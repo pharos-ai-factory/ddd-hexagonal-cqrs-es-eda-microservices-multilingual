@@ -27,6 +27,22 @@ go.work.sum
 # env file
 .env
 
+# Local tools, infrastructure credentials and generated verification evidence.
+.tools/
+.local/
+bin/
+node_modules/
+.venv/
+.next/
+dist/
+*.tsbuildinfo
+test-results/
+playwright-report/
+
 # Editor/IDE
 # .idea/
 # .vscode/
+
+__pycache__/
+*.pyc
+.mypy_cache/

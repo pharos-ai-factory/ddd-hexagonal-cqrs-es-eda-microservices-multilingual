@@ -1,0 +1,26 @@
+{
+  "name": "@cafe/engagement",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/apps/service.js",
+    "test": "tsx --test 'src/**/*.test.ts'",
+    "type-check": "tsc --noEmit",
+    "test:bdd": "node --import tsx ../../node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.mjs"
+  },
+  "dependencies": {
+    "amqplib": "2.0.1",
+    "pg": "8.23.0",
+    "protobufjs": "8.8.0"
+  },
+  "devDependencies": {
+    "@types/amqplib": "0.10.8",
+    "@types/pg": "8.15.5",
+    "@types/node": "24.5.2",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "@cucumber/cucumber": "13.2.1"
+  }
+}

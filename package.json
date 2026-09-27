@@ -1,0 +1,35 @@
+{
+  "name": "cafe-ddd-reference",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "protobufjs": "8.8.0",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "@cucumber/cucumber": "13.2.1",
+    "@cucumber/gherkin": "42.0.0",
+    "@cucumber/messages": "34.2.0",
+    "amqplib": "2.0.1",
+    "pg": "8.23.0",
+    "@types/pg": "8.15.5",
+    "@types/node": "24.5.2"
+  },
+  "scripts": {
+    "verify": "python3 scripts/verify.py",
+    "test:unit": "python3 scripts/verify.py",
+    "test:bdd": "python3 scripts/bdd.py",
+    "check:specifications": "node scripts/check_specifications.mjs",
+    "test:integration": "python3 scripts/integration.py",
+    "dev:configure": "python3 scripts/dev.py configure",
+    "dev:up": "python3 scripts/dev.py up",
+    "dev:down": "python3 scripts/dev.py down",
+    "dev:logs": "python3 scripts/dev.py logs",
+    "demo": "python3 scripts/journey.py",
+    "events:replay": "python3 scripts/replay.py",
+    "check:architecture": "python3 scripts/check_architecture.py",
+    "check:large-file-review": "python3 scripts/check_architecture.py",
+    "generate:contracts": "python3 scripts/generate.py",
+    "test:browser": "python3 scripts/browser.py"
+  }
+}

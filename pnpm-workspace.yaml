@@ -1,0 +1,6 @@
+packages:
+  - services/engagement
+  - services/web
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

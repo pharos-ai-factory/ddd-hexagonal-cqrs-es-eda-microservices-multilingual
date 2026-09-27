@@ -1,0 +1,398 @@
+{
+  "nested": {
+    "cafe": {
+      "nested": {
+        "realtime": {
+          "nested": {
+            "v1": {
+              "options": {
+                "go_package": "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1"
+              },
+              "nested": {
+                "Publication": {
+                  "oneofs": {
+                    "snapshot": {
+                      "oneof": [
+                        "drink",
+                        "edition",
+                        "order",
+                        "ticket",
+                        "pickup",
+                        "account",
+                        "reward",
+                        "notification"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "eventId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "event_id"
+                    },
+                    "contractVersion": {
+                      "type": "uint32",
+                      "id": 2,
+                      "protoName": "contract_version"
+                    },
+                    "context": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "aggregateKind": {
+                      "type": "string",
+                      "id": 4,
+                      "protoName": "aggregate_kind"
+                    },
+                    "aggregateId": {
+                      "type": "string",
+                      "id": 5,
+                      "protoName": "aggregate_id"
+                    },
+                    "revision": {
+                      "type": "uint64",
+                      "id": 6
+                    },
+                    "drink": {
+                      "type": "Drink",
+                      "id": 10
+                    },
+                    "edition": {
+                      "type": "Edition",
+                      "id": 11
+                    },
+                    "order": {
+                      "type": "Order",
+                      "id": 12
+                    },
+                    "ticket": {
+                      "type": "Ticket",
+                      "id": 13
+                    },
+                    "pickup": {
+                      "type": "Pickup",
+                      "id": 14
+                    },
+                    "account": {
+                      "type": "Account",
+                      "id": 15
+                    },
+                    "reward": {
+                      "type": "Reward",
+                      "id": 16
+                    },
+                    "notification": {
+                      "type": "Notification",
+                      "id": 17
+                    }
+                  }
+                },
+                "Drink": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "revision": {
+                      "type": "uint64",
+                      "id": 3
+                    },
+                    "published": {
+                      "type": "bool",
+                      "id": 4
+                    }
+                  }
+                },
+                "Offer": {
+                  "fields": {
+                    "code": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "drinkId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "drink_id"
+                    },
+                    "drinkRevision": {
+                      "type": "uint64",
+                      "id": 3,
+                      "protoName": "drink_revision"
+                    },
+                    "name": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "minor": {
+                      "type": "int64",
+                      "id": 5
+                    },
+                    "currency": {
+                      "type": "string",
+                      "id": 6
+                    }
+                  }
+                },
+                "Edition": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "currency": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "status": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "offers": {
+                      "rule": "repeated",
+                      "type": "Offer",
+                      "id": 4
+                    }
+                  }
+                },
+                "Selection": {
+                  "fields": {
+                    "offerCode": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "offer_code"
+                    },
+                    "name": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "minor": {
+                      "type": "int64",
+                      "id": 3
+                    }
+                  }
+                },
+                "Line": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "selection": {
+                      "type": "Selection",
+                      "id": 2
+                    },
+                    "quantity": {
+                      "type": "int32",
+                      "id": 3
+                    }
+                  }
+                },
+                "Order": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "customer_id"
+                    },
+                    "editionId": {
+                      "type": "string",
+                      "id": 3,
+                      "protoName": "edition_id"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "status": {
+                      "type": "string",
+                      "id": 5
+                    },
+                    "lines": {
+                      "rule": "repeated",
+                      "type": "Line",
+                      "id": 6
+                    }
+                  }
+                },
+                "Ticket": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "order_id"
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "id": 3,
+                      "protoName": "customer_id"
+                    },
+                    "instructions": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "status": {
+                      "type": "string",
+                      "id": 5
+                    }
+                  }
+                },
+                "Pickup": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "order_id"
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "id": 3,
+                      "protoName": "customer_id"
+                    },
+                    "code": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "status": {
+                      "type": "string",
+                      "id": 5
+                    }
+                  }
+                },
+                "Grant": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "accountId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "account_id"
+                    },
+                    "benefit": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "validDays": {
+                      "type": "int32",
+                      "id": 4,
+                      "protoName": "valid_days"
+                    }
+                  }
+                },
+                "Account": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "stampBalance": {
+                      "type": "int32",
+                      "id": 2,
+                      "protoName": "stamp_balance"
+                    },
+                    "collections": {
+                      "type": "int32",
+                      "id": 3
+                    },
+                    "grantsEarned": {
+                      "type": "int32",
+                      "id": 4,
+                      "protoName": "grants_earned"
+                    },
+                    "lastGrant": {
+                      "type": "Grant",
+                      "id": 5,
+                      "protoName": "last_grant"
+                    }
+                  }
+                },
+                "Reward": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "grantId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "grant_id"
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "id": 3,
+                      "protoName": "customer_id"
+                    },
+                    "benefit": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "status": {
+                      "type": "string",
+                      "id": 5
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "id": 6,
+                      "protoName": "expires_at"
+                    },
+                    "redeemedFor": {
+                      "type": "string",
+                      "id": 7,
+                      "protoName": "redeemed_for"
+                    }
+                  }
+                },
+                "Notification": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "subject": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "body": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "status": {
+                      "type": "string",
+                      "id": 5
+                    },
+                    "providerReceipt": {
+                      "type": "string",
+                      "id": 6,
+                      "protoName": "provider_receipt"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

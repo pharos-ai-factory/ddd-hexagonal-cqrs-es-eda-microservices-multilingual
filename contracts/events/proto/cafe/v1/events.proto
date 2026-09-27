@@ -1,0 +1,54 @@
+syntax = "proto3";
+package cafe.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
+
+// Domain and integration messages share one envelope and delivery protocol.
+// The catalogue restricts private domain contracts to their owning context.
+message Event {
+  string id = 1;
+  string name = 2;
+  string context = 3;
+  string visibility = 4;
+  uint32 contract_version = 5;
+  string aggregate_kind = 6;
+  string aggregate_id = 7;
+  uint64 aggregate_version = 8;
+  string correlation_id = 9;
+  string causation_id = 10;
+  string occurred_at = 11;
+  oneof payload {
+    DrinkPublished drink_published = 20;
+    MenuPublished menu_published = 21;
+    OrderPlaced order_placed = 22;
+    DrinksReady drinks_ready = 23;
+    PickupOpened pickup_opened = 24;
+    OrderCollected order_collected = 25;
+    RewardEarned reward_earned = 26;
+    RewardIssued reward_issued = 27;
+    NotificationRequested notification_requested = 28;
+  }
+}
+message DrinkPublished { string drink_id = 1; string name = 2; uint64 revision = 3; }
+message Offer {
+  string code = 1; string drink_id = 2; uint64 drink_revision = 3;
+  string name = 4; int64 minor = 5; string currency = 6;
+}
+message MenuPublished { string edition_id = 1; string currency = 2; repeated Offer offers = 3; }
+message Line { string id = 1; string offer_code = 2; string name = 3; int32 quantity = 4; int64 minor = 5; }
+message OrderPlaced {
+  string order_id = 1; string customer_id = 2; string edition_id = 3;
+  string currency = 4; repeated Line lines = 5;
+}
+message DrinksReady { string order_id = 1; string customer_id = 2; }
+message PickupOpened {
+  string pickup_id = 1; string order_id = 2;
+  string customer_id = 3; string collection_code = 4;
+}
+message OrderCollected { string order_id = 1; string customer_id = 2; }
+message RewardEarned {
+  string account_id = 1; string grant_id = 2; string benefit = 3; int32 valid_days = 4;
+}
+message RewardIssued {
+  string reward_id = 1; string customer_id = 2; string benefit = 3; string expires_at = 4;
+}
+message NotificationRequested { string notification_id = 1; }

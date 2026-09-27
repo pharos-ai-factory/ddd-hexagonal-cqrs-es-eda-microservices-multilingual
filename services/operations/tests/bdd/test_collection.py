@@ -1,0 +1,95 @@
+import re
+import pytest
+
+from pytest_bdd import given, when, then, parsers, scenarios
+
+from operations.contexts.collection.application import OpenPickup, CollectOrder
+from operations.contexts.collection.domain import PickupSnapshot
+from operations.contracts.events import DrinksReady
+from operations.foundation.application import Metadata
+from operations.foundation.identity import derived_id
+from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe
+
+type CollectionProbe = CommandProbe[PickupSnapshot, DrinksReady]
+
+scenarios(str(SPECIFICATIONS / "collection"))
+
+
+@pytest.fixture
+def probe() -> CollectionProbe:
+    return CommandProbe()
+
+
+@given("drinks are ready for an order")
+def ready(probe: CollectionProbe) -> None:
+    probe.event = {"orderId": ORDER, "customerId": CUSTOMER}
+
+
+@when("Collection handles the ready drinks")
+def open_pickup(probe: CollectionProbe, metadata: Metadata) -> None:
+    OpenPickup(probe, derived_id).handle(metadata, probe.incoming())
+
+
+@given("the pickup has been opened")
+def opened(probe: CollectionProbe, metadata: Metadata) -> None:
+    open_pickup(probe, metadata)
+    probe.succeeded()
+
+
+@when("the customer presents the correct collection code")
+def collect(probe: CollectionProbe, metadata: Metadata) -> None:
+    CollectOrder(probe).execute(metadata, {"code": probe.current()["code"]})
+
+
+@given("the pickup has been collected")
+def collected(probe: CollectionProbe, metadata: Metadata) -> None:
+    opened(probe, metadata)
+    collect(probe, metadata)
+    probe.succeeded()
+
+
+@when("the customer presents the wrong collection code")
+def wrong_code(probe: CollectionProbe, metadata: Metadata) -> None:
+    assert probe.current()["code"] != "WRONG1"
+    CollectOrder(probe).execute(metadata, {"code": "WRONG1"})
+
+
+@then("the pickup is ready with a six-character collection code")
+def pickup(probe: CollectionProbe) -> None:
+    probe.succeeded()
+    assert probe.current()["status"] == "ready"
+    assert re.fullmatch(r"[A-Z0-9]{6}", probe.current()["code"])
+    assert probe.current()["code"] == derived_id("collection-code", ORDER)[:6].upper()
+
+
+@then("one PickupOpened publication contains that code, order and customer")
+def opened_event(probe: CollectionProbe) -> None:
+    assert len(probe.publications) == 1
+    event = probe.publications[0]
+    assert event.name == "collection.pickup-opened"
+    assert event.payload == {
+        "pickupId": ROOT, "orderId": ORDER, "customerId": CUSTOMER, "collectionCode": probe.current()["code"]}
+
+
+@then(parsers.parse('Collection rejects the command with "{code}"'))
+def rejection(probe: CollectionProbe, code: str) -> None:
+    assert probe.rejection and probe.rejection["code"] == code
+
+
+@then("the pickup and its outgoing events are unchanged")
+def unchanged(probe: CollectionProbe) -> None:
+    probe.unchanged()
+
+
+@then("the pickup is collected")
+def collected_state(probe: CollectionProbe) -> None:
+    probe.succeeded()
+    assert probe.current()["status"] == "collected"
+
+
+@then("one OrderCollected publication identifies the order and customer")
+def collected_event(probe: CollectionProbe) -> None:
+    assert len(probe.publications) == 1
+    event = probe.publications[0]
+    assert event.name == "collection.order-collected"
+    assert event.payload == {"orderId": ORDER, "customerId": CUSTOMER}
