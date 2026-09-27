@@ -111,9 +111,24 @@ func (s *Store) Run(ctx context.Context) {
 			for _, work := range actors {
 				// Each revoked session has its own work identity. Completing an
 				// older disconnect cannot remove a concurrent revocation.
+				// Start the fence only after observing durable revocation. Every
+				// earlier connect grant then expires before the final disconnect.
+				fence := prefix + "fence:" + work
+				if err := s.client.SetNX(ctx, fence, time.Now().Add(a.ConnectLifetime).Unix(), Lifetime).Err(); err != nil {
+					continue
+				}
+				deadline, err := s.client.Get(ctx, fence).Int64()
+				// Centrifugo accepts expire_at == now, so cross the whole second.
+				if err != nil || time.Now().Unix() <= deadline {
+					continue
+				}
 				actor, _, _ := strings.Cut(work, "|")
 				if err := s.disconnect(ctx, actor); err == nil {
-					_ = s.client.SRem(ctx, prefix+"disconnects", work).Err()
+					_, _ = s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+						pipe.SRem(ctx, prefix+"disconnects", work)
+						pipe.Del(ctx, fence)
+						return nil
+					})
 				}
 			}
 		}

@@ -4,6 +4,26 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Reject missing/null persisted Go fields before they can become zero prices,
+  including nested offers and immutable projections.
+- Validate saved receipt identity, version, status and rejection details before
+  returning outcomes or acknowledging consumed events.
+- Check stored and proposed root identities against their storage keys in all
+  three runtimes; corrupt authority rolls back without consuming the attempt.
+- Expire in-flight connect grants and retain durable revocation work past their
+  validity window; revalidate established connections through the refresh proxy.
+- Add PostgreSQL regression tests for missing/null order prices, mismatched root
+  identities and malformed command/consumer receipts, including explicit valid
+  controls and identical retry after administrative repair.
+- Add an isolated Valkey/Centrifugo regression that delays an authenticated
+  connection until the real Go session worker has completed logout disconnection.
+- Await response handling and session-storage clearance in the browser command
+  recovery test; hiding a busy retry button does not establish completion.
+- Collect independent integration failures so one failing regression does not
+  prevent the other infrastructure lanes from executing.
+- Wait for committed consumer projections in the browser journey before adding
+  an offer or starting an order; browser publication can precede broker delivery.
+
 ## 2026-09-27 — Initial implementation
 
 ### Added

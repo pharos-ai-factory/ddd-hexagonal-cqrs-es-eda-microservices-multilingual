@@ -38,7 +38,8 @@ else:
         args += ["--network", "host"]
     for name in os.environ:
         if name.endswith(("_DATABASE_URL", "_BROKER_URL")) or name in {
-            "DATABASE_ADMIN_URL", "BROKER_ADMIN_URL", "BROKER_URL", "APP_ENV", "UPDATE_FIXTURES"
+            "DATABASE_ADMIN_URL", "BROKER_ADMIN_URL", "BROKER_URL", "APP_ENV", "UPDATE_FIXTURES",
+            "CAFE_DISPOSABLE_PROJECT",
         }:
             args += ["-e", name]
     if os.environ.get("GOBIN"):

@@ -1,5 +1,70 @@
 # Executed verification
 
+## Regression fixes, 27 September 2026
+
+Both `pnpm verify` and `pnpm test:integration` pass with the corruption and
+in-flight authentication regressions enabled. No environment-dependent check
+was omitted. The browser specifications also passed a focused strict TypeScript
+check.
+
+| Correction | Executed evidence |
+| --- | --- |
+| Required stored Go fields | Missing/null order prices fail without changing state, receipts or either outbox; explicit zero and paid prices work, and the original command succeeds after repair |
+| Root identity | Go, Python and TypeScript reject mismatched stored identities and proposed changes; corrupt queries fail and administrative repair preserves the original attempt |
+| Saved receipts | All six command/consumer corruption cases pass in both Go and TypeScript; repair returns the original outcome without rerunning the decision or duplicating intent |
+| Pending connection revocation | The real worker completes its disconnect before the held response is released; Centrifugo rejects the expired grant and the revoked session receives no publication |
+| Established connections | The healthy control revalidates its original session through the refresh proxy and receives a publication |
+| Browser prerequisites | The host waits for committed Drink/Menu projections before dependent commands, preserving all browser request-count assertions |
+
+The Go PostgreSQL/RabbitMQ suites, all 12 Python infrastructure tests, all
+TypeScript infrastructure tests, two PostgreSQL and ten live Gherkin scenarios,
+the outage/provider recovery journey, both café browser scenarios, four Valkey
+permission checks and the separate revocation browser fixture passed. The
+deterministic gate includes all 51 fast Gherkin scenarios and the existing
+workflow binding dry run; that dry run is not a skipped infrastructure lane.
+
+Local logs are `.local/fix-verify.log` and `.local/fix-integration.log`.
+Disposable Compose resources and the separate revocation fixture containers
+were removed. The development dataset was preserved. Remote CI, timed one-hour
+session expiry, multi-process revocation fault injection and the other explicit
+limits below remain outside this verification.
+
+## Captured regressions before fixes, 27 September 2026
+
+The regression additions deliberately assert the required behaviour while leaving
+the application defects in place. `pnpm verify` passes. `pnpm test:integration`
+executes every infrastructure lane and fails on the newly captured defects:
+
+| Regression | Observed result |
+| --- | --- |
+| Go missing/null stored order prices | Both cases fail: placement commits a zero price, state, receipts and outgoing publications |
+| Go corrupt command/consumer receipts | Six cases fail: empty, null and incomplete rejection outcomes are accepted; command outcomes can be copied into consumer receipts |
+| Python mismatched Pickup identity | Fails because collection succeeds for a snapshot identifying another root |
+| TypeScript corrupt command/consumer receipts | Five cases fail; the null command outcome already rolls back through the database constraint when copied into a consumer receipt |
+| Logout during connection authentication | Fails after the real Go worker completes disconnection: releasing the captured response permits a publication to reach the revoked session |
+
+Explicit zero/paid prices, a matching Pickup identity and the healthy realtime
+connection control pass. Repair-and-retry assertions are included after corruption
+detection; those assertions remain unexecuted in the failing cases until the
+application guards are fixed. No expected-failure or skip markers hide the defects.
+
+The existing PostgreSQL/broker checks, recovery journey, two PostgreSQL and ten live
+Gherkin scenarios, both existing browser scenarios and four Valkey permission
+checks pass. The browser authentication-recovery scenario now waits for its
+successful retry response and session-storage clearance. The revocation fixture
+also rejects a cancelled proxy request as evidence, preventing an authentication
+timeout from being mistaken for successful revocation.
+
+No environment-dependent lane was omitted. Disposable Compose resources and the
+separate revocation fixture containers were removed after execution. Local logs
+are `.local/regression-verify.log` and `.local/regression-integration.log`; the
+revocation browser trace is under `test-results/session-revocation`.
+
+The remaining sections record the earlier baseline, before these regression
+assertions were introduced.
+
+## Previously recorded baseline
+
 Verified locally on **27 September 2026**, Linux ARM64 with Docker/Compose,
 Go 1.27.1, Node.js 24, pnpm 10.34.5 and uv 0.12.19. Operations runs with Python
 3.14 in its container; the local Python test environment uses 3.13. The pinned

@@ -7,6 +7,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/application"
 )
@@ -101,6 +102,9 @@ func (c Config) Handler() http.Handler {
 			jsonResponse(w, 403, map[string]string{"code": "proxy_denied"})
 			return
 		}
+		// Calculate before reading authority: every response authorised before
+		// session deletion must expire within the worker's revocation fence.
+		expires := time.Now().Add(a.ConnectLifetime).Unix()
 		principal, ok, err := c.Sessions.Authenticate(r.Context(), token(r))
 		if err != nil || !ok || !c.origin(r) {
 			jsonResponse(w, 200, map[string]any{"disconnect": map[string]any{"code": 4501, "reason": "unauthorised"}})
@@ -110,7 +114,23 @@ func (c Config) Handler() http.Handler {
 		for _, channel := range a.AuthorisedChannels(principal) {
 			subs[channel] = map[string]any{}
 		}
-		jsonResponse(w, 200, map[string]any{"result": map[string]any{"user": principal.Subject, "subs": subs}})
+		jsonResponse(w, 200, map[string]any{"result": map[string]any{
+			"user": principal.Subject, "subs": subs, "expire_at": expires}})
+	})
+	mux.HandleFunc("POST /api/realtime/refresh", func(w http.ResponseWriter, r *http.Request) {
+		if !equal(r.Header.Get("X-Cafe-Realtime-Proxy"), c.ProxySecret) {
+			jsonResponse(w, 403, map[string]string{"code": "proxy_denied"})
+			return
+		}
+		// Centrifugo forwards the original connection's Cookie and Origin.
+		// Refresh cannot create a connection or revive one already disconnected.
+		expires := time.Now().Add(time.Minute).Unix()
+		_, ok, err := c.Sessions.Authenticate(r.Context(), token(r))
+		if err != nil || !ok || !c.origin(r) {
+			jsonResponse(w, 200, map[string]any{"result": map[string]bool{"expired": true}})
+			return
+		}
+		jsonResponse(w, 200, map[string]any{"result": map[string]int64{"expire_at": expires}})
 	})
 	for owner, backend := range c.Backends {
 		target, err := url.Parse(backend.URL)

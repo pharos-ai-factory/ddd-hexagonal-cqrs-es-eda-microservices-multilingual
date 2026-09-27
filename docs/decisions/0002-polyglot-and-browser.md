@@ -52,6 +52,12 @@ window owns its independent connection and position.
 A server-provisioned operator has access to all six context channels. An opaque,
 fixed-lifetime cookie session replaces a production identity-provider integration
 for this example. Logout and expiry still record durable disconnection work.
+Connect grants expire after one second, with the deadline calculated before
+reading session authority. A worker observing revocation durably records a wait
+past that validity window before completing its disconnect, so a delayed grant
+cannot establish subscriptions after completion. Established connections use
+the server-side refresh proxy to revalidate their original cookie session.
+The validity window and worker deadline use the development host's clock.
 Customer IDs on screen select domain subjects; they do not confer authority.
 
 The composition is local/development-only and has no production release workflow.

@@ -32,12 +32,36 @@ production build used locally, and runs:
 | Provider | Acceptance followed by a lost response creates one provider effect |
 | Browser / Centrifugo | Two independent windows, persisted uncertain command retry across authentication loss, typed live updates, no business polling, recovered history, missing-history reconciliation, mobile layout and logout |
 | Valkey authority | Realtime credentials cannot write session keys or administer ACL users; permission probes require a disposable project |
+| In-flight authentication | A held successful connect response cannot restore access after the real Go session worker has completed logout disconnection |
 
 Fixtures use real PostgreSQL and RabbitMQ. Missing infrastructure is a failure,
 not a skipped pass. Component fixtures are cleared only in the guarded disposable
 project before the acceptance journey; the development dataset is preserved.
 The test project is removed at completion, including on failure. Use
 `python3 scripts/integration.py --keep` to retain it for diagnosis.
+
+Independent test lanes continue after assertion failures and the runner reports
+their combined failure at the end. Provisioning and journey prerequisites still
+stop execution if unavailable. Continuing a lane never turns a failure into a pass.
+
+The corruption regressions use administrator credentials only inside a guarded
+disposable project. Missing/null Go prices must fail while explicit zero remains
+valid; snapshots in all three runtimes must identify their storage keys and
+proposed changes must retain that identity; Go and TypeScript must
+reject malformed command and consumer outcomes. Failed attempts leave state,
+receipts and outgoing intent unchanged. Administrative repair preserves the
+logical root version so the exact original attempt can recover afterwards.
+
+`tests/infrastructure/session_revocation.py` starts separate temporary Valkey and
+Centrifugo instances and a host using the actual Go API handler, session adaptor
+and disconnect worker. It holds one successful authentication response, observes
+completed disconnect work, then releases the response and tests access. The healthy
+connection control proves that the fixture can refresh its session and receive
+publications. An expired connect grant is an explicit protocol refusal even when
+the unauthenticated WebSocket remains open; a cancelled proxy call is not proof
+of revocation. The fixture's proxy timeout accommodates the deliberate hold.
+These test controls are absent from the application entry point. The fixture is cleaned up
+on failure; its browser trace remains under `test-results/session-revocation`.
 
 Gherkin duplicate scenarios wait for the new message's committed consumer receipt
 before asserting no second effect. Cross-service fixtures use only the Go API,
@@ -48,6 +72,10 @@ provider failure control requires serial execution in one disposable project.
 `pnpm test:browser` runs the browser scenario against the existing development
 stack. It adds demonstration data and removes test channel history during the
 recovery exercise. `CAFE_ENV_FILE` selects a different repository-local env file.
+Before adding an offer or opening an order, the test host waits for the owning
+consumer's committed published projection using its runtime read credentials.
+The browser's menu update alone does not prove RabbitMQ delivery has completed.
+This bounded infrastructure observation adds no browser business requests.
 Chromium runs in the pinned Playwright Docker image, including its system
 libraries; the wrapper handles rootless Docker ownership. Linux host networking
 is currently required for this lane.

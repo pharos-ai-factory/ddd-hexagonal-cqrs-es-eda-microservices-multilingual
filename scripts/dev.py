@@ -112,7 +112,7 @@ def wait_ready(values, services=("STOREFRONT", "OPERATIONS", "ENGAGEMENT", "API"
             time.sleep(0.25)
 
 def test_environment(values):
-    result = dict(os.environ, APP_ENV="development")
+    result = dict(os.environ, APP_ENV="development", CAFE_DISPOSABLE_PROJECT=values["COMPOSE_PROJECT_NAME"])
     for owner in OWNERS:
         prefix = owner.upper()
         result[prefix+"_DATABASE_URL"] = f'postgres://cafe_{owner}:{values[prefix+"_DB_PASSWORD"]}@127.0.0.1:{values["PG_PORT"]}/cafe_{owner}?sslmode=disable'

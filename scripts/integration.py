@@ -16,23 +16,32 @@ def execute(env_file, keep=False):
     if not values["COMPOSE_PROJECT_NAME"].startswith("cafe-reference-test-"):
         raise RuntimeError("Integration fixtures require a disposable test project")
     passed = False
+    failures = []
+
+    def check(label, arguments, environment):
+        # Independent test failures must not hide the other regression lanes.
+        result = subprocess.run(arguments, cwd=ROOT, env=environment, check=False)
+        if result.returncode:
+            failures.append(label)
+            print(f"{label} failed; continuing independent checks", flush=True)
+
     previous_pause = os.environ.get("PAUSED_CONSUMERS")
     try:
         os.environ["PAUSED_CONSUMERS"] = "loyalty.issue-reward"
         up(env_file)
         # Foundation fixtures cannot compete with live application relays.
         compose(env_file, "stop", "storefront", "operations", "engagement")
-        subprocess.run([sys.executable, "scripts/go.py", "test", "-race", "-tags", "integration", "-count=1", "-timeout=120s",
+        check("Go PostgreSQL/RabbitMQ", [sys.executable, "scripts/go.py", "test", "-race", "-tags", "integration", "-count=1", "-timeout=120s",
                         "./foundation/persistence/postgres", "./foundation/transport/amqp",
-                        "./contexts/ordering/application"], cwd=ROOT,
-                       env=dict(test_environment(values), BDD_REPORT_DIR=str(reports)), check=True)
-        subprocess.run(["uv", "run", "--project", "services/operations", "pytest", "-q",
+                        "./contexts/ordering/application"],
+              dict(test_environment(values), BDD_REPORT_DIR=str(reports)))
+        check("Python PostgreSQL/RabbitMQ", ["uv", "run", "--project", "services/operations", "pytest", "-q",
                         "services/operations/tests/persistence_integration.py",
-                        "services/operations/tests/delivery_integration.py"],
-                       cwd=ROOT, env=test_environment(values), check=True)
-        subprocess.run(["pnpm", "--filter", "@cafe/engagement", "exec", "tsx", "--test",
-                        "src/adaptors/postgres.integration.ts", "src/adaptors/broker.integration.ts"],
-                       cwd=ROOT, env=test_environment(values), check=True)
+                        "services/operations/tests/delivery_integration.py",
+                        "services/operations/tests/identity_integration.py"], test_environment(values))
+        check("TypeScript PostgreSQL/RabbitMQ", ["pnpm", "--filter", "@cafe/engagement", "exec", "tsx", "--test",
+                        "src/adaptors/postgres.integration.ts", "src/adaptors/broker.integration.ts",
+                        "src/adaptors/corrupt-receipts.integration.ts"], test_environment(values))
         # Component fixtures deliberately contain partial roots. The journey
         # starts from empty business tables in this disposable project only.
         for owner in ("menu", "ordering", "preparation", "collection", "loyalty", "communication"):
@@ -60,14 +69,15 @@ def execute(env_file, keep=False):
                 wait_ready(values, ("ENGAGEMENT",))
 
         run(values, recovery=recovery)
-        subprocess.run(["node", "--import", "tsx", "node_modules/@cucumber/cucumber/bin/cucumber.js",
-                        "--config", "tests/acceptance/cucumber.mjs"], cwd=ROOT,
-                       env=dict(os.environ, CAFE_ENV_FILE=str(env_file.resolve())), check=True)
-        subprocess.run(["node", "scripts/check_bdd_reports.mjs", "infrastructure"], cwd=ROOT, check=True)
-        subprocess.run([sys.executable, "scripts/browser.py"], cwd=ROOT,
-                       env=dict(os.environ, CAFE_ENV_FILE=str(env_file)), check=True)
-        subprocess.run([sys.executable, "tests/infrastructure/valkey_permissions.py"], cwd=ROOT,
-                       env=dict(os.environ, CAFE_ENV_FILE=str(env_file)), check=True)
+        live = dict(os.environ, CAFE_ENV_FILE=str(env_file.resolve()))
+        check("Gherkin live workflows", ["node", "--import", "tsx", "node_modules/@cucumber/cucumber/bin/cucumber.js",
+                        "--config", "tests/acceptance/cucumber.mjs"], live)
+        check("Gherkin infrastructure reports", ["node", "scripts/check_bdd_reports.mjs", "infrastructure"], live)
+        check("Browser recovery", [sys.executable, "scripts/browser.py"], live)
+        check("Valkey permissions", [sys.executable, "tests/infrastructure/valkey_permissions.py"], live)
+        check("Session revocation", [sys.executable, "tests/infrastructure/session_revocation.py"], live)
+        if failures:
+            raise RuntimeError("Integration checks failed: "+", ".join(failures))
         passed = True
         print("PostgreSQL, RabbitMQ, Gherkin workflows, provider recovery and browser journey passed")
     finally:

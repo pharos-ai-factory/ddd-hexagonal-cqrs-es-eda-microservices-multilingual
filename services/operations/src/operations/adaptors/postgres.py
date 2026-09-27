@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 from operations.foundation.application import Change, Loaded, Metadata, Outcome
-from operations.foundation.domain import Rejection, identifier, integer
+from operations.foundation.domain import CorruptState, Rejection, identifier, integer
 from operations.adaptors import codec, receipts
 
 type Row = dict[str, object]
@@ -17,6 +17,11 @@ SCHEMA = json.loads((Path(__file__).parent/"generated/persistence.json").read_te
 
 def fingerprint(value: object) -> str:
     return sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def check_root_identity(state: Mapping[str, object], target: str) -> None:
+    if state.get("id") != target:
+        raise CorruptState("Snapshot identity differs from its storage key")
 
 
 class Database:
@@ -61,7 +66,7 @@ class Commands[S: Mapping[str, object]]:
                 if previous:
                     if previous["fingerprint"] != m.source_hash or previous["target"] != target:
                         raise ValueError("Event identity reused with conflicting bytes or target")
-                    return receipts.outcome(previous["outcome"])
+                    return receipts.outcome(previous["outcome"], m.target)
             receipt = connection.execute("""SELECT fingerprint,outcome FROM cafe.command_receipts
                 WHERE kind=%s AND aggregate_id=%s AND command_name=%s AND command_id=%s""",
                 (self.kind, m.target, m.name, m.id)).fetchone()
@@ -69,22 +74,26 @@ class Commands[S: Mapping[str, object]]:
                 if receipt["fingerprint"] != digest:
                     return {"aggregateId": m.target, "version": 0, "status": "", "rejection": {
                         "code": "idempotency_conflict", "message": "The command identity has different input"}}
-                outcome = receipts.outcome(receipt["outcome"])
+                outcome = receipts.outcome(receipt["outcome"], m.target)
                 self._incoming(connection, m, target, outcome)
                 return outcome
             loaded = connection.execute("SELECT version,state FROM cafe.aggregates WHERE kind=%s AND id=%s FOR UPDATE",
                                         (self.kind, m.target)).fetchone()
             version = integer(loaded["version"]) if loaded else 0
+            state = self.restore(loaded["state"]) if loaded else None
+            if state is not None:
+                check_root_identity(state, m.target)
             outcome = {"aggregateId": m.target, "version": version, "status": ""}
             try:
                 if m.expected is not None and m.expected != version:
                     raise Rejection("version_conflict", "The expected aggregate version is stale")
-                change = decide(self.restore(loaded["state"]) if loaded else None)
+                change = decide(state)
                 outcome["status"] = change.status
             except Rejection as rejection:
                 outcome["rejection"] = rejection.outcome()
             else:
                 if change.changed:
+                    check_root_identity(change.state, m.target)
                     version += 1
                     outcome["version"] = version
                     if loaded:
@@ -120,7 +129,7 @@ class Commands[S: Mapping[str, object]]:
                 VALUES(%s,%s,%s,%s,%s)""", (m.consumer, m.source_id, m.source_hash, target, Jsonb(outcome)))
 
 
-class Queries[S]:
+class Queries[S: Mapping[str, object]]:
     def __init__(self, database: Database, kind: str, restore: Callable[[object], S]) -> None:
         self.database, self.kind = database, kind
         self.restore = restore
@@ -128,15 +137,17 @@ class Queries[S]:
     def get(self, identity: str) -> Loaded[S] | None:
         identifier(identity)
         with self.database.pool.connection() as connection:
-            row = connection.execute("SELECT version,state FROM cafe.aggregates WHERE kind=%s AND id=%s",
+            row = connection.execute("SELECT id,version,state FROM cafe.aggregates WHERE kind=%s AND id=%s",
                                      (self.kind, identity)).fetchone()
             return self._loaded(row) if row else None
 
     def list(self) -> list[Loaded[S]]:
         with self.database.pool.connection() as connection:
-            rows = connection.execute("SELECT version,state FROM cafe.aggregates WHERE kind=%s ORDER BY id LIMIT 100",
+            rows = connection.execute("SELECT id,version,state FROM cafe.aggregates WHERE kind=%s ORDER BY id LIMIT 100",
                                       (self.kind,)).fetchall()
             return [self._loaded(row) for row in rows]
 
     def _loaded(self, row: Row) -> Loaded[S]:
-        return {"exists": True, "version": integer(row["version"]), "state": self.restore(row["state"])}
+        state = self.restore(row["state"])
+        check_root_identity(state, str(row["id"]))
+        return {"exists": True, "version": integer(row["version"]), "state": state}

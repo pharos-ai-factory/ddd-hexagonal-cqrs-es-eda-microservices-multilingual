@@ -1,6 +1,7 @@
 import {test, expect, type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
+import {Pool} from 'pg';
 
 const env = Object.fromEntries(readFileSync(process.env.CAFE_ENV_FILE ?? '.local/dev.env', 'utf8')
   .trim().split('\n').map(line => line.split('=')));
@@ -23,6 +24,21 @@ async function createDrink(name: string) {
     body: JSON.stringify({name}),
   });
   expect(response.status).toBe(200);
+}
+
+async function projected(owner: 'menu' | 'ordering', name: string, key: string) {
+  // Browser publication and RabbitMQ consumption are independent deliveries.
+  // Observe committed prerequisites from the test host, using runtime read access.
+  const pool = new Pool({host: '127.0.0.1', port: Number(env.PG_PORT), database: 'cafe_'+owner,
+    user: 'cafe_'+owner, password: env[owner.toUpperCase()+'_DB_PASSWORD'],
+    max: 1, connectionTimeoutMillis: 5_000, query_timeout: 5_000});
+  try {
+    await expect.poll(async () => {
+      const result = await pool.query<{arrived: boolean}>(
+        'SELECT EXISTS(SELECT 1 FROM cafe.projections WHERE name=$1 AND key=$2) AS arrived', [name, key]);
+      return result.rows[0]?.arrived;
+    }, {message: `${owner} must receive ${name} before its next command`}).toBe(true);
+  } finally { await pool.end(); }
 }
 
 test('six contexts, independent windows, binary recovery, durable logout and uncertain commands', async ({page, context}) => {
@@ -67,11 +83,13 @@ test('six contexts, independent windows, binary recovery, durable logout and unc
   await expect(page.locator('.list-row').filter({hasText: drink})).toContainText('Published');
   await page.getByRole('button', {name: 'New edition', exact: true}).click();
   await expect(page.getByLabel('Published drink')).toBeVisible();
-  await page.getByLabel('Published drink').selectOption({label: drink});
+  const [drinkId] = await page.getByLabel('Published drink').selectOption({label: drink});
+  await projected('menu', 'published-drinks', drinkId+'/1');
   await page.getByRole('button', {name: 'Add offer', exact: true}).click();
   await expect(page.getByRole('button', {name: 'Publish menu', exact: true})).toBeEnabled();
   await page.getByRole('button', {name: 'Publish menu', exact: true}).click();
   await expect(page.getByText('This edition is published.', {exact: false})).toBeVisible();
+  await projected('ordering', 'published-menus', await page.getByLabel('Menu edition').inputValue());
   const readsAfterInitial = businessGets.length;
   expect(readsAfterInitial).toBe(16); // Eight owner queries in each independent window.
   for (let index = 0; index < 3; index++) {

@@ -45,7 +45,7 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	if _, err = tx.Exec(ctx, `SELECT set_config('cafe.command_target',$1,true)`, target); err != nil {
 		return a.Outcome{}, err
 	}
-	done, previous, err := loadIncoming(ctx, tx, m, target)
+	done, previous, err := loadIncoming(ctx, tx, m, target, m.AggregateID)
 	if err != nil {
 		return a.Outcome{}, err
 	}
@@ -59,8 +59,8 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 		if savedHash != hash {
 			return a.Outcome{AggregateID: m.AggregateID, Rejection: &d.Violation{Code: "idempotency_conflict", Message: "The command identity was reused with different input"}}, nil
 		}
-		var outcome a.Outcome
-		if err = json.Unmarshal(saved, &outcome); err != nil {
+		outcome, err := decodeOutcome(saved, m.AggregateID)
+		if err != nil {
 			return a.Outcome{}, err
 		}
 		if err = recordIncoming(ctx, tx, m, target, outcome); err != nil {
@@ -76,7 +76,10 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	err = tx.QueryRow(ctx, `SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2 FOR UPDATE`, s.kind, m.AggregateID).Scan(&loaded.Version, &state)
 	if err == nil {
 		loaded.Exists = true
-		if err = json.Unmarshal(state, &loaded.State); err != nil {
+		if err = decodeStored(state, &loaded.State); err != nil {
+			return a.Outcome{}, err
+		}
+		if err = checkRootIdentity(state, m.AggregateID); err != nil {
 			return a.Outcome{}, err
 		}
 	} else if !errors.Is(err, pgx.ErrNoRows) {
@@ -100,6 +103,9 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 				outcome.Version++
 				state, err = json.Marshal(mutation.State)
 				if err != nil {
+					return a.Outcome{}, err
+				}
+				if err = checkRootIdentity(state, m.AggregateID); err != nil {
 					return a.Outcome{}, err
 				}
 				if loaded.Exists {

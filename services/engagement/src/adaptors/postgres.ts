@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import type {Change, CommandPort, Loaded, Metadata, Outcome, QueryPort} from '../foundation/application.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 import {encode, realtime} from './codec.js';
+import {outcome as decodeOutcome, checkRootIdentity} from './receipts.js';
 import schema from './generated/persistence.json' with {type: 'json'};
 
 function canonical(value: unknown): unknown {
@@ -47,7 +48,8 @@ export class Commands<S> implements CommandPort<S> {
           WHERE consumer=$1 AND event_id=$2`, [m.consumer, m.sourceId]);
         if (previous) {
           if (previous.fingerprint !== m.sourceHash || previous.target !== target) throw new Error('Conflicting delivery identity');
-          await client.query('COMMIT'); return previous.outcome as Outcome;
+          const saved = decodeOutcome(previous.outcome, m.target);
+          await client.query('COMMIT'); return saved;
         }
       }
       const {rows: [receipt]} = await client.query(`SELECT fingerprint,outcome FROM cafe.command_receipts
@@ -58,12 +60,14 @@ export class Commands<S> implements CommandPort<S> {
           return {aggregateId: m.target, version: 0, status: '', rejection: {
             code: 'idempotency_conflict', message: 'The command identity has different input'}};
         }
-        await incoming(client, m, target, receipt.outcome as Outcome);
-        await client.query('COMMIT'); return receipt.outcome as Outcome;
+        const saved = decodeOutcome(receipt.outcome, m.target);
+        await incoming(client, m, target, saved);
+        await client.query('COMMIT'); return saved;
       }
       const {rows: [row]} = await client.query('SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2 FOR UPDATE',
         [this.kind, m.target]);
       const version = Number(row?.version ?? 0);
+      if (row) checkRootIdentity(row.state, m.target);
       const outcome: Outcome = {aggregateId: m.target, version, status: ''};
       let change: Change<S> | undefined;
       try {
@@ -75,6 +79,7 @@ export class Commands<S> implements CommandPort<S> {
         outcome.rejection = error.outcome();
       }
       if (change?.changed) {
+        checkRootIdentity(change.state, m.target);
         outcome.version++;
         if (row) await client.query('UPDATE cafe.aggregates SET version=$3,state=$4 WHERE kind=$1 AND id=$2',
           [this.kind, m.target, outcome.version, JSON.stringify(change.state)]);
@@ -113,10 +118,14 @@ export class Queries<S> implements QueryPort<S> {
   async get(id: string): Promise<Loaded<S> | undefined> {
     identifier(id);
     const {rows: [row]} = await this.db.pool.query('SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2', [this.kind, id]);
+    if (row) checkRootIdentity(row.state, id);
     return row ? {exists: true, version: Number(row.version), state: row.state as S} : undefined;
   }
   async list(): Promise<Loaded<S>[]> {
-    const {rows} = await this.db.pool.query('SELECT version,state FROM cafe.aggregates WHERE kind=$1 ORDER BY id LIMIT 100', [this.kind]);
-    return rows.map(row => ({exists: true, version: Number(row.version), state: row.state as S}));
+    const {rows} = await this.db.pool.query('SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 ORDER BY id LIMIT 100', [this.kind]);
+    return rows.map(row => {
+      checkRootIdentity(row.state, row.id);
+      return {exists: true, version: Number(row.version), state: row.state as S};
+    });
   }
 }

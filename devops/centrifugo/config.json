@@ -1,10 +1,17 @@
 {
   "http_server": {"port": 8000, "internal_port": 9000},
-  "client": {"proxy": {"connect": {
-    "enabled": true, "endpoint": "http://api:8080/api/realtime/connect", "timeout": "3s",
-    "http_headers": ["Cookie", "Origin", "User-Agent"],
-    "http": {"static_headers": {"X-Cafe-Realtime-Proxy": "${CENTRIFUGO_VAR_CONNECT_PROXY_SECRET}"}}
-  }}},
+  "client": {"proxy": {
+    "connect": {
+      "enabled": true, "endpoint": "http://api:8080/api/realtime/connect", "timeout": "3s",
+      "http_headers": ["Cookie", "Origin", "User-Agent"],
+      "http": {"static_headers": {"X-Cafe-Realtime-Proxy": "${CENTRIFUGO_VAR_CONNECT_PROXY_SECRET}"}}
+    },
+    "refresh": {
+      "enabled": true, "endpoint": "http://api:8080/api/realtime/refresh", "timeout": "3s",
+      "http_headers": ["Cookie", "Origin"],
+      "http": {"static_headers": {"X-Cafe-Realtime-Proxy": "${CENTRIFUGO_VAR_CONNECT_PROXY_SECRET}"}}
+    }
+  }},
   "engine": {"type": "redis", "redis": {"prefix": "cafe:realtime"}},
   "channel": {"namespaces": [{
     "name": "cafe", "publication_data_format": "binary",

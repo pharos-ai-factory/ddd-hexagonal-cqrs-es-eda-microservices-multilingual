@@ -27,7 +27,7 @@ func (p *Projection[S]) Find(ctx context.Context, key string) (S, bool, error) {
 	if err != nil {
 		return result, false, err
 	}
-	err = json.Unmarshal(data, &result)
+	err = decodeStored(data, &result)
 	return result, err == nil, err
 }
 func (p *Projection[S]) Record(ctx context.Context, m a.Metadata, key string, revision uint64, state S) error {
@@ -40,7 +40,7 @@ func (p *Projection[S]) Record(ctx context.Context, m a.Metadata, key string, re
 		return err
 	}
 	target := "projection:" + p.name + ":" + key
-	done, _, err := loadIncoming(ctx, tx, m, target)
+	done, _, err := loadIncoming(ctx, tx, m, target, key)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (p *Projection[S]) Record(ctx context.Context, m a.Metadata, key string, re
 	if err == nil {
 		if revision >= previous {
 			var existing S
-			if err = json.Unmarshal(old, &existing); err != nil {
+			if err = decodeStored(old, &existing); err != nil {
 				return err
 			}
 			left, _ := fingerprint(existing)

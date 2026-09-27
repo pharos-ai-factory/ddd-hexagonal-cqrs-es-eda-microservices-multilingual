@@ -31,6 +31,20 @@ The API retries Centrifugo disconnection until accepted. All operator connection
 are disconnected; any other valid session must authenticate again on reconnect.
 There is no single-connection or single-window setting.
 
+Connect responses carry a one-second authorisation deadline, calculated before
+reading the session. After observing durable revocation, the worker records a
+deadline in Valkey and waits beyond that grant window before its final disconnect.
+It crosses the whole deadline second because Centrifugo accepts an equal
+`expire_at`. A successful response still in flight at completion is therefore
+expired when Centrifugo receives it. Worker recovery retains pending work and
+its deadline; an expired deadline key safely starts another wait.
+
+Centrifugo refreshes established connections through the internal
+`/api/realtime/refresh` proxy, forwarding their original Cookie and Origin.
+The API checks that session again and grants at most another minute. Refresh
+does not create a connection or restore a disconnected one. These checks do
+not query business state or create browser polling.
+
 ## Atomic publication
 
 A changed root, its version, command outcome/receipts, domain/integration outbox

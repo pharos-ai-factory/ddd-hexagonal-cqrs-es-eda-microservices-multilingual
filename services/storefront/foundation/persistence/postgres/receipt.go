@@ -12,7 +12,7 @@ import (
 
 // Receipt ownership is serialised independently of the target aggregate.
 // Concurrent conflicting copies of one event cannot affect different targets.
-func loadIncoming(ctx context.Context, tx pgx.Tx, m a.Metadata, target string) (bool, a.Outcome, error) {
+func loadIncoming(ctx context.Context, tx pgx.Tx, m a.Metadata, target, outcomeID string) (bool, a.Outcome, error) {
 	if m.Consumer == "" {
 		return false, a.Outcome{}, nil
 	}
@@ -33,8 +33,8 @@ func loadIncoming(ctx context.Context, tx pgx.Tx, m a.Metadata, target string) (
 	if hash != m.SourceHash || target != originalTarget {
 		return false, a.Outcome{}, fmt.Errorf("event identity reused with conflicting bytes or target")
 	}
-	var outcome a.Outcome
-	if err = json.Unmarshal(data, &outcome); err != nil {
+	outcome, err := decodeOutcome(data, outcomeID)
+	if err != nil {
 		return false, a.Outcome{}, err
 	}
 	return true, outcome, nil

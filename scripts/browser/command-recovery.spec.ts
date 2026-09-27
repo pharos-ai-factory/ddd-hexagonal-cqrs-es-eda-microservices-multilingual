@@ -37,10 +37,14 @@ test('an uncertain command survives lost authentication and recovers after signi
   expect(await page.evaluate(() => sessionStorage.getItem('cafe:pending-command'))).toBe(original);
   await expect(page.getByLabel('Local operator access code')).toBeVisible();
   await login();
+  const recovered = page.waitForResponse(response => response.request().method() === 'POST' &&
+    response.url().includes('/api/v1/menu/drinks/') && response.status() === 200 &&
+    response.request().headers()['idempotency-key'] === attempts[0]);
   await retry.click();
+  await recovered;
   await expect(retry).toHaveCount(0);
   expect(attempts).toHaveLength(3);
   expect(new Set(attempts).size).toBe(1);
-  expect(await page.evaluate(() => sessionStorage.getItem('cafe:pending-command'))).toBeNull();
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('cafe:pending-command'))).toBeNull();
   await expect(page.locator('.list-row').filter({hasText: name})).toHaveCount(1);
 });

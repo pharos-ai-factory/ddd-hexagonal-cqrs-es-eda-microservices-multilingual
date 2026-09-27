@@ -35,6 +35,7 @@ for service in ('engagement', 'web'):
     run('pnpm', '--filter', '@cafe/'+service, 'test')
 run('pnpm', '--filter', '@cafe/engagement', 'exec', 'tsc', '--project', 'tsconfig.bdd.json')
 run('pnpm', 'exec', 'tsc', '--project', 'tests/acceptance/tsconfig.json')
+run('pnpm', 'exec', 'tsc', '--project', 'tests/infrastructure/tsconfig.json')
 run('pnpm', '--filter', '@cafe/engagement', 'test:bdd', '--format', 'json:'+str(REPORTS/'engagement.json'))
 run('node', '--import', 'tsx', 'node_modules/@cucumber/cucumber/bin/cucumber.js',
     '--config', 'tests/acceptance/cucumber.mjs', '--dry-run', '--format', 'json:'+str(REPORTS/'workflows-dry-run.json'))
