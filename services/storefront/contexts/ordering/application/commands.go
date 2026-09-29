@@ -55,7 +55,7 @@ func (h AddLineHandler) Execute(ctx context.Context, m a.Metadata, c AddLine) (a
 	}
 	return h.Orders.Execute(ctx, m, func(s a.Loaded[d.State]) (a.Mutation[d.State], error) {
 		if !s.Exists {
-			return a.Mutation[d.State]{}, core.Reject("not_found", "The order does not exist")
+			return a.Mutation[d.State]{}, orderNotFound()
 		}
 		if !found || s.State.EditionID != c.EditionID {
 			return a.Mutation[d.State]{}, core.Reject("incorrect_edition", "The selection must belong to the order's edition")
@@ -85,7 +85,7 @@ type ChangeQuantityHandler struct{ Orders a.CommandPort[d.State] }
 func (h ChangeQuantityHandler) Execute(ctx context.Context, m a.Metadata, c ChangeQuantity) (a.Outcome, error) {
 	return h.Orders.Execute(ctx, m, func(s a.Loaded[d.State]) (a.Mutation[d.State], error) {
 		if !s.Exists {
-			return a.Mutation[d.State]{}, core.Reject("not_found", "The order does not exist")
+			return a.Mutation[d.State]{}, orderNotFound()
 		}
 		order, err := d.Restore(s.State)
 		if err != nil {
@@ -103,7 +103,7 @@ type PlaceOrderHandler struct{ Orders a.CommandPort[d.State] }
 func (h PlaceOrderHandler) Execute(ctx context.Context, m a.Metadata, _ struct{}) (a.Outcome, error) {
 	return h.Orders.Execute(ctx, m, func(s a.Loaded[d.State]) (a.Mutation[d.State], error) {
 		if !s.Exists {
-			return a.Mutation[d.State]{}, core.Reject("not_found", "The order does not exist")
+			return a.Mutation[d.State]{}, orderNotFound()
 		}
 		order, err := d.Restore(s.State)
 		if err != nil {

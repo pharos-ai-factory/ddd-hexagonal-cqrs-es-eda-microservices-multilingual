@@ -38,7 +38,12 @@ func TestOrderOwnsLineInvariants(t *testing.T) {
 	if order.Snapshot().Lines[0].ID != lineID {
 		t.Fatal("quantity edit replaced the line identity")
 	}
-	assertRejected(t, order.AddLine(id, Selection{"T1", "Tea", 200}, 1), "too_many_drinks")
+	err = order.AddLine(id, Selection{"T1", "Tea", 200}, 1)
+	assertRejected(t, err, "too_many_drinks")
+	var tooMany *TooManyDrinksDomainError
+	if !errors.As(err, &tooMany) {
+		t.Fatalf("expected the named order rule, got %v", err)
+	}
 	if err = order.Place(); err != nil {
 		t.Fatal(err)
 	}

@@ -2,7 +2,16 @@
 from dataclasses import dataclass, field
 from collections.abc import Callable, Mapping
 from typing import Literal, NotRequired, Protocol, TypedDict
-from operations.foundation.domain import RejectionDetail
+from operations.foundation.domain import Rejection, RejectionDetail
+
+
+class ApplicationError(Rejection):
+    """Expected use-case failure, recorded like a domain rejection."""
+
+
+class VersionConflictApplicationError(ApplicationError):
+    def __init__(self) -> None:
+        super().__init__("version_conflict", "The expected aggregate version is stale")
 
 
 class Outcome(TypedDict):

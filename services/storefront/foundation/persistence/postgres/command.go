@@ -57,7 +57,8 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	err = tx.QueryRow(ctx, `SELECT fingerprint,outcome FROM cafe.command_receipts WHERE kind=$1 AND aggregate_id=$2 AND command_name=$3 AND command_id=$4`, s.kind, m.AggregateID, m.Name, m.ID).Scan(&savedHash, &saved)
 	if err == nil {
 		if savedHash != hash {
-			return a.Outcome{AggregateID: m.AggregateID, Rejection: &d.Violation{Code: "idempotency_conflict", Message: "The command identity was reused with different input"}}, nil
+			detail := (&a.ApplicationError{Code: "idempotency_conflict", Message: "The command identity was reused with different input"}).Rejection()
+			return a.Outcome{AggregateID: m.AggregateID, Rejection: &detail}, nil
 		}
 		outcome, err := decodeOutcome(saved, m.AggregateID)
 		if err != nil {
@@ -88,15 +89,17 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	outcome := a.Outcome{AggregateID: m.AggregateID, Version: loaded.Version}
 	var mutation a.Mutation[S]
 	if m.ExpectedVersion != nil && *m.ExpectedVersion != loaded.Version {
-		outcome.Rejection = &d.Violation{Code: "version_conflict", Message: "The expected aggregate version is stale"}
+		detail := (&a.ApplicationError{Code: "version_conflict", Message: "The expected aggregate version is stale"}).Rejection()
+		outcome.Rejection = &detail
 	} else {
 		mutation, err = decide(loaded)
 		if err != nil {
-			var violation *d.Violation
-			if !errors.As(err, &violation) {
+			var expected d.ExpectedError
+			if !errors.As(err, &expected) {
 				return a.Outcome{}, err
 			}
-			outcome.Rejection = violation
+			detail := expected.Rejection()
+			outcome.Rejection = &detail
 		} else {
 			outcome.Status = mutation.Status
 			if err = s.persistMutation(ctx, tx, m, loaded, mutation, &outcome); err != nil {

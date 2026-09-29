@@ -4,6 +4,8 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Add service-local domain and application error types while retaining stable
+  recorded rejection codes and retryable infrastructure failures.
 - Split the operator workflow into focused panels, validate Engagement snapshots
   at the persistence boundary and simplify command parsing and transaction flow.
 - Restrict Centrifugo operations through per-context publisher credentials and a

@@ -12,8 +12,21 @@ type Violation struct {
 	Message string `json:"message"`
 }
 
-func (v *Violation) Error() string      { return v.Code + ": " + v.Message }
-func Reject(code, message string) error { return &Violation{code, message} }
+func (v *Violation) Error() string        { return v.Code + ": " + v.Message }
+func (v *Violation) Rejection() Violation { return *v }
+func Reject(code, message string) error   { return &Violation{code, message} }
+
+// ExpectedError is the only error shape a command port records as an outcome.
+type ExpectedError interface {
+	error
+	Rejection() Violation
+}
+
+// DomainError marks a named aggregate rule, apart from generic rejections.
+type DomainError interface {
+	ExpectedError
+	DomainError()
+}
 
 var identifier = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 

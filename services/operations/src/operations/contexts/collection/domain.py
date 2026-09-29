@@ -1,7 +1,12 @@
 from dataclasses import dataclass, replace
 import re
 from typing import ClassVar, Literal, TypedDict
-from operations.foundation.domain import CorruptState, Rejection, identifier, record, text
+from operations.foundation.domain import CorruptState, DomainError, Rejection, identifier, record, text
+
+
+class PickupAlreadyCollectedDomainError(DomainError):
+    def __init__(self) -> None:
+        super().__init__("pickup_already_collected", "This pickup has already been collected")
 
 type PickupStatus = Literal["ready", "collected"]
 
@@ -81,7 +86,7 @@ class Pickup:
 
     def collect(self, code: str) -> None:
         if self._state.status != "ready":
-            raise Rejection("pickup_already_collected", "This pickup has already been collected")
+            raise PickupAlreadyCollectedDomainError()
         if code != self._state.code.value:
             raise Rejection("incorrect_collection_code", "The collection code does not match")
         self._state = replace(self._state, status="collected")

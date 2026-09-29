@@ -43,6 +43,19 @@ type Outcome struct {
 	Rejection   *domain.Violation `json:"rejection,omitempty"`
 }
 
+// ApplicationError represents an expected command failure outside aggregate policy.
+type ApplicationError struct {
+	Code    string
+	Message string
+}
+
+var _ domain.ExpectedError = (*ApplicationError)(nil)
+
+func (e *ApplicationError) Error() string { return e.Code + ": " + e.Message }
+func (e *ApplicationError) Rejection() domain.Violation {
+	return domain.Violation{Code: e.Code, Message: e.Message}
+}
+
 type Loaded[S any] struct {
 	Exists  bool   `json:"exists"`
 	Version uint64 `json:"version"`

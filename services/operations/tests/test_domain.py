@@ -2,7 +2,7 @@ from pathlib import Path
 from collections.abc import Callable
 import pytest
 from operations.contexts.preparation.domain import PreparationTicket, TicketState
-from operations.contexts.collection.domain import Pickup
+from operations.contexts.collection.domain import Pickup, PickupAlreadyCollectedDomainError
 from operations.adaptors.codec import decode
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.foundation.domain import Rejection
@@ -35,8 +35,10 @@ def test_collection_code_and_single_handover() -> None:
     assert (pickup.snapshot(), pickup.events()) == (before, facts)
     pickup.collect("AB1234")
     assert pickup.snapshot()["status"] == "collected"
-    with pytest.raises(Rejection):
+    with pytest.raises(PickupAlreadyCollectedDomainError) as repeated:
         pickup.collect("AB1234")
+    assert repeated.value.outcome() == {
+        "code": "pickup_already_collected", "message": "This pickup has already been collected"}
     assert [fact.name for fact in pickup.events()].count("OrderCollected") == 1
 
 

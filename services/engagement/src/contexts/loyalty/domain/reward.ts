@@ -1,5 +1,9 @@
-import {CorruptState, identifier, Rejection} from '../../../foundation/domain.js';
+import {CorruptState, DomainError, identifier, Rejection} from '../../../foundation/domain.js';
 import type {Grant} from './account.js';
+
+export class RewardUnavailableDomainError extends DomainError {
+  constructor() { super('reward_unavailable', 'The reward is no longer available'); }
+}
 
 export type RewardState = Readonly<{
   id: string; grantId: string; customerId: string; benefit: string;
@@ -29,12 +33,12 @@ export class Reward {
   }
   redeem(orderId: string, now: Date): void {
     identifier(orderId);
-    if (this.#state.status !== 'issued') throw new Rejection('reward_unavailable', 'The reward is no longer available');
+    if (this.#state.status !== 'issued') throw new RewardUnavailableDomainError();
     if (now.getTime() >= Date.parse(this.#state.expiresAt)) throw new Rejection('reward_expired', 'The reward has expired');
     this.#state = {...this.#state, status: 'redeemed', redeemedFor: orderId};
   }
   expire(now: Date): void {
-    if (this.#state.status !== 'issued') throw new Rejection('reward_unavailable', 'The reward is no longer available');
+    if (this.#state.status !== 'issued') throw new RewardUnavailableDomainError();
     if (now.getTime() < Date.parse(this.#state.expiresAt)) throw new Rejection('reward_not_expired', 'Validity has not ended');
     this.#state = {...this.#state, status: 'expired'};
   }

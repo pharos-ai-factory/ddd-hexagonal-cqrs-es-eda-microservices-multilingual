@@ -18,6 +18,10 @@ class Rejection(Exception):
         return {"code": self.code, "message": self.message}
 
 
+class DomainError(Rejection):
+    """Expected failure of a context-owned business rule."""
+
+
 class CorruptState(ValueError):
     """Authoritative state cannot be restored; never record a business outcome."""
 

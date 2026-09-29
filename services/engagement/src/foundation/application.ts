@@ -1,3 +1,12 @@
+import {Rejection} from './domain.js';
+
+// Expected use-case failures share the recorded rejection contract with domain errors.
+export abstract class ApplicationError extends Rejection {}
+
+export class VersionConflictApplicationError extends ApplicationError {
+  constructor() { super('version_conflict', 'The expected version is stale'); }
+}
+
 export type Metadata = {
   id: string; target: string; name: string; correlation: string; input: unknown;
   expected?: number; causation?: string; consumer?: string; sourceId?: string; sourceHash?: string;

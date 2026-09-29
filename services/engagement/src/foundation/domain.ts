@@ -3,6 +3,9 @@ export class Rejection extends Error {
   outcome() { return {code: this.code, message: this.message}; }
 }
 
+// Contexts define named subclasses for rules callers need to identify.
+export abstract class DomainError extends Rejection {}
+
 export class CorruptState extends Error {
   override name = 'CorruptState';
 }

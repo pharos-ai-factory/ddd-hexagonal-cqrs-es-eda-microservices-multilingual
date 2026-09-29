@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 from operations.foundation.pagination import Page, PageRequest
-from operations.foundation.application import Change, Loaded, Metadata, Outcome
+from operations.foundation.application import Change, Loaded, Metadata, Outcome, VersionConflictApplicationError
 from operations.foundation.domain import CorruptState, Rejection, identifier, integer
 from operations.adaptors import codec, receipts
 
@@ -99,7 +99,7 @@ class Commands[S: Mapping[str, object]]:
             outcome = {"aggregateId": m.target, "version": version, "status": ""}
             try:
                 if m.expected is not None and m.expected != version:
-                    raise Rejection("version_conflict", "The expected aggregate version is stale")
+                    raise VersionConflictApplicationError()
                 change = decide(state)
                 outcome["status"] = change.status
             except Rejection as rejection:

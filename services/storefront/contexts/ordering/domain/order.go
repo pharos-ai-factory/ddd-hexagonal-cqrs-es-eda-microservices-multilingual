@@ -110,7 +110,7 @@ func (o *Order) AddLine(id string, selection Selection, quantity int) error {
 		}
 	}
 	if o.total()+line.quantity.Value() > 5 {
-		return core.Reject("too_many_drinks", "An order contains at most five drinks")
+		return tooManyDrinks()
 	}
 	o.lines = append(o.lines, line)
 	o.facts = append(o.facts, core.Fact{Name: "OrderLineAdded", Data: line.Snapshot()})
@@ -127,7 +127,7 @@ func (o *Order) ChangeQuantity(id string, quantity int) error {
 	for i, line := range o.lines {
 		if line.id == id {
 			if o.total()-line.quantity.Value()+q.Value() > 5 {
-				return core.Reject("too_many_drinks", "An order contains at most five drinks")
+				return tooManyDrinks()
 			}
 			if line.quantity.Value() == q.Value() {
 				return nil

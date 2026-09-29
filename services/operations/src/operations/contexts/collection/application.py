@@ -2,8 +2,12 @@ from collections.abc import Callable
 from typing import TypedDict
 from operations.contexts.collection.domain import Pickup, PickupSnapshot, PickupOpened, OrderCollected
 from operations.contracts import events
-from operations.foundation.application import Change, CommandPort, Metadata, Outcome, Publication
-from operations.foundation.domain import Rejection
+from operations.foundation.application import ApplicationError, Change, CommandPort, Metadata, Outcome, Publication
+
+
+class PickupNotFoundApplicationError(ApplicationError):
+    def __init__(self) -> None:
+        super().__init__("not_found", "The pickup does not exist")
 
 
 class CollectOrderCommand(TypedDict):
@@ -35,7 +39,7 @@ class CollectOrder:
     def execute(self, metadata: Metadata, command: CollectOrderCommand) -> Outcome:
         def decide(state: PickupSnapshot | None) -> Change[PickupSnapshot]:
             if state is None:
-                raise Rejection("not_found", "The pickup does not exist")
+                raise PickupNotFoundApplicationError()
             pickup = Pickup.restore(state)
             pickup.collect(command["code"])
             publications = tuple(Publication("collection.order-collected", events.OrderCollected(

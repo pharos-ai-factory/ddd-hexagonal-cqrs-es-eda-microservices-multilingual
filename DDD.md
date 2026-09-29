@@ -32,6 +32,12 @@ Commands request one aggregate transition. A handler records typed expected
 rejections as stable outcomes. Unavailable infrastructure is retryable and
 does not become a business rejection.
 
+Domain and application errors may be named classes or structs in their owning
+context. Service-local foundations define the shared expected-rejection shape;
+command ports serialise it as the existing code and message, not as a runtime
+class. Corrupt restored state and infrastructure failures remain retryable. See
+decision 0005.
+
 Clients supply an idempotency key and expected version. Repeating the same
 command returns its recorded outcome. Reusing the identity with different
 material input is a conflict. Duplicate/no-op transitions emit no new events.

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {LoyaltyAccount} from './account.js';
-import {Reward} from './reward.js';
+import {Reward, RewardUnavailableDomainError} from './reward.js';
 import {CorruptState, Rejection} from '../../../foundation/domain.js';
 
 const ids = Array.from({length: 5}, (_, index) => `00000000-0000-4000-8000-${String(index+1).padStart(12, '0')}`);
@@ -35,7 +35,8 @@ test('redemption is single use and validity has an exact supplied deadline', () 
   assert.throws(() => reward.redeem(ids[3]!, new Date('2026-01-08T00:00:00Z')), {code: 'reward_expired'});
   assert.deepEqual(reward.snapshot(), before);
   reward.redeem(ids[3]!, new Date('2026-01-07T23:59:59Z'));
-  assert.throws(() => reward.redeem(ids[4]!, new Date('2026-01-07T23:59:59Z')), {code: 'reward_unavailable'});
+  assert.throws(() => reward.redeem(ids[4]!, new Date('2026-01-07T23:59:59Z')),
+    error => error instanceof RewardUnavailableDomainError && error.outcome().code === 'reward_unavailable');
   assert.equal(reward.snapshot().redeemedFor, ids[3]);
 });
 test('invalid issuance is a business rejection, but corrupt reward restoration is retryable', () => {

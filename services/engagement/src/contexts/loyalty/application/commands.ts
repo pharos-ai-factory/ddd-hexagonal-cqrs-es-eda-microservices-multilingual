@@ -1,5 +1,4 @@
-import type {CommandPort, IdentityFactory, Metadata, Publication} from '../../../foundation/application.js';
-import {Rejection} from '../../../foundation/domain.js';
+import {ApplicationError, type CommandPort, type IdentityFactory, type Metadata, type Publication} from '../../../foundation/application.js';
 import type {OrderCollected, RewardEarned} from '../../../contracts/events.js';
 import {LoyaltyAccount, type AccountState} from '../domain/account.js';
 import {Reward, type RewardState} from '../domain/reward.js';
@@ -38,10 +37,14 @@ export class RedeemReward {
   constructor(private rewards: CommandPort<RewardState>, private clock: () => Date) {}
   execute(m: Metadata, command: {orderId: string}) {
     return this.rewards.execute(m, loaded => {
-      if (!loaded) throw new Rejection('not_found', 'The reward does not exist');
+      if (!loaded) throw new RewardNotFoundApplicationError();
       const reward = new Reward(loaded.state);
       reward.redeem(command.orderId, this.clock());
       return {state: reward.snapshot(), status: 'redeemed', changed: true};
     });
   }
+}
+
+export class RewardNotFoundApplicationError extends ApplicationError {
+  constructor() { super('not_found', 'The reward does not exist'); }
 }

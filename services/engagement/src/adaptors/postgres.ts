@@ -1,6 +1,6 @@
 import {Pool, type PoolClient} from 'pg';
 import {createHash} from 'node:crypto';
-import type {Change, CommandPort, Loaded, Metadata, Outcome, QueryPort} from '../foundation/application.js';
+import {VersionConflictApplicationError, type Change, type CommandPort, type Loaded, type Metadata, type Outcome, type QueryPort} from '../foundation/application.js';
 import type {Page, PageRequest} from '../foundation/pagination.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 import {encode, realtime} from './codec.js';
@@ -82,7 +82,7 @@ export class Commands<S> implements CommandPort<S> {
       const outcome: Outcome = {aggregateId: m.target, version, status: ''};
       let change: Change<S> | undefined;
       try {
-        if (m.expected !== undefined && m.expected !== version) throw new Rejection('version_conflict', 'The expected version is stale');
+        if (m.expected !== undefined && m.expected !== version) throw new VersionConflictApplicationError();
         change = decide(loaded);
         outcome.status = change.status;
       } catch (error) {
