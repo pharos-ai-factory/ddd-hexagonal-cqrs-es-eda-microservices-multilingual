@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/config"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/http"
 	"log"
@@ -25,7 +26,8 @@ type Accepted struct {
 }
 
 func main() {
-	if os.Getenv("APP_ENV") != "development" || len(os.Getenv("API_KEY")) < 32 {
+	apiKey, err := config.Secret("API_KEY")
+	if os.Getenv("APP_ENV") != "development" || err != nil || len(apiKey) < 32 {
 		log.Fatal("development configuration is required")
 	}
 	root := os.Getenv("DATA_DIR")
@@ -124,7 +126,7 @@ func main() {
 		}
 		web.JSON(w, 200, items)
 	})
-	server := http.Server{Addr: ":8080", Handler: web.Auth(os.Getenv("API_KEY"), mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second}
+	server := http.Server{Addr: ":8080", Handler: web.Auth(apiKey, mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second}
 	log.Fatal(server.ListenAndServe())
 }
 func persist(root, path string, data []byte) error {

@@ -1,10 +1,10 @@
 """Fenced outbox dispatch and confirmed, manual-acknowledgement consumption."""
+from operations.foundation.secrets import secret
 import base64
 from collections.abc import Callable
 from dataclasses import dataclass
 from hashlib import sha256
 import json
-import logging
 import os
 from threading import Event
 from typing import NotRequired, TypedDict
@@ -13,6 +13,7 @@ import pika
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
 from pika.spec import Basic
 from operations.adaptors.codec import decode
+from operations.adaptors.diagnostics import failure
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.adaptors.postgres import Database
 from operations.foundation.application import Metadata, Outcome
@@ -95,10 +96,11 @@ def relay(database: Database, broker_url: str, stop: Event) -> None:
                                 correlation_id=event.correlation_id, headers={"contract-version": 1}), mandatory=True)
                         finish(database, row)
                     except Exception as error:
-                        finish(database, row, error=str(error))
+                        failure(database.owner, "outbox.publish", error, row["id"])
+                        finish(database, row, error=type(error).__name__)
                         raise
         except Exception as error:
-            logging.warning("Publication retained for %s: %s", database.owner, type(error).__name__)
+            failure(database.owner, "outbox.reconnect", error)
             stop.wait(1)
 
 
@@ -110,10 +112,10 @@ def realtime_relay(database: Database, stop: Event) -> None:
             if not row:
                 stop.wait(0.1)
                 continue
-            request = urllib.request.Request(os.environ["CENTRIFUGO_API_URL"]+"/api/publish", method="POST",
+            request = urllib.request.Request(os.environ["REALTIME_GATEWAY_URL"]+"/api/publish", method="POST",
                 data=json.dumps({"channel": row["channel"], "b64data": base64.b64encode(row["body"]).decode(),
                                  "idempotency_key": str(row["id"])}).encode(),
-                headers={"Content-Type": "application/json", "X-API-Key": os.environ["CENTRIFUGO_API_KEY"],
+                headers={"Content-Type": "application/json", "X-API-Key": secret(database.owner.upper()+"_REALTIME_KEY"),
                          "X-Centrifugo-Error-Mode": "transport"})
             with urllib.request.urlopen(request, timeout=5) as response:
                 if "error" in json.load(response):
@@ -122,11 +124,11 @@ def realtime_relay(database: Database, stop: Event) -> None:
         except Exception as error:
             if row:
                 try:
-                    finish(database, row, True, str(error))
-                except Exception:
+                    finish(database, row, True, type(error).__name__)
+                except Exception as finish_error:
                     # A lost database connection also leaves a recoverable lease.
-                    logging.warning("Realtime dispatch lease retained for %s", database.owner)
-            logging.warning("Realtime publication retained for %s: %s", database.owner, type(error).__name__)
+                    failure(database.owner, "realtime.complete", finish_error, row["id"])
+            failure(database.owner, "realtime.publish", error, row["id"] if row else "")
             stop.wait(1)
 
 
@@ -155,6 +157,7 @@ def consume[P](url: str, subscription: Subscription[P], stop: Event) -> None:
                     if method.delivery_tag is None:
                         raise ValueError("Missing broker delivery tag")
                     validation = True
+                    event_id, correlation = "", ""
                     counter = (properties.headers or {}).get("ref-attempt", 0)
                     valid_attempt = type(counter) is int and 0 <= counter <= 3
                     attempt = counter if valid_attempt else 0
@@ -162,6 +165,7 @@ def consume[P](url: str, subscription: Subscription[P], stop: Event) -> None:
                         if not valid_attempt:
                             raise ValueError("Invalid retry counter")
                         event, wire_payload = decode(body)
+                        event_id, correlation = event.id, event.correlation_id
                         if (event.name != sub.event or (event.visibility == "domain" and event.context != sub.owner)
                             or properties.content_type != "application/x-protobuf" or properties.delivery_mode != 2
                             or properties.message_id != event.id or properties.type != event.name
@@ -184,6 +188,7 @@ def consume[P](url: str, subscription: Subscription[P], stop: Event) -> None:
                         # Confirmation of the transfer precedes source acknowledgement.
                         channel.basic_publish("ref."+sub.owner+".delivery", queue+suffix, body,
                                               properties=properties, mandatory=True)
+                        failure(sub.owner, sub.consumer, error, event_id, correlation, suffix == ".dead")
                     channel.basic_ack(method.delivery_tag)
 
                 channel.basic_consume(queue, receive, auto_ack=False)
@@ -191,5 +196,5 @@ def consume[P](url: str, subscription: Subscription[P], stop: Event) -> None:
                     # Pika accepts fractional seconds; types-pika incorrectly declares int.
                     connection.process_data_events(time_limit=0.5)  # type: ignore[arg-type]
         except Exception as error:
-            logging.warning("Consumer reconnecting %s: %s", sub.consumer, type(error).__name__)
+            failure(sub.owner, sub.consumer+".reconnect", error)
             stop.wait(1)

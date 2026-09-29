@@ -3,6 +3,7 @@
 import os
 import json
 from hashlib import sha256
+from migration_catalogue import generate as generate_migration_metadata
 from pathlib import Path
 import shutil
 import subprocess
@@ -31,3 +32,5 @@ checksums = {str(version): sha256((ROOT/f"contracts/persistence/{name}").read_by
 for directory in (python_out, ROOT/"services/engagement/src/adaptors/generated"):
     (directory/"persistence.json").write_text(json.dumps(checksums, indent=2)+"\n")
 subprocess.run(["node", "scripts/generate-typescript.mjs"], cwd=ROOT, check=True)
+
+generate_migration_metadata()

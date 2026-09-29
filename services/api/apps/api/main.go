@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	runtimeconfig "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/config"
 	"log"
 	"net/http"
 	"os"
@@ -15,9 +16,9 @@ import (
 )
 
 func required(name string) string {
-	value := os.Getenv(name)
-	if value == "" {
-		log.Fatal(name + " is required")
+	value, err := runtimeconfig.Secret(name)
+	if err != nil {
+		log.Fatal(err)
 	}
 	return value
 }
@@ -28,7 +29,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	store, err := sessions.Open(ctx, required("VALKEY_ADDRESS"), required("SESSION_PASSWORD"),
-		required("CENTRIFUGO_API_URL"), required("CENTRIFUGO_API_KEY"))
+		required("REALTIME_GATEWAY_URL"), required("SESSION_REALTIME_KEY"))
 	if err != nil {
 		log.Fatal("session store unavailable")
 	}
@@ -44,7 +45,7 @@ func main() {
 			backends[owner] = web.Backend{URL: required(prefix + "_URL"), Key: required(prefix + "_API_KEY")}
 		}
 	}
-	config := web.Config{Sessions: store, OperatorPassword: required("OPERATOR_PASSWORD"), CLIKey: required("API_KEY"),
+	config := web.Config{Diagnostics: func(ctx context.Context) (any, error) { return store.Diagnostics(ctx) }, Sessions: store, OperatorPassword: required("OPERATOR_PASSWORD"), CLIKey: required("API_KEY"),
 		ProxySecret: required("CONNECT_PROXY_SECRET"), Origins: strings.Split(required("WEB_ORIGINS"), ","), Backends: backends}
 	server := &http.Server{Addr: ":8080", Handler: config.Handler(), ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout: 10 * time.Second, WriteTimeout: 20 * time.Second, IdleTimeout: 30 * time.Second}

@@ -90,3 +90,27 @@ test('losing an idle PostgreSQL connection does not terminate the service and th
     await db.pool.end();
   }
 });
+
+test('queries traverse more than one page and retain unpaginated reads', async () => {
+  const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
+  try {
+    const commands = new Commands<AccountState>(db, 'account'), queries = new Queries<AccountState>(db, 'account');
+    for (let index = 0; index < 105; index++) {
+      const id = randomUUID(), state: AccountState = {id, collections: 0, stampBalance: 0, grantsEarned: 0};
+      await commands.execute({id: randomUUID(), target: id, name: 'test.pagination', correlation: id, expected: 0, input: {}},
+        () => ({state, status: 'active', changed: true}));
+    }
+    const all = await queries.list();
+    assert.ok(all.length >= 105);
+    const combined = [];
+    let after: string | undefined;
+    do {
+      const page = await queries.page({limit: 37, after});
+      assert.ok(page.items.length <= 37);
+      combined.push(...page.items);
+      if (page.nextId) assert.ok(page.nextId > (after ?? ''));
+      after = page.nextId;
+    } while (after);
+    assert.deepEqual(combined, all);
+  } finally { await db.pool.end(); }
+});

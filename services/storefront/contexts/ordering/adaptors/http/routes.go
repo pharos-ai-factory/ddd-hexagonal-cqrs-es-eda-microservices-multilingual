@@ -15,7 +15,7 @@ type Handlers struct {
 }
 
 func Mount(mux *http.ServeMux, h Handlers) {
-	mux.HandleFunc("GET /v1/ordering/orders", web.List(h.OrderingQueries.List))
+	mux.HandleFunc("GET /v1/ordering/orders", web.PagedList(h.OrderingQueries.List, h.OrderingQueries.Page))
 	mux.HandleFunc("GET /v1/ordering/orders/{id}", web.Get(h.OrderingQueries.Get))
 	mux.HandleFunc("POST /v1/ordering/orders/{id}", web.Command("ordering.CreateOrder", h.CreateOrder.Execute))
 	mux.HandleFunc("POST /v1/ordering/orders/{id}/lines", web.Command("ordering.AddLine", h.AddLine.Execute))

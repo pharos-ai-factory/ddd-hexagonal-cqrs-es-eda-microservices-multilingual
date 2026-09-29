@@ -19,19 +19,23 @@ that the live workflows passed.
 
 `pnpm test:integration` provisions a disposable Compose project with random ports
 and separate credentials. It builds all applications, including the Next.js
-production build used locally, and runs:
+static export served by the ingress, and runs:
 
 | Boundary | Required evidence |
 | --- | --- |
 | Go PostgreSQL | State/receipt/outbox atomicity, terminated connection, concurrent commands, conflicting consumer identities, restricted roles, immutable evidence and fenced leases |
 | Python and TypeScript PostgreSQL | Encoder-failure rollback, recorded retry outcomes, conflicting input, expected-version races, atomic browser publications and realtime lease fencing |
-| RabbitMQ | Protobuf metadata, confirmed mandatory publication, commit-before-ACK redelivery, bounded retry, dead-letter preservation, replay and private-topic restrictions |
+| RabbitMQ | Protobuf metadata, confirmed mandatory publication, commit-before-ACK redelivery, bounded retry, dead-letter preservation, replay, private-topic restrictions and denial of runtime topology mutation |
+| Context migrations | Independent owner ledgers, additive upgrade preserving roots, idempotent reapplication, checksum/owner rejection and rollback |
+| Query completeness | More than 100 roots in each language; complete unpaginated arrays and cursor traversal without omissions or duplicates |
 | Cross-language workflow | Menu → order → preparation → collection → account → reward → notifications; Operations outage and paused private Reward consumer |
 | Gherkin PostgreSQL | Recorded `menu_pending` after projection arrival, new-attempt success and conflicting key reuse; atomic browser intent |
 | Gherkin live workflows | Ten focused scenarios: repeated business facts with new event IDs, duplicate grants/notifications, concurrent collections/redemptions, customer isolation, lost provider response and recorded completion rejection |
 | Provider | Acceptance followed by a lost response creates one provider effect |
-| Browser / Centrifugo | Two independent windows, persisted uncertain command retry across authentication loss, typed live updates, no business polling, recovered history, missing-history reconciliation, mobile layout and logout |
-| Valkey authority | Realtime credentials cannot write session keys or administer ACL users; permission probes require a disposable project |
+| Browser / Centrifugo | Two independent windows, more than 100 drinks, persisted uncertain command retry across authentication loss, typed live updates, no business polling, recovered history, missing-history reconciliation, mobile layout and logout |
+| Realtime authority | Context credentials cannot publish another channel, disconnect sessions or use administrative APIs |
+| Workflow diagnostics | Authenticated owned backlog metrics in all runtimes, pending-work age, redacted pre-claim failures and session revocation counters |
+| Valkey authority | Realtime credentials cannot authenticate to session Valkey, write session keys or administer ACL users; permission probes require a disposable project |
 | In-flight authentication | A held successful connect response cannot restore access after the real Go session worker has completed logout disconnection |
 
 Fixtures use real PostgreSQL and RabbitMQ. Missing infrastructure is a failure,

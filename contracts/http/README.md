@@ -117,10 +117,24 @@ An item is `{"exists":true,"version":3,"state":{...}}`; a list is an array of
 items. `state` is the JSON snapshot declared in each context's domain package.
 Queries never advance an aggregate.
 
-Lists return the first 100 rows in aggregate-ID order. They are diagnostic
-endpoints, not a paginated customer API. Repeated demos can eventually exceed
-this limit; use a fresh development dataset or the isolated integration lane. The
-scripted journey uses fresh IDs and observes its own records within bounded
+Without pagination parameters, lists return their complete array in aggregate-ID
+order. Queries opt into pagination separately from the ordinary query port:
+
+```text
+GET /v1/menu/drinks?limit=100
+GET /v1/menu/drinks?limit=100&cursor=<nextCursor>
+```
+
+Paginated responses are `{"items":[...],"nextCursor":"..."}`. The last page has
+`nextCursor: null`; `limit` must be an integer from 1 to 100. A cursor is opaque,
+versioned and bound to its resource. Invalid cursors, duplicate pagination
+parameters and foreign-resource cursors return 400. A cursor must be accompanied by `limit`. UUID keysets
+avoid offset shifts; a scan is not a single snapshot across requests. Existing
+item queries and explicitly unpaginated list queries retain their shapes.
+
+The browser's `query<T>` helper supports any ordinary response and `queryAll<T>`
+traverses paginated results. Pagination does not introduce periodic polling.
+The scripted journey uses fresh IDs and observes its records within bounded
 deadlines. `GET /healthz` means the HTTP process has started; it is not proof that
 every queue has drained or every workflow has completed.
 

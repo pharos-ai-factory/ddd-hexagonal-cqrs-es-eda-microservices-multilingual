@@ -22,14 +22,21 @@ import (
 
 func fixture(t *testing.T) (context.Context, string, Subscription, a.Message, []byte) {
 	t.Helper()
+	return ownedFixture(t, "loyalty")
+}
+func ownedFixture(t *testing.T, owner string) (context.Context, string, Subscription, a.Message, []byte) {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(t.Context(), 25*time.Second)
 	t.Cleanup(cancel)
-	url := os.Getenv("LOYALTY_BROKER_URL")
+	url := os.Getenv(strings.ToUpper(owner) + "_BROKER_URL")
 	if url == "" {
-		t.Fatal("integration lane requires LOYALTY_BROKER_URL")
+		t.Fatalf("integration lane requires %s_BROKER_URL", strings.ToUpper(owner))
 	}
-	consumer := "loyalty.test-" + store.NewID()
-	binding := Binding{Consumer: consumer, Context: "loyalty", Event: "loyalty.reward-earned", Visibility: "domain"}
+	consumer := owner + ".test-" + store.NewID()
+	binding := Binding{Consumer: consumer, Context: owner, Event: "loyalty.reward-earned", Visibility: "domain"}
+	if owner == "ordering" {
+		binding.Event, binding.Visibility = "ordering.order-placed", "integration"
+	}
 	if err := Declare(os.Getenv("BROKER_ADMIN_URL"), []Binding{binding}); err != nil {
 		t.Fatal(err)
 	}
@@ -50,6 +57,11 @@ func fixture(t *testing.T) (context.Context, string, Subscription, a.Message, []
 	})
 	account := store.NewID()
 	message := a.Message{ID: store.NewID(), Name: binding.Event, Context: "loyalty", Visibility: a.Private, ContractVersion: 1, AggregateKind: "account", AggregateID: account, AggregateVersion: 3, CorrelationID: store.NewID(), CausationID: store.NewID(), OccurredAt: time.Now().UTC(), Payload: model.RewardEarned{AccountID: account, GrantID: store.NewID(), Benefit: "one free drink", ValidDays: 7}}
+	if owner == "ordering" {
+		message.Context, message.Visibility, message.AggregateKind = owner, a.Public, "order"
+		message.Payload = model.OrderPlaced{OrderID: account, CustomerID: store.NewID(), EditionID: store.NewID(), Currency: "GBP",
+			Lines: []model.Line{{ID: store.NewID(), OfferCode: "COFFEE", Name: "Coffee", Quantity: 1, Minor: 300}}}
+	}
 	body, err := codec.Encode(message)
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +75,7 @@ func publishDirect(t *testing.T, ctx context.Context, url, key string, m a.Messa
 		t.Fatal(err)
 	}
 	defer p.Close()
-	err = p.send(ctx, DeliveryExchange("loyalty"), key, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Type: m.Name, AppId: m.Context, CorrelationId: m.CorrelationID, Body: body, Headers: rabbit.Table{"contract-version": int32(1)}})
+	err = p.send(ctx, DeliveryExchange(m.Context), key, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Type: m.Name, AppId: m.Context, CorrelationId: m.CorrelationID, Body: body, Headers: rabbit.Table{"contract-version": int32(1)}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,8 +93,8 @@ func TestMandatoryPublicationIsNotSuccessfulWhenUnroutable(t *testing.T) {
 	}
 }
 func TestCommitThenLostAcknowledgementDoesNotRepeatEffect(t *testing.T) {
-	ctx, url, sub, message, body := fixture(t)
-	db, err := store.Open(ctx, os.Getenv("LOYALTY_DATABASE_URL"), "loyalty", codec.Encode)
+	ctx, url, sub, message, body := ownedFixture(t, "ordering")
+	db, err := store.Open(ctx, os.Getenv("ORDERING_DATABASE_URL"), "ordering", codec.Encode)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,9 +250,20 @@ func TestPrivateDomainBindingIsDeniedToAnotherContext(t *testing.T) {
 	}
 	defer channel.Close()
 	queue := "ref.ordering.private-test-" + store.NewID()
-	if _, err = channel.QueueDeclare(queue, true, false, false, false, rabbit.Table{"x-queue-type": "quorum"}); err != nil {
+	admin, err := rabbit.Dial(os.Getenv("BROKER_ADMIN_URL"))
+	if err != nil {
 		t.Fatal(err)
 	}
+	defer admin.Close()
+	topology, err := admin.Channel()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer topology.Close()
+	if _, err = topology.QueueDeclare(queue, true, false, false, false, rabbit.Table{"x-queue-type": "quorum"}); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _, _ = topology.QueueDelete(queue, false, false, false) }()
 	err = channel.QueueBind(queue, "domain.loyalty.reward-earned", Exchange, false, nil)
 	if err == nil {
 		t.Fatal("Ordering bound a private Loyalty domain event")

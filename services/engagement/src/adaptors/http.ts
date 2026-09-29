@@ -1,9 +1,11 @@
 import {createServer, type IncomingMessage, type ServerResponse} from 'node:http';
 import {timingSafeEqual} from 'node:crypto';
 import type {Metadata, Outcome, QueryPort} from '../foundation/application.js';
+import type {PagedQueryPort} from '../foundation/pagination.js';
+import {pageRequest, pageResponse} from './pagination.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 type Route = {
-  resource: string; queries: QueryPort<unknown>;
+  resource: string; queries: QueryPort<unknown> & Partial<Pick<PagedQueryPort<unknown>, 'page'>>;
   commands?: Record<string, {name: string; fields: string[]; execute(m: Metadata, input: Record<string, string>): Promise<Outcome>}>;
 };
 function json(response: ServerResponse, status: number, body: unknown) {
@@ -19,7 +21,7 @@ async function body(request: IncomingMessage) {
   }
   return JSON.parse(Buffer.concat(buffers).toString()) as unknown;
 }
-export function server(key: string, routes: Route[]) {
+export function server(key: string, routes: Route[], diagnostics?: () => Promise<unknown>) {
   if (key.length < 32) throw new Error('A development service key is required');
   return createServer((request, response) => {
     void (async () => {
@@ -28,9 +30,16 @@ export function server(key: string, routes: Route[]) {
       if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
         json(response, 401, {code: 'unauthorised'}); return;
       }
-      const path = new URL(request.url ?? '/', 'http://internal').pathname;
+      const url = new URL(request.url ?? '/', 'http://internal'), path = url.pathname;
+      if (path === '/diagnostics' && request.method === 'GET' && diagnostics) {
+        response.setHeader('cache-control', 'no-store'); json(response, 200, await diagnostics()); return;
+      }
       for (const route of routes) {
-        if (path === route.resource && request.method === 'GET') { json(response, 200, await route.queries.list()); return; }
+        if (path === route.resource && request.method === 'GET') {
+          const page = pageRequest(url.searchParams, path);
+          if (page && !route.queries.page) throw new Rejection('invalid_pagination', 'This query does not support pagination');
+          json(response, 200, page ? pageResponse(await route.queries.page!(page), path) : await route.queries.list()); return;
+        }
         if (!path.startsWith(route.resource+'/')) continue;
         const [identity, action, extra] = path.slice(route.resource.length+1).split('/');
         identifier(identity ?? '');

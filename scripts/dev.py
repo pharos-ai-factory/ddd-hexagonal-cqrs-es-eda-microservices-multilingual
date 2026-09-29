@@ -4,7 +4,6 @@ import argparse
 import base64
 import json
 import http.client
-from hashlib import sha256
 import os
 from pathlib import Path
 import secrets
@@ -13,6 +12,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from secret_files import atomic_private_write, compose_environment, read_configuration, resolve_files
 
 ROOT = Path(__file__).resolve().parents[1]
 OWNERS = ("menu", "ordering", "preparation", "collection", "loyalty", "communication")
@@ -27,27 +27,29 @@ def free_port():
         return sock.getsockname()[1]
 
 def configure(path, disposable=False):
-    values = load(path) if path.exists() else {}
+    values = read_configuration(path) if path.exists() or path.is_symlink() else {}
     for key in ("POSTGRES_PASSWORD", "BROKER_PASSWORD", "API_KEY", "DELIVERY_KEY", "OPERATOR_PASSWORD",
                 "SESSION_PASSWORD", "REALTIME_REDIS_PASSWORD", "CENTRIFUGO_API_KEY", "CONNECT_PROXY_SECRET",
-                "STOREFRONT_API_KEY", "OPERATIONS_API_KEY", "ENGAGEMENT_API_KEY"):
-        values.setdefault(key, secrets.token_hex(24))
+                "STOREFRONT_API_KEY", "OPERATIONS_API_KEY", "ENGAGEMENT_API_KEY", "SESSION_REALTIME_KEY"):
+        if key + "_FILE" not in values:
+            values.setdefault(key, secrets.token_hex(24))
     for owner in OWNERS:
-        values.setdefault(owner.upper()+"_DB_PASSWORD", secrets.token_hex(24))
-        values.setdefault(owner.upper()+"_BROKER_PASSWORD", secrets.token_hex(24))
+        for suffix in ("_DB_PASSWORD", "_BROKER_PASSWORD", "_REALTIME_KEY"):
+            key = owner.upper() + suffix
+            if key + "_FILE" not in values:
+                values.setdefault(key, secrets.token_hex(24))
     for key, port in PORTS.items():
         values.setdefault(key, str(free_port() if disposable else port))
     values.setdefault("COMPOSE_PROJECT_NAME", "cafe-reference-test-"+secrets.token_hex(4) if disposable else "cafe-reference")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w") as stream:
-        stream.write("\n".join(f"{key}={value}" for key, value in values.items())+"\n")
-    return values
+    resolved = resolve_files(values, path.parent)
+    atomic_private_write(path, "\n".join(f"{key}={value}" for key, value in values.items())+"\n")
+    return resolved
 
 def load(path):
-    return dict(line.split("=", 1) for line in path.read_text().splitlines() if line and not line.startswith("#"))
+    return resolve_files(read_configuration(path), path.parent)
 
 def compose(path, *args, **kwargs):
+    kwargs.setdefault("env", compose_environment(load(path), OWNERS))
     return subprocess.run(["docker", "compose", "--env-file", str(path), "-f",
                            str(ROOT / "devops/compose.yaml"), *args], cwd=ROOT, check=True, **kwargs)
 
@@ -69,7 +71,7 @@ def broker_users(values):
                                {"password": values[owner.upper()+"_BROKER_PASSWORD"], "tags": ""})
                 queue = rf"^ref\.{owner}\..*"
                 broker_request(values, "PUT", f"permissions/reference/{user}",
-                               {"configure": queue+r"|^cafe\.events$", "write": queue+r"|^cafe\.events$", "read": queue})
+                               {"configure": "^$", "write": rf"^ref\.{owner}\.delivery$|^cafe\.events$", "read": queue})
                 broker_request(values, "PUT", f"topic-permissions/reference/{user}",
                                {"exchange": "cafe.events", "write": rf"^(domain|integration)\.{owner}\..*$",
                                 "read": rf"^(domain\.{owner}\..*|integration\..*)$"})
@@ -81,18 +83,14 @@ def broker_users(values):
 
 def up(path):
     values = configure(path)
-    compose(path, "up", "-d", "--wait", "postgres", "rabbitmq", "valkey")
+    compose(path, "up", "-d", "--wait", "postgres", "rabbitmq", "valkey", "realtime-history")
     # Upgrade existing demonstration databases using the administrator, before runtime startup.
-    for owner in OWNERS:
-        checksum = sha256((ROOT/"contracts/persistence/0002_realtime.sql").read_bytes()).hexdigest()
-        compose(path, "exec", "-T", "postgres", "psql", "-U", "postgres", "-d", "cafe_"+owner,
-                "-v", "ON_ERROR_STOP=1", "-v", "role=cafe_"+owner, "-v", "checksum="+checksum,
-                "-f", "/reference/0002_realtime.sql",
-                stdout=subprocess.DEVNULL)
+    from migrate import migrate
+    migrate(path)
     broker_users(values)
     compose(path, "up", "--build", "--abort-on-container-exit", "--exit-code-from", "topology", "topology")
     compose(path, "up", "-d", "--build", "storefront", "operations", "engagement", "delivery-simulator",
-            "api", "centrifugo", "web", "ingress")
+            "api", "centrifugo", "realtime-gateway", "ingress")
     wait_ready(values)
     print("Development services are ready. Credentials remain in", path)
     return values

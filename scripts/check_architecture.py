@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check service ownership and inward dependencies in all implementation languages."""
 import ast
+from migration_catalogue import metadata, OUTPUTS
 from hashlib import sha256
 import json
 import os
@@ -14,7 +15,7 @@ MODULE = 'github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-m
 SERVICES = {'storefront': {'menu', 'ordering'}, 'operations': {'preparation', 'collection'},
             'engagement': {'loyalty', 'communication'}}
 IGNORED = {'.git', '.tools', '.local', 'node_modules', '__pycache__', '.venv', '.next',
-           'dist', 'test-results', 'playwright-report', '.pytest_cache', '.ruff_cache', '.mypy_cache'}
+           'dist', 'out', 'test-results', 'playwright-report', '.pytest_cache', '.ruff_cache', '.mypy_cache'}
 GENERATED = {
     'services/storefront/contracts/events/generated/cafe/v1/events.pb.go',
     'services/storefront/contracts/realtime/generated/cafe/realtime/v1/realtime.pb.go',
@@ -25,6 +26,9 @@ GENERATED = {
     'services/engagement/src/adaptors/generated/events.json',
     'services/engagement/src/adaptors/generated/realtime.json',
     'services/web/src/adaptors/generated/realtime.json',
+    'services/storefront/foundation/persistence/postgres/migrations/contexts.json',
+    'services/operations/src/operations/adaptors/generated/context-persistence.json',
+    'services/engagement/src/adaptors/generated/context-persistence.json',
     'pnpm-lock.yaml', 'services/operations/uv.lock',
 }
 
@@ -174,6 +178,12 @@ def check():
     baseline = ROOT/'contracts/persistence/0001_initial.sql'
     if baseline.read_bytes() != (ROOT/'services/storefront/foundation/persistence/postgres/migrations/0001_initial.sql').read_bytes():
         errors.append('Go embedded migration differs from the shared persistence contract')
+    try:
+        for service, expected in metadata().items():
+            if json.loads((ROOT/OUTPUTS[service]).read_text()) != expected:
+                errors.append(service+': context migration metadata drift; run pnpm generate:contracts')
+    except (ValueError, KeyError, OSError) as error:
+        errors.append(str(error))
     catalogue = json.loads((ROOT/'contracts/events/catalogue.json').read_text())
     go_catalogue = (ROOT/'services/storefront/contracts/events/model/catalogue.go').read_text()
     parsed = [{'name': name, 'owner': owner, 'visibility': 'domain' if visibility == 'Private' else 'integration',

@@ -1,5 +1,34 @@
 # Executed verification
 
+## Runtime authority and complete queries, 29 September 2026
+
+`pnpm verify` and `pnpm test:integration` pass after the runtime, secret delivery,
+query and migration changes in decision 0004. No environment-dependent check was
+omitted. All 51 fast and 12 infrastructure Gherkin scenarios passed; the workflow
+binding dry run remains separate from the executed infrastructure scenarios.
+
+| Change | Executed evidence |
+| --- | --- |
+| Optional pagination | More than 100 roots in each language; complete ordinary arrays and keyset traversal without omissions or duplicates; invalid cursor/limit cases and ordinary query helpers |
+| Browser reconciliation | Both Chromium scenarios pass with 105 seeded drinks, independent windows, all subscriptions attached before page traversal, live revision guards, history recovery and no business polling |
+| Realtime authority | Gateway unit tests preserve original publication bytes; live context credentials cannot publish foreign channels, disconnect sessions or invoke administration |
+| RabbitMQ authority | All six runtime users can publish/consume/acknowledge but cannot declare/delete topology or publish another context's private events; recovery/replay suites pass |
+| Valkey separation | Five permission checks pass, including rejected realtime authentication to the separate session instance; delayed-connect revocation regression passes |
+| Context migrations | Seven real PostgreSQL migration tests cover additive upgrade, retained state, independent versions, rollback and authority checks; runtime rejects schema identity and ledger drift |
+| Diagnostics | Four live authenticated endpoints expose owned backlog/revocation metrics; exact backlog increments, redaction, pre-claim failure retention and unavailable authority are tested |
+| Secret delivery | File-input ambiguity/error tests and atomic private configuration tests pass; real Compose services start with protected secret mounts, and the existing development env file is mode `0600` |
+| Static frontend | The final ingress image serves the Next.js static export; full browser workflows pass without a frontend Node server |
+
+The final local logs are `.local/hardening-verify.log` and
+`.local/hardening-integration.log`. Disposable infrastructure and revocation
+fixture containers were removed. Existing development business data was preserved.
+
+This remains a development composition. Contexts sharing a language process share
+its security boundary; per-context credentials are enforced by each database and
+gateway login. OpenBao deployment, live leased-secret renewal, production identity,
+retention, load testing and clustered availability remain outside this evidence.
+Earlier entries below describe the repository at their recorded dates.
+
 ## Regression fixes, 27 September 2026
 
 Both `pnpm verify` and `pnpm test:integration` pass with the corruption and

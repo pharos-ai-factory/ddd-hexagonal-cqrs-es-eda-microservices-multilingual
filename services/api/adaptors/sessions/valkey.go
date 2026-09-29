@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/application"
@@ -20,9 +21,12 @@ const prefix = "cafe:auth:"
 const Lifetime = time.Hour
 
 type Store struct {
-	client   *redis.Client
-	url, key string
-	http     *http.Client
+	diagnosticsMu sync.Mutex
+	failures      uint64
+	lastFailure   *Failure
+	client        *redis.Client
+	url, key      string
+	http          *http.Client
 }
 
 func Open(ctx context.Context, address, password, centrifugoURL, centrifugoKey string) (*Store, error) {
@@ -94,18 +98,21 @@ func (s *Store) Run(ctx context.Context) {
 			expired, err := s.client.ZRangeByScore(ctx, prefix+"expirations", &redis.ZRangeBy{
 				Min: "-inf", Max: fmt.Sprint(time.Now().Unix()), Count: 100}).Result()
 			if err != nil {
+				s.record("scan", err)
 				continue
 			}
 			for _, key := range expired {
-				_, _ = s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+				_, expireErr := s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 					pipe.Del(ctx, prefix+"session:"+key)
 					pipe.ZRem(ctx, prefix+"expirations", key)
 					pipe.SAdd(ctx, prefix+"disconnects", a.OperatorID+"|"+key)
 					return nil
 				})
+				s.record("expire", expireErr)
 			}
 			actors, err := s.client.SMembers(ctx, prefix+"disconnects").Result()
 			if err != nil {
+				s.record("scan", err)
 				continue
 			}
 			for _, work := range actors {
@@ -115,20 +122,20 @@ func (s *Store) Run(ctx context.Context) {
 				// earlier connect grant then expires before the final disconnect.
 				fence := prefix + "fence:" + work
 				if err := s.client.SetNX(ctx, fence, time.Now().Add(a.ConnectLifetime).Unix(), Lifetime).Err(); err != nil {
+					s.record("fence", err)
 					continue
 				}
 				deadline, err := s.client.Get(ctx, fence).Int64()
+				s.record("fence.read", err)
 				// Centrifugo accepts expire_at == now, so cross the whole second.
 				if err != nil || time.Now().Unix() <= deadline {
 					continue
 				}
 				actor, _, _ := strings.Cut(work, "|")
 				if err := s.disconnect(ctx, actor); err == nil {
-					_, _ = s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-						pipe.SRem(ctx, prefix+"disconnects", work)
-						pipe.Del(ctx, fence)
-						return nil
-					})
+					s.complete(ctx, work, fence)
+				} else {
+					s.record("disconnect", err)
 				}
 			}
 		}

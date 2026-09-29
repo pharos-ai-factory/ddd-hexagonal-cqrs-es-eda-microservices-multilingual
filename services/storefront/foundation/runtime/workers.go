@@ -3,9 +3,9 @@ package runtime
 import (
 	"context"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/diagnostics"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
 	broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/amqp"
-	"log/slog"
 	"time"
 )
 
@@ -23,6 +23,7 @@ func Relay(ctx context.Context, db *postgres.Database, url string, decode a.Deco
 	for ctx.Err() == nil {
 		publisher, err := broker.Connect(url)
 		if err != nil {
+			diagnostics.Record(db.Owner(), "outbox.connect", "", "", err, false)
 			if !Wait(ctx, time.Second) {
 				return
 			}
@@ -31,7 +32,7 @@ func Relay(ctx context.Context, db *postgres.Database, url string, decode a.Deco
 		for ctx.Err() == nil {
 			dispatch, found, err := db.Claim(ctx, 30*time.Second)
 			if err != nil {
-				slog.Error("dispatch claim failed", "error", err)
+				diagnostics.Record(db.Owner(), "outbox.claim", "", "", err, false)
 				break
 			}
 			if !found {
@@ -47,13 +48,16 @@ func Relay(ctx context.Context, db *postgres.Database, url string, decode a.Deco
 				cancel()
 			}
 			if err != nil {
-				_, _ = db.Retry(ctx, dispatch, err.Error())
-				slog.Warn("dispatch retained", "event", dispatch.EventID, "error", err)
+				_, retryErr := db.Retry(ctx, dispatch, diagnostics.Class(err))
+				if retryErr != nil {
+					diagnostics.Record(db.Owner(), "outbox.retry", dispatch.EventID, message.CorrelationID, retryErr, false)
+				}
+				diagnostics.Record(db.Owner(), "outbox.publish", dispatch.EventID, message.CorrelationID, err, false)
 				break
 			}
 			completed, err := db.Complete(ctx, dispatch)
 			if err != nil || !completed {
-				slog.Warn("dispatch completion requires recovery", "event", dispatch.EventID, "error", err)
+				diagnostics.Record(db.Owner(), "outbox.complete", dispatch.EventID, message.CorrelationID, err, false)
 			}
 		}
 		publisher.Close()
@@ -68,7 +72,7 @@ func Consumer(ctx context.Context, url string, sub broker.Subscription, decode a
 		if ctx.Err() != nil {
 			return
 		}
-		slog.Warn("consumer reconnecting", "consumer", sub.Binding.Consumer, "error", err)
+		diagnostics.Record(sub.Binding.Context, sub.Binding.Consumer, "", "", err, false)
 		if !Wait(ctx, time.Second) {
 			return
 		}

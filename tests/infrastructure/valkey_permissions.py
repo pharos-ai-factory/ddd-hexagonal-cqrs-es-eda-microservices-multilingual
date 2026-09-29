@@ -21,9 +21,9 @@ class RealtimePermissions(unittest.TestCase):
 
     def command(self, *arguments: str) -> str:
         # Read the existing credential inside its container; never print it.
-        result = compose(self.env_file, "exec", "-T", "valkey", "/bin/sh", "-c",
-                         'exec valkey-cli --raw --user realtime --pass "$REALTIME_REDIS_PASSWORD" '
-                         '--no-auth-warning "$@"', "valkey-cli", *arguments,
+        result = compose(self.env_file, "exec", "-T", "realtime-history", "/bin/sh", "-c",
+                         'export REDISCLI_AUTH=$(cat "$REALTIME_REDIS_PASSWORD_FILE"); '
+                         'exec valkey-cli --raw --user realtime --no-auth-warning "$@"', "valkey-cli", *arguments,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return result.stdout.strip()
 
@@ -52,6 +52,13 @@ class RealtimePermissions(unittest.TestCase):
             self.assertEqual(self.command("HGET", key, "offset"), "1")
         finally:
             self.command("DEL", key)
+
+    def test_realtime_identity_cannot_authenticate_to_sessions(self):
+        result = compose(self.env_file, "exec", "-T", "realtime-history", "/bin/sh", "-c",
+                         'export REDISCLI_AUTH=$(cat "$REALTIME_REDIS_PASSWORD_FILE"); '
+                         'exec valkey-cli -h valkey --raw --user realtime --no-auth-warning PING',
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        self.assertIn("WRONGPASS", result.stdout)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import {failure, errorClass} from './diagnostics.js';
 import type {Database} from './postgres.js';
 import {newId} from '../foundation/identity.js';
 export type Dispatch = {
@@ -45,7 +46,8 @@ export async function realtimeRelay(db: Database, url: string, key: string, sign
       if (!response.ok || body.error) throw new Error('Centrifugo publication failed');
       await finish(db, row, true);
     } catch (error) {
-      if (row) await finish(db, row, true, String(error)).catch(() => {});
+      failure(db.owner, 'realtime.publish', error, row?.id);
+      if (row) await finish(db, row, true, errorClass(error)).catch(finishError => failure(db.owner, 'realtime.complete', finishError, row?.id));
       await pause(signal, 1000);
     }
   }

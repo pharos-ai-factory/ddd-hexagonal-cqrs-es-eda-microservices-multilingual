@@ -1,15 +1,27 @@
+from operations.foundation.secrets import secret
 import hmac
-import os
 from collections.abc import Awaitable, Callable, Mapping
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 from operations.foundation.application import Loaded, Metadata, Outcome, QueryPort
+from operations.foundation.pagination import Page, PageRequest, PagedQueryPort
+from operations.adaptors.pagination import PageResponse, page_request, page_response
 from operations.foundation.domain import Rejection, identifier
 
 
-def mount_queries[S](app: FastAPI, path: str, queries: QueryPort[S]) -> None:
-    def listing() -> list[Loaded[S]]:
+def mount_paged_queries[S](app: FastAPI, path: str, queries: PagedQueryPort[S]) -> None:
+    mount_queries(app, path, queries, queries.page)
+
+
+def mount_queries[S](app: FastAPI, path: str, queries: QueryPort[S],
+                     page: Callable[[PageRequest], Page[S]] | None = None) -> None:
+    def listing(request: Request) -> list[Loaded[S]] | PageResponse[S]:
+        pagination = page_request(request.query_params, path)
+        if pagination:
+            if page is None:
+                raise Rejection("invalid_pagination", "This query does not support pagination")
+            return page_response(page(pagination), path)
         return queries.list()
 
     def get(identity: str) -> Loaded[S] | JSONResponse:
@@ -61,7 +73,7 @@ def mount_command[C: Mapping[str, object]](
 
 
 def authenticate(app: FastAPI) -> None:
-    key = os.environ["API_KEY"]
+    key = secret("API_KEY")
     if len(key) < 32:
         raise RuntimeError("A development service key is required")
 

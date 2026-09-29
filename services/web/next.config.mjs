@@ -1,6 +1,6 @@
 /** Presentation only. The development ingress routes API and WebSocket traffic. */
 const config = {
-  output: 'standalone',
+  output: 'export',
   reactStrictMode: true,
   poweredByHeader: false,
 };

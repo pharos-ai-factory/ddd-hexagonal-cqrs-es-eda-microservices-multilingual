@@ -1,8 +1,9 @@
 #!/bin/sh
 set -eu
+. /read-secret.sh
 for owner in menu ordering preparation collection loyalty communication; do
  upper=$(printf '%s' "$owner" | tr '[:lower:]' '[:upper:]')
- password=$(printenv "${upper}_DB_PASSWORD")
+ password=$(read_secret "${upper}_DB_PASSWORD")
  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres \
   -v role="cafe_${owner}" -v password="$password" -v database="cafe_${owner}" <<'SQL'
 CREATE ROLE :"role" LOGIN PASSWORD :'password' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;

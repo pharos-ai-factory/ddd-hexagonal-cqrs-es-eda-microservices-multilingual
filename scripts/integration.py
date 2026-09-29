@@ -31,6 +31,8 @@ def execute(env_file, keep=False):
         up(env_file)
         # Foundation fixtures cannot compete with live application relays.
         compose(env_file, "stop", "storefront", "operations", "engagement")
+        check("Context migrations", [sys.executable, "tests/infrastructure/context_migrations.py"],
+              dict(os.environ, CAFE_ENV_FILE=str(env_file.resolve())))
         check("Go PostgreSQL/RabbitMQ", [sys.executable, "scripts/go.py", "test", "-race", "-tags", "integration", "-count=1", "-timeout=120s",
                         "./foundation/persistence/postgres", "./foundation/transport/amqp",
                         "./contexts/ordering/application"],
@@ -73,6 +75,8 @@ def execute(env_file, keep=False):
         check("Gherkin live workflows", ["node", "--import", "tsx", "node_modules/@cucumber/cucumber/bin/cucumber.js",
                         "--config", "tests/acceptance/cucumber.mjs"], live)
         check("Gherkin infrastructure reports", ["node", "scripts/check_bdd_reports.mjs", "infrastructure"], live)
+        check("Realtime publisher permissions", [sys.executable, "tests/infrastructure/realtime_permissions.py"], live)
+        check("Workflow diagnostics", [sys.executable, "tests/infrastructure/diagnostics.py"], live)
         check("Browser recovery", [sys.executable, "scripts/browser.py"], live)
         check("Valkey permissions", [sys.executable, "tests/infrastructure/valkey_permissions.py"], live)
         check("Session revocation", [sys.executable, "tests/infrastructure/session_revocation.py"], live)

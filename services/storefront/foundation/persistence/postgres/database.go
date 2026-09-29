@@ -53,6 +53,10 @@ func Open(ctx context.Context, url, owner string, encode a.Encoder) (*Database, 
 		pool.Close()
 		return nil, fmt.Errorf("database schema is not at version 1")
 	}
+	if err = verifyContextSchema(ctx, pool, owner); err != nil {
+		pool.Close()
+		return nil, err
+	}
 	return &Database{pool: pool, owner: owner, encode: encode}, nil
 }
 func (db *Database) Close() { db.pool.Close() }

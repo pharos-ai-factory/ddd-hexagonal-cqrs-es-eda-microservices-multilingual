@@ -19,6 +19,10 @@ questions help identify where a pattern would address a concrete problem.
 | Shared HTTP journeys and Protobuf fixtures | Compare independent language services by behaviour and contracts |
 | Atomic typed browser bytes plus fenced relay | Preserve the projection revision represented by a publication across retries |
 | Two-window recovery tests | Prove server authorisation, recovered history and explicit reconciliation without polling |
+| Optional keyset pagination | Make traversal explicit and reusable without silently truncating ordinary queries |
+| Context-owned migration history | Evolve each database independently and reject mismatched runtime ownership or checksums |
+| Restricted realtime gateway | Give publishers authority over their own channel and session workers only disconnection authority |
+| Protected developer secret files | Use individual provider credentials with scopes and spending controls outside generated configuration |
 | Architecture checker with negative fixtures | Turn enforceable architectural decisions into build failures |
 
 ## Transfer the rules with their evidence
@@ -34,7 +38,8 @@ Combining contexts in a service does not grant shared data access.
 
 ## Do not copy the demonstration shortcuts
 
-The generic JSONB aggregate storage keeps this example small. A larger system may need
+The generic JSONB aggregate storage keeps this example small. Contexts own their
+additional migrations and indexes. A larger system may need
 typed schemas, indexes, richer query models and context-specific persistence
 ports. Preserve the transaction contract rather than copying every table.
 
@@ -43,7 +48,7 @@ may require different meanings for quantity, money and identity; do not create
 a universal business model merely to share code.
 
 The fixed operator session, CLI bearer key, pickup-code inspection, single-node
-broker, bounded diagnostic lists and local provider are development facilities. They do not replace production
+broker and local provider are development facilities. They do not replace production
 authentication, authorisation, provider administration or browser subscriptions.
 The current-state persistence decision also does not settle whether a particular
 context would benefit from event sourcing.

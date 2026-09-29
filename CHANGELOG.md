@@ -4,6 +4,19 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Restrict Centrifugo operations through per-context publisher credentials and a
+  separate disconnection credential; remove topology administration from broker
+  runtime users.
+- Add optional keyset pagination in all three languages and reusable browser
+  traversal; unpaginated queries return complete results. Exercise more than
+  100 roots and subscription-before-reconciliation recovery.
+- Add authenticated workflow diagnostics and redacted worker failure records.
+- Add context-owned migration manifests, lifecycle indexes and independent
+  checksum/owner verification while retaining current-state persistence.
+- Serve statically exported Next.js assets from the ingress and separate durable
+  session Valkey from disposable realtime history.
+- Mount runtime secrets as protected files and support individual developer
+  credential files; atomically repair generated configuration permissions.
 - Reject missing/null persisted Go fields before they can become zero prices,
   including nested offers and immutable projections.
 - Validate saved receipt identity, version, status and rejection details before

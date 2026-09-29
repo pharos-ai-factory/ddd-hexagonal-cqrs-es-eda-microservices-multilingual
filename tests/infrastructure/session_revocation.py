@@ -87,6 +87,7 @@ def run():
             ("valkey", ["-p", f"127.0.0.1:{valkey}:6379", "--tmpfs", "/data",
                 "-e", "SESSION_PASSWORD", "-e", "REALTIME_REDIS_PASSWORD",
                 "-v", str(ROOT/"devops/valkey/start.sh")+":/reference/start.sh:ro",
+                "-v", str(ROOT/"devops/read-secret.sh")+":/reference/read-secret.sh:ro",
                 "--entrypoint", "/bin/sh", images["valkey"]["image"], "/reference/start.sh"]),
             ("centrifugo", ["--network", "host", "-e", "CENTRIFUGO_HTTP_API_KEY",
                 "-e", "CENTRIFUGO_VAR_CONNECT_PROXY_SECRET", "-e", "CENTRIFUGO_CLIENT_ALLOWED_ORIGINS",

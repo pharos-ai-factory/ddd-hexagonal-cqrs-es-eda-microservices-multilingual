@@ -14,9 +14,11 @@ wire contracts and behavioural scenarios connect their independent builds.
 | Engagement (TypeScript) | Loyalty, Customer Communication | Earned grants, usable rewards and notification delivery |
 
 Each context owns a PostgreSQL database and a distinct runtime login. A shared
-PostgreSQL server is an operational convenience. Contexts cannot read each
-other's tables. A service is a composition root for two independent contexts;
-co-location does not widen a command's authority.
+PostgreSQL server is an operational convenience. Each credential is denied access
+to the other context databases. A service is a composition root for two contexts
+and holds both credentials: the process is their shared security boundary.
+Co-location does not widen a command's authority. Isolation from hostile code in
+a sibling context would require distinct processes and secret delivery.
 
 The source layout keeps explicit dependency roles inside service boundaries:
 
@@ -57,9 +59,31 @@ RabbitMQ credentials, and it cannot decide domain outcomes. It routes only known
 context paths, authenticates the caller, replaces browser credentials with the
 owning service's internal key, and preserves command identity and version headers.
 
-Next.js renders the operator interface. An ingress routes `/auth` and `/api/v1`
+Next.js exports the operator interface as static assets served by the ingress;
+there is no frontend Node server. The ingress routes `/auth` and `/api/v1`
 to the Go API and `/connection/websocket` to Centrifugo. Internal proxy and
 administrative endpoints are not exposed through browser ingress.
+
+An internal Go realtime gateway authorises each context credential for publication
+to its own channel and the session credential for disconnection. Domain processes
+do not receive Centrifugo's full API key. RabbitMQ runtime credentials cannot
+create, change or delete topology; the separate bootstrap owns those operations.
+Session/revocation state and disposable realtime history use separate Valkey
+instances and credentials. Session writes retain `appendfsync always`; history
+loss is handled by browser reconciliation.
+
+Runtime credentials arrive through explicit secret-file references. The local
+launcher also supports protected files containing individual developer credentials
+without copying their contents into configuration. See `docs/development-secrets.md`.
+
+Each service exposes authenticated `/diagnostics` on its internal/loopback HTTP
+endpoint, using its existing bearer credential; the API uses its CLI key.
+Database metrics include pending outbox/realtime publications, oldest age and
+failed pending dispatches. Session metrics include pending revocations and expired
+sessions awaiting revocation. Worker failure records omit exception messages,
+credentials and payloads. Their counters reset on process restart; confirmed
+dead-letter transfers are not queue-depth measurements. These routes are absent
+from browser ingress. `/healthz` reports liveness separately from workflow progress.
 
 ## Transaction rule
 
@@ -107,6 +131,11 @@ Query handlers return DTOs without changing aggregates. Consumer-owned projectio
 contain only published facts. Published menus remain immutable and orderable in
 this example; introducing withdrawal would require an explicit owner protocol.
 
+List queries can return complete arrays or explicitly opt into keyset pagination.
+The browser follows every page after all subscriptions attach and after a history
+gap. No query silently truncates its results. Pagination is a separate query-port
+capability and transport tooling rather than domain policy.
+
 Notification delivery uses an idempotent development provider. Provider I/O is
 outside aggregate transactions; recording its outcome is a separate command.
 The provider's idempotency receipt protects the crash window after acceptance.
@@ -124,8 +153,16 @@ from owner queries at initial attachment or a history gap. Recoverable history
 requires no additional business GET. See `CLIENT-SUBSCRIPTIONS.md`.
 
 Database administration applies checksummed migrations before runtime startup.
+The two shared historical migrations are frozen. Each context owns its additional
+manifest, SQL and independent version sequence inside its language service.
+The administrator records a context identity and immutable checksum ledger;
+initial local migrations add context-specific lifecycle indexes.
 Go, Python and TypeScript independently verify database identity, restricted
 privileges and migration checksums. No runtime credential can migrate a schema.
+Append a context-local SQL migration and manifest checksum, then run
+`pnpm generate:contracts`. `pnpm dev:up` applies pending migrations; the explicit
+administrative command is `python3 scripts/migrate.py --env-file .local/dev.env`,
+optionally with `--owner ordering` to advance one context only.
 
 Only local/development configurations are supported. Runtime processes reject
 staging and production environment values. Schema administration is a separate

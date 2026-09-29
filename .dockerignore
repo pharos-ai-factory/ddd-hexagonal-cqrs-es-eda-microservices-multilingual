@@ -6,6 +6,7 @@ node_modules
 **/.venv
 **/.next
 **/dist
+**/out
 **/__pycache__
 test-results
 playwright-report

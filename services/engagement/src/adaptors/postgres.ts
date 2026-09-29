@@ -1,10 +1,12 @@
 import {Pool, type PoolClient} from 'pg';
 import {createHash} from 'node:crypto';
 import type {Change, CommandPort, Loaded, Metadata, Outcome, QueryPort} from '../foundation/application.js';
+import type {Page, PageRequest} from '../foundation/pagination.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 import {encode, realtime} from './codec.js';
 import {outcome as decodeOutcome, checkRootIdentity} from './receipts.js';
 import schema from './generated/persistence.json' with {type: 'json'};
+import contextSchemas from './generated/context-persistence.json' with {type: 'json'};
 
 function canonical(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonical);
@@ -15,7 +17,7 @@ function canonical(value: unknown): unknown {
 export class Database {
   readonly pool: Pool;
   constructor(readonly owner: string, url: string) {
-    this.pool = new Pool({connectionString: url, max: 6});
+    this.pool = new Pool({connectionString: url, max: 6, connectionTimeoutMillis: 3000});
     // The pool removes failed idle clients; queries can acquire a replacement.
     this.pool.on('error', () => console.warn('Idle PostgreSQL connection lost for', this.owner));
   }
@@ -28,6 +30,14 @@ export class Database {
     for (const [version, table] of [[1, 'schema_version'], [2, 'schema_migrations']] as const) {
       const {rows: [migration]} = await this.pool.query(`SELECT checksum FROM cafe.${table} WHERE version=$1`, [version]);
       if (migration?.checksum !== schema[String(version) as keyof typeof schema]) throw new Error('Database migration checksum mismatch');
+    }
+    const {rows: [identity]} = await this.pool.query('SELECT owner FROM cafe.context_identity WHERE singleton');
+    const expected = (contextSchemas as Record<string, Record<string, string>>)[this.owner];
+    if (!expected || identity?.owner !== this.owner) throw new Error('Context schema identity mismatch');
+    const {rows: migrations} = await this.pool.query<{version: number; checksum: string}>(
+      'SELECT version,checksum FROM cafe.context_migrations');
+    if (migrations.length !== Object.keys(expected).length || migrations.some(item => expected[String(item.version)] !== item.checksum)) {
+      throw new Error('Context migration checksum mismatch');
     }
     await this.pool.query('SELECT id FROM cafe.realtime_publications LIMIT 0');
   }
@@ -121,8 +131,20 @@ export class Queries<S> implements QueryPort<S> {
     if (row) checkRootIdentity(row.state, id);
     return row ? {exists: true, version: Number(row.version), state: row.state as S} : undefined;
   }
+  async page(request: PageRequest): Promise<Page<S>> {
+    if (!Number.isInteger(request.limit) || request.limit < 1 || request.limit > 100) throw new Error('Invalid page size');
+    if (request.after) identifier(request.after);
+    const {rows} = await this.db.pool.query(
+      'SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 AND ($2::uuid IS NULL OR id>$2::uuid) ORDER BY id LIMIT $3',
+      [this.kind, request.after ?? null, request.limit+1]);
+    const selected = rows.slice(0, request.limit);
+    return {items: selected.map(row => {
+      checkRootIdentity(row.state, row.id);
+      return {exists: true, version: Number(row.version), state: row.state as S};
+    }), nextId: rows.length > request.limit ? selected.at(-1)!.id as string : undefined};
+  }
   async list(): Promise<Loaded<S>[]> {
-    const {rows} = await this.db.pool.query('SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 ORDER BY id LIMIT 100', [this.kind]);
+    const {rows} = await this.db.pool.query('SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 ORDER BY id', [this.kind]);
     return rows.map(row => {
       checkRootIdentity(row.state, row.id);
       return {exists: true, version: Number(row.version), state: row.state as S};

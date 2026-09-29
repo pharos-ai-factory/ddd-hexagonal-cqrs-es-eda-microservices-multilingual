@@ -46,9 +46,12 @@ Open **http://127.0.0.1:28000**. Use `OPERATOR_PASSWORD` from the ignored,
 owner-readable `.local/dev.env` as the local operator access code. This is a
 server-provisioned demonstration operator, not customer authentication.
 
-Startup builds the five applications and provisions PostgreSQL, RabbitMQ,
-Centrifugo, Valkey, an HTTP ingress and a local notification simulator. Each
-context has its own database and restricted database/broker credentials.
+Startup builds the applications and provisions PostgreSQL, RabbitMQ, Centrifugo,
+separate Valkey instances for sessions and disposable realtime history, an HTTP
+ingress and a local notification simulator. Next.js exports static browser assets
+served by the ingress. A small internal gateway restricts realtime publication
+and disconnection credentials. Each context has its own database, migration
+history and restricted database/broker credentials.
 
 In the browser:
 
@@ -74,7 +77,7 @@ pnpm dev:down             # Stop development containers; preserve their data
 
 | Local endpoint | Purpose |
 | --- | --- |
-| 28000 | Browser ingress: Next.js, API and WebSocket routes |
+| 28000 | Browser ingress: static Next.js assets, API and WebSocket routes |
 | 28080 | Separate Go API |
 | 28081 / 28082 / 28083 | Storefront / Operations / Engagement diagnostics |
 | 25432 | PostgreSQL, six private databases |
@@ -341,13 +344,16 @@ Start with [the walkthrough](docs/walkthrough.md), then:
   [browser subscriptions](CLIENT-SUBSCRIPTIONS.md).
 - Decisions for [durable delivery](docs/decisions/0001-consistency-and-delivery.md),
   [service boundaries and realtime](docs/decisions/0002-polyglot-and-browser.md),
-  and [executable behaviour](docs/decisions/0003-executable-behaviour.md).
+  [executable behaviour](docs/decisions/0003-executable-behaviour.md), and
+  [runtime authority and query completeness](docs/decisions/0004-runtime-authority-and-queries.md).
 - [HTTP](contracts/http/README.md), [events](contracts/events/README.md) and
   [realtime contracts](contracts/realtime/README.md).
 - [Testing](TESTING.md), [executed evidence](docs/verification.md),
   [Gherkin specifications](specifications/README.md),
   [contributing](CONTRIBUTING.md) and [adopting these patterns](docs/adopting-patterns.md).
 - [Changelog](CHANGELOG.md) for notable changes to the reference.
+- [Development secrets](docs/development-secrets.md) for protected file inputs
+  and individual developer credentials.
 
 ## Deliberate scope
 
@@ -360,8 +366,9 @@ withdrawal, customer identity management, real email and discount application
 are outside the model. Reward redemption records voucher use against an order
 identity; it does not synchronously mutate or validate an Order.
 
-Diagnostic lists are bounded to 100 rows per kind. Use the isolated integration
-lane for a fresh dataset. Production pagination, retention, load tests,
+List queries return complete arrays unless pagination is explicitly requested.
+The browser traverses bounded pages on attachment or an unrecoverable history
+gap; ordinary queries can retain their own response shape. Retention, load tests,
 cluster availability and event-sourced rehydration remain outside this reference.
 The generic JSONB persistence and fixed development operator are teaching
 simplifications. Production identity, authorisation and operational policies

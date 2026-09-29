@@ -1,3 +1,4 @@
+import {failure, errorClass} from './diagnostics.js';
 import amqp, {type ConfirmChannel, type Options} from 'amqplib';
 import {createHash} from 'node:crypto';
 import type {Database} from './postgres.js';
@@ -27,9 +28,9 @@ export async function relay(db: Database, url: string, signal: AbortSignal) {
     let connection: Awaited<ReturnType<typeof amqp.connect>> | undefined;
     try {
       connection = await amqp.connect(url);
-      connection.on('error', () => {});
+      connection.on('error', error => failure(db.owner, 'outbox.connection', error));
       const channel = await connection.createConfirmChannel();
-      channel.on('error', () => {});
+      channel.on('error', error => failure(db.owner, 'outbox.channel', error));
       while (!signal.aborted) {
         const row = await claim(db);
         if (!row) { await pause(signal); continue; }
@@ -40,9 +41,12 @@ export async function relay(db: Database, url: string, signal: AbortSignal) {
             appId: event.context, correlationId: event.correlationId,
             headers: {'contract-version': {'!': 'int32', value: 1}}});
           await finish(db, row);
-        } catch (error) { await finish(db, row, false, String(error)); throw error; }
+        } catch (error) {
+          failure(db.owner, 'outbox.publish', error, row.id);
+          await finish(db, row, false, errorClass(error)); throw error;
+        }
       }
-    } catch { await pause(signal, 1000); }
+    } catch (error) { failure(db.owner, 'outbox.reconnect', error); await pause(signal, 1000); }
     finally { await connection?.close().catch(() => {}); }
   }
 }
@@ -62,8 +66,8 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
       connection = await amqp.connect(url);
       const current = connection;
       const channel = await current.createConfirmChannel();
-      channel.on('error', () => {});
-      current.on('error', () => {});
+      channel.on('error', error => failure(sub.owner, sub.consumer, error));
+      current.on('error', error => failure(sub.owner, sub.consumer, error));
       const closed = new Promise<void>(resolve => current.once('close', resolve));
       const abort = () => { void current.close().catch(() => {}); };
       signal.addEventListener('abort', abort, {once: true});
@@ -72,6 +76,7 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
         if (!message) { void current.close().catch(() => {}); return; }
         void (async () => {
           let validating = true;
+          let decoded: WireEvent | undefined;
           const incomingHeaders = message.properties.headers ?? {};
           const counter = 'ref-attempt' in incomingHeaders ? incomingHeaders['ref-attempt'] : 0;
           const validAttempt = typeof counter === 'number' && Number.isInteger(counter) && counter >= 0 && counter <= 3;
@@ -79,6 +84,7 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
           try {
             if (!validAttempt) throw new Error('Invalid retry counter');
             const event = decode(message.content);
+            decoded = event;
             if (event.name !== sub.event || (event.visibility === 'domain' && event.context !== sub.owner) ||
               !validProperties(message.properties, event)) throw new Error('Invalid delivery metadata');
             validating = false;
@@ -92,16 +98,17 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
             delete headers['x-death'];
             const suffix = validating || error instanceof Rejection || attempt >= 3 ? '.dead' : '.retry';
             headers['ref-attempt'] = {'!': 'int32', value: attempt + 1};
-            headers['ref-failure'] = error instanceof Error ? error.name : 'processing-failed';
+            headers['ref-failure'] = errorClass(error);
             await confirmed(channel, 'ref.'+sub.owner+'.delivery', 'ref.'+sub.consumer+suffix, message.content,
               {...message.properties, headers});
+            failure(sub.owner, sub.consumer, error, decoded?.id, decoded?.correlationId, suffix === '.dead');
           }
           channel.ack(message);
-        })().catch(() => { void current.close().catch(() => {}); });
+        })().catch(error => { failure(sub.owner, sub.consumer+'.transfer', error); void current.close().catch(() => {}); });
       }, {noAck: false});
       await closed;
       signal.removeEventListener('abort', abort);
-    } catch { await pause(signal, 1000); }
+    } catch (error) { failure(sub.owner, sub.consumer+'.reconnect', error); await pause(signal, 1000); }
     finally { await connection?.close().catch(() => {}); }
   }
 }

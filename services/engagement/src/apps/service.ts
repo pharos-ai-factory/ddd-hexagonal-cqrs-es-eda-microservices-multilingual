@@ -1,3 +1,4 @@
+import {diagnostics} from '../adaptors/diagnostics.js';
 import {Database, Commands, Queries} from '../adaptors/postgres.js';
 import {relay, consume, type Subscription} from '../adaptors/broker.js';
 import {realtimeRelay} from '../adaptors/dispatch.js';
@@ -12,9 +13,7 @@ import {CreditCollection, IssueReward, RedeemReward} from '../contexts/loyalty/a
 import {PickupNotice, RewardNotice, DeliverNotification} from '../contexts/communication/application/commands.js';
 import type {OrderCollected, RewardEarned, RewardIssued, PickupOpened, NotificationRequested} from '../contracts/events.js';
 
-function required(name: string) {
-  const value = process.env[name]; if (!value) throw new Error(name+' is required'); return value;
-}
+import {secret as required} from '../foundation/secrets.js';
 if (!['local', 'development'].includes(process.env.APP_ENV ?? '')) throw new Error('Development environments only');
 const databases = {
   loyalty: new Database('loyalty', required('LOYALTY_DATABASE_URL')),
@@ -29,7 +28,7 @@ const controller = new AbortController();
 const tasks: Promise<void>[] = [];
 for (const [owner, db] of Object.entries(databases)) {
   tasks.push(relay(db, required(owner.toUpperCase()+'_BROKER_URL'), controller.signal));
-  tasks.push(realtimeRelay(db, required('CENTRIFUGO_API_URL'), required('CENTRIFUGO_API_KEY'), controller.signal));
+  tasks.push(realtimeRelay(db, required('REALTIME_GATEWAY_URL'), required(owner.toUpperCase()+'_REALTIME_KEY'), controller.signal));
 }
 function subscribe<P extends object>(owner: string, consumer: string, event: string, target: (payload: P) => string,
   handler: {handle(m: Metadata, payload: P): Promise<Outcome>}) {
@@ -56,7 +55,7 @@ const http = server(required('API_KEY'), [
     commands: {redeem: {name: 'loyalty.RedeemReward', fields: ['orderId'],
       execute: (m, body) => redeem.execute(m, {orderId: body.orderId!})}}},
   {resource: '/v1/communication/notifications', queries: noticeQueries},
-]);
+], () => diagnostics(databases));
 http.listen(8080, '0.0.0.0', () => console.info('Engagement ready (TypeScript)'));
 async function stop() {
   controller.abort(); http.close();

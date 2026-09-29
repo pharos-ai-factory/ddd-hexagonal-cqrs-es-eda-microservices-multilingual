@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"crypto/subtle"
 	"encoding/json"
 	"net/http"
@@ -16,6 +17,7 @@ const cookieName = "cafe_session"
 
 type Backend struct{ URL, Key string }
 type Config struct {
+	Diagnostics                           func(context.Context) (any, error)
 	Sessions                              a.Sessions
 	OperatorPassword, CLIKey, ProxySecret string
 	Origins                               []string
@@ -46,6 +48,24 @@ func (c Config) origin(r *http.Request) bool {
 }
 func (c Config) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /diagnostics", func(w http.ResponseWriter, r *http.Request) {
+		if c.CLIKey == "" || !equal(r.Header.Get("Authorization"), "Bearer "+c.CLIKey) {
+			jsonResponse(w, 401, map[string]string{"code": "unauthorised"})
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		if c.Diagnostics == nil {
+			jsonResponse(w, 503, map[string]string{"code": "diagnostics_unavailable"})
+			return
+		}
+		result, err := c.Diagnostics(ctx)
+		if err != nil {
+			jsonResponse(w, 503, map[string]string{"code": "diagnostics_unavailable"})
+			return
+		}
+		jsonResponse(w, 200, result)
+	})
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		jsonResponse(w, 200, map[string]string{"status": "ok", "role": "client-api"})
 	})

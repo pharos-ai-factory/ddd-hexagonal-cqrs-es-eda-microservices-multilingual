@@ -19,12 +19,12 @@ type Handlers struct {
 }
 
 func Mount(mux *http.ServeMux, h Handlers) {
-	mux.HandleFunc("GET /v1/menu/drinks", web.List(h.DrinkQueries.List))
+	mux.HandleFunc("GET /v1/menu/drinks", web.PagedList(h.DrinkQueries.List, h.DrinkQueries.Page))
 	mux.HandleFunc("GET /v1/menu/drinks/{id}", web.Get(h.DrinkQueries.Get))
 	mux.HandleFunc("POST /v1/menu/drinks/{id}", web.Command("menu.CreateDrink", h.CreateDrink.Execute))
 	mux.HandleFunc("POST /v1/menu/drinks/{id}/publish", web.Command("menu.PublishDrink", h.PublishDrink.Execute))
 	mux.HandleFunc("POST /v1/menu/drinks/{id}/revise", web.Command("menu.ReviseDrink", h.ReviseDrink.Execute))
-	mux.HandleFunc("GET /v1/menu/editions", web.List(h.EditionQueries.List))
+	mux.HandleFunc("GET /v1/menu/editions", web.PagedList(h.EditionQueries.List, h.EditionQueries.Page))
 	mux.HandleFunc("GET /v1/menu/editions/{id}", web.Get(h.EditionQueries.Get))
 	mux.HandleFunc("POST /v1/menu/editions/{id}", web.Command("menu.CreateEdition", h.CreateEdition.Execute))
 	mux.HandleFunc("POST /v1/menu/editions/{id}/offers", web.Command("menu.AddOffer", h.AddOffer.Execute, "minor"))

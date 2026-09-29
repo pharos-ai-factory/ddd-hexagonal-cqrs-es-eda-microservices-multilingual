@@ -1,0 +1,10 @@
+{
+  "owner": "preparation",
+  "migrations": [
+    {
+      "version": 1,
+      "file": "0001_lifecycle_indexes.sql",
+      "checksum": "e97498dd80621c24ceca8782c9364a33f6b72049ea1667b0d9e3f0112eb826ce"
+    }
+  ]
+}

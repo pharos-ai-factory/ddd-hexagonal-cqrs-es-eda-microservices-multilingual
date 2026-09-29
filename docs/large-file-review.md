@@ -1,6 +1,6 @@
 # Large-file responsibility review
 
-Reviewed on 27 September 2026. Handwritten files have a 450-line limit.
+Reviewed on 29 September 2026. Handwritten files have a 450-line limit.
 There are no handwritten exceptions.
 
 The following exact paths are classified as generated source or dependency locks:
@@ -16,6 +16,9 @@ The following exact paths are classified as generated source or dependency locks
 | `services/engagement/src/adaptors/generated/events.json` | TypeScript event descriptor |
 | `services/engagement/src/adaptors/generated/realtime.json` | TypeScript browser descriptor |
 | `services/web/src/adaptors/generated/realtime.json` | Browser decoder descriptor |
+| `services/storefront/foundation/persistence/postgres/migrations/contexts.json` | Storefront context migration checksums |
+| `services/operations/src/operations/adaptors/generated/context-persistence.json` | Operations context migration checksums |
+| `services/engagement/src/adaptors/generated/context-persistence.json` | Engagement context migration checksums |
 | `pnpm-lock.yaml` | Reproducible Node dependency resolution |
 | `services/operations/uv.lock` | Reproducible Python dependency resolution |
 

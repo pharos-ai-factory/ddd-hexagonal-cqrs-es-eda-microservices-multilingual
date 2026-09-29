@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/diagnostics"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 	rabbit "github.com/rabbitmq/amqp091-go"
-	"log/slog"
 	"strings"
 	"time"
 )
@@ -78,7 +78,7 @@ func Consume(ctx context.Context, url string, sub Subscription, decode a.Decoder
 				}
 			}
 			headers["ref-attempt"] = int32(attempt + 1)
-			headers["ref-failure"] = processing.Error()
+			headers["ref-failure"] = diagnostics.Class(processing)
 			outgoing := rabbit.Publishing{ContentType: delivery.ContentType, DeliveryMode: rabbit.Persistent, MessageId: delivery.MessageId, Type: delivery.Type, AppId: delivery.AppId, CorrelationId: delivery.CorrelationId, Body: delivery.Body, Headers: headers}
 			publishCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			err = publisher.send(publishCtx, DeliveryExchange(sub.Binding.Context), target, outgoing)
@@ -87,7 +87,7 @@ func Consume(ctx context.Context, url string, sub Subscription, decode a.Decoder
 				_ = delivery.Nack(false, true)
 				return err
 			}
-			slog.Warn("event deferred", "consumer", sub.Binding.Consumer, "event", delivery.MessageId, "destination", target, "attempt", attempt+1, "error", processing)
+			diagnostics.Record(sub.Binding.Context, sub.Binding.Consumer, message.ID, message.CorrelationID, processing, strings.HasSuffix(target, ".dead"))
 			if err = delivery.Ack(false); err != nil {
 				return err
 			}

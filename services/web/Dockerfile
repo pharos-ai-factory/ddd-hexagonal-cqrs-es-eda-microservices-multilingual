@@ -7,6 +7,7 @@ COPY services/web/package.json services/web/package.json
 RUN pnpm install --frozen-lockfile
 COPY services/web services/web
 RUN pnpm --filter @cafe/web build
-USER node
-WORKDIR /repo/services/web
-CMD ["node_modules/.bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]
+
+FROM nginx:1.28-alpine
+COPY --from=build /repo/services/web/out /usr/share/nginx/html
+COPY devops/ingress/default.conf /etc/nginx/conf.d/default.conf

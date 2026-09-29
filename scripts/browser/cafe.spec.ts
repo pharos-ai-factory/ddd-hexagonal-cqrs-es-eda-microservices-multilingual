@@ -48,6 +48,22 @@ test('six contexts, independent windows, binary recovery, durable logout and unc
   context.on('request', request => {
     if (request.method() === 'GET' && request.url().includes('/api/v1/')) businessGets.push(request.url());
   });
+  // More than one page must converge independently in each browser window.
+  const paginationPrefix = 'Pagination '+randomUUID().slice(0, 8)+' ';
+  for (let index = 0; index < 105; index++) await createDrink(paginationPrefix+index);
+  const pageReads = async () => {
+    const resources = ['menu/drinks', 'menu/editions', 'ordering/orders', 'preparation/tickets',
+      'collection/pickups', 'loyalty/accounts', 'loyalty/rewards', 'communication/notifications'];
+    const counts = await Promise.all(resources.map(async resource => {
+      const response = await fetch(`http://127.0.0.1:${env.API_PORT}/api/v1/${resource}`,
+        {headers: {Authorization: 'Bearer '+env.API_KEY}});
+      expect(response.status).toBe(200);
+      const rows = await response.json() as unknown[];
+      return Math.max(1, Math.ceil(rows.length/100));
+    }));
+    return counts.reduce((total, count) => total+count, 0);
+  };
+  const initialPageReads = await pageReads();
   await page.goto(base);
   await page.getByLabel('Local operator access code').fill(env.OPERATOR_PASSWORD!);
   await page.getByRole('button', {name: 'Open the café'}).click();
@@ -59,6 +75,8 @@ test('six contexts, independent windows, binary recovery, durable logout and unc
   await second.goto(base);
   await live(second);
   await expect(second.getByLabel('Customer identity')).toHaveValue(customer);
+  await expect(page.locator('.list-row').filter({hasText: paginationPrefix})).toHaveCount(105);
+  await expect(second.locator('.list-row').filter({hasText: paginationPrefix})).toHaveCount(105);
 
   const drink = 'Browser coffee '+randomUUID().slice(0, 6);
   await page.getByLabel('Drink name', {exact: true}).fill(drink);
@@ -91,7 +109,8 @@ test('six contexts, independent windows, binary recovery, durable logout and unc
   await expect(page.getByText('This edition is published.', {exact: false})).toBeVisible();
   await projected('ordering', 'published-menus', await page.getByLabel('Menu edition').inputValue());
   const readsAfterInitial = businessGets.length;
-  expect(readsAfterInitial).toBe(16); // Eight owner queries in each independent window.
+  expect(readsAfterInitial).toBe(initialPageReads*2); // One complete scan per resource and window.
+  expect(businessGets.every(url => new URL(url).searchParams.get('limit') === '100')).toBe(true);
   for (let index = 0; index < 3; index++) {
     await page.getByRole('button', {name: 'Start an order', exact: true}).click();
     const order = page.getByTestId('order').filter({hasText: 'draft'});
@@ -146,7 +165,9 @@ test('six contexts, independent windows, binary recovery, durable logout and unc
   await expect(page.locator('.list-row').filter({hasText: reconciledName})).toBeVisible();
   await expect(second.locator('.list-row').filter({hasText: reconciledName})).toBeVisible();
   await expect(page.locator('.list-row').filter({hasText: missedName})).toBeVisible();
-  await expect.poll(() => businessGets.length).toBe(readsAfterInitial+16);
+  await expect.poll(() => businessGets.length).toBe(readsAfterInitial+2*await pageReads());
+  await expect(page.locator('.list-row').filter({hasText: paginationPrefix})).toHaveCount(105);
+  await expect(second.locator('.list-row').filter({hasText: paginationPrefix})).toHaveCount(105);
   await page.setViewportSize({width: 390, height: 844});
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path: '.local/cafe-mobile.png', fullPage: true});

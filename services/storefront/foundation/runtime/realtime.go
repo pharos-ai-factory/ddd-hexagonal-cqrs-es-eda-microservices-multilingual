@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/diagnostics"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
 	"net/http"
 	"time"
@@ -15,6 +17,9 @@ func Realtime(ctx context.Context, db *postgres.Database, url, key string) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	for ctx.Err() == nil {
 		dispatch, found, err := db.ClaimRealtime(ctx)
+		if err != nil {
+			diagnostics.Record(db.Owner(), "realtime.claim", "", "", err, false)
+		}
 		if err != nil || !found {
 			if !Wait(ctx, 100*time.Millisecond) {
 				return
@@ -22,7 +27,14 @@ func Realtime(ctx context.Context, db *postgres.Database, url, key string) {
 			continue
 		}
 		err = publishRealtime(ctx, client, url, key, dispatch)
-		_ = db.FinishRealtime(ctx, dispatch, err)
+		var safeError error
+		if err != nil {
+			diagnostics.Record(db.Owner(), "realtime.publish", dispatch.ID, "", err, false)
+			safeError = errors.New(diagnostics.Class(err))
+		}
+		if finishErr := db.FinishRealtime(ctx, dispatch, safeError); finishErr != nil {
+			diagnostics.Record(db.Owner(), "realtime.complete", dispatch.ID, "", finishErr, false)
+		}
 		if err != nil && !Wait(ctx, time.Second) {
 			return
 		}

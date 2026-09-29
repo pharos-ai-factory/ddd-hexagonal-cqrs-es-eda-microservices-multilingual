@@ -100,3 +100,33 @@ def test_corrupt_pickup_does_not_commit_a_command_or_consumer_rejection() -> Non
         assert CollectOrder(commands).execute(metadata, {"code": "ABC123"})["status"] == "collected"
     finally:
         database.pool.close()
+
+
+def test_queries_traverse_more_than_one_page_and_retain_unpaginated_reads() -> None:
+    from operations.foundation.pagination import PageRequest
+    database = Database("preparation", os.environ["PREPARATION_DATABASE_URL"])
+    def restore(value: object) -> TicketSnapshot:
+        return PreparationTicket.restore(value).snapshot()
+    commands, queries = Commands(database, "ticket", restore), Queries(database, "ticket", restore)
+    try:
+        for _ in range(105):
+            identity = new_id()
+            state: TicketSnapshot = {"id": identity, "orderId": identity, "customerId": new_id(),
+                                    "instructions": "Pagination coffee", "status": "queued"}
+            commands.execute(Metadata(new_id(), identity, "test.pagination", new_id(), expected=0),
+                             lambda _: Change(state, "queued"))
+        all_rows = queries.list()
+        assert len(all_rows) >= 105
+        combined = []
+        request = PageRequest(37)
+        while True:
+            page = queries.page(request)
+            assert len(page.items) <= 37
+            combined.extend(page.items)
+            if page.next_id is None:
+                break
+            assert page.next_id > (request.after or "")
+            request = PageRequest(37, page.next_id)
+        assert combined == all_rows
+    finally:
+        database.pool.close()

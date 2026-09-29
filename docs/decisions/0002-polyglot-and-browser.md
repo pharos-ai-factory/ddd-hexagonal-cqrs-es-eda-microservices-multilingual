@@ -1,6 +1,7 @@
 # 0002 — Service-first polyglot monorepo and browser delivery
 
-Status: accepted, 27 September 2026. Clarifies the deployment/language scope of
+Status: accepted, 27 September 2026. Runtime composition and query reconciliation
+are refined by [0004](0004-runtime-authority-and-queries.md). Clarifies the deployment/language scope of
 0001; its aggregate and event-delivery decisions remain in force.
 
 ## Service boundary
@@ -61,5 +62,5 @@ The validity window and worker deadline use the development host's clock.
 Customer IDs on screen select domain subjects; they do not confer authority.
 
 The composition is local/development-only and has no production release workflow.
-Single-node infrastructure, a local notification simulator, generic JSONB roots,
-limited diagnostic lists and absent event sourcing remain explicit constraints.
+Single-node infrastructure, a local notification simulator, generic JSONB roots
+and absent event sourcing remain explicit constraints.

@@ -53,8 +53,13 @@ transaction. The browser contract is `contracts/realtime/proto/.../realtime.prot
 It is separate from the broker's domain/integration envelope.
 
 Immutable `realtime_publications` and mutable `realtime_dispatches` are separate.
-A relay claims a fenced lease, publishes `b64data` with the publication identity
-as Centrifugo's `idempotency_key`, and completes its dispatch after acceptance.
+A relay claims a fenced lease and sends `b64data` with the publication identity
+as Centrifugo's `idempotency_key` through the internal realtime gateway. Each
+context has a distinct publisher credential authorising exactly its own channel.
+The gateway validates transport identity and forwards the original bytes. Only
+the gateway and Centrifugo receive the full server API key. The session worker
+uses a separate credential authorising disconnection only. A relay completes
+its dispatch after acceptance.
 Failure leaves retryable work. A publication accepted before a lost response may
 be sent again; the browser's revision guard independently makes duplicates safe.
 
@@ -73,12 +78,13 @@ or duplicate publication cannot roll it back.
 
 Each window owns its connection and transport cursors:
 
-1. Attach using server-selected subscriptions.
-2. On initial attachment, fetch each of the eight resource lists once.
+1. Attach all six server-selected subscriptions before beginning reconciliation.
+2. On initial attachment, traverse every page of each of the eight resource lists.
 3. Apply incoming snapshots by root revision while queries are in flight.
 4. On a successfully recovered subscription, consume history without business GETs.
-5. On any unrecoverable subscription, reconcile the eight owner lists once for
-   that connection. Query failure is visible and an explicit reconnect retries it.
+5. On any unrecoverable subscription, traverse the eight owner lists once for
+   that connection. A traversal can require several requests. Query failure is
+   visible and an explicit reconnect retries it.
 
 There is no periodic business polling. A disconnect triggers one session check
 where appropriate; this is access revalidation, not projection polling. Pending
@@ -86,8 +92,13 @@ business steps remain visible, for example an earned grant awaiting Reward
 issuance. Browser commands are disabled while the transport is reconnecting.
 
 No root deletion exists in this model. Deletion would require versioned tombstones
-and reconciliation removal semantics. Lists have the documented 100-row teaching
-limit; this is not a production synchronisation protocol for unbounded datasets.
+and reconciliation removal semantics. Queries support optional UUID keyset
+pagination with resource-bound opaque cursors. The browser requests 100 items
+per page until `nextCursor` is null. Live subscriptions cover concurrent insertions
+behind the cursor, and root revisions protect against stale pages. A traversal
+does not claim a single database snapshot across requests. Ordinary queries can
+also return their complete unpaginated result; pagination is an explicit port
+capability, not a requirement on every query.
 
 ## Command acceptance and uncertainty
 

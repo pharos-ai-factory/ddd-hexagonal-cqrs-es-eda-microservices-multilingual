@@ -1,0 +1,10 @@
+{
+  "owner": "loyalty",
+  "migrations": [
+    {
+      "version": 1,
+      "file": "0001_lifecycle_indexes.sql",
+      "checksum": "9bf61e1d8d50bbe47e86db97163c90576837df2c9aaaaddf41a2ddb5fab0fc51"
+    }
+  ]
+}

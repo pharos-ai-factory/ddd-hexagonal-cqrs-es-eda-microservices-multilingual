@@ -1,0 +1,10 @@
+{
+  "owner": "collection",
+  "migrations": [
+    {
+      "version": 1,
+      "file": "0001_lifecycle_indexes.sql",
+      "checksum": "d64208312e86494fb2a0a8623e199cacc0ecaa4c7c8627c8064f78c935d03838"
+    }
+  ]
+}

@@ -7,12 +7,14 @@ from psycopg import Connection
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
+from operations.foundation.pagination import Page, PageRequest
 from operations.foundation.application import Change, Loaded, Metadata, Outcome
 from operations.foundation.domain import CorruptState, Rejection, identifier, integer
 from operations.adaptors import codec, receipts
 
 type Row = dict[str, object]
 
+CONTEXT_SCHEMAS = json.loads((Path(__file__).parent/"generated/context-persistence.json").read_text())
 SCHEMA = json.loads((Path(__file__).parent/"generated/persistence.json").read_text())
 
 def fingerprint(value: object) -> str:
@@ -29,19 +31,30 @@ class Database:
         self.owner = owner
         self.pool: ConnectionPool[Connection[Row]] = ConnectionPool(url, min_size=1, max_size=4, open=True,
                                    kwargs={"autocommit": True, "row_factory": dict_row})
-        with self.pool.connection() as connection:
-            row = connection.execute("""SELECT current_database() AS database,
-                rolsuper OR rolcreatedb OR rolcreaterole
-                OR has_database_privilege(current_user,current_database(),'CREATE')
-                OR has_schema_privilege(current_user,'cafe','CREATE') AS privileged
-                FROM pg_roles WHERE rolname=current_user""").fetchone()
-            if not row or row["database"] != "cafe_"+owner or row["privileged"]:
-                raise RuntimeError("Database owner or runtime privilege mismatch")
-            for version, table in ((1, "schema_version"), (2, "schema_migrations")):
-                row = connection.execute(f"SELECT checksum FROM cafe.{table} WHERE version=%s", (version,)).fetchone()
-                if not row or row["checksum"] != SCHEMA[str(version)]:
-                    raise RuntimeError("Database migration checksum mismatch")
-            connection.execute("SELECT id FROM cafe.realtime_publications LIMIT 0")
+        try:
+            with self.pool.connection() as connection:
+                row = connection.execute("""SELECT current_database() AS database,
+                    rolsuper OR rolcreatedb OR rolcreaterole
+                    OR has_database_privilege(current_user,current_database(),'CREATE')
+                    OR has_schema_privilege(current_user,'cafe','CREATE') AS privileged
+                    FROM pg_roles WHERE rolname=current_user""").fetchone()
+                if not row or row["database"] != "cafe_"+owner or row["privileged"]:
+                    raise RuntimeError("Database owner or runtime privilege mismatch")
+                for version, table in ((1, "schema_version"), (2, "schema_migrations")):
+                    row = connection.execute(f"SELECT checksum FROM cafe.{table} WHERE version=%s", (version,)).fetchone()
+                    if not row or row["checksum"] != SCHEMA[str(version)]:
+                        raise RuntimeError("Database migration checksum mismatch")
+                row = connection.execute("SELECT owner FROM cafe.context_identity WHERE singleton").fetchone()
+                if not row or row["owner"] != owner or owner not in CONTEXT_SCHEMAS:
+                    raise RuntimeError("Context schema identity mismatch")
+                migrations = connection.execute("SELECT version,checksum FROM cafe.context_migrations").fetchall()
+                actual = {str(item["version"]): item["checksum"] for item in migrations}
+                if actual != CONTEXT_SCHEMAS[owner]:
+                    raise RuntimeError("Context migration checksum mismatch")
+                connection.execute("SELECT id FROM cafe.realtime_publications LIMIT 0")
+        except Exception:
+            self.pool.close()
+            raise
 
 
 class Commands[S: Mapping[str, object]]:
@@ -143,9 +156,23 @@ class Queries[S: Mapping[str, object]]:
 
     def list(self) -> list[Loaded[S]]:
         with self.database.pool.connection() as connection:
-            rows = connection.execute("SELECT id,version,state FROM cafe.aggregates WHERE kind=%s ORDER BY id LIMIT 100",
+            rows = connection.execute("SELECT id,version,state FROM cafe.aggregates WHERE kind=%s ORDER BY id",
                                       (self.kind,)).fetchall()
             return [self._loaded(row) for row in rows]
+
+    def page(self, request: PageRequest) -> Page[S]:
+        if request.limit < 1 or request.limit > 100:
+            raise ValueError("Invalid page size")
+        if request.after:
+            identifier(request.after)
+        with self.database.pool.connection() as connection:
+            rows = connection.execute(
+                "SELECT id,version,state FROM cafe.aggregates WHERE kind=%s "
+                "AND (%s::uuid IS NULL OR id>%s::uuid) ORDER BY id LIMIT %s",
+                (self.kind, request.after, request.after, request.limit + 1)).fetchall()
+            selected = rows[:request.limit]
+            return Page([self._loaded(row) for row in selected],
+                        str(selected[-1]["id"]) if len(rows) > request.limit else None)
 
     def _loaded(self, row: Row) -> Loaded[S]:
         state = self.restore(row["state"])

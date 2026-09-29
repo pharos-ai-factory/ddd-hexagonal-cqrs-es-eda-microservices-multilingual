@@ -8,6 +8,8 @@ import (
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	realtime "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	config "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/config"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/diagnostics"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
 	workers "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/runtime"
 	broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/amqp"
@@ -28,6 +30,7 @@ type Service struct {
 	URLs          map[string]string
 	subscriptions []broker.Subscription
 	cancel        context.CancelFunc
+	apiKey        string
 }
 
 func Open(contexts ...string) (*Service, error) {
@@ -35,13 +38,27 @@ func Open(contexts ...string) (*Service, error) {
 	if environment != "development" && environment != "local" {
 		return nil, fmt.Errorf("this reference only runs in local or development environments")
 	}
-	if len(os.Getenv("API_KEY")) < 32 {
+	apiKey, err := config.Secret("API_KEY")
+	if err != nil {
+		return nil, err
+	}
+	if len(apiKey) < 32 {
 		return nil, fmt.Errorf("a development API key of at least 32 characters is required")
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	service := &Service{Context: ctx, Mux: http.NewServeMux(), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, cancel: cancel}
+	service := &Service{Context: ctx, Mux: http.NewServeMux(), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, cancel: cancel, apiKey: apiKey}
 	for _, owner := range contexts {
-		db, err := postgres.Open(ctx, os.Getenv(strings.ToUpper(owner)+"_DATABASE_URL"), owner, codec.Encode)
+		databaseURL, err := config.Secret(strings.ToUpper(owner) + "_DATABASE_URL")
+		if err != nil {
+			service.Close()
+			return nil, err
+		}
+		brokerURL, err := config.Secret(strings.ToUpper(owner) + "_BROKER_URL")
+		if err != nil {
+			service.Close()
+			return nil, err
+		}
+		db, err := postgres.Open(ctx, databaseURL, owner, codec.Encode)
 		if err != nil {
 			service.Close()
 			return nil, err
@@ -51,9 +68,25 @@ func Open(contexts ...string) (*Service, error) {
 			service.Close()
 			return nil, err
 		}
-		service.URLs[owner] = os.Getenv(strings.ToUpper(owner) + "_BROKER_URL")
+		service.URLs[owner] = brokerURL
 	}
 	service.Mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { web.JSON(w, 200, map[string]string{"status": "ok"}) })
+	service.Mux.HandleFunc("GET /diagnostics", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		databases := map[string]postgres.Diagnostics{}
+		for owner, db := range service.Databases {
+			state, err := db.Diagnostics(ctx)
+			if err != nil {
+				diagnostics.Record(owner, "diagnostics", "", "", err, false)
+				web.JSON(w, 503, map[string]string{"code": "diagnostics_unavailable"})
+				return
+			}
+			databases[owner] = state
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		web.JSON(w, 200, map[string]any{"databases": databases, "processWorkers": diagnostics.Snapshot(), "counterScope": "process lifetime; deadLetterTransfers are confirmed transfers, not queue depths"})
+	})
 	return service, nil
 }
 func (s *Service) Close() {
@@ -64,9 +97,17 @@ func (s *Service) Close() {
 }
 func (s *Service) Run() error {
 	defer s.Close()
+	gatewayURL, err := config.Secret("REALTIME_GATEWAY_URL")
+	if err != nil {
+		return err
+	}
 	for owner, db := range s.Databases {
+		realtimeKey, err := config.Secret(strings.ToUpper(owner) + "_REALTIME_KEY")
+		if err != nil {
+			return err
+		}
 		go workers.Relay(s.Context, db, s.URLs[owner], codec.Decode)
-		go workers.Realtime(s.Context, db, os.Getenv("CENTRIFUGO_API_URL"), os.Getenv("CENTRIFUGO_API_KEY"))
+		go workers.Realtime(s.Context, db, gatewayURL, realtimeKey)
 	}
 	paused := "," + os.Getenv("PAUSED_CONSUMERS") + ","
 	for _, sub := range s.subscriptions {
@@ -80,7 +121,7 @@ func (s *Service) Run() error {
 	if address == "" {
 		address = ":8080"
 	}
-	server := &http.Server{Addr: address, Handler: web.Auth(os.Getenv("API_KEY"), s.Mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 30 * time.Second}
+	server := &http.Server{Addr: address, Handler: web.Auth(s.apiKey, s.Mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 30 * time.Second}
 	go func() {
 		<-s.Context.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -88,7 +129,7 @@ func (s *Service) Run() error {
 		_ = server.Shutdown(ctx)
 	}()
 	slog.Info("reference service ready", "address", address)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
