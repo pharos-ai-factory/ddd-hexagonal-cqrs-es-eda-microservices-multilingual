@@ -1,5 +1,7 @@
 import {diagnostics} from '../adaptors/diagnostics.js';
 import {Database, Commands, Queries} from '../adaptors/postgres.js';
+import {restoreAccount, restoreReward, restoreNotification} from '../adaptors/restore.js';
+import {redeemInput} from '../adaptors/inputs.js';
 import {relay, consume, type Subscription} from '../adaptors/broker.js';
 import {realtimeRelay} from '../adaptors/dispatch.js';
 import {server} from '../adaptors/http.js';
@@ -20,10 +22,10 @@ const databases = {
   communication: new Database('communication', required('COMMUNICATION_DATABASE_URL')),
 };
 await Promise.all(Object.values(databases).map(db => db.verify()));
-const accounts = new Commands<AccountState>(databases.loyalty, 'account');
-const rewards = new Commands<RewardState>(databases.loyalty, 'reward');
-const notices = new Commands<NotificationState>(databases.communication, 'notification');
-const noticeQueries = new Queries<NotificationState>(databases.communication, 'notification');
+const accounts = new Commands<AccountState>(databases.loyalty, 'account', restoreAccount);
+const rewards = new Commands<RewardState>(databases.loyalty, 'reward', restoreReward);
+const notices = new Commands<NotificationState>(databases.communication, 'notification', restoreNotification);
+const noticeQueries = new Queries<NotificationState>(databases.communication, 'notification', restoreNotification);
 const controller = new AbortController();
 const tasks: Promise<void>[] = [];
 for (const [owner, db] of Object.entries(databases)) {
@@ -50,10 +52,12 @@ subscribe<NotificationRequested>('communication', 'communication.deliver-notice'
     new HttpDelivery(required('DELIVERY_URL'), required('DELIVERY_KEY'))));
 const redeem = new RedeemReward(rewards, () => new Date());
 const http = server(required('API_KEY'), [
-  {resource: '/v1/loyalty/accounts', queries: new Queries<AccountState>(databases.loyalty, 'account')},
-  {resource: '/v1/loyalty/rewards', queries: new Queries<RewardState>(databases.loyalty, 'reward'),
-    commands: {redeem: {name: 'loyalty.RedeemReward', fields: ['orderId'],
-      execute: (m, body) => redeem.execute(m, {orderId: body.orderId!})}}},
+  {resource: '/v1/loyalty/accounts', queries: new Queries<AccountState>(databases.loyalty, 'account', restoreAccount)},
+  {resource: '/v1/loyalty/rewards', queries: new Queries<RewardState>(databases.loyalty, 'reward', restoreReward),
+    commands: {redeem: {name: 'loyalty.RedeemReward', invoke: (m, value) => {
+      const input = redeemInput(value);
+      return redeem.execute({...m, input}, input);
+    }}}},
   {resource: '/v1/communication/notifications', queries: noticeQueries},
 ], () => diagnostics(databases));
 http.listen(8080, '0.0.0.0', () => console.info('Engagement ready (TypeScript)'));

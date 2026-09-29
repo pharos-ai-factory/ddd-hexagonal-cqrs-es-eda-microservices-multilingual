@@ -75,11 +75,3 @@ func Changed[S any](state S, status string, publications ...Publication) Mutatio
 }
 
 func Expected(version uint64) *uint64 { return &version }
-
-func MapFacts(facts []domain.Fact, mapper func(domain.Fact) []Publication) []Publication {
-	var result []Publication
-	for _, fact := range facts {
-		result = append(result, mapper(fact)...)
-	}
-	return result
-}

@@ -16,7 +16,21 @@ export class LoyaltyAccount {
         !Number.isSafeInteger(state.grantsEarned) || state.grantsEarned < 0 ||
         ![0, 1, 2].includes(state.stampBalance) ||
         state.collections !== state.grantsEarned * 3 + state.stampBalance) {
-      throw new Error('Corrupt stamp accounting');
+      throw new CorruptState('Corrupt stamp accounting');
+    }
+    if ((state.grantsEarned > 0 && !state.lastGrant) || (state.grantsEarned === 0 && state.lastGrant)) {
+      throw new CorruptState('Corrupt earned grant');
+    }
+    if (state.lastGrant) {
+      try {
+        identifier(state.lastGrant.id);
+        identifier(state.lastGrant.accountId);
+      } catch (cause) { throw new CorruptState('Corrupt earned grant', {cause}); }
+      if (state.lastGrant.accountId !== state.id || typeof state.lastGrant.benefit !== 'string' ||
+          !state.lastGrant.benefit || !Number.isSafeInteger(state.lastGrant.validDays) ||
+          state.lastGrant.validDays < 1 || state.lastGrant.validDays > 30) {
+        throw new CorruptState('Corrupt earned grant');
+      }
     }
     this.#state = structuredClone(state);
   }

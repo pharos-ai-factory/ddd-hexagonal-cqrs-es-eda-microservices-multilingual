@@ -2,12 +2,14 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {Database, Commands, Queries} from './postgres.js';
+import {Pool} from 'pg';
+import {restoreAccount, restoreReward} from './restore.js';
 import {claim, finish} from './dispatch.js';
 import type {AccountState} from '../contexts/loyalty/domain/account.js';
 import type {Metadata} from '../foundation/application.js';
 import {RedeemReward} from '../contexts/loyalty/application/commands.js';
 import type {RewardState} from '../contexts/loyalty/domain/reward.js';
-import {Rejection} from '../foundation/domain.js';
+import {CorruptState, Rejection} from '../foundation/domain.js';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {fileURLToPath} from 'node:url';
@@ -16,7 +18,8 @@ test('real transactions atomically record one root, receipts and realtime; rejec
   const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
   try {
     await db.verify();
-    const commands = new Commands<AccountState>(db, 'account'), queries = new Queries<AccountState>(db, 'account');
+    const commands = new Commands<AccountState>(db, 'account', restoreAccount);
+    const queries = new Queries<AccountState>(db, 'account', restoreAccount);
     const id = randomUUID();
     const metadata: Metadata = {id: randomUUID(), target: id, name: 'test.open', correlation: randomUUID(), expected: 0, input: {}};
     const state: AccountState = {id, collections: 0, stampBalance: 0, grantsEarned: 0};
@@ -48,15 +51,21 @@ test('real transactions atomically record one root, receipts and realtime; rejec
 });
 
 test('corrupt rewards do not become durable business rejections', async () => {
+  assert.ok(process.env.CAFE_DISPOSABLE_PROJECT?.startsWith('cafe-reference-test-'));
+  const url = new URL(process.env.DATABASE_ADMIN_URL!);
+  url.pathname = '/cafe_loyalty';
+  const admin = new Pool({connectionString: url.toString()});
   const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
   try {
     await db.verify();
-    const commands = new Commands<RewardState>(db, 'reward');
+    const commands = new Commands<RewardState>(db, 'reward', restoreReward);
+    const queries = new Queries<RewardState>(db, 'reward', restoreReward);
     const id = randomUUID(), commandId = randomUUID(), sourceId = randomUUID();
     const state: RewardState = {id, grantId: randomUUID(), customerId: 'broken', benefit: 'coffee',
       status: 'issued', expiresAt: '2026-10-04T12:00:00Z'};
     await commands.execute({id: randomUUID(), target: id, name: 'test.fixture', correlation: id, input: {}},
       () => ({state, status: 'issued', changed: true}));
+    await assert.rejects(queries.get(id), CorruptState);
     const command = {orderId: randomUUID()};
     const metadata: Metadata = {id: commandId, target: id, name: 'loyalty.RedeemReward', correlation: id,
       input: command, consumer: 'test.corrupt-reward', sourceId, sourceHash: 'fixture'};
@@ -64,10 +73,19 @@ test('corrupt rewards do not become durable business rejections', async () => {
     await assert.rejects(handler.execute(metadata, command), error => error instanceof Error && !(error instanceof Rejection));
     assert.equal((await db.pool.query('SELECT count(*) FROM cafe.command_receipts WHERE command_id=$1', [commandId])).rows[0].count, '0');
     assert.equal((await db.pool.query('SELECT count(*) FROM cafe.consumer_receipts WHERE event_id=$1', [sourceId])).rows[0].count, '0');
-    await commands.execute({id: randomUUID(), target: id, name: 'test.repair', correlation: id, input: {}, expected: 1},
-      () => ({state: {...state, customerId: randomUUID()}, status: 'issued', changed: true}));
+    const client = await admin.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query("SET LOCAL session_replication_role='replica'");
+      await client.query("UPDATE cafe.aggregates SET state=$1 WHERE kind='reward' AND id=$2",
+        [{...state, customerId: randomUUID()}, id]);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally { client.release(); }
     assert.equal((await handler.execute(metadata, command)).status, 'redeemed');
-  } finally { await db.pool.end(); }
+  } finally { await Promise.all([db.pool.end(), admin.end()]); }
 });
 
 test('losing an idle PostgreSQL connection does not terminate the service and the pool recovers', async () => {
@@ -94,7 +112,8 @@ test('losing an idle PostgreSQL connection does not terminate the service and th
 test('queries traverse more than one page and retain unpaginated reads', async () => {
   const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
   try {
-    const commands = new Commands<AccountState>(db, 'account'), queries = new Queries<AccountState>(db, 'account');
+    const commands = new Commands<AccountState>(db, 'account', restoreAccount);
+    const queries = new Queries<AccountState>(db, 'account', restoreAccount);
     for (let index = 0; index < 105; index++) {
       const id = randomUUID(), state: AccountState = {id, collections: 0, stampBalance: 0, grantsEarned: 0};
       await commands.execute({id: randomUUID(), target: id, name: 'test.pagination', correlation: id, expected: 0, input: {}},

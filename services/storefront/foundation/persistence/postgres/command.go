@@ -99,39 +99,8 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 			outcome.Rejection = violation
 		} else {
 			outcome.Status = mutation.Status
-			if mutation.Changed {
-				outcome.Version++
-				state, err = json.Marshal(mutation.State)
-				if err != nil {
-					return a.Outcome{}, err
-				}
-				if err = checkRootIdentity(state, m.AggregateID); err != nil {
-					return a.Outcome{}, err
-				}
-				if loaded.Exists {
-					tag, writeErr := tx.Exec(ctx, `UPDATE cafe.aggregates SET version=$3,state=$4 WHERE kind=$1 AND id=$2 AND version=$5`, s.kind, m.AggregateID, outcome.Version, state, loaded.Version)
-					if writeErr != nil {
-						return a.Outcome{}, writeErr
-					}
-					if tag.RowsAffected() != 1 {
-						return a.Outcome{}, fmt.Errorf("optimistic update lost its owner version")
-					}
-				} else if _, err = tx.Exec(ctx, `INSERT INTO cafe.aggregates(kind,id,version,state) VALUES($1,$2,$3,$4)`, s.kind, m.AggregateID, outcome.Version, state); err != nil {
-					return a.Outcome{}, err
-				}
-				for _, publication := range mutation.Publications {
-					message := a.Message{ID: NewID(), Name: publication.Name, Context: s.db.owner, Visibility: publication.Visibility, ContractVersion: 1, AggregateKind: s.kind, AggregateID: m.AggregateID, AggregateVersion: outcome.Version, CorrelationID: m.CorrelationID, CausationID: m.ID, OccurredAt: time.Now().UTC(), Payload: publication.Payload}
-					if err = s.db.appendEvent(ctx, tx, message); err != nil {
-						return a.Outcome{}, err
-					}
-				}
-				if s.db.realtime != nil {
-					if err = s.db.appendRealtime(ctx, tx, s.kind, m.AggregateID, outcome.Version, state); err != nil {
-						return a.Outcome{}, err
-					}
-				}
-			} else if len(mutation.Publications) > 0 {
-				return a.Outcome{}, fmt.Errorf("a no-op cannot publish new events")
+			if err = s.persistMutation(ctx, tx, m, loaded, mutation, &outcome); err != nil {
+				return a.Outcome{}, err
 			}
 		}
 	}
@@ -147,6 +116,46 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	}
 	return outcome, tx.Commit(ctx)
 }
+
+// persistMutation writes the root and both publication intents on the command's transaction.
+func (s *CommandStore[S]) persistMutation(ctx context.Context, tx pgx.Tx, m a.Metadata, loaded a.Loaded[S], mutation a.Mutation[S], outcome *a.Outcome) error {
+	if !mutation.Changed {
+		if len(mutation.Publications) > 0 {
+			return fmt.Errorf("a no-op cannot publish new events")
+		}
+		return nil
+	}
+	state, err := json.Marshal(mutation.State)
+	if err != nil {
+		return err
+	}
+	if err = checkRootIdentity(state, m.AggregateID); err != nil {
+		return err
+	}
+	outcome.Version++
+	if loaded.Exists {
+		tag, writeErr := tx.Exec(ctx, `UPDATE cafe.aggregates SET version=$3,state=$4 WHERE kind=$1 AND id=$2 AND version=$5`, s.kind, m.AggregateID, outcome.Version, state, loaded.Version)
+		if writeErr != nil {
+			return writeErr
+		}
+		if tag.RowsAffected() != 1 {
+			return fmt.Errorf("optimistic update lost its owner version")
+		}
+	} else if _, err = tx.Exec(ctx, `INSERT INTO cafe.aggregates(kind,id,version,state) VALUES($1,$2,$3,$4)`, s.kind, m.AggregateID, outcome.Version, state); err != nil {
+		return err
+	}
+	for _, publication := range mutation.Publications {
+		message := a.Message{ID: NewID(), Name: publication.Name, Context: s.db.owner, Visibility: publication.Visibility, ContractVersion: 1, AggregateKind: s.kind, AggregateID: m.AggregateID, AggregateVersion: outcome.Version, CorrelationID: m.CorrelationID, CausationID: m.ID, OccurredAt: time.Now().UTC(), Payload: publication.Payload}
+		if err = s.db.appendEvent(ctx, tx, message); err != nil {
+			return err
+		}
+	}
+	if s.db.realtime != nil {
+		return s.db.appendRealtime(ctx, tx, s.kind, m.AggregateID, outcome.Version, state)
+	}
+	return nil
+}
+
 func (db *Database) appendEvent(ctx context.Context, tx pgx.Tx, message a.Message) error {
 	encoded, err := db.encode(message)
 	if err != nil {

@@ -43,7 +43,7 @@ export class Database {
   }
 }
 export class Commands<S> implements CommandPort<S> {
-  constructor(private db: Database, private kind: string) {}
+  constructor(private db: Database, private kind: string, private restore: (value: unknown) => S) {}
   async execute(m: Metadata, decide: (loaded: Loaded<S> | undefined) => Change<S>): Promise<Outcome> {
     [m.id, m.target, m.correlation].forEach(identifier);
     const digest = createHash('sha256').update(JSON.stringify(canonical({expected: m.expected ?? null, input: m.input}))).digest('hex');
@@ -77,36 +77,19 @@ export class Commands<S> implements CommandPort<S> {
       const {rows: [row]} = await client.query('SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2 FOR UPDATE',
         [this.kind, m.target]);
       const version = Number(row?.version ?? 0);
-      if (row) checkRootIdentity(row.state, m.target);
+      const loaded: Loaded<S> | undefined = row ? {exists: true, version, state: this.restore(row.state)} : undefined;
+      if (loaded) checkRootIdentity(loaded.state, m.target);
       const outcome: Outcome = {aggregateId: m.target, version, status: ''};
       let change: Change<S> | undefined;
       try {
         if (m.expected !== undefined && m.expected !== version) throw new Rejection('version_conflict', 'The expected version is stale');
-        change = decide(row ? {exists: true, version, state: row.state as S} : undefined);
+        change = decide(loaded);
         outcome.status = change.status;
       } catch (error) {
         if (!(error instanceof Rejection)) throw error;
         outcome.rejection = error.outcome();
       }
-      if (change?.changed) {
-        checkRootIdentity(change.state, m.target);
-        outcome.version++;
-        if (row) await client.query('UPDATE cafe.aggregates SET version=$3,state=$4 WHERE kind=$1 AND id=$2',
-          [this.kind, m.target, outcome.version, JSON.stringify(change.state)]);
-        else await client.query('INSERT INTO cafe.aggregates(kind,id,version,state) VALUES($1,$2,$3,$4)',
-          [this.kind, m.target, outcome.version, JSON.stringify(change.state)]);
-        for (const publication of change.publications ?? []) {
-          const {event, body} = encode(this.db.owner, this.kind, m.target, outcome.version, m, publication);
-          await client.query(`INSERT INTO cafe.outbox_events(id,event_name,visibility,aggregate_kind,aggregate_id,
-            aggregate_version,correlation_id,causation_id,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-            [event.id, event.name, event.visibility, this.kind, m.target, outcome.version, m.correlation, m.id, body]);
-          await client.query('INSERT INTO cafe.dispatches(event_id) VALUES($1)', [event.id]);
-        }
-        const publication = realtime(this.db.owner, this.kind, m.target, outcome.version, change.state);
-        await client.query(`INSERT INTO cafe.realtime_publications(id,channel,aggregate_kind,aggregate_id,revision,body)
-          VALUES($1,$2,$3,$4,$5,$6)`, [publication.id, 'cafe:'+this.db.owner, this.kind, m.target, outcome.version, publication.body]);
-        await client.query('INSERT INTO cafe.realtime_dispatches(event_id) VALUES($1)', [publication.id]);
-      } else if (change?.publications?.length) throw new Error('A no-op cannot publish new events');
+      if (change) await this.persistChange(client, m, Boolean(row), change, outcome);
       await client.query(`INSERT INTO cafe.command_receipts(kind,aggregate_id,command_name,command_id,
         fingerprint,outcome,correlation_id,causation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
         [this.kind, m.target, m.name, m.id, digest, outcome, m.correlation, m.causation ?? null]);
@@ -118,18 +101,46 @@ export class Commands<S> implements CommandPort<S> {
       throw error;
     } finally { client.release(); }
   }
+
+  private async persistChange(client: PoolClient, m: Metadata, exists: boolean, change: Change<S>, outcome: Outcome) {
+    if (!change.changed) {
+      if (change.publications?.length) throw new Error('A no-op cannot publish new events');
+      return;
+    }
+    checkRootIdentity(change.state, m.target);
+    outcome.version++;
+    if (exists) await client.query('UPDATE cafe.aggregates SET version=$3,state=$4 WHERE kind=$1 AND id=$2',
+      [this.kind, m.target, outcome.version, JSON.stringify(change.state)]);
+    else await client.query('INSERT INTO cafe.aggregates(kind,id,version,state) VALUES($1,$2,$3,$4)',
+      [this.kind, m.target, outcome.version, JSON.stringify(change.state)]);
+    for (const publication of change.publications ?? []) {
+      const {event, body} = encode(this.db.owner, this.kind, m.target, outcome.version, m, publication);
+      await client.query(`INSERT INTO cafe.outbox_events(id,event_name,visibility,aggregate_kind,aggregate_id,
+        aggregate_version,correlation_id,causation_id,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [event.id, event.name, event.visibility, this.kind, m.target, outcome.version, m.correlation, m.id, body]);
+      await client.query('INSERT INTO cafe.dispatches(event_id) VALUES($1)', [event.id]);
+    }
+    const publication = realtime(this.db.owner, this.kind, m.target, outcome.version, change.state);
+    await client.query(`INSERT INTO cafe.realtime_publications(id,channel,aggregate_kind,aggregate_id,revision,body)
+      VALUES($1,$2,$3,$4,$5,$6)`, [publication.id, 'cafe:'+this.db.owner, this.kind, m.target, outcome.version, publication.body]);
+    await client.query('INSERT INTO cafe.realtime_dispatches(event_id) VALUES($1)', [publication.id]);
+  }
 }
 async function incoming(client: PoolClient, m: Metadata, target: string, outcome: Outcome) {
   if (m.consumer) await client.query(`INSERT INTO cafe.consumer_receipts(consumer,event_id,fingerprint,target,outcome)
     VALUES($1,$2,$3,$4,$5)`, [m.consumer, m.sourceId, m.sourceHash, target, outcome]);
 }
 export class Queries<S> implements QueryPort<S> {
-  constructor(private db: Database, private kind: string) {}
+  constructor(private db: Database, private kind: string, private restore: (value: unknown) => S) {}
+  private loaded(row: {id: string; version: number; state: unknown}): Loaded<S> {
+    const state = this.restore(row.state);
+    checkRootIdentity(state, row.id);
+    return {exists: true, version: Number(row.version), state};
+  }
   async get(id: string): Promise<Loaded<S> | undefined> {
     identifier(id);
-    const {rows: [row]} = await this.db.pool.query('SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2', [this.kind, id]);
-    if (row) checkRootIdentity(row.state, id);
-    return row ? {exists: true, version: Number(row.version), state: row.state as S} : undefined;
+    const {rows: [row]} = await this.db.pool.query('SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2', [this.kind, id]);
+    return row ? this.loaded(row) : undefined;
   }
   async page(request: PageRequest): Promise<Page<S>> {
     if (!Number.isInteger(request.limit) || request.limit < 1 || request.limit > 100) throw new Error('Invalid page size');
@@ -138,16 +149,11 @@ export class Queries<S> implements QueryPort<S> {
       'SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 AND ($2::uuid IS NULL OR id>$2::uuid) ORDER BY id LIMIT $3',
       [this.kind, request.after ?? null, request.limit+1]);
     const selected = rows.slice(0, request.limit);
-    return {items: selected.map(row => {
-      checkRootIdentity(row.state, row.id);
-      return {exists: true, version: Number(row.version), state: row.state as S};
-    }), nextId: rows.length > request.limit ? selected.at(-1)!.id as string : undefined};
+    return {items: selected.map(row => this.loaded(row)),
+      nextId: rows.length > request.limit ? selected.at(-1)!.id as string : undefined};
   }
   async list(): Promise<Loaded<S>[]> {
     const {rows} = await this.db.pool.query('SELECT id,version,state FROM cafe.aggregates WHERE kind=$1 ORDER BY id', [this.kind]);
-    return rows.map(row => {
-      checkRootIdentity(row.state, row.id);
-      return {exists: true, version: Number(row.version), state: row.state as S};
-    });
+    return rows.map(row => this.loaded(row));
   }
 }

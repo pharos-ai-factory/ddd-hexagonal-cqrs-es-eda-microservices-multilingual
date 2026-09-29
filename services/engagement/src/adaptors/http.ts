@@ -6,7 +6,7 @@ import {pageRequest, pageResponse} from './pagination.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 type Route = {
   resource: string; queries: QueryPort<unknown> & Partial<Pick<PagedQueryPort<unknown>, 'page'>>;
-  commands?: Record<string, {name: string; fields: string[]; execute(m: Metadata, input: Record<string, string>): Promise<Outcome>}>;
+  commands?: Record<string, {name: string; invoke(m: Omit<Metadata, 'input'>, value: unknown): Promise<Outcome>}>;
 };
 function json(response: ServerResponse, status: number, body: unknown) {
   response.writeHead(status, {'content-type': 'application/json'});
@@ -51,20 +51,15 @@ export function server(key: string, routes: Route[], diagnostics?: () => Promise
         const handler = action ? route.commands?.[action] : undefined;
         if (!handler || request.method !== 'POST') break;
         const input = await body(request);
-        if (!input || typeof input !== 'object' || Array.isArray(input) ||
-            Object.keys(input).sort().join() !== [...handler.fields].sort().join() ||
-            Object.values(input).some(value => typeof value !== 'string')) {
-          json(response, 400, {code: 'invalid_request'}); return;
-        }
         const versionHeader = String(request.headers['if-match'] ?? '').replace(/^"|"$/g, '');
         const version = Number(versionHeader);
         if (!/^\d+$/.test(versionHeader) || !Number.isSafeInteger(version)) {
           json(response, 428, {code: 'expected_version_required'}); return;
         }
         const commandId = identifier(String(request.headers['idempotency-key'] ?? ''));
-        const m: Metadata = {id: commandId, target: identity!, name: handler.name, expected: version, input,
+        const m: Omit<Metadata, 'input'> = {id: commandId, target: identity!, name: handler.name, expected: version,
           correlation: identifier(String(request.headers['x-correlation-id'] ?? commandId))};
-        const outcome = await handler.execute(m, input as Record<string, string>);
+        const outcome = await handler.invoke(m, input);
         const code = outcome.rejection?.code;
         json(response, code === 'version_conflict' || code === 'idempotency_conflict' ? 409 :
           code === 'not_found' ? 404 : code ? 422 : 200, outcome);

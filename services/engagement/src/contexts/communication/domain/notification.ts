@@ -16,7 +16,8 @@ export class Notification {
     try {
       validateContent(state.id, state.recipient, state.subject, state.body);
       if (!['requested', 'sent'].includes(state.status) ||
-          (state.status === 'sent' && (typeof state.providerReceipt !== 'string' || !state.providerReceipt))) {
+          (state.status === 'sent' && (typeof state.providerReceipt !== 'string' || !state.providerReceipt)) ||
+          (state.status === 'requested' && state.providerReceipt !== undefined)) {
         throw new Error('Invalid delivery state');
       }
     } catch (cause) {

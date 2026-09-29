@@ -105,35 +105,40 @@ class Commands[S: Mapping[str, object]]:
             except Rejection as rejection:
                 outcome["rejection"] = rejection.outcome()
             else:
-                if change.changed:
-                    check_root_identity(change.state, m.target)
-                    version += 1
-                    outcome["version"] = version
-                    if loaded:
-                        connection.execute("""UPDATE cafe.aggregates SET version=%s,state=%s
-                            WHERE kind=%s AND id=%s""", (version, Jsonb(dict(change.state)), self.kind, m.target))
-                    else:
-                        connection.execute("INSERT INTO cafe.aggregates(kind,id,version,state) VALUES(%s,%s,%s,%s)",
-                                           (self.kind, m.target, version, Jsonb(dict(change.state))))
-                    for publication in change.publications:
-                        event, body = codec.encode(self.database.owner, self.kind, m.target, version, m, publication)
-                        connection.execute("""INSERT INTO cafe.outbox_events(id,event_name,visibility,aggregate_kind,
-                            aggregate_id,aggregate_version,correlation_id,causation_id,body)
-                            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""", (event.id, event.name, event.visibility,
-                            self.kind, m.target, version, m.correlation, m.id, body))
-                        connection.execute("INSERT INTO cafe.dispatches(event_id) VALUES(%s)", (event.id,))
-                    event_id, body = codec.realtime(self.database.owner, self.kind, m.target, version, change.state)
-                    connection.execute("""INSERT INTO cafe.realtime_publications
-                        (id,channel,aggregate_kind,aggregate_id,revision,body) VALUES(%s,%s,%s,%s,%s,%s)""",
-                        (event_id, "cafe:"+self.database.owner, self.kind, m.target, version, body))
-                    connection.execute("INSERT INTO cafe.realtime_dispatches(event_id) VALUES(%s)", (event_id,))
-                elif change.publications:
-                    raise ValueError("A no-op cannot emit new publications")
+                outcome["version"] = self._persist_change(connection, m, loaded is not None, version, change)
             connection.execute("""INSERT INTO cafe.command_receipts(kind,aggregate_id,command_name,command_id,
                 fingerprint,outcome,correlation_id,causation_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
                 (self.kind, m.target, m.name, m.id, digest, Jsonb(outcome), m.correlation, m.causation or None))
             self._incoming(connection, m, target, outcome)
             return outcome
+
+    def _persist_change(self, connection: Connection[Row], m: Metadata, exists: bool,
+                        version: int, change: Change[S]) -> int:
+        if not change.changed:
+            if change.publications:
+                raise ValueError("A no-op cannot emit new publications")
+            return version
+        check_root_identity(change.state, m.target)
+        version += 1
+        if exists:
+            connection.execute("""UPDATE cafe.aggregates SET version=%s,state=%s
+                WHERE kind=%s AND id=%s""", (version, Jsonb(dict(change.state)), self.kind, m.target))
+        else:
+            connection.execute("INSERT INTO cafe.aggregates(kind,id,version,state) VALUES(%s,%s,%s,%s)",
+                               (self.kind, m.target, version, Jsonb(dict(change.state))))
+        for publication in change.publications:
+            event, body = codec.encode(self.database.owner, self.kind, m.target, version, m, publication)
+            connection.execute("""INSERT INTO cafe.outbox_events(id,event_name,visibility,aggregate_kind,
+                aggregate_id,aggregate_version,correlation_id,causation_id,body)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""", (event.id, event.name, event.visibility,
+                self.kind, m.target, version, m.correlation, m.id, body))
+            connection.execute("INSERT INTO cafe.dispatches(event_id) VALUES(%s)", (event.id,))
+        event_id, body = codec.realtime(self.database.owner, self.kind, m.target, version, change.state)
+        connection.execute("""INSERT INTO cafe.realtime_publications
+            (id,channel,aggregate_kind,aggregate_id,revision,body) VALUES(%s,%s,%s,%s,%s,%s)""",
+            (event_id, "cafe:"+self.database.owner, self.kind, m.target, version, body))
+        connection.execute("INSERT INTO cafe.realtime_dispatches(event_id) VALUES(%s)", (event_id,))
+        return version
 
     @staticmethod
     def _incoming(connection: Connection[Row], m: Metadata, target: str, outcome: Outcome) -> None:

@@ -4,6 +4,8 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Split the operator workflow into focused panels, validate Engagement snapshots
+  at the persistence boundary and simplify command parsing and transaction flow.
 - Restrict Centrifugo operations through per-context publisher credentials and a
   separate disconnection credential; remove topology administration from broker
   runtime users.
