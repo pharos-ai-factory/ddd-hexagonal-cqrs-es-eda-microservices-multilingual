@@ -11,6 +11,7 @@ import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/config"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/http"
+	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/openapi"
 	"log"
 	"net/http"
 	"os"
@@ -37,10 +38,15 @@ func main() {
 	if err := os.MkdirAll(root, 0700); err != nil {
 		log.Fatal(err)
 	}
+	server := http.Server{Addr: ":8080", Handler: web.Auth(apiKey, handler(root)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second}
+	log.Fatal(server.ListenAndServe())
+}
+
+func handler(root string) http.Handler {
 	var lock sync.Mutex
 	failures := 0
 	lostResponses := 0
-	mux := http.NewServeMux()
+	mux := contract.NewMux("provider", nil)
 	mux.HandleFunc("POST /messages", func(w http.ResponseWriter, r *http.Request) {
 		var input a.Delivery
 		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 8192))
@@ -126,9 +132,9 @@ func main() {
 		}
 		web.JSON(w, 200, items)
 	})
-	server := http.Server{Addr: ":8080", Handler: web.Auth(apiKey, mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second}
-	log.Fatal(server.ListenAndServe())
+	return mux.Handler()
 }
+
 func persist(root, path string, data []byte) error {
 	file, err := os.CreateTemp(root, "pending-")
 	if err != nil {

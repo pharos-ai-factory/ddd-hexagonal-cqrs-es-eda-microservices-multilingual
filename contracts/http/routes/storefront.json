@@ -1,0 +1,49 @@
+{
+  "health": {
+    "get": {
+      "operationId": "storefrontHealth",
+      "security": [],
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ok"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "diagnostics": {
+    "get": {
+      "operationId": "storefrontDiagnostics",
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "../schemas/diagnostics.json#/schemas/Storefront"}
+            }
+          }
+        },
+        "401": {"$ref": "../schemas/common.json#/responses/401"},
+        "503": {"$ref": "../schemas/common.json#/responses/503"}
+      }
+    }
+  }
+}

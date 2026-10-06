@@ -14,6 +14,7 @@ def run(*args, cwd=ROOT, env=None):
     subprocess.run(args, cwd=cwd, env=env, check=True)
 
 
+run(sys.executable, 'scripts/http_contracts.py', '--check')
 run(sys.executable, 'scripts/check_architecture.py')
 run('node', 'scripts/check_specifications.mjs')
 run('node', '--test', 'scripts/check_specifications.test.mjs')

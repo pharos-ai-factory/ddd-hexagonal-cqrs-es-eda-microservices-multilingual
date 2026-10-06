@@ -14,7 +14,9 @@ type Handlers struct {
 	PlaceOrder      app.PlaceOrderHandler
 }
 
-func Mount(mux *http.ServeMux, h Handlers) {
+func Mount(mux interface {
+	HandleFunc(string, func(http.ResponseWriter, *http.Request))
+}, h Handlers) {
 	mux.HandleFunc("GET /v1/ordering/orders", web.PagedList(h.OrderingQueries.List, h.OrderingQueries.Page))
 	mux.HandleFunc("GET /v1/ordering/orders/{id}", web.Get(h.OrderingQueries.Get))
 	mux.HandleFunc("POST /v1/ordering/orders/{id}", web.Command("ordering.CreateOrder", h.CreateOrder.Execute))

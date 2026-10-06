@@ -10,6 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/openapi"
+	check "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/tests/httpcontract"
+
 	"google.golang.org/protobuf/encoding/protowire"
 )
 
@@ -54,9 +57,12 @@ func TestGatewayRestrictsAuthoritiesAndPreservesBytes(t *testing.T) {
 		t.Run(owner, func(t *testing.T) {
 			body := publication(owner, "publication-id")
 			r := httptest.NewRequest("POST", "/api/publish", strings.NewReader(body))
+			r.Header.Set("Content-Type", "application/json")
 			r.Header.Set("X-API-Key", owner+"-key")
+			check.Request(t, contract.Document("gateway"), r)
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, r)
+			check.Response(t, contract.Document("gateway"), r, w.Result())
 			if w.Code != 200 {
 				t.Fatalf("own publication status %d: %s", w.Code, w.Body.String())
 			}
@@ -93,18 +99,28 @@ func TestGatewayRestrictsAuthoritiesAndPreservesBytes(t *testing.T) {
 			r.Header.Set("X-API-Key", test.key)
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, r)
+			if test.method == "POST" && (test.path == "/api/publish" || test.path == "/api/disconnect") {
+				check.Response(t, contract.Document("gateway"), r, w.Result())
+			}
 			if w.Code != test.status || len(forwarded) != before {
 				t.Fatalf("status=%d forwarded=%d", w.Code, len(forwarded)-before)
 			}
 		})
 	}
 	r := httptest.NewRequest("POST", "/api/disconnect", strings.NewReader(`{"user":"operator"}`))
+	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("X-API-Key", "sessions")
+	check.Request(t, contract.Document("gateway"), r)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
+	check.Response(t, contract.Document("gateway"), r, w.Result())
 	if w.Code != 200 || forwarded[len(forwarded)-1].path != "/api/disconnect" {
 		t.Fatal("session disconnect refused")
 	}
+	r = httptest.NewRequest("GET", "/healthz", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+	check.Response(t, contract.Document("gateway"), r, w.Result())
 	config.PublisherKeys["menu"] = config.SessionKey
 	if _, err := config.Handler(); err == nil {
 		t.Fatal("ambiguous identity accepted")

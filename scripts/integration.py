@@ -72,6 +72,9 @@ def execute(env_file, keep=False):
 
         run(values, recovery=recovery)
         live = dict(os.environ, CAFE_ENV_FILE=str(env_file.resolve()))
+        check("Live OpenAPI conformance", [sys.executable, "scripts/go.py", "run", "./tests/httpconformance"],
+              dict(live, CAFE_GO_PROJECT="services/api", CAFE_DISPOSABLE_PROJECT=values["COMPOSE_PROJECT_NAME"],
+                   CAFE_HTTP_API_URL="http://127.0.0.1:"+values["API_PORT"], CAFE_HTTP_API_KEY=values["API_KEY"]))
         check("Gherkin live workflows", ["node", "--import", "tsx", "node_modules/@cucumber/cucumber/bin/cucumber.js",
                         "--config", "tests/acceptance/cucumber.mjs"], live)
         check("Gherkin infrastructure reports", ["node", "scripts/check_bdd_reports.mjs", "infrastructure"], live)

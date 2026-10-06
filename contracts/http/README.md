@@ -1,5 +1,50 @@
 # HTTP behaviour contract, version 1
 
+The OpenAPI 3.0.3 documents are the authoritative HTTP wire contracts:
+
+| Document | Surface |
+| --- | --- |
+| [api.openapi.json](api.openapi.json) | Go API: all six contexts' forwarded commands and queries, sessions, health, diagnostics and internal Centrifugo proxies |
+| [storefront.openapi.json](storefront.openapi.json) | Direct Go Storefront commands, queries, health and diagnostics |
+| [gateway.openapi.json](gateway.openapi.json) | Internal Go realtime publication and disconnection gateway |
+| [provider.openapi.json](provider.openapi.json) | Go development notification provider and its failure controls |
+
+Shared path items in `routes/` and schemas in `schemas/` keep the API and owner
+contracts aligned. The Python and TypeScript business endpoints exposed through
+the Go API use those same published schemas. These services' framework-specific
+administrative surfaces are outside the Go documents.
+
+Go compositions embed self-contained bundles generated from these documents.
+Route registration fails for an undeclared method/path or a declared operation
+without a handler. API forwarding selects exact operations from the contract;
+each configured backend must identify a declared context. Authentication and
+credential scope remain in the owning HTTP adaptor.
+
+`pnpm verify` checks bundle drift and runs OpenAPI request/response conformance
+tests against every Go HTTP operation. Tests validate response bodies, content
+types and declared status codes, including typed rejection envelopes, and prove
+that malformed wire shapes fail validation. `pnpm test:integration` also checks
+live responses from all six contexts through the API after the workflow journey,
+including full lists, item queries, cursor traversal and command error outcomes.
+
+Edit the source documents, run `pnpm generate:http`, and run both required gates.
+`pnpm generate:contracts` includes the same HTTP bundling step. Generated bundles
+are committed inside each owning Go module and must remain reproducible. Normal
+builds need no generator or repository-root files.
+
+Schemas describe transport values. Owners retain business decisions such as
+quantity bounds, drink naming, currency rules and lifecycle transitions, returning
+recorded 422 outcomes. The existing HTTP body limits, UUID validation, concurrency
+headers and authentication are exercised separately. Response buffering and
+schema validation run in the conformance checks.
+
+Go API technical failures use the shared `ErrorResponse` struct and status/code
+descriptors in its HTTP adaptor. The body remains `{"code":"..."}` with an
+optional public `message`; underlying infrastructure errors stay outside it.
+Session authentication and Centrifugo replies retain their documented protocol
+envelopes. The API forwards owner command rejections with their aggregate identity,
+version and `rejection` details.
+
 The separate Go API exposes `/api/v1/<context>/...` on port 28080 and through
 browser ingress on port 28000. Browser requests use the operator cookie; mutations
 require an allowed Origin. Scripted clients use `Authorization: Bearer <API_KEY>`

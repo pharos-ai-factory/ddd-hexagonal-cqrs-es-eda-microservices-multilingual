@@ -1,0 +1,223 @@
+{
+  "list": {
+    "x-owner": "loyalty",
+    "get": {
+      "operationId": "listRewards",
+      "summary": "List rewards",
+      "parameters": [
+        {"$ref": "../schemas/common.json#/parameters/Limit"},
+        {"$ref": "../schemas/common.json#/parameters/Cursor"}
+      ],
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "exists",
+                        "version",
+                        "state"
+                      ],
+                      "properties": {
+                        "exists": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "state": {"$ref": "../schemas/engagement.json#/schemas/Reward"}
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "items",
+                      "nextCursor"
+                    ],
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "exists",
+                            "version",
+                            "state"
+                          ],
+                          "properties": {
+                            "exists": {
+                              "type": "boolean",
+                              "enum": [
+                                true
+                              ]
+                            },
+                            "version": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "state": {"$ref": "../schemas/engagement.json#/schemas/Reward"}
+                          }
+                        }
+                      },
+                      "nextCursor": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": [
+                {
+                  "exists": true,
+                  "version": 1,
+                  "state": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "grantId": "22222222-2222-4222-8222-222222222222",
+                    "customerId": "22222222-2222-4222-8222-222222222222",
+                    "benefit": "Coffee",
+                    "status": "issued",
+                    "expiresAt": "2026-10-06T12:00:00Z"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "400": {"$ref": "../schemas/common.json#/responses/400"},
+        "401": {"$ref": "../schemas/common.json#/responses/401"},
+        "403": {"$ref": "../schemas/common.json#/responses/403"},
+        "503": {"$ref": "../schemas/common.json#/responses/503"}
+      }
+    }
+  },
+  "item": {
+    "x-owner": "loyalty",
+    "parameters": [
+      {"$ref": "../schemas/common.json#/parameters/ID"}
+    ],
+    "get": {
+      "operationId": "getReward",
+      "summary": "Get Reward",
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "exists",
+                  "version",
+                  "state"
+                ],
+                "properties": {
+                  "exists": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "state": {"$ref": "../schemas/engagement.json#/schemas/Reward"}
+                }
+              },
+              "example": {
+                "exists": true,
+                "version": 1,
+                "state": {
+                  "id": "11111111-1111-4111-8111-111111111111",
+                  "grantId": "22222222-2222-4222-8222-222222222222",
+                  "customerId": "22222222-2222-4222-8222-222222222222",
+                  "benefit": "Coffee",
+                  "status": "issued",
+                  "expiresAt": "2026-10-06T12:00:00Z"
+                }
+              }
+            }
+          }
+        },
+        "400": {"$ref": "../schemas/common.json#/responses/400"},
+        "401": {"$ref": "../schemas/common.json#/responses/401"},
+        "403": {"$ref": "../schemas/common.json#/responses/403"},
+        "404": {"$ref": "../schemas/common.json#/responses/404"},
+        "503": {"$ref": "../schemas/common.json#/responses/503"}
+      }
+    }
+  },
+  "redeem": {
+    "x-owner": "loyalty",
+    "parameters": [
+      {"$ref": "../schemas/common.json#/parameters/ID"}
+    ],
+    "post": {
+      "operationId": "redeemReward",
+      "summary": "redeemReward",
+      "parameters": [
+        {"$ref": "../schemas/common.json#/parameters/CommandID"},
+        {"$ref": "../schemas/common.json#/parameters/Version"},
+        {"$ref": "../schemas/common.json#/parameters/Correlation"}
+      ],
+      "requestBody": {
+        "required": true,
+        "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schemas/engagement.json#/schemas/RedeemCommand"},
+            "example": {
+              "orderId": "22222222-2222-4222-8222-222222222222"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "../schemas/common.json#/schemas/Outcome"},
+              "example": {
+                "aggregateId": "11111111-1111-4111-8111-111111111111",
+                "version": 1,
+                "status": "draft"
+              }
+            }
+          }
+        },
+        "400": {"$ref": "../schemas/common.json#/responses/400"},
+        "401": {"$ref": "../schemas/common.json#/responses/401"},
+        "403": {"$ref": "../schemas/common.json#/responses/403"},
+        "404": {
+          "description": "Recorded missing-root rejection",
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "../schemas/common.json#/schemas/RejectedOutcome"}
+            }
+          }
+        },
+        "409": {"$ref": "../schemas/common.json#/responses/409"},
+        "422": {"$ref": "../schemas/common.json#/responses/422"},
+        "428": {"$ref": "../schemas/common.json#/responses/428"},
+        "503": {"$ref": "../schemas/common.json#/responses/503"}
+      }
+    }
+  }
+}

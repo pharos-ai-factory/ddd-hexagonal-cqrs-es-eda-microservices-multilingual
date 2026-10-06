@@ -29,6 +29,8 @@
     "events:replay": "python3 scripts/replay.py",
     "check:architecture": "python3 scripts/check_architecture.py",
     "check:large-file-review": "python3 scripts/check_architecture.py",
+    "generate:http": "python3 scripts/http_contracts.py",
+    "check:http": "python3 scripts/http_contracts.py --check",
     "generate:contracts": "python3 scripts/generate.py",
     "test:browser": "python3 scripts/browser.py"
   }

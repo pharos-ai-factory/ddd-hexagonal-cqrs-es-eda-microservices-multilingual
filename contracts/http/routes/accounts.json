@@ -1,0 +1,162 @@
+{
+  "list": {
+    "x-owner": "loyalty",
+    "get": {
+      "operationId": "listAccounts",
+      "summary": "List accounts",
+      "parameters": [
+        {"$ref": "../schemas/common.json#/parameters/Limit"},
+        {"$ref": "../schemas/common.json#/parameters/Cursor"}
+      ],
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "exists",
+                        "version",
+                        "state"
+                      ],
+                      "properties": {
+                        "exists": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "state": {"$ref": "../schemas/engagement.json#/schemas/Account"}
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "items",
+                      "nextCursor"
+                    ],
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "exists",
+                            "version",
+                            "state"
+                          ],
+                          "properties": {
+                            "exists": {
+                              "type": "boolean",
+                              "enum": [
+                                true
+                              ]
+                            },
+                            "version": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "state": {"$ref": "../schemas/engagement.json#/schemas/Account"}
+                          }
+                        }
+                      },
+                      "nextCursor": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": [
+                {
+                  "exists": true,
+                  "version": 1,
+                  "state": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "stampBalance": 0,
+                    "collections": 0,
+                    "grantsEarned": 0
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "400": {"$ref": "../schemas/common.json#/responses/400"},
+        "401": {"$ref": "../schemas/common.json#/responses/401"},
+        "403": {"$ref": "../schemas/common.json#/responses/403"},
+        "503": {"$ref": "../schemas/common.json#/responses/503"}
+      }
+    }
+  },
+  "item": {
+    "x-owner": "loyalty",
+    "parameters": [
+      {"$ref": "../schemas/common.json#/parameters/ID"}
+    ],
+    "get": {
+      "operationId": "getAccount",
+      "summary": "Get Account",
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "exists",
+                  "version",
+                  "state"
+                ],
+                "properties": {
+                  "exists": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "state": {"$ref": "../schemas/engagement.json#/schemas/Account"}
+                }
+              },
+              "example": {
+                "exists": true,
+                "version": 1,
+                "state": {
+                  "id": "11111111-1111-4111-8111-111111111111",
+                  "stampBalance": 0,
+                  "collections": 0,
+                  "grantsEarned": 0
+                }
+              }
+            }
+          }
+        },
+        "400": {"$ref": "../schemas/common.json#/responses/400"},
+        "401": {"$ref": "../schemas/common.json#/responses/401"},
+        "403": {"$ref": "../schemas/common.json#/responses/403"},
+        "404": {"$ref": "../schemas/common.json#/responses/404"},
+        "503": {"$ref": "../schemas/common.json#/responses/503"}
+      }
+    }
+  }
+}

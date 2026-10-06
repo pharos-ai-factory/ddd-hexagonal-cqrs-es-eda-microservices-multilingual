@@ -33,13 +33,13 @@ else:
         args += ["--user", f"{os.getuid()}:{os.getgid()}"]
     args += ["-e", "GOPATH=/cache", "-e", "GOCACHE=/cache/build", "-v", f"{ROOT}:/src",
             "-v", f"{cache}:/cache", "-w", "/src" if formatting else "/src/"+str(PROJECT.relative_to(ROOT))]
-    if os.environ.get("DATABASE_ADMIN_URL") or os.environ.get("BROKER_URL"):
+    if os.environ.get("DATABASE_ADMIN_URL") or os.environ.get("BROKER_URL") or os.environ.get("CAFE_HTTP_API_URL"):
         # Integration services publish random loopback ports on the host.
         args += ["--network", "host"]
     for name in os.environ:
         if name.endswith(("_DATABASE_URL", "_BROKER_URL")) or name in {
             "DATABASE_ADMIN_URL", "BROKER_ADMIN_URL", "BROKER_URL", "APP_ENV", "UPDATE_FIXTURES",
-            "CAFE_DISPOSABLE_PROJECT",
+            "CAFE_DISPOSABLE_PROJECT", "CAFE_HTTP_API_URL", "CAFE_HTTP_API_KEY",
         }:
             args += ["-e", name]
     if os.environ.get("GOBIN"):

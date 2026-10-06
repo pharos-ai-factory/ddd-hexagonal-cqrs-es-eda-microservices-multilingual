@@ -1,5 +1,97 @@
 # Executed verification
 
+## Go API HTTP packages, 6 October 2026
+
+The HTTP adaptor now groups handlers and adjacent tests in `operational`,
+`session`, `realtime` and `backend` packages. Each receives its own configuration;
+the parent composes the routes and retains complete OpenAPI conformance checks.
+Shared security, JSON/error responses and test fixtures live under `http/internal`.
+The published routes, credentials, session cookies, error bodies and realtime
+authorisation deadlines retain their existing behaviour.
+
+`pnpm verify` passed, including architecture checks across 48 Go packages,
+race-enabled tests, vet and all 51 fast Gherkin scenarios. The integration rerun
+passed live OpenAPI validation for all 31 business operations, persistence/broker
+checks, workflows, permissions, diagnostics and both Chromium scenarios.
+
+The initial browser run timed out before sending its command because the
+connection remained in reconnecting state after successful authentication.
+Both browser scenarios passed on a fresh full integration run; no browser or
+session-worker code was changed. The first trace is preserved in
+`.local/api-http-packages-browser-failure.zip`.
+
+Both integration runs failed the separate session revocation fixture's Centrifugo
+readiness check before its API process started. Those assertions remain unverified
+on this Docker Desktop host. Disposable resources were removed after each run.
+Logs are `.local/api-http-packages-verify.log`,
+`.local/api-http-packages-integration.log` and
+`.local/api-http-packages-integration-rerun.log`.
+
+## Go API technical error responses, 6 October 2026
+
+All seven API technical JSON errors use a shared `ErrorResponse` and reusable
+status/code descriptors. The published bodies retain their existing fields;
+session/Centrifugo envelopes and forwarded owner outcomes retain their contracts.
+Boundary tests cover failed session creation, authentication and revocation,
+upstream failure, redaction, cookie/cache behaviour and refusal to forward when
+session authority is unavailable.
+
+`BenchmarkAPIErrorResponseEncoding` compared the previous map body with the typed
+writer on Go 1.27.1, macOS ARM64, Apple M3 Max. Across three runs the median was
+390.7 ns/op for maps and 197.0 ns/op for structs. Allocations fell from 7 to 4 per
+response, and allocated bytes from 408 to 96. Both variants use the same JSON
+encoder and headers with a body-discarding writer. This measures encoding only;
+it makes no claim about overall request latency or throughput. Results are in
+`.local/api-errors-bench.log`.
+
+`pnpm verify` passed. The integration run passed the live OpenAPI checks for all
+31 business operations and every other lane except the separate session
+revocation fixture. Its Centrifugo health endpoint remained unreachable before
+the fixture API started, so those assertions remain unverified on Docker Desktop.
+Disposable resources were removed. Gate logs are `.local/api-errors-verify.log`
+and `.local/api-errors-integration.log`.
+
+## Go API route organisation, 6 October 2026
+
+The API composition now mounts focused session, realtime, operational and backend
+route groups. Named handlers and their existing tests follow those responsibilities;
+shared security and JSON response helpers have separate files. OpenAPI documents
+and externally visible behaviour retain their existing contracts.
+
+`pnpm verify` passed after the refactor. The integration run passed live OpenAPI
+validation for all 31 business operations, persistence/broker checks, workflows,
+permissions, diagnostics and both browser scenarios. The separate session
+revocation fixture again failed to reach its Centrifugo health endpoint before
+its API process started, so its assertions remain unverified on this Docker
+Desktop host. Disposable resources were removed. Logs are
+`.local/api-routes-verify.log` and `.local/api-routes-integration.log`.
+
+## OpenAPI HTTP authority, 6 October 2026
+
+`pnpm verify` passes with authoritative OpenAPI documents, reproducible embedded
+bundles and complete route registration checks enabled. Conformance tests cover
+all 38 Go API operations, 19 direct Storefront operations, three realtime gateway
+operations and three development provider operations. Negative examples reject
+malformed requests, missing/wrong response fields and undeclared status codes.
+
+`pnpm test:integration` executed the PostgreSQL/RabbitMQ checks, recovery journey,
+12 infrastructure Gherkin scenarios, realtime/Valkey permission probes,
+diagnostics and both browser scenarios successfully. The new live OpenAPI probe
+passed for all 31 business operations across all six contexts, including owner
+DTOs, cursor traversal, 404/409/422 outcomes and missing-version responses.
+
+The integration gate failed during the separate session revocation fixture's
+readiness check. On this macOS host with Docker Desktop, its Centrifugo container
+started with the memory engine and logged both HTTP listeners, but the host could
+not reach its health endpoint through `--network host`. A focused rerun reproduced
+the same failure before the fixture API started. The revocation assertions did
+not execute; they remain unverified in this run. Disposable Compose resources and
+both fixture containers were removed. No other integration lane was omitted.
+
+Logs are `.local/openapi-verify.log`, `.local/openapi-integration.log` and
+`.local/openapi-revocation-debug.log`. The existing development dataset was
+preserved. Remote CI remains outside these local results.
+
 ## Runtime authority and complete queries, 29 September 2026
 
 `pnpm verify` and `pnpm test:integration` pass after the runtime, secret delivery,

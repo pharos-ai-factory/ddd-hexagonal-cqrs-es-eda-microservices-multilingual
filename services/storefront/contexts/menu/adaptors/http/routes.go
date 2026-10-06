@@ -18,7 +18,9 @@ type Handlers struct {
 	PublishEdition app.PublishEditionHandler
 }
 
-func Mount(mux *http.ServeMux, h Handlers) {
+func Mount(mux interface {
+	HandleFunc(string, func(http.ResponseWriter, *http.Request))
+}, h Handlers) {
 	mux.HandleFunc("GET /v1/menu/drinks", web.PagedList(h.DrinkQueries.List, h.DrinkQueries.Page))
 	mux.HandleFunc("GET /v1/menu/drinks/{id}", web.Get(h.DrinkQueries.Get))
 	mux.HandleFunc("POST /v1/menu/drinks/{id}", web.Command("menu.CreateDrink", h.CreateDrink.Execute))

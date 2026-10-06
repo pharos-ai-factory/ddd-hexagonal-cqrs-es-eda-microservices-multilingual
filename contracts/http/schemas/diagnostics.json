@@ -1,0 +1,172 @@
+{
+  "schemas": {
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pendingRevocations",
+        "expiredSessionsAwaitingRevocation",
+        "processFailures"
+      ],
+      "properties": {
+        "pendingRevocations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiredSessionsAwaitingRevocation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "processFailures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastFailure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "at",
+            "operation",
+            "class"
+          ],
+          "properties": {
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "operation": {
+              "type": "string"
+            },
+            "class": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Storefront": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "databases",
+        "processWorkers",
+        "counterScope"
+      ],
+      "properties": {
+        "databases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "outbox",
+              "realtime"
+            ],
+            "properties": {
+              "outbox": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "pending",
+                  "oldestAgeSeconds",
+                  "failed"
+                ],
+                "properties": {
+                  "pending": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "oldestAgeSeconds": {
+                    "type": "number"
+                  },
+                  "failed": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "realtime": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "pending",
+                  "oldestAgeSeconds",
+                  "failed"
+                ],
+                "properties": {
+                  "pending": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "oldestAgeSeconds": {
+                    "type": "number"
+                  },
+                  "failed": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "processWorkers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "name",
+              "failures",
+              "deadLetterTransfers",
+              "lastFailure"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "failures": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "deadLetterTransfers": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "lastFailure": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "at",
+                  "class"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "class": {
+                    "type": "string"
+                  },
+                  "event": {
+                    "type": "string"
+                  },
+                  "correlation": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "counterScope": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

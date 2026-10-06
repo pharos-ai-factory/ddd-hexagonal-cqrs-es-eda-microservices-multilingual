@@ -5,6 +5,8 @@
 - Service/context ownership and inward imports across Go, Python and TypeScript;
   policy negative fixtures and large-file responsibility checks.
 - Formatting, race-enabled unit tests and vet for both Go modules.
+- Reproducible OpenAPI bundles, complete Go route registration and schema
+  conformance for every Go HTTP operation; negative wire-drift examples.
 - Frozen Python dependencies, Ruff, strict Mypy over handwritten source/tests,
   type-gate negative examples and domain/contract tests.
 - Engagement and web TypeScript checks and behaviour tests.
@@ -29,6 +31,7 @@ static export served by the ingress, and runs:
 | Context migrations | Independent owner ledgers, additive upgrade preserving roots, idempotent reapplication, checksum/owner rejection and rollback |
 | Query completeness | More than 100 roots in each language; complete unpaginated arrays and cursor traversal without omissions or duplicates |
 | Cross-language workflow | Menu → order → preparation → collection → account → reward → notifications; Operations outage and paused private Reward consumer |
+| HTTP contracts | Live OpenAPI response validation through the Go API for all six contexts, complete/paginated reads, item DTOs, missing versions, missing roots and conflicting command identities |
 | Gherkin PostgreSQL | Recorded `menu_pending` after projection arrival, new-attempt success and conflicting key reuse; atomic browser intent |
 | Gherkin live workflows | Ten focused scenarios: repeated business facts with new event IDs, duplicate grants/notifications, concurrent collections/redemptions, customer isolation, lost provider response and recorded completion rejection |
 | Provider | Acceptance followed by a lost response creates one provider effect |
@@ -96,7 +99,7 @@ fail native runners. Add binding definitions in the owning service's language.
 The report gate matches executed identities/example counts against the catalogue
 and rejects missing, repeated, skipped or failed examples.
 
-`pnpm generate:contracts` regenerates Go/Python bindings, TypeScript descriptors,
+`pnpm generate:contracts` regenerates Go/Python bindings, TypeScript descriptors, OpenAPI bundles,
 Python `.pyi` declarations, canonical fixture copies and migration checksum metadata. Review all generated
 diffs. `pnpm check:large-file-review` checks the explicit generated/lockfile
 exceptions; no handwritten exception currently exists.

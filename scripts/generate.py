@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate transport bindings for all runtimes from the shared wire schemas."""
+from http_contracts import generate as generate_http_contracts
 import os
 import json
 from hashlib import sha256
@@ -34,3 +35,4 @@ for directory in (python_out, ROOT/"services/engagement/src/adaptors/generated")
 subprocess.run(["node", "scripts/generate-typescript.mjs"], cwd=ROOT, check=True)
 
 generate_migration_metadata()
+generate_http_contracts()

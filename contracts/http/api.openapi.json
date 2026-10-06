@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Café Go API",
+    "version": "1.0.0",
+    "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
+  },
+  "paths": {
+    "/api/v1/menu/drinks": {"$ref": "routes/drinks.json#/list"},
+    "/api/v1/menu/drinks/{id}": {"$ref": "routes/drinks.json#/item"},
+    "/api/v1/menu/drinks/{id}/revise": {"$ref": "routes/drinks.json#/revise"},
+    "/api/v1/menu/drinks/{id}/publish": {"$ref": "routes/drinks.json#/publish"},
+    "/api/v1/menu/editions": {"$ref": "routes/editions.json#/list"},
+    "/api/v1/menu/editions/{id}": {"$ref": "routes/editions.json#/item"},
+    "/api/v1/menu/editions/{id}/offers": {"$ref": "routes/editions.json#/offers"},
+    "/api/v1/menu/editions/{id}/prices": {"$ref": "routes/editions.json#/prices"},
+    "/api/v1/menu/editions/{id}/publish": {"$ref": "routes/editions.json#/publish"},
+    "/api/v1/ordering/orders": {"$ref": "routes/orders.json#/list"},
+    "/api/v1/ordering/orders/{id}": {"$ref": "routes/orders.json#/item"},
+    "/api/v1/ordering/orders/{id}/lines": {"$ref": "routes/orders.json#/lines"},
+    "/api/v1/ordering/orders/{id}/quantities": {"$ref": "routes/orders.json#/quantities"},
+    "/api/v1/ordering/orders/{id}/place": {"$ref": "routes/orders.json#/place"},
+    "/api/v1/preparation/tickets": {"$ref": "routes/tickets.json#/list"},
+    "/api/v1/preparation/tickets/{id}": {"$ref": "routes/tickets.json#/item"},
+    "/api/v1/preparation/tickets/{id}/start": {"$ref": "routes/tickets.json#/start"},
+    "/api/v1/preparation/tickets/{id}/complete": {"$ref": "routes/tickets.json#/complete"},
+    "/api/v1/collection/pickups": {"$ref": "routes/pickups.json#/list"},
+    "/api/v1/collection/pickups/{id}": {"$ref": "routes/pickups.json#/item"},
+    "/api/v1/collection/pickups/{id}/collect": {"$ref": "routes/pickups.json#/collect"},
+    "/api/v1/loyalty/accounts": {"$ref": "routes/accounts.json#/list"},
+    "/api/v1/loyalty/accounts/{id}": {"$ref": "routes/accounts.json#/item"},
+    "/api/v1/loyalty/rewards": {"$ref": "routes/rewards.json#/list"},
+    "/api/v1/loyalty/rewards/{id}": {"$ref": "routes/rewards.json#/item"},
+    "/api/v1/loyalty/rewards/{id}/redeem": {"$ref": "routes/rewards.json#/redeem"},
+    "/api/v1/communication/notifications": {"$ref": "routes/notifications.json#/list"},
+    "/api/v1/communication/notifications/{id}": {"$ref": "routes/notifications.json#/item"},
+    "/healthz": {"$ref": "routes/api.json#/health"},
+    "/diagnostics": {"$ref": "routes/api.json#/diagnostics"},
+    "/auth/login": {"$ref": "routes/api.json#/login"},
+    "/auth/session": {"$ref": "routes/api.json#/session"},
+    "/auth/logout": {"$ref": "routes/api.json#/logout"},
+    "/api/realtime/connect": {"$ref": "routes/api.json#/connect"},
+    "/api/realtime/refresh": {"$ref": "routes/api.json#/refresh"}
+  },
+  "components": {
+    "securitySchemes": {
+      "CLIKey": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "OperatorSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "cafe_session"
+      },
+      "RealtimeProxy": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Cafe-Realtime-Proxy"
+      }
+    }
+  },
+  "security": [
+    {
+      "CLIKey": []
+    },
+    {
+      "OperatorSession": []
+    }
+  ]
+}

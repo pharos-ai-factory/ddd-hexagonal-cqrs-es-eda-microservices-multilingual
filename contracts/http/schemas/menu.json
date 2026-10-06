@@ -1,0 +1,164 @@
+{
+  "schemas": {
+    "Drink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "published"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "published": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "drinkId",
+        "drinkRevision",
+        "name",
+        "minor",
+        "currency"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "drinkId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "drinkRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string"
+        }
+      }
+    },
+    "Edition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "currency",
+        "status",
+        "offers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "published"
+          ]
+        },
+        "offers": {
+          "type": "array",
+          "items": {"$ref": "../schemas/menu.json#/schemas/Offer"},
+          "nullable": true
+        }
+      }
+    },
+    "DrinkCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "EditionCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currency"
+      ],
+      "properties": {
+        "currency": {
+          "type": "string"
+        }
+      }
+    },
+    "OfferCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "drinkId",
+        "drinkRevision",
+        "minor"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "drinkId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "drinkRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minor": {
+          "type": "integer"
+        }
+      }
+    },
+    "PriceCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "minor"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "minor": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

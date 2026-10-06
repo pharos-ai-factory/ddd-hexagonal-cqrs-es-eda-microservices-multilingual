@@ -59,6 +59,19 @@ RabbitMQ credentials, and it cannot decide domain outcomes. It routes only known
 context paths, authenticates the caller, replaces browser credentials with the
 owning service's internal key, and preserves command identity and version headers.
 
+Its HTTP adaptor has separate `operational`, `session`, `realtime` and `backend`
+packages with tests beside their handlers. The parent package composes those
+routes and verifies the assembled OpenAPI surface. Shared response and security
+helpers stay under `http/internal`; each route package receives its own technical
+dependencies without importing the parent composition.
+
+OpenAPI documents in `contracts/http/` define every Go HTTP operation and the
+published business wire shapes. Each Go module embeds generated bundles and
+checks complete route registration at startup. The API registers its exact
+forwarding routes from the document. Schema conformance runs in deterministic
+tests and against the live owner responses in the integration lane. See decision
+0006 and `contracts/http/README.md`.
+
 Next.js exports the operator interface as static assets served by the ingress;
 there is no frontend Node server. The ingress routes `/auth` and `/api/v1`
 to the Go API and `/connection/websocket` to Centrifugo. Internal proxy and

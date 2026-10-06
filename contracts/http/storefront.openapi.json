@@ -1,0 +1,39 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Café Go Storefront",
+    "version": "1.0.0",
+    "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
+  },
+  "paths": {
+    "/v1/menu/drinks": {"$ref": "routes/drinks.json#/list"},
+    "/v1/menu/drinks/{id}": {"$ref": "routes/drinks.json#/item"},
+    "/v1/menu/drinks/{id}/revise": {"$ref": "routes/drinks.json#/revise"},
+    "/v1/menu/drinks/{id}/publish": {"$ref": "routes/drinks.json#/publish"},
+    "/v1/menu/editions": {"$ref": "routes/editions.json#/list"},
+    "/v1/menu/editions/{id}": {"$ref": "routes/editions.json#/item"},
+    "/v1/menu/editions/{id}/offers": {"$ref": "routes/editions.json#/offers"},
+    "/v1/menu/editions/{id}/prices": {"$ref": "routes/editions.json#/prices"},
+    "/v1/menu/editions/{id}/publish": {"$ref": "routes/editions.json#/publish"},
+    "/v1/ordering/orders": {"$ref": "routes/orders.json#/list"},
+    "/v1/ordering/orders/{id}": {"$ref": "routes/orders.json#/item"},
+    "/v1/ordering/orders/{id}/lines": {"$ref": "routes/orders.json#/lines"},
+    "/v1/ordering/orders/{id}/quantities": {"$ref": "routes/orders.json#/quantities"},
+    "/v1/ordering/orders/{id}/place": {"$ref": "routes/orders.json#/place"},
+    "/healthz": {"$ref": "routes/storefront.json#/health"},
+    "/diagnostics": {"$ref": "routes/storefront.json#/diagnostics"}
+  },
+  "components": {
+    "securitySchemes": {
+      "ServiceKey": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "ServiceKey": []
+    }
+  ]
+}

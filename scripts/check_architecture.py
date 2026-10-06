@@ -29,6 +29,10 @@ GENERATED = {
     'services/storefront/foundation/persistence/postgres/migrations/contexts.json',
     'services/operations/src/operations/adaptors/generated/context-persistence.json',
     'services/engagement/src/adaptors/generated/context-persistence.json',
+    'services/api/adaptors/openapi/generated/api.openapi.json',
+    'services/api/adaptors/openapi/generated/gateway.openapi.json',
+    'services/storefront/foundation/transport/openapi/generated/storefront.openapi.json',
+    'services/storefront/foundation/transport/openapi/generated/provider.openapi.json',
     'pnpm-lock.yaml', 'services/operations/uv.lock',
 }
 

@@ -1,0 +1,216 @@
+{
+  "schemas": {
+    "ID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregateId",
+        "version",
+        "status"
+      ],
+      "properties": {
+        "aggregateId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "RejectedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregateId",
+        "version",
+        "status",
+        "rejection"
+      ],
+      "properties": {
+        "aggregateId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string"
+        },
+        "rejection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "EmptyCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    }
+  },
+  "parameters": {
+    "ID": {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      },
+      "example": "11111111-1111-4111-8111-111111111111"
+    },
+    "CommandID": {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": true,
+      "schema": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      },
+      "example": "22222222-2222-4222-8222-222222222222"
+    },
+    "Version": {
+      "name": "If-Match",
+      "in": "header",
+      "required": true,
+      "description": "Expected root version; 0 creates a root. Quoted decimal versions are also accepted. Invalid or missing values return 428.",
+      "schema": {
+        "type": "string",
+        "pattern": "^\"?[0-9]+\"?$"
+      },
+      "example": "0"
+    },
+    "Correlation": {
+      "name": "X-Correlation-ID",
+      "in": "header",
+      "required": false,
+      "schema": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      }
+    },
+    "Limit": {
+      "name": "limit",
+      "in": "query",
+      "schema": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      }
+    },
+    "Cursor": {
+      "name": "cursor",
+      "in": "query",
+      "description": "Opaque, resource-bound cursor. Requires limit. Repeated pagination parameters are rejected.",
+      "schema": {
+        "type": "string",
+        "maxLength": 1024
+      }
+    }
+  },
+  "responses": {
+    "400": {
+      "description": "Malformed request",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/Error"}
+        }
+      }
+    },
+    "401": {
+      "description": "Missing or invalid credentials",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/Error"}
+        }
+      }
+    },
+    "403": {
+      "description": "Origin or authority denied",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/Error"}
+        }
+      }
+    },
+    "404": {
+      "description": "Root not found",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/Error"}
+        }
+      }
+    },
+    "428": {
+      "description": "Expected aggregate version required",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/Error"}
+        }
+      }
+    },
+    "503": {
+      "description": "Infrastructure unavailable; retry the same identity",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/Error"}
+        }
+      }
+    },
+    "409": {
+      "description": "Conflicting version or command identity",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/RejectedOutcome"}
+        }
+      }
+    },
+    "422": {
+      "description": "Recorded business rejection",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schemas/common.json#/schemas/RejectedOutcome"}
+        }
+      }
+    }
+  }
+}

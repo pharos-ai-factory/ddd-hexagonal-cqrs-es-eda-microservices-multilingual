@@ -4,6 +4,14 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Centralise Go API technical errors as typed JSON responses with reusable
+  status/code descriptors; preserve session, realtime and owner outcome contracts.
+- Organise Go API HTTP handlers into session, realtime, operational and backend
+  packages with adjacent tests, a small composition function and internal shared
+  transport helpers.
+- Define authoritative OpenAPI contracts for every Go HTTP surface, require
+  complete route registration, restrict API forwarding to declared operations
+  and validate wire schemas in deterministic and live integration checks.
 - Add service-local domain and application error types while retaining stable
   recorded rejection codes and retryable infrastructure failures.
 - Split the operator workflow into focused panels, validate Engagement snapshots

@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/openapi"
 )
 
 const MaxRequestBytes = 1024 * 1024
@@ -42,7 +44,7 @@ func (c Config) Handler() (http.Handler, error) {
 		seen[key] = true
 	}
 	client := &http.Client{Timeout: 5 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	mux := http.NewServeMux()
+	mux := contract.NewMux("gateway", nil)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("ok")) })
 	mux.HandleFunc("POST /api/publish", func(w http.ResponseWriter, r *http.Request) {
 		owner := ""
@@ -91,7 +93,7 @@ func (c Config) Handler() (http.Handler, error) {
 		}
 		c.forward(w, r, client, body)
 	})
-	return mux, nil
+	return mux.Handler(), nil
 }
 
 func sameKey(actual, expected string) bool {

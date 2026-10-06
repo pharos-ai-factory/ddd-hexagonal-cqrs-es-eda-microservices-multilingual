@@ -53,6 +53,11 @@ Review schema and fixture changes as public contract changes. See
 `contracts/events/README.md` for compatibility rules. Regeneration must produce
 no unexpected change before merging.
 
+HTTP changes start with the OpenAPI sources in `contracts/http/`. Regenerate
+service-local bundles with `pnpm generate:http` or `pnpm generate:contracts`.
+Update the relevant handler conformance examples; the Go compositions require
+complete method/path coverage and the integration gate validates live owner DTOs.
+
 Database bootstrap runs as an administrator; applications only check schema
 version and checksum. Never add startup migrations or schema ownership to runtime
 credentials. The initial schema describes a fresh reference installation.

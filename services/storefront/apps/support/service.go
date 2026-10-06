@@ -14,6 +14,7 @@ import (
 	workers "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/runtime"
 	broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/amqp"
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/http"
+	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/openapi"
 	"log/slog"
 	"net/http"
 	"os"
@@ -25,7 +26,7 @@ import (
 
 type Service struct {
 	Context       context.Context
-	Mux           *http.ServeMux
+	Mux           *contract.Mux
 	Databases     map[string]*postgres.Database
 	URLs          map[string]string
 	subscriptions []broker.Subscription
@@ -46,7 +47,7 @@ func Open(contexts ...string) (*Service, error) {
 		return nil, fmt.Errorf("a development API key of at least 32 characters is required")
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	service := &Service{Context: ctx, Mux: http.NewServeMux(), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, cancel: cancel, apiKey: apiKey}
+	service := &Service{Context: ctx, Mux: contract.NewMux("storefront", nil), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, cancel: cancel, apiKey: apiKey}
 	for _, owner := range contexts {
 		databaseURL, err := config.Secret(strings.ToUpper(owner) + "_DATABASE_URL")
 		if err != nil {
@@ -70,12 +71,16 @@ func Open(contexts ...string) (*Service, error) {
 		}
 		service.URLs[owner] = brokerURL
 	}
-	service.Mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { web.JSON(w, 200, map[string]string{"status": "ok"}) })
-	service.Mux.HandleFunc("GET /diagnostics", func(w http.ResponseWriter, r *http.Request) {
+	service.mountHTTP()
+	return service, nil
+}
+func (s *Service) mountHTTP() {
+	s.Mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { web.JSON(w, 200, map[string]string{"status": "ok"}) })
+	s.Mux.HandleFunc("GET /diagnostics", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
 		databases := map[string]postgres.Diagnostics{}
-		for owner, db := range service.Databases {
+		for owner, db := range s.Databases {
 			state, err := db.Diagnostics(ctx)
 			if err != nil {
 				diagnostics.Record(owner, "diagnostics", "", "", err, false)
@@ -87,8 +92,8 @@ func Open(contexts ...string) (*Service, error) {
 		w.Header().Set("Cache-Control", "no-store")
 		web.JSON(w, 200, map[string]any{"databases": databases, "processWorkers": diagnostics.Snapshot(), "counterScope": "process lifetime; deadLetterTransfers are confirmed transfers, not queue depths"})
 	})
-	return service, nil
 }
+
 func (s *Service) Close() {
 	s.cancel()
 	for _, db := range s.Databases {
@@ -121,7 +126,7 @@ func (s *Service) Run() error {
 	if address == "" {
 		address = ":8080"
 	}
-	server := &http.Server{Addr: address, Handler: web.Auth(s.apiKey, s.Mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 30 * time.Second}
+	server := &http.Server{Addr: address, Handler: web.Auth(s.apiKey, s.Mux.Handler()), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 30 * time.Second}
 	go func() {
 		<-s.Context.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

@@ -1,0 +1,2221 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Café Go Storefront",
+    "version": "1.0.0",
+    "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
+  },
+  "paths": {
+    "/v1/menu/drinks": {
+      "x-owner": "menu",
+      "get": {
+        "operationId": "listDrinks",
+        "summary": "List drinks",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-Limit"
+          },
+          {
+            "$ref": "#/components/parameters/common-Cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "exists",
+                          "version",
+                          "state"
+                        ],
+                        "properties": {
+                          "exists": {
+                            "type": "boolean",
+                            "enum": [
+                              true
+                            ]
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "state": {
+                            "$ref": "#/components/schemas/menu-Drink"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "items",
+                        "nextCursor"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "exists",
+                              "version",
+                              "state"
+                            ],
+                            "properties": {
+                              "exists": {
+                                "type": "boolean",
+                                "enum": [
+                                  true
+                                ]
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "state": {
+                                "$ref": "#/components/schemas/menu-Drink"
+                              }
+                            }
+                          }
+                        },
+                        "nextCursor": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": [
+                  {
+                    "exists": true,
+                    "version": 1,
+                    "state": {
+                      "id": "11111111-1111-4111-8111-111111111111",
+                      "name": "Coffee",
+                      "revision": 0,
+                      "published": false
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/drinks/{id}": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "get": {
+        "operationId": "getDrink",
+        "summary": "Get Drink",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "exists",
+                    "version",
+                    "state"
+                  ],
+                  "properties": {
+                    "exists": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "state": {
+                      "$ref": "#/components/schemas/menu-Drink"
+                    }
+                  }
+                },
+                "example": {
+                  "exists": true,
+                  "version": 1,
+                  "state": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "name": "Coffee",
+                    "revision": 0,
+                    "published": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "$ref": "#/components/responses/common-404"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDrink",
+        "summary": "createDrink",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/menu-DrinkCommand"
+              },
+              "example": {
+                "name": "Coffee"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/drinks/{id}/revise": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "reviseDrink",
+        "summary": "reviseDrink",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/menu-DrinkCommand"
+              },
+              "example": {
+                "name": "Coffee"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/drinks/{id}/publish": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "publishDrink",
+        "summary": "publishDrink",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/common-EmptyCommand"
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/editions": {
+      "x-owner": "menu",
+      "get": {
+        "operationId": "listEditions",
+        "summary": "List editions",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-Limit"
+          },
+          {
+            "$ref": "#/components/parameters/common-Cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "exists",
+                          "version",
+                          "state"
+                        ],
+                        "properties": {
+                          "exists": {
+                            "type": "boolean",
+                            "enum": [
+                              true
+                            ]
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "state": {
+                            "$ref": "#/components/schemas/menu-Edition"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "items",
+                        "nextCursor"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "exists",
+                              "version",
+                              "state"
+                            ],
+                            "properties": {
+                              "exists": {
+                                "type": "boolean",
+                                "enum": [
+                                  true
+                                ]
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "state": {
+                                "$ref": "#/components/schemas/menu-Edition"
+                              }
+                            }
+                          }
+                        },
+                        "nextCursor": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": [
+                  {
+                    "exists": true,
+                    "version": 1,
+                    "state": {
+                      "id": "11111111-1111-4111-8111-111111111111",
+                      "currency": "EUR",
+                      "status": "draft",
+                      "offers": []
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/editions/{id}": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "get": {
+        "operationId": "getEdition",
+        "summary": "Get Edition",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "exists",
+                    "version",
+                    "state"
+                  ],
+                  "properties": {
+                    "exists": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "state": {
+                      "$ref": "#/components/schemas/menu-Edition"
+                    }
+                  }
+                },
+                "example": {
+                  "exists": true,
+                  "version": 1,
+                  "state": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "currency": "EUR",
+                    "status": "draft",
+                    "offers": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "$ref": "#/components/responses/common-404"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createEdition",
+        "summary": "createEdition",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/menu-EditionCommand"
+              },
+              "example": {
+                "currency": "EUR"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/editions/{id}/offers": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "addOffer",
+        "summary": "addOffer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/menu-OfferCommand"
+              },
+              "example": {
+                "code": "C1",
+                "drinkId": "22222222-2222-4222-8222-222222222222",
+                "drinkRevision": 1,
+                "minor": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/editions/{id}/prices": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "changePrice",
+        "summary": "changePrice",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/menu-PriceCommand"
+              },
+              "example": {
+                "code": "C1",
+                "minor": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/menu/editions/{id}/publish": {
+      "x-owner": "menu",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "publishEdition",
+        "summary": "publishEdition",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/common-EmptyCommand"
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/ordering/orders": {
+      "x-owner": "ordering",
+      "get": {
+        "operationId": "listOrders",
+        "summary": "List orders",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-Limit"
+          },
+          {
+            "$ref": "#/components/parameters/common-Cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "exists",
+                          "version",
+                          "state"
+                        ],
+                        "properties": {
+                          "exists": {
+                            "type": "boolean",
+                            "enum": [
+                              true
+                            ]
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "state": {
+                            "$ref": "#/components/schemas/ordering-Order"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "items",
+                        "nextCursor"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "exists",
+                              "version",
+                              "state"
+                            ],
+                            "properties": {
+                              "exists": {
+                                "type": "boolean",
+                                "enum": [
+                                  true
+                                ]
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "state": {
+                                "$ref": "#/components/schemas/ordering-Order"
+                              }
+                            }
+                          }
+                        },
+                        "nextCursor": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": [
+                  {
+                    "exists": true,
+                    "version": 1,
+                    "state": {
+                      "id": "11111111-1111-4111-8111-111111111111",
+                      "customerId": "22222222-2222-4222-8222-222222222222",
+                      "editionId": "22222222-2222-4222-8222-222222222222",
+                      "currency": "EUR",
+                      "status": "draft",
+                      "lines": []
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/ordering/orders/{id}": {
+      "x-owner": "ordering",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "get": {
+        "operationId": "getOrder",
+        "summary": "Get Order",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "exists",
+                    "version",
+                    "state"
+                  ],
+                  "properties": {
+                    "exists": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "state": {
+                      "$ref": "#/components/schemas/ordering-Order"
+                    }
+                  }
+                },
+                "example": {
+                  "exists": true,
+                  "version": 1,
+                  "state": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "customerId": "22222222-2222-4222-8222-222222222222",
+                    "editionId": "22222222-2222-4222-8222-222222222222",
+                    "currency": "EUR",
+                    "status": "draft",
+                    "lines": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "$ref": "#/components/responses/common-404"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createOrder",
+        "summary": "createOrder",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ordering-CreateCommand"
+              },
+              "example": {
+                "customerId": "22222222-2222-4222-8222-222222222222",
+                "editionId": "22222222-2222-4222-8222-222222222222"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/ordering/orders/{id}/lines": {
+      "x-owner": "ordering",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "addLine",
+        "summary": "addLine",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ordering-LineCommand"
+              },
+              "example": {
+                "lineId": "22222222-2222-4222-8222-222222222222",
+                "editionId": "22222222-2222-4222-8222-222222222222",
+                "offerCode": "C1",
+                "quantity": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/ordering/orders/{id}/quantities": {
+      "x-owner": "ordering",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "changeQuantity",
+        "summary": "changeQuantity",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ordering-QuantityCommand"
+              },
+              "example": {
+                "lineId": "22222222-2222-4222-8222-222222222222",
+                "quantity": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/v1/ordering/orders/{id}/place": {
+      "x-owner": "ordering",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/common-ID"
+        }
+      ],
+      "post": {
+        "operationId": "placeOrder",
+        "summary": "placeOrder",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/common-CommandID"
+          },
+          {
+            "$ref": "#/components/parameters/common-Version"
+          },
+          {
+            "$ref": "#/components/parameters/common-Correlation"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/common-EmptyCommand"
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-Outcome"
+                },
+                "example": {
+                  "aggregateId": "11111111-1111-4111-8111-111111111111",
+                  "version": 1,
+                  "status": "draft"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/common-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "403": {
+            "$ref": "#/components/responses/common-403"
+          },
+          "404": {
+            "description": "Recorded missing-root rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/common-409"
+          },
+          "422": {
+            "$ref": "#/components/responses/common-422"
+          },
+          "428": {
+            "$ref": "#/components/responses/common-428"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "storefrontHealth",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/diagnostics": {
+      "get": {
+        "operationId": "storefrontDiagnostics",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/diagnostics-Storefront"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/common-401"
+          },
+          "503": {
+            "$ref": "#/components/responses/common-503"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ServiceKey": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "parameters": {
+      "common-Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "common-Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "description": "Opaque, resource-bound cursor. Requires limit. Repeated pagination parameters are rejected.",
+        "schema": {
+          "type": "string",
+          "maxLength": 1024
+        }
+      },
+      "common-ID": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "example": "11111111-1111-4111-8111-111111111111"
+      },
+      "common-CommandID": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "example": "22222222-2222-4222-8222-222222222222"
+      },
+      "common-Version": {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "description": "Expected root version; 0 creates a root. Quoted decimal versions are also accepted. Invalid or missing values return 428.",
+        "schema": {
+          "type": "string",
+          "pattern": "^\"?[0-9]+\"?$"
+        },
+        "example": "0"
+      },
+      "common-Correlation": {
+        "name": "X-Correlation-ID",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "schemas": {
+      "menu-Drink": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "revision",
+          "published"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "published": {
+            "type": "boolean"
+          }
+        }
+      },
+      "common-Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "menu-DrinkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "common-Outcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "aggregateId",
+          "version",
+          "status"
+        ],
+        "properties": {
+          "aggregateId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "common-RejectedOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "aggregateId",
+          "version",
+          "status",
+          "rejection"
+        ],
+        "properties": {
+          "aggregateId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string"
+          },
+          "rejection": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "common-EmptyCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {}
+      },
+      "menu-Offer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "drinkId",
+          "drinkRevision",
+          "name",
+          "minor",
+          "currency"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "drinkId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "drinkRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "minor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "menu-Edition": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "currency",
+          "status",
+          "offers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ]
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/menu-Offer"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "menu-EditionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "currency"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "menu-OfferCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "drinkId",
+          "drinkRevision",
+          "minor"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "drinkId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "drinkRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minor": {
+            "type": "integer"
+          }
+        }
+      },
+      "menu-PriceCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "minor"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "minor": {
+            "type": "integer"
+          }
+        }
+      },
+      "ordering-Selection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offerCode",
+          "name",
+          "minor"
+        ],
+        "properties": {
+          "offerCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "minor": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "ordering-Line": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "selection",
+          "quantity"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/ordering-Selection"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "ordering-Order": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "customerId",
+          "editionId",
+          "currency",
+          "status",
+          "lines"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "customerId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "editionId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "placed"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ordering-Line"
+            }
+          }
+        }
+      },
+      "ordering-CreateCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "customerId",
+          "editionId"
+        ],
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "editionId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          }
+        }
+      },
+      "ordering-LineCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "lineId",
+          "editionId",
+          "offerCode",
+          "quantity"
+        ],
+        "properties": {
+          "lineId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "editionId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "offerCode": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "ordering-QuantityCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "lineId",
+          "quantity"
+        ],
+        "properties": {
+          "lineId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "diagnostics-Storefront": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "databases",
+          "processWorkers",
+          "counterScope"
+        ],
+        "properties": {
+          "databases": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "outbox",
+                "realtime"
+              ],
+              "properties": {
+                "outbox": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "pending",
+                    "oldestAgeSeconds",
+                    "failed"
+                  ],
+                  "properties": {
+                    "pending": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "oldestAgeSeconds": {
+                      "type": "number"
+                    },
+                    "failed": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "realtime": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "pending",
+                    "oldestAgeSeconds",
+                    "failed"
+                  ],
+                  "properties": {
+                    "pending": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "oldestAgeSeconds": {
+                      "type": "number"
+                    },
+                    "failed": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "processWorkers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "name",
+                "failures",
+                "deadLetterTransfers",
+                "lastFailure"
+              ],
+              "properties": {
+                "owner": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "failures": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "deadLetterTransfers": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "lastFailure": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "at",
+                    "class"
+                  ],
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "class": {
+                      "type": "string"
+                    },
+                    "event": {
+                      "type": "string"
+                    },
+                    "correlation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "counterScope": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "common-400": {
+        "description": "Malformed request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-Error"
+            }
+          }
+        }
+      },
+      "common-401": {
+        "description": "Missing or invalid credentials",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-Error"
+            }
+          }
+        }
+      },
+      "common-403": {
+        "description": "Origin or authority denied",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-Error"
+            }
+          }
+        }
+      },
+      "common-503": {
+        "description": "Infrastructure unavailable; retry the same identity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-Error"
+            }
+          }
+        }
+      },
+      "common-404": {
+        "description": "Root not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-Error"
+            }
+          }
+        }
+      },
+      "common-409": {
+        "description": "Conflicting version or command identity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-RejectedOutcome"
+            }
+          }
+        }
+      },
+      "common-422": {
+        "description": "Recorded business rejection",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-RejectedOutcome"
+            }
+          }
+        }
+      },
+      "common-428": {
+        "description": "Expected aggregate version required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/common-Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "ServiceKey": []
+    }
+  ]
+}
