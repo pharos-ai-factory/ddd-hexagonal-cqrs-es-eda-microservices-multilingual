@@ -1,0 +1,34 @@
+syntax = "proto3";
+package cafe.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
+
+import "cafe/v1/contexts/menu/menu_integration_events.proto";
+import "cafe/v1/contexts/ordering/ordering_integration_events.proto";
+import "cafe/v1/contexts/preparation/preparation_integration_events.proto";
+import "cafe/v1/contexts/collection/collection_integration_events.proto";
+import "cafe/v1/contexts/loyalty/loyalty_integration_events.proto";
+
+// Published integration event envelope. Private messages belong to owner adaptors.
+message Event {
+  reserved 20, 26, 28;
+  reserved "drink_published", "reward_earned", "notification_requested";
+  string id = 1;
+  string name = 2;
+  string context = 3;
+  string visibility = 4;
+  uint32 contract_version = 5;
+  string aggregate_kind = 6;
+  string aggregate_id = 7;
+  uint64 aggregate_version = 8;
+  string correlation_id = 9;
+  string causation_id = 10;
+  string occurred_at = 11;
+  oneof payload {
+    MenuPublished menu_published = 21;
+    OrderPlaced order_placed = 22;
+    DrinksReady drinks_ready = 23;
+    PickupOpened pickup_opened = 24;
+    OrderCollected order_collected = 25;
+    RewardIssued reward_issued = 27;
+  }
+}

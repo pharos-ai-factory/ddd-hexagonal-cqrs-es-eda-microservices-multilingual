@@ -3,12 +3,12 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http/internal/response"
+	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging"
+	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1"
 	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/openapi"
 	sessionstore "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/sessions"
 	check "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/tests/httpcontract"
@@ -16,7 +16,7 @@ import (
 
 const contractID = "11111111-1111-4111-8111-111111111111"
 
-func TestEveryPublishedOperationIsProxiedWithItsDeclaredShape(t *testing.T) {
+func TestEveryPublishedOperationTranslatesItsDeclaredShape(t *testing.T) {
 	document := contract.Document("api")
 	for path, item := range document.Paths.Map() {
 		owner, _ := item.Extensions["x-owner"].(string)
@@ -26,21 +26,53 @@ func TestEveryPublishedOperationIsProxiedWithItsDeclaredShape(t *testing.T) {
 		for method, operation := range item.Operations() {
 			t.Run(operation.OperationID, func(t *testing.T) {
 				urlPath := strings.ReplaceAll(path, "{id}", contractID)
-				upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if r.URL.Path != strings.TrimPrefix(urlPath, "/api") || r.Method != method {
-						t.Error("proxy route changed")
-					}
-					if r.Header.Get("Authorization") != "Bearer internal" || r.Header.Get("Cookie") != "" {
-						t.Error("proxy credential isolation failed")
-					}
-					if method == "POST" && (r.Header.Get("Idempotency-Key") != contractID || r.Header.Get("If-Match") != "0" || r.Header.Get("X-Correlation-ID") != contractID) {
-						t.Error("command metadata changed")
-					}
-					response.JSON(w, 200, operation.Responses.Value("200").Value.Content["application/json"].Example)
-				}))
-				defer upstream.Close()
 				c := config()
-				c.Backends = map[string]Backend{owner: {URL: upstream.URL, Key: "internal"}}
+				c.Owners = []string{owner}
+				c.Requests = requestCaller(func(_ context.Context, request pb.Request) (pb.Reply, error) {
+					name, _, err := rpc.Validate(request, owner)
+					if err != nil || name != operation.OperationID {
+						t.Fatal("OpenAPI operation disagrees with Protobuf request", err)
+					}
+					reply, err := pb.NewReply(owner, request.GetRequestId())
+					if err != nil {
+						t.Fatal(err)
+					}
+					example := operation.Responses.Value("200").Value.Content["application/json"].Example
+					if method == "POST" {
+						metadata := pb.Command(request).GetMetadata()
+						if metadata.CommandId != contractID || metadata.CorrelationId != contractID || metadata.GetExpectedVersion() != 0 {
+							t.Fatal("command metadata changed")
+						}
+						outcome := &pb.Outcome{}
+						if err := rpc.FromObject(example, outcome); err != nil {
+							t.Fatal(err)
+						}
+						if err := rpc.SetPayload(reply, "outcome", outcome); err != nil {
+							t.Fatal(err)
+						}
+					} else {
+						prefix := 3
+						if strings.HasPrefix(name, "list") {
+							prefix = 4
+						}
+						payloadName := strings.ToLower(name[prefix:prefix+1]) + name[prefix+1:]
+						payload, err := rpc.NewPayload(reply, payloadName)
+						if err != nil {
+							t.Fatal(err)
+						}
+						value := example
+						if prefix == 4 {
+							value = map[string]any{"items": example, "paged": false}
+						}
+						if err := rpc.FromObject(value, payload); err != nil {
+							t.Fatal(err)
+						}
+						if err := rpc.SetPayload(reply, payloadName, payload); err != nil {
+							t.Fatal(err)
+						}
+					}
+					return reply, nil
+				})
 				var body []byte
 				if operation.RequestBody != nil {
 					body, _ = json.Marshal(operation.RequestBody.Value.Content["application/json"].Example)
@@ -91,10 +123,9 @@ func TestSessionAndTechnicalOperationsConformToOpenAPI(t *testing.T) {
 
 func TestAPIExposesOnlyOpenAPIOperations(t *testing.T) {
 	called := false
-	backend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { called = true }))
-	defer backend.Close()
 	c := config()
-	c.Backends = map[string]Backend{"menu": {URL: backend.URL, Key: "internal"}}
+	c.Owners = []string{"menu"}
+	c.Requests = requestCaller(func(context.Context, pb.Request) (pb.Reply, error) { called = true; return nil, nil })
 	handler := c.Handler()
 	for _, scenario := range []struct {
 		method, path string
@@ -111,4 +142,10 @@ func TestAPIExposesOnlyOpenAPIOperations(t *testing.T) {
 			t.Fatalf("undeclared route forwarded: %s %s status=%d", scenario.method, scenario.path, w.Code)
 		}
 	}
+}
+
+type requestCaller func(context.Context, pb.Request) (pb.Reply, error)
+
+func (f requestCaller) Call(ctx context.Context, request pb.Request) (pb.Reply, error) {
+	return f(ctx, request)
 }

@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
@@ -44,7 +43,7 @@ func (h PublishDrinkHandler) Execute(ctx context.Context, m a.Metadata, _ struct
 		for _, fact := range drink.Events() {
 			if fact.Name == "DrinkPublished" {
 				s := fact.Data.(d.DrinkState)
-				result.Publications = append(result.Publications, a.Publication{Name: "menu.drink-published", Visibility: a.Private, Payload: model.DrinkPublished{DrinkID: s.ID, Name: s.Name, Revision: s.Revision}})
+				result.Publications = append(result.Publications, a.Publication{Name: "menu.drink-published", Visibility: a.Private, Payload: DrinkPublished{DrinkID: s.ID, Name: s.Name, Revision: s.Revision}})
 			}
 		}
 		return result, nil

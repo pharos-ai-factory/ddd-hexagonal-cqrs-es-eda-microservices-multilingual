@@ -1,21 +1,33 @@
 # 0006 — Authoritative OpenAPI HTTP contracts
 
-Status: accepted, 6 October 2026.
+Status: accepted, 6 October 2026. API dispatch is refined by
+[0007](0007-api-broker-requests.md); source layout by
+[0008](0008-published-contract-ownership.md).
 
 ## Decision
 
-OpenAPI 3.0.3 documents under `contracts/http/` own the HTTP methods, paths,
+OpenAPI 3.0.3 documents under `contracts/services/<service>/http_api/` own the HTTP
+methods, paths,
 parameters, request objects, response objects and status codes exposed by the
 Go API, Go Storefront, internal realtime gateway and development notification
 provider. The API document includes every published business command and query
-from all six contexts. Shared path items and schemas keep forwarded operations
+from all six contexts. Shared path items and schemas keep API operations
 and direct Storefront operations aligned.
+
+Business source fragments live under `contracts/<context>/http_api/`: resource
+paths and the owning context's schemas sit together. Service-specific fragments
+and complete documents live under `contracts/services/<service>/http_api/`;
+generic components live under `contracts/shared/http_api/`. The root contract
+guide links to each complete document. Generated component names include source
+paths to preserve distinct schemas with the same name in different owners.
+Ambiguous component names fail bundling.
 
 Generate self-contained JSON bundles into each owning Go module and embed them
 in its technical transport/adaptor ring. Compositions validate their document
 and require every enabled operation to have a handler. They reject undeclared
-registrations. The API selects its forwarding routes from the document and
-retains context authentication and credential replacement in the adaptor.
+registrations. The API selects its request translation routes from the document and
+retains authentication at the HTTP boundary. Internal dispatch uses the separate
+Protobuf request/reply contract over RabbitMQ (0007).
 
 Run request and response schema conformance against every Go HTTP operation in
 the deterministic gate. Validate live business responses through the Go API in

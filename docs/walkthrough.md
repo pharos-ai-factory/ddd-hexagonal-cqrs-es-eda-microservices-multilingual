@@ -111,7 +111,7 @@ identity and bytes. Do not delete receipts to make a replay appear new.
 
 ## 6. Inspect without changing authority
 
-Use the HTTP query routes in `contracts/http/README.md`. The demo's `Client` in
+Use the HTTP query routes in `contracts/shared/http_api/README.md`. The demo's `Client` in
 `scripts/journey.py` loads credentials without embedding them in source.
 
 For an administrative database inspection, this command reads the Loyalty

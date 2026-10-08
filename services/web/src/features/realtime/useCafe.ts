@@ -2,8 +2,11 @@
 import {Centrifuge} from 'centrifuge/build/protobuf';
 import {useEffect, useReducer, useState} from 'react';
 import {decode} from './codec';
-import {merge, owners, resources, type Kind, type Projection, type Snapshot} from './model';
-import {query, queryAll, SessionEnded, subscriptionBarrier, type Page} from './queries';
+import {merge, owners, type Projection, type Snapshot} from './model';
+import {subscriptionBarrier} from './queries';
+import {SessionEnded} from '../../adaptors/http/client';
+import {projections} from './httpProjection';
+import {request} from '../../adaptors/http/client';
 import {reconciliationQueue} from './reconciliation';
 
 export function useCafe(active: boolean, sessionEnded: () => void) {
@@ -20,12 +23,8 @@ export function useCafe(active: boolean, sessionEnded: () => void) {
     const client = new Centrifuge(websocket);
     const reconciliation = reconciliationQueue(async () => {
       try {
-        const updates = await Promise.all(Object.entries(resources).map(async ([kind, resource]) => {
-          const rows = await queryAll<{version: number; state: Projection['state']}>(
-            '/api/v1/'+resource, url => query<Page<{version: number; state: Projection['state']}>>(url, abort.signal));
-          return rows.map(row => ({...row, kind: kind as Kind}));
-        }));
-        if (alive) { updates.flat().forEach(update => dispatch(update)); setProblem(''); }
+        const updates = await projections(abort.signal);
+        if (alive) { updates.forEach(update => dispatch(update)); setProblem(''); }
       } catch (error) { if (alive) {
         if (error instanceof SessionEnded) sessionEnded();
         setProblem(error instanceof Error ? error.message : 'State unavailable');
@@ -49,7 +48,7 @@ export function useCafe(active: boolean, sessionEnded: () => void) {
       if (!alive) return;
       setConnection('disconnected');
       // Recheck access once after a disconnect, including logout in another window.
-      void fetch('/auth/session', {cache: 'no-store'}).then(response => {
+      void request('session', {}).then(response => {
         if (alive && response.status === 401) sessionEnded();
       }).catch(() => {});
     });

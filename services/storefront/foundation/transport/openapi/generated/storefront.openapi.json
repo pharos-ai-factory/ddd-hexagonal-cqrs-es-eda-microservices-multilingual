@@ -13,10 +13,10 @@
         "summary": "List drinks",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-Limit"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Limit"
           },
           {
-            "$ref": "#/components/parameters/common-Cursor"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Cursor"
           }
         ],
         "responses": {
@@ -48,7 +48,7 @@
                             "minimum": 0
                           },
                           "state": {
-                            "$ref": "#/components/schemas/menu-Drink"
+                            "$ref": "#/components/schemas/menu.http_api.schemas.Drink"
                           }
                         }
                       }
@@ -83,7 +83,7 @@
                                 "minimum": 0
                               },
                               "state": {
-                                "$ref": "#/components/schemas/menu-Drink"
+                                "$ref": "#/components/schemas/menu.http_api.schemas.Drink"
                               }
                             }
                           }
@@ -112,16 +112,16 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -130,7 +130,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "get": {
@@ -161,7 +161,7 @@
                       "minimum": 0
                     },
                     "state": {
-                      "$ref": "#/components/schemas/menu-Drink"
+                      "$ref": "#/components/schemas/menu.http_api.schemas.Drink"
                     }
                   }
                 },
@@ -179,19 +179,19 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
-            "$ref": "#/components/responses/common-404"
+            "$ref": "#/components/responses/shared.http_api.responses.404"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       },
@@ -200,13 +200,13 @@
         "summary": "createDrink",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -215,7 +215,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/menu-DrinkCommand"
+                "$ref": "#/components/schemas/menu.http_api.schemas.DrinkCommand"
               },
               "example": {
                 "name": "Coffee"
@@ -229,7 +229,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -240,35 +240,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -277,7 +277,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -285,13 +285,13 @@
         "summary": "reviseDrink",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -300,7 +300,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/menu-DrinkCommand"
+                "$ref": "#/components/schemas/menu.http_api.schemas.DrinkCommand"
               },
               "example": {
                 "name": "Coffee"
@@ -314,7 +314,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -325,35 +325,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -362,7 +362,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -370,13 +370,13 @@
         "summary": "publishDrink",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -385,7 +385,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/common-EmptyCommand"
+                "$ref": "#/components/schemas/shared.http_api.schemas.EmptyCommand"
               },
               "example": {}
             }
@@ -397,7 +397,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -408,35 +408,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -448,10 +448,10 @@
         "summary": "List editions",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-Limit"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Limit"
           },
           {
-            "$ref": "#/components/parameters/common-Cursor"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Cursor"
           }
         ],
         "responses": {
@@ -483,7 +483,7 @@
                             "minimum": 0
                           },
                           "state": {
-                            "$ref": "#/components/schemas/menu-Edition"
+                            "$ref": "#/components/schemas/menu.http_api.schemas.Edition"
                           }
                         }
                       }
@@ -518,7 +518,7 @@
                                 "minimum": 0
                               },
                               "state": {
-                                "$ref": "#/components/schemas/menu-Edition"
+                                "$ref": "#/components/schemas/menu.http_api.schemas.Edition"
                               }
                             }
                           }
@@ -547,16 +547,16 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -565,7 +565,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "get": {
@@ -596,7 +596,7 @@
                       "minimum": 0
                     },
                     "state": {
-                      "$ref": "#/components/schemas/menu-Edition"
+                      "$ref": "#/components/schemas/menu.http_api.schemas.Edition"
                     }
                   }
                 },
@@ -614,19 +614,19 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
-            "$ref": "#/components/responses/common-404"
+            "$ref": "#/components/responses/shared.http_api.responses.404"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       },
@@ -635,13 +635,13 @@
         "summary": "createEdition",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -650,7 +650,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/menu-EditionCommand"
+                "$ref": "#/components/schemas/menu.http_api.schemas.EditionCommand"
               },
               "example": {
                 "currency": "EUR"
@@ -664,7 +664,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -675,35 +675,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -712,7 +712,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -720,13 +720,13 @@
         "summary": "addOffer",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -735,7 +735,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/menu-OfferCommand"
+                "$ref": "#/components/schemas/menu.http_api.schemas.OfferCommand"
               },
               "example": {
                 "code": "C1",
@@ -752,7 +752,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -763,35 +763,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -800,7 +800,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -808,13 +808,13 @@
         "summary": "changePrice",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -823,7 +823,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/menu-PriceCommand"
+                "$ref": "#/components/schemas/menu.http_api.schemas.PriceCommand"
               },
               "example": {
                 "code": "C1",
@@ -838,7 +838,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -849,35 +849,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -886,7 +886,7 @@
       "x-owner": "menu",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -894,13 +894,13 @@
         "summary": "publishEdition",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -909,7 +909,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/common-EmptyCommand"
+                "$ref": "#/components/schemas/shared.http_api.schemas.EmptyCommand"
               },
               "example": {}
             }
@@ -921,7 +921,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -932,35 +932,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -972,10 +972,10 @@
         "summary": "List orders",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-Limit"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Limit"
           },
           {
-            "$ref": "#/components/parameters/common-Cursor"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Cursor"
           }
         ],
         "responses": {
@@ -1007,7 +1007,7 @@
                             "minimum": 0
                           },
                           "state": {
-                            "$ref": "#/components/schemas/ordering-Order"
+                            "$ref": "#/components/schemas/ordering.http_api.schemas.Order"
                           }
                         }
                       }
@@ -1042,7 +1042,7 @@
                                 "minimum": 0
                               },
                               "state": {
-                                "$ref": "#/components/schemas/ordering-Order"
+                                "$ref": "#/components/schemas/ordering.http_api.schemas.Order"
                               }
                             }
                           }
@@ -1073,16 +1073,16 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -1091,7 +1091,7 @@
       "x-owner": "ordering",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "get": {
@@ -1122,7 +1122,7 @@
                       "minimum": 0
                     },
                     "state": {
-                      "$ref": "#/components/schemas/ordering-Order"
+                      "$ref": "#/components/schemas/ordering.http_api.schemas.Order"
                     }
                   }
                 },
@@ -1142,19 +1142,19 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
-            "$ref": "#/components/responses/common-404"
+            "$ref": "#/components/responses/shared.http_api.responses.404"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       },
@@ -1163,13 +1163,13 @@
         "summary": "createOrder",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -1178,7 +1178,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ordering-CreateCommand"
+                "$ref": "#/components/schemas/ordering.http_api.schemas.CreateCommand"
               },
               "example": {
                 "customerId": "22222222-2222-4222-8222-222222222222",
@@ -1193,7 +1193,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -1204,35 +1204,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -1241,7 +1241,7 @@
       "x-owner": "ordering",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -1249,13 +1249,13 @@
         "summary": "addLine",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -1264,7 +1264,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ordering-LineCommand"
+                "$ref": "#/components/schemas/ordering.http_api.schemas.LineCommand"
               },
               "example": {
                 "lineId": "22222222-2222-4222-8222-222222222222",
@@ -1281,7 +1281,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -1292,35 +1292,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -1329,7 +1329,7 @@
       "x-owner": "ordering",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -1337,13 +1337,13 @@
         "summary": "changeQuantity",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -1352,7 +1352,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ordering-QuantityCommand"
+                "$ref": "#/components/schemas/ordering.http_api.schemas.QuantityCommand"
               },
               "example": {
                 "lineId": "22222222-2222-4222-8222-222222222222",
@@ -1367,7 +1367,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -1378,35 +1378,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -1415,7 +1415,7 @@
       "x-owner": "ordering",
       "parameters": [
         {
-          "$ref": "#/components/parameters/common-ID"
+          "$ref": "#/components/parameters/shared.http_api.parameters.ID"
         }
       ],
       "post": {
@@ -1423,13 +1423,13 @@
         "summary": "placeOrder",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           },
           {
-            "$ref": "#/components/parameters/common-Version"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Version"
           },
           {
-            "$ref": "#/components/parameters/common-Correlation"
+            "$ref": "#/components/parameters/shared.http_api.parameters.Correlation"
           }
         ],
         "requestBody": {
@@ -1438,7 +1438,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/common-EmptyCommand"
+                "$ref": "#/components/schemas/shared.http_api.schemas.EmptyCommand"
               },
               "example": {}
             }
@@ -1450,7 +1450,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Outcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Outcome"
                 },
                 "example": {
                   "aggregateId": "11111111-1111-4111-8111-111111111111",
@@ -1461,35 +1461,35 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "403": {
-            "$ref": "#/components/responses/common-403"
+            "$ref": "#/components/responses/shared.http_api.responses.403"
           },
           "404": {
             "description": "Recorded missing-root rejection",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-RejectedOutcome"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
                 }
               }
             }
           },
           "409": {
-            "$ref": "#/components/responses/common-409"
+            "$ref": "#/components/responses/shared.http_api.responses.409"
           },
           "422": {
-            "$ref": "#/components/responses/common-422"
+            "$ref": "#/components/responses/shared.http_api.responses.422"
           },
           "428": {
-            "$ref": "#/components/responses/common-428"
+            "$ref": "#/components/responses/shared.http_api.responses.428"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -1533,16 +1533,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/diagnostics-Storefront"
+                  "$ref": "#/components/schemas/services.storefront.http_api.operational.schemas.StorefrontDiagnostics"
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           }
         }
       }
@@ -1556,7 +1556,7 @@
       }
     },
     "parameters": {
-      "common-Limit": {
+      "shared.http_api.parameters.Limit": {
         "name": "limit",
         "in": "query",
         "schema": {
@@ -1565,7 +1565,7 @@
           "maximum": 100
         }
       },
-      "common-Cursor": {
+      "shared.http_api.parameters.Cursor": {
         "name": "cursor",
         "in": "query",
         "description": "Opaque, resource-bound cursor. Requires limit. Repeated pagination parameters are rejected.",
@@ -1574,7 +1574,7 @@
           "maxLength": 1024
         }
       },
-      "common-ID": {
+      "shared.http_api.parameters.ID": {
         "name": "id",
         "in": "path",
         "required": true,
@@ -1584,7 +1584,7 @@
         },
         "example": "11111111-1111-4111-8111-111111111111"
       },
-      "common-CommandID": {
+      "shared.http_api.parameters.CommandID": {
         "name": "Idempotency-Key",
         "in": "header",
         "required": true,
@@ -1594,7 +1594,7 @@
         },
         "example": "22222222-2222-4222-8222-222222222222"
       },
-      "common-Version": {
+      "shared.http_api.parameters.Version": {
         "name": "If-Match",
         "in": "header",
         "required": true,
@@ -1605,7 +1605,7 @@
         },
         "example": "0"
       },
-      "common-Correlation": {
+      "shared.http_api.parameters.Correlation": {
         "name": "X-Correlation-ID",
         "in": "header",
         "required": false,
@@ -1616,7 +1616,7 @@
       }
     },
     "schemas": {
-      "menu-Drink": {
+      "menu.http_api.schemas.Drink": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1644,7 +1644,7 @@
           }
         }
       },
-      "common-Error": {
+      "shared.http_api.schemas.Error": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1659,7 +1659,7 @@
           }
         }
       },
-      "menu-DrinkCommand": {
+      "menu.http_api.schemas.DrinkCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1671,7 +1671,7 @@
           }
         }
       },
-      "common-Outcome": {
+      "shared.http_api.schemas.Outcome": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1693,7 +1693,7 @@
           }
         }
       },
-      "common-RejectedOutcome": {
+      "shared.http_api.schemas.RejectedOutcome": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1732,13 +1732,13 @@
           }
         }
       },
-      "common-EmptyCommand": {
+      "shared.http_api.schemas.EmptyCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [],
         "properties": {}
       },
-      "menu-Offer": {
+      "menu.http_api.schemas.Offer": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1773,7 +1773,7 @@
           }
         }
       },
-      "menu-Edition": {
+      "menu.http_api.schemas.Edition": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1800,13 +1800,13 @@
           "offers": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/menu-Offer"
+              "$ref": "#/components/schemas/menu.http_api.schemas.Offer"
             },
             "nullable": true
           }
         }
       },
-      "menu-EditionCommand": {
+      "menu.http_api.schemas.EditionCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1818,7 +1818,7 @@
           }
         }
       },
-      "menu-OfferCommand": {
+      "menu.http_api.schemas.OfferCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1844,7 +1844,7 @@
           }
         }
       },
-      "menu-PriceCommand": {
+      "menu.http_api.schemas.PriceCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1860,7 +1860,7 @@
           }
         }
       },
-      "ordering-Selection": {
+      "ordering.http_api.schemas.Selection": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1881,7 +1881,7 @@
           }
         }
       },
-      "ordering-Line": {
+      "ordering.http_api.schemas.Line": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1895,14 +1895,14 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           },
           "selection": {
-            "$ref": "#/components/schemas/ordering-Selection"
+            "$ref": "#/components/schemas/ordering.http_api.schemas.Selection"
           },
           "quantity": {
             "type": "integer"
           }
         }
       },
-      "ordering-Order": {
+      "ordering.http_api.schemas.Order": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1939,12 +1939,12 @@
           "lines": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ordering-Line"
+              "$ref": "#/components/schemas/ordering.http_api.schemas.Line"
             }
           }
         }
       },
-      "ordering-CreateCommand": {
+      "ordering.http_api.schemas.CreateCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1962,7 +1962,7 @@
           }
         }
       },
-      "ordering-LineCommand": {
+      "ordering.http_api.schemas.LineCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1988,7 +1988,7 @@
           }
         }
       },
-      "ordering-QuantityCommand": {
+      "ordering.http_api.schemas.QuantityCommand": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2005,7 +2005,7 @@
           }
         }
       },
-      "diagnostics-Storefront": {
+      "services.storefront.http_api.operational.schemas.StorefrontDiagnostics": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2131,82 +2131,82 @@
       }
     },
     "responses": {
-      "common-400": {
+      "shared.http_api.responses.400": {
         "description": "Malformed request",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-401": {
+      "shared.http_api.responses.401": {
         "description": "Missing or invalid credentials",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-403": {
+      "shared.http_api.responses.403": {
         "description": "Origin or authority denied",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-503": {
+      "shared.http_api.responses.503": {
         "description": "Infrastructure unavailable; retry the same identity",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-404": {
+      "shared.http_api.responses.404": {
         "description": "Root not found",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-409": {
+      "shared.http_api.responses.409": {
         "description": "Conflicting version or command identity",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-RejectedOutcome"
+              "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
             }
           }
         }
       },
-      "common-422": {
+      "shared.http_api.responses.422": {
         "description": "Recorded business rejection",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-RejectedOutcome"
+              "$ref": "#/components/schemas/shared.http_api.schemas.RejectedOutcome"
             }
           }
         }
       },
-      "common-428": {
+      "shared.http_api.responses.428": {
         "description": "Expected aggregate version required",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }

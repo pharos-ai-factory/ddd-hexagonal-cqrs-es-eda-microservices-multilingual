@@ -2,6 +2,8 @@ package protobuf
 
 import (
 	"fmt"
+	private "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated"
+	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -15,11 +17,11 @@ func Encode(message a.Message) ([]byte, error) {
 		return nil, err
 	}
 	event := &pb.Event{Id: message.ID, Name: message.Name, Context: message.Context, Visibility: string(message.Visibility), ContractVersion: message.ContractVersion, AggregateKind: message.AggregateKind, AggregateId: message.AggregateID, AggregateVersion: message.AggregateVersion, CorrelationId: message.CorrelationID, CausationId: message.CausationID, OccurredAt: message.OccurredAt.UTC().Format(time.RFC3339Nano)}
+	if message.Visibility == a.Private {
+		return encodePrivate(message)
+	}
 	expected := ""
 	switch p := message.Payload.(type) {
-	case model.DrinkPublished:
-		expected = "menu.drink-published"
-		event.Payload = &pb.Event_DrinkPublished{DrinkPublished: &pb.DrinkPublished{DrinkId: p.DrinkID, Name: p.Name, Revision: p.Revision}}
 	case model.MenuPublished:
 		expected = "menu.edition-published"
 		event.Payload = &pb.Event_MenuPublished{MenuPublished: &pb.MenuPublished{EditionId: p.EditionID, Currency: p.Currency, Offers: encodeOffers(p.Offers)}}
@@ -35,15 +37,9 @@ func Encode(message a.Message) ([]byte, error) {
 	case model.OrderCollected:
 		expected = "collection.order-collected"
 		event.Payload = &pb.Event_OrderCollected{OrderCollected: &pb.OrderCollected{OrderId: p.OrderID, CustomerId: p.CustomerID}}
-	case model.RewardEarned:
-		expected = "loyalty.reward-earned"
-		event.Payload = &pb.Event_RewardEarned{RewardEarned: &pb.RewardEarned{AccountId: p.AccountID, GrantId: p.GrantID, Benefit: p.Benefit, ValidDays: int32(p.ValidDays)}}
 	case model.RewardIssued:
 		expected = "loyalty.reward-issued"
 		event.Payload = &pb.Event_RewardIssued{RewardIssued: &pb.RewardIssued{RewardId: p.RewardID, CustomerId: p.CustomerID, Benefit: p.Benefit, ExpiresAt: p.ExpiresAt}}
-	case model.NotificationRequested:
-		expected = "communication.notification-requested"
-		event.Payload = &pb.Event_NotificationRequested{NotificationRequested: &pb.NotificationRequested{NotificationId: p.NotificationID}}
 	default:
 		return nil, fmt.Errorf("unknown publication payload %T", message.Payload)
 	}
@@ -60,6 +56,9 @@ func Decode(data []byte) (a.Message, error) {
 	if err := proto.Unmarshal(data, &event); err != nil {
 		return a.Message{}, err
 	}
+	if event.Visibility == string(a.Private) {
+		return decodePrivate(data)
+	}
 	if len(event.ProtoReflect().GetUnknown()) > 0 {
 		return a.Message{}, fmt.Errorf("unknown envelope fields")
 	}
@@ -70,13 +69,6 @@ func Decode(data []byte) (a.Message, error) {
 	message := a.Message{ID: event.Id, Name: event.Name, Context: event.Context, Visibility: a.Visibility(event.Visibility), ContractVersion: event.ContractVersion, AggregateKind: event.AggregateKind, AggregateID: event.AggregateId, AggregateVersion: event.AggregateVersion, CorrelationID: event.CorrelationId, CausationID: event.CausationId, OccurredAt: occurred}
 	expected := ""
 	switch value := event.Payload.(type) {
-	case *pb.Event_DrinkPublished:
-		p := value.DrinkPublished
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "menu.drink-published"
-		message.Payload = model.DrinkPublished{DrinkID: p.DrinkId, Name: p.Name, Revision: p.Revision}
 	case *pb.Event_MenuPublished:
 		p := value.MenuPublished
 		if p == nil {
@@ -112,13 +104,6 @@ func Decode(data []byte) (a.Message, error) {
 		}
 		expected = "collection.order-collected"
 		message.Payload = model.OrderCollected{OrderID: p.OrderId, CustomerID: p.CustomerId}
-	case *pb.Event_RewardEarned:
-		p := value.RewardEarned
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "loyalty.reward-earned"
-		message.Payload = model.RewardEarned{AccountID: p.AccountId, GrantID: p.GrantId, Benefit: p.Benefit, ValidDays: int(p.ValidDays)}
 	case *pb.Event_RewardIssued:
 		p := value.RewardIssued
 		if p == nil {
@@ -126,13 +111,6 @@ func Decode(data []byte) (a.Message, error) {
 		}
 		expected = "loyalty.reward-issued"
 		message.Payload = model.RewardIssued{RewardID: p.RewardId, CustomerID: p.CustomerId, Benefit: p.Benefit, ExpiresAt: p.ExpiresAt}
-	case *pb.Event_NotificationRequested:
-		p := value.NotificationRequested
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "communication.notification-requested"
-		message.Payload = model.NotificationRequested{NotificationID: p.NotificationId}
 	default:
 		return a.Message{}, fmt.Errorf("missing or unknown payload")
 	}
@@ -146,7 +124,12 @@ func Decode(data []byte) (a.Message, error) {
 }
 func validateEnvelope(m a.Message) error {
 	definition, ok := model.Lookup(m.Name)
-	if !ok || definition.Owner != m.Context || definition.Visibility != m.Visibility || m.ContractVersion != 1 || m.AggregateKind != definition.AggregateKind {
+	if m.Visibility == a.Private {
+		ok = m.Name == "menu.drink-published" && m.Context == "menu" && m.AggregateKind == "drink"
+	} else {
+		ok = ok && definition.Owner == m.Context && definition.Visibility == m.Visibility && m.AggregateKind == definition.AggregateKind
+	}
+	if !ok || m.ContractVersion != 1 {
 		return fmt.Errorf("unknown event contract or invalid owner/visibility")
 	}
 	for _, id := range []string{m.ID, m.AggregateID, m.CorrelationID, m.CausationID} {
@@ -190,4 +173,32 @@ func decodeLines(values []*pb.Line) []model.Line {
 		}
 	}
 	return out
+}
+
+func encodePrivate(message a.Message) ([]byte, error) {
+	p, ok := message.Payload.(menu.DrinkPublished)
+	if !ok || message.Name != "menu.drink-published" || message.Context != "menu" {
+		return nil, fmt.Errorf("foreign private message")
+	}
+	event := &private.PrivateEvent{Id: message.ID, Name: message.Name, Context: message.Context, Visibility: "domain", FormatRevision: message.ContractVersion, AggregateKind: message.AggregateKind, AggregateId: message.AggregateID, AggregateVersion: message.AggregateVersion, CorrelationId: message.CorrelationID, CausationId: message.CausationID, OccurredAt: message.OccurredAt.UTC().Format(time.RFC3339Nano), Payload: &private.PrivateEvent_DrinkPublished{DrinkPublished: &private.DrinkPublished{DrinkId: p.DrinkID, Name: p.Name, Revision: p.Revision}}}
+	return proto.MarshalOptions{Deterministic: true}.Marshal(event)
+}
+func decodePrivate(data []byte) (a.Message, error) {
+	event := &private.PrivateEvent{}
+	if err := proto.Unmarshal(data, event); err != nil {
+		return a.Message{}, err
+	}
+	if len(event.ProtoReflect().GetUnknown()) > 0 || event.GetDrinkPublished() == nil {
+		return a.Message{}, fmt.Errorf("unknown private message format")
+	}
+	occurred, err := time.Parse(time.RFC3339Nano, event.OccurredAt)
+	if err != nil {
+		return a.Message{}, err
+	}
+	p := event.GetDrinkPublished()
+	message := a.Message{ID: event.Id, Name: event.Name, Context: event.Context, Visibility: a.Visibility(event.Visibility), ContractVersion: event.FormatRevision, AggregateKind: event.AggregateKind, AggregateID: event.AggregateId, AggregateVersion: event.AggregateVersion, CorrelationID: event.CorrelationId, CausationID: event.CausationId, OccurredAt: occurred, Payload: menu.DrinkPublished{DrinkID: p.DrinkId, Name: p.Name, Revision: p.Revision}}
+	if message.Visibility != a.Private {
+		return a.Message{}, fmt.Errorf("private message escaped its owner")
+	}
+	return message, validateEnvelope(message)
 }

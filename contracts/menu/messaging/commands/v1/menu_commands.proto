@@ -1,0 +1,34 @@
+syntax = "proto3";
+package cafe.menu.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1";
+import "cafe/requests/v1/validation.proto";
+
+message CreateDrink {
+  optional string name = 1 [(cafe.requests.v1.required_input) = true];
+}
+
+message ReviseDrink {
+  optional string name = 1 [(cafe.requests.v1.required_input) = true];
+}
+
+message PublishDrink {
+}
+
+message CreateEdition {
+  optional string currency = 1 [(cafe.requests.v1.required_input) = true];
+}
+
+message AddOffer {
+  optional string code = 1 [(cafe.requests.v1.required_input) = true];
+  optional string drink_id = 2 [(cafe.requests.v1.required_input) = true];
+  optional uint64 drink_revision = 3 [(cafe.requests.v1.required_input) = true];
+  optional int64 minor = 4 [(cafe.requests.v1.required_input) = true];
+}
+
+message ChangePrice {
+  optional string code = 1 [(cafe.requests.v1.required_input) = true];
+  optional int64 minor = 2 [(cafe.requests.v1.required_input) = true];
+}
+
+message PublishEdition {
+}

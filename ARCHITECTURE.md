@@ -28,7 +28,7 @@ services/operations/src/operations/{apps,contexts,foundation,contracts,adaptors}
 services/engagement/src/{apps,contexts,foundation,adaptors,contracts}/ TypeScript
 services/api/{apps,application,adaptors}/                             Go module
 services/web/src/{app,features,adaptors}/                             Next.js
-contracts/{events,realtime,persistence,http}/  shared wire/schema specifications
+contracts/<context>/{messaging,realtime,http_api}/  published specifications
 specifications/{menu,ordering,...,workflows}/  executable Gherkin behaviour
 tests/acceptance/                             cross-service wire/API bindings
 devops/                                      development composition only
@@ -40,6 +40,14 @@ Go and TypeScript unit tests sit beside their subjects. Python tests and
 TypeScript Gherkin bindings live under their service's `tests` directory.
 Go Gherkin bindings sit beside the owning application handlers.
 Generated contracts stay in transport/adaptor rings.
+Published Protobuf payload sources identify their context and interface category.
+Context folders contain `messaging/{commands,queries,integration_events}`,
+`realtime` and `http_api`. Private domain facts are plain application/domain types;
+private RabbitMQ formats and delivery metadata remain in owner service adaptors.
+The public integration envelope excludes private payloads. Private work retains
+stored-byte compatibility without becoming a published interface. Commands and
+queries use Protobuf over RabbitMQ between the API and owner services; OpenAPI
+defines the public HTTP boundary. See decision 0008 and `contracts/README.md`.
 The shared root has no cross-language business implementation. Application
 handlers may use plain published DTOs, never generated transport messages.
 The shared Gherkin catalogue has native service runners and a separate live
@@ -54,10 +62,16 @@ values. The consumer retains the original wire payload for receipt fingerprints.
 Strict Mypy checks cover handwritten runtime code and native tests; generated
 Protobuf type declarations stay in the adaptor ring.
 
-The Go API owns technical sessions in Valkey. It holds no business database or
-RabbitMQ credentials, and it cannot decide domain outcomes. It routes only known
-context paths, authenticates the caller, replaces browser credentials with the
-owning service's internal key, and preserves command identity and version headers.
+The Go API owns technical sessions in Valkey and has no business database. It
+maps only known OpenAPI operations, authenticates the caller and translates HTTP
+requests into typed Protobuf commands/queries over RabbitMQ. Owner-side adaptors
+translate those messages into plain application types. A dedicated API broker
+credential can publish requests and consume replies; owner credentials retain
+context authority. Command identity, expected version and correlation survive
+translation. Success reports a committed owner outcome; a timeout remains uncertain
+and permits an identical retry. Owner request packages, explicit ACL mappings,
+separate command/query consumers and transactionally stored response bytes are
+defined by decision 0009. See decision 0007 and `contracts/shared/messaging/requests.md`.
 
 Its HTTP adaptor has separate `operational`, `session`, `realtime` and `backend`
 packages with tests beside their handlers. The parent package composes those
@@ -65,12 +79,12 @@ routes and verifies the assembled OpenAPI surface. Shared response and security
 helpers stay under `http/internal`; each route package receives its own technical
 dependencies without importing the parent composition.
 
-OpenAPI documents in `contracts/http/` define every Go HTTP operation and the
-published business wire shapes. Each Go module embeds generated bundles and
-checks complete route registration at startup. The API registers its exact
-forwarding routes from the document. Schema conformance runs in deterministic
-tests and against the live owner responses in the integration lane. See decision
-0006 and `contracts/http/README.md`.
+OpenAPI business fragments live in `contracts/<context>/http_api/`. Complete
+service documents and technical routes live in `contracts/services/<service>/http_api/`.
+Reusable components live in `contracts/shared/http_api/`. Go modules embed
+self-contained generated bundles, require complete route registration at startup
+and validate deterministic/live response conformance. See decision 0006 and
+`contracts/shared/http_api/README.md`.
 
 Next.js exports the operator interface as static assets served by the ingress;
 there is no frontend Node server. The ingress routes `/auth` and `/api/v1`
@@ -124,9 +138,10 @@ leased dispatch → persistent mandatory RabbitMQ publication → publisher conf
 consumer → one aggregate + receipt + outgoing events → PostgreSQL commit → ACK
 ```
 
-Domain facts are plain types. Applications map them to private domain contracts
-or published integration contracts. Both have versioned Protobuf representations,
-stable message identities, correlation and causation. Context-private messages
+Domain facts are plain types. Applications map them to owner-private delivery values or published integration
+events. Public interfaces have versioned Protobuf representations. Internal
+formats preserve stored delivery bytes and keep their definitions with the owner.
+Both deliveries retain stable identities, correlation and causation. Context-private messages
 are only bound to consumers owned by that context.
 
 Immutable source events and mutable dispatch progress are separate. A relay
@@ -166,7 +181,7 @@ from owner queries at initial attachment or a history gap. Recoverable history
 requires no additional business GET. See `CLIENT-SUBSCRIPTIONS.md`.
 
 Database administration applies checksummed migrations before runtime startup.
-The two shared historical migrations are frozen. Each context owns its additional
+The two historical SQL bootstrap files in `devops/postgres/bootstrap/` are frozen. Each context owns its additional
 manifest, SQL and independent version sequence inside its language service.
 The administrator records a context identity and immutable checksum ledger;
 initial local migrations add context-specific lifecycle indexes.
@@ -180,3 +195,10 @@ optionally with `--owner ordering` to advance one context only.
 Only local/development configurations are supported. Runtime processes reject
 staging and production environment values. Schema administration is a separate
 bootstrap responsibility; application startup cannot migrate a database.
+
+
+Frontend HTTP calls use OpenAPI-generated operation/request/response types through
+the HTTP adaptor. Verification rejects generated drift and incompatible feature
+usage. Command replies use owner-local immutable storage and fenced confirmed
+publishers; their thirty-second lifetime bounds retries. Exact reply bytes commit
+atomically with the receiving outcome. See decision 0009 and the contract guides.

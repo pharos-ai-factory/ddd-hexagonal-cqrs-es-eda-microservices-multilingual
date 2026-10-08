@@ -50,7 +50,7 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 		return a.Outcome{}, err
 	}
 	if done {
-		return previous, tx.Commit(ctx)
+		return commitOutcome(ctx, tx, previous)
 	}
 	var savedHash string
 	var saved []byte
@@ -58,7 +58,7 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	if err == nil {
 		if savedHash != hash {
 			detail := (&a.ApplicationError{Code: "idempotency_conflict", Message: "The command identity was reused with different input"}).Rejection()
-			return a.Outcome{AggregateID: m.AggregateID, Rejection: &detail}, nil
+			return commitOutcome(ctx, tx, a.Outcome{AggregateID: m.AggregateID, Rejection: &detail})
 		}
 		outcome, err := decodeOutcome(saved, m.AggregateID)
 		if err != nil {
@@ -67,7 +67,7 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 		if err = recordIncoming(ctx, tx, m, target, outcome); err != nil {
 			return a.Outcome{}, err
 		}
-		return outcome, tx.Commit(ctx)
+		return commitOutcome(ctx, tx, outcome)
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return a.Outcome{}, err
@@ -117,7 +117,7 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 	if err = recordIncoming(ctx, tx, m, target, outcome); err != nil {
 		return a.Outcome{}, err
 	}
-	return outcome, tx.Commit(ctx)
+	return commitOutcome(ctx, tx, outcome)
 }
 
 // persistMutation writes the root and both publication intents on the command's transaction.

@@ -32,3 +32,17 @@ are excluded, and are never contributor source.
 `pnpm check:large-file-review` runs this check alongside dependency rules;
 `pnpm verify` includes it. New handwritten exceptions require an explicit
 responsibility review and a corresponding checker change.
+
+The context-first contract source inventory in `scripts/contract_sources.py`
+also derives exact compiler-owned Go/Python context payload and request/reply
+binding paths. Menu's private Go binding and Loyalty/Communication's private
+TypeScript descriptors are generated in their owning adaptors. Deployment
+topology metadata is generated from published and owner-local queue definitions.
+These derived files have the same generator-owned classification; handwritten
+schemas, catalogues and source code retain the 450-line limit.
+
+Generated frontend HTTP operation types, API field mapping code and Engagement
+wire interfaces are also explicitly classified. They are reproducible from the
+published specifications and explicit API ACL map. Request bindings are scoped
+per consuming service; Go dispatch interfaces and factories over native context
+envelopes are generated and retain the same classification.

@@ -1,0 +1,48 @@
+{
+  "schemas": {
+    "SessionDiagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pendingRevocations",
+        "expiredSessionsAwaitingRevocation",
+        "processFailures"
+      ],
+      "properties": {
+        "pendingRevocations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiredSessionsAwaitingRevocation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "processFailures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastFailure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "at",
+            "operation",
+            "class"
+          ],
+          "properties": {
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "operation": {
+              "type": "string"
+            },
+            "class": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

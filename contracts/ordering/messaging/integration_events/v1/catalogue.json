@@ -1,0 +1,9 @@
+[
+  {
+    "name": "ordering.order-placed",
+    "owner": "ordering",
+    "visibility": "integration",
+    "consumer": "preparation.accept-order",
+    "kind": "order"
+  }
+]

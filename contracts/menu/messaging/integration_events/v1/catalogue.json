@@ -1,0 +1,9 @@
+[
+  {
+    "name": "menu.edition-published",
+    "owner": "menu",
+    "visibility": "integration",
+    "consumer": "ordering.menu-directory",
+    "kind": "edition"
+  }
+]

@@ -1,0 +1,19 @@
+syntax = "proto3";
+package cafe.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
+
+message Line {
+  string id = 1;
+  string offer_code = 2;
+  string name = 3;
+  int32 quantity = 4;
+  int64 minor = 5;
+}
+
+message OrderPlaced {
+  string order_id = 1;
+  string customer_id = 2;
+  string edition_id = 3;
+  string currency = 4;
+  repeated Line lines = 5;
+}

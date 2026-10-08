@@ -1,0 +1,8 @@
+syntax = "proto3";
+package cafe.loyalty.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1";
+import "cafe/requests/v1/validation.proto";
+
+message RedeemReward {
+  optional string order_id = 1 [(cafe.requests.v1.required_input) = true];
+}

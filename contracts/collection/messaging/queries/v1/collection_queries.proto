@@ -1,0 +1,13 @@
+syntax = "proto3";
+package cafe.collection.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1";
+
+import "cafe/requests/v1/common.proto";
+
+message ListPickups {
+  cafe.requests.v1.PageRequest page = 1;
+}
+
+message GetPickup {
+  string id = 1;
+}

@@ -1,0 +1,32 @@
+syntax = "proto3";
+package cafe.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared;sharedv1";
+
+message PageRequest {
+  uint32 limit = 1;
+  optional string after = 2;
+}
+
+message CommandMetadata {
+  string command_id = 1;
+  string aggregate_id = 2;
+  optional uint64 expected_version = 3;
+  string correlation_id = 4;
+}
+
+message Rejection {
+  string code = 1;
+  string message = 2;
+}
+
+message Outcome {
+  string aggregate_id = 1;
+  uint64 version = 2;
+  string status = 3;
+  Rejection rejection = 4;
+}
+
+message RequestError {
+  string code = 1;
+  string message = 2;
+}

@@ -1,0 +1,21 @@
+syntax = "proto3";
+package cafe.menu.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1";
+
+import "cafe/requests/v1/common.proto";
+
+message ListDrinks {
+  cafe.requests.v1.PageRequest page = 1;
+}
+
+message GetDrink {
+  string id = 1;
+}
+
+message ListEditions {
+  cafe.requests.v1.PageRequest page = 1;
+}
+
+message GetEdition {
+  string id = 1;
+}

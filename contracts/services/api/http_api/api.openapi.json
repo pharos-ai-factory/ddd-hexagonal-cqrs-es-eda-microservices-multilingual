@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Caf\u00e9 Go API",
+    "version": "1.0.0",
+    "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
+  },
+  "paths": {
+    "/api/v1/menu/drinks": {"$ref": "../../../menu/http_api/drinks.paths.json#/list"},
+    "/api/v1/menu/drinks/{id}": {"$ref": "../../../menu/http_api/drinks.paths.json#/item"},
+    "/api/v1/menu/drinks/{id}/revise": {"$ref": "../../../menu/http_api/drinks.paths.json#/revise"},
+    "/api/v1/menu/drinks/{id}/publish": {"$ref": "../../../menu/http_api/drinks.paths.json#/publish"},
+    "/api/v1/menu/editions": {"$ref": "../../../menu/http_api/editions.paths.json#/list"},
+    "/api/v1/menu/editions/{id}": {"$ref": "../../../menu/http_api/editions.paths.json#/item"},
+    "/api/v1/menu/editions/{id}/offers": {"$ref": "../../../menu/http_api/editions.paths.json#/offers"},
+    "/api/v1/menu/editions/{id}/prices": {"$ref": "../../../menu/http_api/editions.paths.json#/prices"},
+    "/api/v1/menu/editions/{id}/publish": {"$ref": "../../../menu/http_api/editions.paths.json#/publish"},
+    "/api/v1/ordering/orders": {"$ref": "../../../ordering/http_api/orders.paths.json#/list"},
+    "/api/v1/ordering/orders/{id}": {"$ref": "../../../ordering/http_api/orders.paths.json#/item"},
+    "/api/v1/ordering/orders/{id}/lines": {"$ref": "../../../ordering/http_api/orders.paths.json#/lines"},
+    "/api/v1/ordering/orders/{id}/quantities": {"$ref": "../../../ordering/http_api/orders.paths.json#/quantities"},
+    "/api/v1/ordering/orders/{id}/place": {"$ref": "../../../ordering/http_api/orders.paths.json#/place"},
+    "/api/v1/preparation/tickets": {"$ref": "../../../preparation/http_api/tickets.paths.json#/list"},
+    "/api/v1/preparation/tickets/{id}": {"$ref": "../../../preparation/http_api/tickets.paths.json#/item"},
+    "/api/v1/preparation/tickets/{id}/start": {"$ref": "../../../preparation/http_api/tickets.paths.json#/start"},
+    "/api/v1/preparation/tickets/{id}/complete": {"$ref": "../../../preparation/http_api/tickets.paths.json#/complete"},
+    "/api/v1/collection/pickups": {"$ref": "../../../collection/http_api/pickups.paths.json#/list"},
+    "/api/v1/collection/pickups/{id}": {"$ref": "../../../collection/http_api/pickups.paths.json#/item"},
+    "/api/v1/collection/pickups/{id}/collect": {"$ref": "../../../collection/http_api/pickups.paths.json#/collect"},
+    "/api/v1/loyalty/accounts": {"$ref": "../../../loyalty/http_api/accounts.paths.json#/list"},
+    "/api/v1/loyalty/accounts/{id}": {"$ref": "../../../loyalty/http_api/accounts.paths.json#/item"},
+    "/api/v1/loyalty/rewards": {"$ref": "../../../loyalty/http_api/rewards.paths.json#/list"},
+    "/api/v1/loyalty/rewards/{id}": {"$ref": "../../../loyalty/http_api/rewards.paths.json#/item"},
+    "/api/v1/loyalty/rewards/{id}/redeem": {"$ref": "../../../loyalty/http_api/rewards.paths.json#/redeem"},
+    "/api/v1/communication/notifications": {"$ref": "../../../communication/http_api/notifications.paths.json#/list"},
+    "/api/v1/communication/notifications/{id}": {"$ref": "../../../communication/http_api/notifications.paths.json#/item"},
+    "/healthz": {"$ref": "operational.paths.json#/health"},
+    "/diagnostics": {"$ref": "operational.paths.json#/diagnostics"},
+    "/auth/login": {"$ref": "session.paths.json#/login"},
+    "/auth/session": {"$ref": "session.paths.json#/session"},
+    "/auth/logout": {"$ref": "session.paths.json#/logout"},
+    "/api/realtime/connect": {"$ref": "realtime.paths.json#/connect"},
+    "/api/realtime/refresh": {"$ref": "realtime.paths.json#/refresh"}
+  },
+  "components": {
+    "securitySchemes": {
+      "CLIKey": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "OperatorSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "cafe_session"
+      },
+      "RealtimeProxy": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Cafe-Realtime-Proxy"
+      }
+    }
+  },
+  "security": [
+    {
+      "CLIKey": []
+    },
+    {
+      "OperatorSession": []
+    }
+  ]
+}

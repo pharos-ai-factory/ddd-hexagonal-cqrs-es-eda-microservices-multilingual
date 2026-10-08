@@ -130,3 +130,67 @@ def test_queries_traverse_more_than_one_page_and_retain_unpaginated_reads() -> N
         assert combined == all_rows
     finally:
         database.pool.close()
+
+
+def test_reply_bytes_commit_with_root_and_retry_recovers_saved_outcome() -> None:
+    from operations.adaptors.replies import ReplyIntent, current, claim_reply
+    from operations.adaptors.requests import outcome_reply
+    database = Database("preparation", os.environ["PREPARATION_DATABASE_URL"])
+    def restore(value: object) -> TicketSnapshot:
+        return PreparationTicket.restore(value).snapshot()
+    commands = Commands(database, "ticket", restore)
+    queries = Queries(database, "ticket", restore)
+    identity = new_id()
+    metadata = Metadata(new_id(), identity, "test.reply", new_id(), expected=0)
+    state: TicketSnapshot = {"id": identity, "orderId": identity, "customerId": identity,
+                            "instructions": "Coffee", "status": "queued"}
+    def broken(_: Outcome) -> bytes:
+        raise ValueError("Reply encoding failed after state SQL")
+    try:
+        intent = ReplyIntent(new_id(), broken)
+        token = current.set(intent)
+        try:
+            with pytest.raises(ValueError):
+                commands.execute(metadata, lambda _: Change(state, "queued"))
+        finally:
+            current.reset(token)
+        assert queries.get(identity) is None
+        def encode(outcome: Outcome) -> bytes:
+            return outcome_reply(database.owner, outcome).SerializeToString(deterministic=True)
+        intent = ReplyIntent(new_id(), encode)
+        token = current.set(intent)
+        try:
+            first = commands.execute(metadata, lambda _: Change(state, "queued"))
+        finally:
+            current.reset(token)
+        assert intent.persisted
+        retry = ReplyIntent(new_id(), encode)
+        token = current.set(retry)
+        try:
+            assert commands.execute(metadata, lambda _: pytest.fail("Replayed decision")) == first
+        finally:
+            current.reset(token)
+        with database.pool.connection() as connection:
+            for request in (intent, retry):
+                row = present(connection.execute("SELECT body FROM cafe.command_replies WHERE id=%s", (request.identity,)).fetchone())
+                from operations.adaptors.delivery import binary
+                assert binary(row["body"]) == encode(first)
+            assert present(connection.execute("SELECT count(*) AS n FROM cafe.command_receipts WHERE aggregate_id=%s", (identity,)).fetchone())["n"] == 1
+        # An abandoned claim must become deliverable before its original expiry.
+        import time
+        from operations.adaptors.delivery import binary
+        abandoned = present(claim_reply(database, new_id()))
+        with database.pool.connection() as connection:
+            connection.execute("UPDATE cafe.command_reply_dispatches SET available_at=clock_timestamp()+interval '1 hour' WHERE event_id<>%s", (abandoned["id"],))
+        deadline = time.monotonic()+11
+        while True:
+            recovered = claim_reply(database, new_id())
+            if recovered is not None:
+                break
+            assert time.monotonic() < deadline, "Reply lease did not recover within the caller deadline"
+            time.sleep(0.05)
+        assert recovered["id"] == abandoned["id"] and not recovered["expired"]
+        assert binary(recovered["body"]) == binary(abandoned["body"])
+
+    finally:
+        database.pool.close()

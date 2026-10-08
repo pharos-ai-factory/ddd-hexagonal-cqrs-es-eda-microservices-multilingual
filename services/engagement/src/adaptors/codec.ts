@@ -1,4 +1,6 @@
 import protobuf from 'protobufjs';
+import loyaltyPrivate from '../contexts/loyalty/adaptors/messaging/generated/private_messages.json' with {type: 'json'};
+import communicationPrivate from '../contexts/communication/adaptors/messaging/generated/private_messages.json' with {type: 'json'};
 import eventSchema from './generated/events.json' with {type: 'json'};
 import realtimeSchema from './generated/realtime.json' with {type: 'json'};
 import catalogue from './generated/catalogue.json' with {type: 'json'};
@@ -7,16 +9,20 @@ import {identifier} from '../foundation/domain.js';
 import {newId} from '../foundation/identity.js';
 
 const eventType = protobuf.Root.fromJSON(eventSchema).lookupType('cafe.v1.Event');
+const privateTypes: Record<string, protobuf.Type> = {
+  loyalty: protobuf.Root.fromJSON(loyaltyPrivate).lookupType('cafe.loyalty.internal.PrivateEvent'),
+  communication: protobuf.Root.fromJSON(communicationPrivate).lookupType('cafe.communication.internal.PrivateEvent'),
+};
 const realtimeType = protobuf.Root.fromJSON(realtimeSchema).lookupType('cafe.realtime.v1.Publication');
 const payloadNames: Record<string, string> = {
-  'menu.drink-published': 'drinkPublished', 'menu.edition-published': 'menuPublished',
+  'menu.edition-published': 'menuPublished',
   'ordering.order-placed': 'orderPlaced', 'preparation.drinks-ready': 'drinksReady',
   'collection.pickup-opened': 'pickupOpened', 'collection.order-collected': 'orderCollected',
   'loyalty.reward-earned': 'rewardEarned', 'loyalty.reward-issued': 'rewardIssued',
   'communication.notification-requested': 'notificationRequested',
 };
 const payloadIdentities: Record<string, readonly string[]> = {
-  'menu.drink-published': ['drinkId'], 'menu.edition-published': ['editionId'],
+  'menu.edition-published': ['editionId'],
   'ordering.order-placed': ['orderId', 'customerId', 'editionId'],
   'preparation.drinks-ready': ['orderId', 'customerId'],
   'collection.pickup-opened': ['pickupId', 'orderId', 'customerId'],
@@ -26,7 +32,7 @@ const payloadIdentities: Record<string, readonly string[]> = {
   'communication.notification-requested': ['notificationId'],
 };
 const sourceIdentities: Record<string, string> = {
-  'menu.drink-published': 'drinkId', 'menu.edition-published': 'editionId',
+  'menu.edition-published': 'editionId',
   'ordering.order-placed': 'orderId', 'collection.pickup-opened': 'pickupId',
   'loyalty.reward-earned': 'accountId', 'loyalty.reward-issued': 'rewardId',
   'communication.notification-requested': 'notificationId',
@@ -68,7 +74,15 @@ function validate(event: WireEvent) {
 }
 export function decode(body: Uint8Array): WireEvent {
   if (body.length > 256*1024) throw new Error('Event exceeds wire limit');
-  const object = eventType.toObject(eventType.decode(body), {longs: Number, oneofs: true}) as Record<string, unknown>;
+  // Header field numbers are shared by the historical internal delivery format.
+  let object = eventType.toObject(eventType.decode(body), {longs: Number, oneofs: true}) as Record<string, unknown>;
+  if (object.visibility === 'domain') {
+    const type = privateTypes[String(object.context)];
+    if (!type) throw new Error('Foreign private message owner');
+    object = type.toObject(type.decode(body), {longs: Number, oneofs: true}) as Record<string, unknown>;
+    object.contractVersion = object.formatRevision;
+    delete object.formatRevision;
+  }
   const name = String(object.name), key = payloadNames[name];
   if (!key || object.payload !== key || !object[key]) throw new Error('Mismatched payload');
   const event = {...object, payload: object[key]} as WireEvent;
@@ -83,10 +97,13 @@ export function encode(owner: string, kind: string, id: string, version: number,
     correlationId: m.correlation, causationId: m.id, occurredAt: new Date().toISOString(), payload: p.payload};
   validate(event);
   const {payload, ...envelope} = event;
-  const value = {...envelope, [payloadNames[event.name]!]: payload};
-  const error = eventType.verify(value);
+  const type = event.visibility === 'domain' ? privateTypes[owner] : eventType;
+  if (!type) throw new Error('Foreign private message owner');
+  const value: Record<string, unknown> = {...envelope, [payloadNames[event.name]!]: payload};
+  if (event.visibility === 'domain') { value.formatRevision = value.contractVersion; delete value.contractVersion; }
+  const error = type.verify(value);
   if (error) throw new Error(error);
-  return {event, body: Buffer.from(eventType.encode(eventType.create(value)).finish())};
+  return {event, body: Buffer.from(type.encode(type.create(value)).finish())};
 }
 export function realtime(owner: string, kind: string, id: string, revision: number, state: unknown) {
   const eventId = newId();

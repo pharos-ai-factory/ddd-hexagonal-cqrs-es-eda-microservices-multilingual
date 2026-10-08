@@ -1,0 +1,31 @@
+syntax = "proto3";
+package cafe.communication.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/communication;communicationv1";
+import "cafe/requests/v1/common.proto";
+import "cafe/requests/v1/contexts/communication/communication_queries.proto";
+import "cafe/requests/v1/contexts/communication/communication_replies.proto";
+message Request {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    Query query = 11;
+  }
+}
+message Query {
+  oneof payload {
+    cafe.communication.requests.v1.ListNotifications list_notifications = 24;
+    cafe.communication.requests.v1.GetNotification get_notification = 25;
+  }
+}
+message Reply {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    cafe.requests.v1.Outcome outcome = 10;
+    cafe.requests.v1.RequestError error = 11;
+    cafe.communication.requests.v1.LoadedNotification notification = 34;
+    cafe.communication.requests.v1.Notifications notifications = 35;
+  }
+}

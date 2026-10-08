@@ -21,8 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Domain and integration messages share one envelope and delivery protocol.
-// The catalogue restricts private domain contracts to their owning context.
+// Published integration event envelope. Private messages belong to owner adaptors.
 type Event struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -38,15 +37,12 @@ type Event struct {
 	OccurredAt       string                 `protobuf:"bytes,11,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	// Types that are valid to be assigned to Payload:
 	//
-	//	*Event_DrinkPublished
 	//	*Event_MenuPublished
 	//	*Event_OrderPlaced
 	//	*Event_DrinksReady
 	//	*Event_PickupOpened
 	//	*Event_OrderCollected
-	//	*Event_RewardEarned
 	//	*Event_RewardIssued
-	//	*Event_NotificationRequested
 	Payload       isEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -166,15 +162,6 @@ func (x *Event) GetPayload() isEvent_Payload {
 	return nil
 }
 
-func (x *Event) GetDrinkPublished() *DrinkPublished {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_DrinkPublished); ok {
-			return x.DrinkPublished
-		}
-	}
-	return nil
-}
-
 func (x *Event) GetMenuPublished() *MenuPublished {
 	if x != nil {
 		if x, ok := x.Payload.(*Event_MenuPublished); ok {
@@ -220,15 +207,6 @@ func (x *Event) GetOrderCollected() *OrderCollected {
 	return nil
 }
 
-func (x *Event) GetRewardEarned() *RewardEarned {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_RewardEarned); ok {
-			return x.RewardEarned
-		}
-	}
-	return nil
-}
-
 func (x *Event) GetRewardIssued() *RewardIssued {
 	if x != nil {
 		if x, ok := x.Payload.(*Event_RewardIssued); ok {
@@ -238,21 +216,8 @@ func (x *Event) GetRewardIssued() *RewardIssued {
 	return nil
 }
 
-func (x *Event) GetNotificationRequested() *NotificationRequested {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_NotificationRequested); ok {
-			return x.NotificationRequested
-		}
-	}
-	return nil
-}
-
 type isEvent_Payload interface {
 	isEvent_Payload()
-}
-
-type Event_DrinkPublished struct {
-	DrinkPublished *DrinkPublished `protobuf:"bytes,20,opt,name=drink_published,json=drinkPublished,proto3,oneof"`
 }
 
 type Event_MenuPublished struct {
@@ -275,19 +240,9 @@ type Event_OrderCollected struct {
 	OrderCollected *OrderCollected `protobuf:"bytes,25,opt,name=order_collected,json=orderCollected,proto3,oneof"`
 }
 
-type Event_RewardEarned struct {
-	RewardEarned *RewardEarned `protobuf:"bytes,26,opt,name=reward_earned,json=rewardEarned,proto3,oneof"`
-}
-
 type Event_RewardIssued struct {
 	RewardIssued *RewardIssued `protobuf:"bytes,27,opt,name=reward_issued,json=rewardIssued,proto3,oneof"`
 }
-
-type Event_NotificationRequested struct {
-	NotificationRequested *NotificationRequested `protobuf:"bytes,28,opt,name=notification_requested,json=notificationRequested,proto3,oneof"`
-}
-
-func (*Event_DrinkPublished) isEvent_Payload() {}
 
 func (*Event_MenuPublished) isEvent_Payload() {}
 
@@ -299,725 +254,13 @@ func (*Event_PickupOpened) isEvent_Payload() {}
 
 func (*Event_OrderCollected) isEvent_Payload() {}
 
-func (*Event_RewardEarned) isEvent_Payload() {}
-
 func (*Event_RewardIssued) isEvent_Payload() {}
-
-func (*Event_NotificationRequested) isEvent_Payload() {}
-
-type DrinkPublished struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DrinkId       string                 `protobuf:"bytes,1,opt,name=drink_id,json=drinkId,proto3" json:"drink_id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Revision      uint64                 `protobuf:"varint,3,opt,name=revision,proto3" json:"revision,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DrinkPublished) Reset() {
-	*x = DrinkPublished{}
-	mi := &file_cafe_v1_events_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DrinkPublished) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DrinkPublished) ProtoMessage() {}
-
-func (x *DrinkPublished) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DrinkPublished.ProtoReflect.Descriptor instead.
-func (*DrinkPublished) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *DrinkPublished) GetDrinkId() string {
-	if x != nil {
-		return x.DrinkId
-	}
-	return ""
-}
-
-func (x *DrinkPublished) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *DrinkPublished) GetRevision() uint64 {
-	if x != nil {
-		return x.Revision
-	}
-	return 0
-}
-
-type Offer struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	DrinkId       string                 `protobuf:"bytes,2,opt,name=drink_id,json=drinkId,proto3" json:"drink_id,omitempty"`
-	DrinkRevision uint64                 `protobuf:"varint,3,opt,name=drink_revision,json=drinkRevision,proto3" json:"drink_revision,omitempty"`
-	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	Minor         int64                  `protobuf:"varint,5,opt,name=minor,proto3" json:"minor,omitempty"`
-	Currency      string                 `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Offer) Reset() {
-	*x = Offer{}
-	mi := &file_cafe_v1_events_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Offer) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Offer) ProtoMessage() {}
-
-func (x *Offer) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Offer.ProtoReflect.Descriptor instead.
-func (*Offer) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *Offer) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-func (x *Offer) GetDrinkId() string {
-	if x != nil {
-		return x.DrinkId
-	}
-	return ""
-}
-
-func (x *Offer) GetDrinkRevision() uint64 {
-	if x != nil {
-		return x.DrinkRevision
-	}
-	return 0
-}
-
-func (x *Offer) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Offer) GetMinor() int64 {
-	if x != nil {
-		return x.Minor
-	}
-	return 0
-}
-
-func (x *Offer) GetCurrency() string {
-	if x != nil {
-		return x.Currency
-	}
-	return ""
-}
-
-type MenuPublished struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	EditionId     string                 `protobuf:"bytes,1,opt,name=edition_id,json=editionId,proto3" json:"edition_id,omitempty"`
-	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`
-	Offers        []*Offer               `protobuf:"bytes,3,rep,name=offers,proto3" json:"offers,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MenuPublished) Reset() {
-	*x = MenuPublished{}
-	mi := &file_cafe_v1_events_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MenuPublished) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MenuPublished) ProtoMessage() {}
-
-func (x *MenuPublished) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MenuPublished.ProtoReflect.Descriptor instead.
-func (*MenuPublished) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *MenuPublished) GetEditionId() string {
-	if x != nil {
-		return x.EditionId
-	}
-	return ""
-}
-
-func (x *MenuPublished) GetCurrency() string {
-	if x != nil {
-		return x.Currency
-	}
-	return ""
-}
-
-func (x *MenuPublished) GetOffers() []*Offer {
-	if x != nil {
-		return x.Offers
-	}
-	return nil
-}
-
-type Line struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	OfferCode     string                 `protobuf:"bytes,2,opt,name=offer_code,json=offerCode,proto3" json:"offer_code,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Quantity      int32                  `protobuf:"varint,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
-	Minor         int64                  `protobuf:"varint,5,opt,name=minor,proto3" json:"minor,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Line) Reset() {
-	*x = Line{}
-	mi := &file_cafe_v1_events_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Line) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Line) ProtoMessage() {}
-
-func (x *Line) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Line.ProtoReflect.Descriptor instead.
-func (*Line) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *Line) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *Line) GetOfferCode() string {
-	if x != nil {
-		return x.OfferCode
-	}
-	return ""
-}
-
-func (x *Line) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Line) GetQuantity() int32 {
-	if x != nil {
-		return x.Quantity
-	}
-	return 0
-}
-
-func (x *Line) GetMinor() int64 {
-	if x != nil {
-		return x.Minor
-	}
-	return 0
-}
-
-type OrderPlaced struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	CustomerId    string                 `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
-	EditionId     string                 `protobuf:"bytes,3,opt,name=edition_id,json=editionId,proto3" json:"edition_id,omitempty"`
-	Currency      string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	Lines         []*Line                `protobuf:"bytes,5,rep,name=lines,proto3" json:"lines,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *OrderPlaced) Reset() {
-	*x = OrderPlaced{}
-	mi := &file_cafe_v1_events_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OrderPlaced) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OrderPlaced) ProtoMessage() {}
-
-func (x *OrderPlaced) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OrderPlaced.ProtoReflect.Descriptor instead.
-func (*OrderPlaced) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *OrderPlaced) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *OrderPlaced) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
-func (x *OrderPlaced) GetEditionId() string {
-	if x != nil {
-		return x.EditionId
-	}
-	return ""
-}
-
-func (x *OrderPlaced) GetCurrency() string {
-	if x != nil {
-		return x.Currency
-	}
-	return ""
-}
-
-func (x *OrderPlaced) GetLines() []*Line {
-	if x != nil {
-		return x.Lines
-	}
-	return nil
-}
-
-type DrinksReady struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	CustomerId    string                 `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DrinksReady) Reset() {
-	*x = DrinksReady{}
-	mi := &file_cafe_v1_events_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DrinksReady) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DrinksReady) ProtoMessage() {}
-
-func (x *DrinksReady) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DrinksReady.ProtoReflect.Descriptor instead.
-func (*DrinksReady) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *DrinksReady) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *DrinksReady) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
-type PickupOpened struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	PickupId       string                 `protobuf:"bytes,1,opt,name=pickup_id,json=pickupId,proto3" json:"pickup_id,omitempty"`
-	OrderId        string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	CustomerId     string                 `protobuf:"bytes,3,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
-	CollectionCode string                 `protobuf:"bytes,4,opt,name=collection_code,json=collectionCode,proto3" json:"collection_code,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *PickupOpened) Reset() {
-	*x = PickupOpened{}
-	mi := &file_cafe_v1_events_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PickupOpened) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PickupOpened) ProtoMessage() {}
-
-func (x *PickupOpened) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PickupOpened.ProtoReflect.Descriptor instead.
-func (*PickupOpened) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *PickupOpened) GetPickupId() string {
-	if x != nil {
-		return x.PickupId
-	}
-	return ""
-}
-
-func (x *PickupOpened) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *PickupOpened) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
-func (x *PickupOpened) GetCollectionCode() string {
-	if x != nil {
-		return x.CollectionCode
-	}
-	return ""
-}
-
-type OrderCollected struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	CustomerId    string                 `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *OrderCollected) Reset() {
-	*x = OrderCollected{}
-	mi := &file_cafe_v1_events_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OrderCollected) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OrderCollected) ProtoMessage() {}
-
-func (x *OrderCollected) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OrderCollected.ProtoReflect.Descriptor instead.
-func (*OrderCollected) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *OrderCollected) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *OrderCollected) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
-type RewardEarned struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	GrantId       string                 `protobuf:"bytes,2,opt,name=grant_id,json=grantId,proto3" json:"grant_id,omitempty"`
-	Benefit       string                 `protobuf:"bytes,3,opt,name=benefit,proto3" json:"benefit,omitempty"`
-	ValidDays     int32                  `protobuf:"varint,4,opt,name=valid_days,json=validDays,proto3" json:"valid_days,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RewardEarned) Reset() {
-	*x = RewardEarned{}
-	mi := &file_cafe_v1_events_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RewardEarned) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RewardEarned) ProtoMessage() {}
-
-func (x *RewardEarned) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RewardEarned.ProtoReflect.Descriptor instead.
-func (*RewardEarned) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *RewardEarned) GetAccountId() string {
-	if x != nil {
-		return x.AccountId
-	}
-	return ""
-}
-
-func (x *RewardEarned) GetGrantId() string {
-	if x != nil {
-		return x.GrantId
-	}
-	return ""
-}
-
-func (x *RewardEarned) GetBenefit() string {
-	if x != nil {
-		return x.Benefit
-	}
-	return ""
-}
-
-func (x *RewardEarned) GetValidDays() int32 {
-	if x != nil {
-		return x.ValidDays
-	}
-	return 0
-}
-
-type RewardIssued struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RewardId      string                 `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
-	CustomerId    string                 `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
-	Benefit       string                 `protobuf:"bytes,3,opt,name=benefit,proto3" json:"benefit,omitempty"`
-	ExpiresAt     string                 `protobuf:"bytes,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RewardIssued) Reset() {
-	*x = RewardIssued{}
-	mi := &file_cafe_v1_events_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RewardIssued) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RewardIssued) ProtoMessage() {}
-
-func (x *RewardIssued) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RewardIssued.ProtoReflect.Descriptor instead.
-func (*RewardIssued) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *RewardIssued) GetRewardId() string {
-	if x != nil {
-		return x.RewardId
-	}
-	return ""
-}
-
-func (x *RewardIssued) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
-func (x *RewardIssued) GetBenefit() string {
-	if x != nil {
-		return x.Benefit
-	}
-	return ""
-}
-
-func (x *RewardIssued) GetExpiresAt() string {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return ""
-}
-
-type NotificationRequested struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	NotificationId string                 `protobuf:"bytes,1,opt,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *NotificationRequested) Reset() {
-	*x = NotificationRequested{}
-	mi := &file_cafe_v1_events_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NotificationRequested) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NotificationRequested) ProtoMessage() {}
-
-func (x *NotificationRequested) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_v1_events_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NotificationRequested.ProtoReflect.Descriptor instead.
-func (*NotificationRequested) Descriptor() ([]byte, []int) {
-	return file_cafe_v1_events_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *NotificationRequested) GetNotificationId() string {
-	if x != nil {
-		return x.NotificationId
-	}
-	return ""
-}
 
 var File_cafe_v1_events_proto protoreflect.FileDescriptor
 
 const file_cafe_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"\x14cafe/v1/events.proto\x12\acafe.v1\"\xcf\a\n" +
+	"\x14cafe/v1/events.proto\x12\acafe.v1\x1a3cafe/v1/contexts/menu/menu_integration_events.proto\x1a;cafe/v1/contexts/ordering/ordering_integration_events.proto\x1aAcafe/v1/contexts/preparation/preparation_integration_events.proto\x1a?cafe/v1/contexts/collection/collection_integration_events.proto\x1a9cafe/v1/contexts/loyalty/loyalty_integration_events.proto\"\xbe\x06\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -1033,78 +276,14 @@ const file_cafe_v1_events_proto_rawDesc = "" +
 	"\fcausation_id\x18\n" +
 	" \x01(\tR\vcausationId\x12\x1f\n" +
 	"\voccurred_at\x18\v \x01(\tR\n" +
-	"occurredAt\x12B\n" +
-	"\x0fdrink_published\x18\x14 \x01(\v2\x17.cafe.v1.DrinkPublishedH\x00R\x0edrinkPublished\x12?\n" +
+	"occurredAt\x12?\n" +
 	"\x0emenu_published\x18\x15 \x01(\v2\x16.cafe.v1.MenuPublishedH\x00R\rmenuPublished\x129\n" +
 	"\forder_placed\x18\x16 \x01(\v2\x14.cafe.v1.OrderPlacedH\x00R\vorderPlaced\x129\n" +
 	"\fdrinks_ready\x18\x17 \x01(\v2\x14.cafe.v1.DrinksReadyH\x00R\vdrinksReady\x12<\n" +
 	"\rpickup_opened\x18\x18 \x01(\v2\x15.cafe.v1.PickupOpenedH\x00R\fpickupOpened\x12B\n" +
 	"\x0forder_collected\x18\x19 \x01(\v2\x17.cafe.v1.OrderCollectedH\x00R\x0eorderCollected\x12<\n" +
-	"\rreward_earned\x18\x1a \x01(\v2\x15.cafe.v1.RewardEarnedH\x00R\frewardEarned\x12<\n" +
-	"\rreward_issued\x18\x1b \x01(\v2\x15.cafe.v1.RewardIssuedH\x00R\frewardIssued\x12W\n" +
-	"\x16notification_requested\x18\x1c \x01(\v2\x1e.cafe.v1.NotificationRequestedH\x00R\x15notificationRequestedB\t\n" +
-	"\apayload\"[\n" +
-	"\x0eDrinkPublished\x12\x19\n" +
-	"\bdrink_id\x18\x01 \x01(\tR\adrinkId\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
-	"\brevision\x18\x03 \x01(\x04R\brevision\"\xa3\x01\n" +
-	"\x05Offer\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x19\n" +
-	"\bdrink_id\x18\x02 \x01(\tR\adrinkId\x12%\n" +
-	"\x0edrink_revision\x18\x03 \x01(\x04R\rdrinkRevision\x12\x12\n" +
-	"\x04name\x18\x04 \x01(\tR\x04name\x12\x14\n" +
-	"\x05minor\x18\x05 \x01(\x03R\x05minor\x12\x1a\n" +
-	"\bcurrency\x18\x06 \x01(\tR\bcurrency\"r\n" +
-	"\rMenuPublished\x12\x1d\n" +
-	"\n" +
-	"edition_id\x18\x01 \x01(\tR\teditionId\x12\x1a\n" +
-	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12&\n" +
-	"\x06offers\x18\x03 \x03(\v2\x0e.cafe.v1.OfferR\x06offers\"{\n" +
-	"\x04Line\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
-	"\n" +
-	"offer_code\x18\x02 \x01(\tR\tofferCode\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1a\n" +
-	"\bquantity\x18\x04 \x01(\x05R\bquantity\x12\x14\n" +
-	"\x05minor\x18\x05 \x01(\x03R\x05minor\"\xa9\x01\n" +
-	"\vOrderPlaced\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
-	"\vcustomer_id\x18\x02 \x01(\tR\n" +
-	"customerId\x12\x1d\n" +
-	"\n" +
-	"edition_id\x18\x03 \x01(\tR\teditionId\x12\x1a\n" +
-	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12#\n" +
-	"\x05lines\x18\x05 \x03(\v2\r.cafe.v1.LineR\x05lines\"I\n" +
-	"\vDrinksReady\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
-	"\vcustomer_id\x18\x02 \x01(\tR\n" +
-	"customerId\"\x90\x01\n" +
-	"\fPickupOpened\x12\x1b\n" +
-	"\tpickup_id\x18\x01 \x01(\tR\bpickupId\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x1f\n" +
-	"\vcustomer_id\x18\x03 \x01(\tR\n" +
-	"customerId\x12'\n" +
-	"\x0fcollection_code\x18\x04 \x01(\tR\x0ecollectionCode\"L\n" +
-	"\x0eOrderCollected\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
-	"\vcustomer_id\x18\x02 \x01(\tR\n" +
-	"customerId\"\x81\x01\n" +
-	"\fRewardEarned\x12\x1d\n" +
-	"\n" +
-	"account_id\x18\x01 \x01(\tR\taccountId\x12\x19\n" +
-	"\bgrant_id\x18\x02 \x01(\tR\agrantId\x12\x18\n" +
-	"\abenefit\x18\x03 \x01(\tR\abenefit\x12\x1d\n" +
-	"\n" +
-	"valid_days\x18\x04 \x01(\x05R\tvalidDays\"\x85\x01\n" +
-	"\fRewardIssued\x12\x1b\n" +
-	"\treward_id\x18\x01 \x01(\tR\brewardId\x12\x1f\n" +
-	"\vcustomer_id\x18\x02 \x01(\tR\n" +
-	"customerId\x12\x18\n" +
-	"\abenefit\x18\x03 \x01(\tR\abenefit\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x04 \x01(\tR\texpiresAt\"@\n" +
-	"\x15NotificationRequested\x12'\n" +
-	"\x0fnotification_id\x18\x01 \x01(\tR\x0enotificationIdB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
+	"\rreward_issued\x18\x1b \x01(\v2\x15.cafe.v1.RewardIssuedH\x00R\frewardIssuedB\t\n" +
+	"\apayloadJ\x04\b\x14\x10\x15J\x04\b\x1a\x10\x1bJ\x04\b\x1c\x10\x1dR\x0fdrink_publishedR\rreward_earnedR\x16notification_requestedB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
 
 var (
 	file_cafe_v1_events_proto_rawDescOnce sync.Once
@@ -1118,38 +297,28 @@ func file_cafe_v1_events_proto_rawDescGZIP() []byte {
 	return file_cafe_v1_events_proto_rawDescData
 }
 
-var file_cafe_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_cafe_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cafe_v1_events_proto_goTypes = []any{
-	(*Event)(nil),                 // 0: cafe.v1.Event
-	(*DrinkPublished)(nil),        // 1: cafe.v1.DrinkPublished
-	(*Offer)(nil),                 // 2: cafe.v1.Offer
-	(*MenuPublished)(nil),         // 3: cafe.v1.MenuPublished
-	(*Line)(nil),                  // 4: cafe.v1.Line
-	(*OrderPlaced)(nil),           // 5: cafe.v1.OrderPlaced
-	(*DrinksReady)(nil),           // 6: cafe.v1.DrinksReady
-	(*PickupOpened)(nil),          // 7: cafe.v1.PickupOpened
-	(*OrderCollected)(nil),        // 8: cafe.v1.OrderCollected
-	(*RewardEarned)(nil),          // 9: cafe.v1.RewardEarned
-	(*RewardIssued)(nil),          // 10: cafe.v1.RewardIssued
-	(*NotificationRequested)(nil), // 11: cafe.v1.NotificationRequested
+	(*Event)(nil),          // 0: cafe.v1.Event
+	(*MenuPublished)(nil),  // 1: cafe.v1.MenuPublished
+	(*OrderPlaced)(nil),    // 2: cafe.v1.OrderPlaced
+	(*DrinksReady)(nil),    // 3: cafe.v1.DrinksReady
+	(*PickupOpened)(nil),   // 4: cafe.v1.PickupOpened
+	(*OrderCollected)(nil), // 5: cafe.v1.OrderCollected
+	(*RewardIssued)(nil),   // 6: cafe.v1.RewardIssued
 }
 var file_cafe_v1_events_proto_depIdxs = []int32{
-	1,  // 0: cafe.v1.Event.drink_published:type_name -> cafe.v1.DrinkPublished
-	3,  // 1: cafe.v1.Event.menu_published:type_name -> cafe.v1.MenuPublished
-	5,  // 2: cafe.v1.Event.order_placed:type_name -> cafe.v1.OrderPlaced
-	6,  // 3: cafe.v1.Event.drinks_ready:type_name -> cafe.v1.DrinksReady
-	7,  // 4: cafe.v1.Event.pickup_opened:type_name -> cafe.v1.PickupOpened
-	8,  // 5: cafe.v1.Event.order_collected:type_name -> cafe.v1.OrderCollected
-	9,  // 6: cafe.v1.Event.reward_earned:type_name -> cafe.v1.RewardEarned
-	10, // 7: cafe.v1.Event.reward_issued:type_name -> cafe.v1.RewardIssued
-	11, // 8: cafe.v1.Event.notification_requested:type_name -> cafe.v1.NotificationRequested
-	2,  // 9: cafe.v1.MenuPublished.offers:type_name -> cafe.v1.Offer
-	4,  // 10: cafe.v1.OrderPlaced.lines:type_name -> cafe.v1.Line
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	1, // 0: cafe.v1.Event.menu_published:type_name -> cafe.v1.MenuPublished
+	2, // 1: cafe.v1.Event.order_placed:type_name -> cafe.v1.OrderPlaced
+	3, // 2: cafe.v1.Event.drinks_ready:type_name -> cafe.v1.DrinksReady
+	4, // 3: cafe.v1.Event.pickup_opened:type_name -> cafe.v1.PickupOpened
+	5, // 4: cafe.v1.Event.order_collected:type_name -> cafe.v1.OrderCollected
+	6, // 5: cafe.v1.Event.reward_issued:type_name -> cafe.v1.RewardIssued
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_cafe_v1_events_proto_init() }
@@ -1157,16 +326,18 @@ func file_cafe_v1_events_proto_init() {
 	if File_cafe_v1_events_proto != nil {
 		return
 	}
+	file_cafe_v1_contexts_menu_menu_integration_events_proto_init()
+	file_cafe_v1_contexts_ordering_ordering_integration_events_proto_init()
+	file_cafe_v1_contexts_preparation_preparation_integration_events_proto_init()
+	file_cafe_v1_contexts_collection_collection_integration_events_proto_init()
+	file_cafe_v1_contexts_loyalty_loyalty_integration_events_proto_init()
 	file_cafe_v1_events_proto_msgTypes[0].OneofWrappers = []any{
-		(*Event_DrinkPublished)(nil),
 		(*Event_MenuPublished)(nil),
 		(*Event_OrderPlaced)(nil),
 		(*Event_DrinksReady)(nil),
 		(*Event_PickupOpened)(nil),
 		(*Event_OrderCollected)(nil),
-		(*Event_RewardEarned)(nil),
 		(*Event_RewardIssued)(nil),
-		(*Event_NotificationRequested)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1174,7 +345,7 @@ func file_cafe_v1_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cafe_v1_events_proto_rawDesc), len(file_cafe_v1_events_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

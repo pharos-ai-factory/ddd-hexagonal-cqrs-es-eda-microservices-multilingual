@@ -4,6 +4,7 @@ go 1.27.1
 
 require (
 	github.com/getkin/kin-openapi v0.133.0
+	github.com/rabbitmq/amqp091-go v1.15.0
 	github.com/redis/go-redis/v9 v9.22.0
 	google.golang.org/protobuf v1.36.12
 )

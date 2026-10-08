@@ -1,0 +1,28 @@
+syntax = "proto3";
+package cafe.realtime.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1";
+
+message Grant {
+  string id = 1;
+  string account_id = 2;
+  string benefit = 3;
+  int32 valid_days = 4;
+}
+
+message Account {
+  string id = 1;
+  int32 stamp_balance = 2;
+  int32 collections = 3;
+  int32 grants_earned = 4;
+  Grant last_grant = 5;
+}
+
+message Reward {
+  string id = 1;
+  string grant_id = 2;
+  string customer_id = 3;
+  string benefit = 4;
+  string status = 5;
+  string expires_at = 6;
+  string redeemed_for = 7;
+}

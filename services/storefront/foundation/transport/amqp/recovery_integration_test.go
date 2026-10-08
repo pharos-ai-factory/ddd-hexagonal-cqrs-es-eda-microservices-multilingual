@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -22,7 +23,7 @@ import (
 
 func fixture(t *testing.T) (context.Context, string, Subscription, a.Message, []byte) {
 	t.Helper()
-	return ownedFixture(t, "loyalty")
+	return ownedFixture(t, "menu")
 }
 func ownedFixture(t *testing.T, owner string) (context.Context, string, Subscription, a.Message, []byte) {
 	t.Helper()
@@ -33,7 +34,7 @@ func ownedFixture(t *testing.T, owner string) (context.Context, string, Subscrip
 		t.Fatalf("integration lane requires %s_BROKER_URL", strings.ToUpper(owner))
 	}
 	consumer := owner + ".test-" + store.NewID()
-	binding := Binding{Consumer: consumer, Context: owner, Event: "loyalty.reward-earned", Visibility: "domain"}
+	binding := Binding{Consumer: consumer, Context: owner, Event: "menu.drink-published", Visibility: "domain"}
 	if owner == "ordering" {
 		binding.Event, binding.Visibility = "ordering.order-placed", "integration"
 	}
@@ -56,7 +57,7 @@ func ownedFixture(t *testing.T, owner string) (context.Context, string, Subscrip
 		}
 	})
 	account := store.NewID()
-	message := a.Message{ID: store.NewID(), Name: binding.Event, Context: "loyalty", Visibility: a.Private, ContractVersion: 1, AggregateKind: "account", AggregateID: account, AggregateVersion: 3, CorrelationID: store.NewID(), CausationID: store.NewID(), OccurredAt: time.Now().UTC(), Payload: model.RewardEarned{AccountID: account, GrantID: store.NewID(), Benefit: "one free drink", ValidDays: 7}}
+	message := a.Message{ID: store.NewID(), Name: binding.Event, Context: "menu", Visibility: a.Private, ContractVersion: 1, AggregateKind: "drink", AggregateID: account, AggregateVersion: 3, CorrelationID: store.NewID(), CausationID: store.NewID(), OccurredAt: time.Now().UTC(), Payload: menu.DrinkPublished{DrinkID: account, Name: "Coffee", Revision: 1}}
 	if owner == "ordering" {
 		message.Context, message.Visibility, message.AggregateKind = owner, a.Public, "order"
 		message.Payload = model.OrderPlaced{OrderID: account, CustomerID: store.NewID(), EditionID: store.NewID(), Currency: "GBP",
@@ -87,7 +88,7 @@ func TestMandatoryPublicationIsNotSuccessfulWhenUnroutable(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer p.Close()
-	err = p.send(ctx, Exchange, "domain.loyalty.unbound-"+store.NewID(), rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Body: body})
+	err = p.send(ctx, Exchange, "domain.menu.unbound-"+store.NewID(), rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Body: body})
 	if err == nil || !strings.Contains(err.Error(), "returned") {
 		t.Fatalf("unroutable mandatory publication: %v", err)
 	}

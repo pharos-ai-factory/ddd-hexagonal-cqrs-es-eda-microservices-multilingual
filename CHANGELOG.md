@@ -4,6 +4,45 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Dispatch through native context request/reply envelopes, allowing independent
+  payload names and field numbers. Generate API mappings from compiler descriptors
+  so legal Protobuf formatting preserves required inputs.
+- Enforce required HTTP headers and query objects in frontend callers, including
+  shared operation helpers. Add real-compiler schema evolution regressions.
+- Make the isolated session-revocation fixture reachable through Docker Desktop
+  on macOS while retaining Linux host networking.
+- Recover abandoned command reply claims before their thirty-second expiry using
+  eight-second leases; test real lease expiry in Go, Python and TypeScript.
+
+- Close the frontend OpenAPI enforcement gap with generated operation, input and
+  response types used by real feature calls; incompatible schema mutation checks
+  and architecture rules enforce the operation client.
+- Add explicit required-input annotations and native optional-field/zero-value
+  regression checks; construct application commands and query DTOs through typed
+  owner mappings and generated API ACL conversions.
+- Publish context-owned request/reply packages and scope domain-service bindings
+  to their owned contexts, preserving historical request bytes.
+- Separate command/query queues and consumers; atomically persist exact command
+  replies with receiving outcomes and recover confirmed publication through
+  fenced reply dispatch, bounded expiry and stable command receipts.
+- Check every generated contract in isolation, including new and removed files,
+  through `pnpm check:contracts` and the verification gate.
+
+- Group published contracts first by context, then by `messaging`, `realtime`
+  and `http_api`; keep only published commands, queries and integration events
+  in messaging. Move private message formats into owner adaptors and PostgreSQL
+  bootstrap SQL into development infrastructure, preserving existing bytes.
+
+- Translate API business requests into typed Protobuf commands/queries over
+  RabbitMQ, with owner-side application adaptors, restricted request/reply
+  credentials and recovery of committed outcomes after reply loss.
+
+- Split published Protobuf payloads by context and message type,
+  and browser snapshots by context, preserving published message and field
+  identities; regenerate service-local bindings with complete import resolution.
+- Group HTTP contract paths and schemas by bounded context, service-specific
+  endpoints by service and generic components under shared; add a developer
+  navigation guide and preserve distinct owner schemas during bundling.
 - Centralise Go API technical errors as typed JSON responses with reusable
   status/code descriptors; preserve session, realtime and owner outcome contracts.
 - Organise Go API HTTP handlers into session, realtime, operational and backend

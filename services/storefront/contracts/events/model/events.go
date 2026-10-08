@@ -1,11 +1,5 @@
-// Package model contains framework-independent published and private event DTOs.
+// Package model contains framework-independent published integration event DTOs.
 package model
-
-type DrinkPublished struct {
-	DrinkID  string `json:"drinkId"`
-	Name     string `json:"name"`
-	Revision uint64 `json:"revision"`
-}
 
 type Offer struct {
 	Code          string `json:"code"`
@@ -55,21 +49,9 @@ type OrderCollected struct {
 	CustomerID string `json:"customerId"`
 }
 
-// RewardEarned is private to Loyalty despite using the common durable transport.
-type RewardEarned struct {
-	AccountID string `json:"accountId"`
-	GrantID   string `json:"grantId"`
-	Benefit   string `json:"benefit"`
-	ValidDays int    `json:"validDays"`
-}
-
 type RewardIssued struct {
 	RewardID   string `json:"rewardId"`
 	CustomerID string `json:"customerId"`
 	Benefit    string `json:"benefit"`
 	ExpiresAt  string `json:"expiresAt"`
-}
-
-type NotificationRequested struct {
-	NotificationID string `json:"notificationId"`
 }

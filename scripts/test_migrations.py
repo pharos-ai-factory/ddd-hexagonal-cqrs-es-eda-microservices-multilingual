@@ -14,7 +14,7 @@ class MigrationTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        shutil.copytree(ROOT/'contracts/persistence', self.root/'contracts/persistence')
+        shutil.copytree(ROOT/'devops/postgres/bootstrap', self.root/'devops/postgres/bootstrap')
         for _, (base, owners) in CONTEXTS.items():
             for owner in owners:
                 path = Path(base)/owner/'adaptors/persistence/migrations'
@@ -27,12 +27,12 @@ class MigrationTests(unittest.TestCase):
         directory = self.owner()
         manifest = json.loads((directory/'manifest.json').read_text())
         source = 'CREATE INDEX test_next ON cafe.aggregates(version);\n'
-        (directory/'0002_next.sql').write_text(source)
-        manifest['migrations'].append({'version': 2, 'file': '0002_next.sql', 'checksum': sha256(source.encode()).hexdigest()})
+        (directory/'0003_next.sql').write_text(source)
+        manifest['migrations'].append({'version': 3, 'file': '0003_next.sql', 'checksum': sha256(source.encode()).hexdigest()})
         (directory/'manifest.json').write_text(json.dumps(manifest))
         generated = metadata(self.root)
-        self.assertEqual(len(generated['storefront']['ordering']), 2)
-        self.assertEqual(len(generated['storefront']['menu']), 1)
+        self.assertEqual(len(generated['storefront']['ordering']), 3)
+        self.assertEqual(len(generated['storefront']['menu']), 2)
         self.assertEqual(set(generated['engagement']), {'loyalty', 'communication'})
         self.assertIn('test_next', migration_sql('ordering', self.root))
 
@@ -42,7 +42,7 @@ class MigrationTests(unittest.TestCase):
             manifests(self.root)
 
     def test_legacy_history_is_frozen(self):
-        (self.root/'contracts/persistence/0001_initial.sql').write_text('SELECT 1;')
+        (self.root/'devops/postgres/bootstrap/0001_initial.sql').write_text('SELECT 1;')
         with self.assertRaisesRegex(ValueError, 'immutable'):
             manifests(self.root)
 

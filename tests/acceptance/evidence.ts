@@ -1,13 +1,38 @@
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
 import pg from 'pg';
 import amqp from 'amqplib';
 import protobuf from 'protobufjs';
 import {eventually, type Loaded} from './client.js';
 
-const catalogue = JSON.parse(readFileSync('contracts/events/catalogue.json', 'utf8')) as
-  {name: string; owner: string; consumer: string; visibility: string}[];
+const sourceMap = JSON.parse(execFileSync('python3', ['scripts/contract_sources.py'], {encoding: 'utf8'})) as
+  Record<string, {entrypoint: string; sources: Record<string, string>}>;
+const group = sourceMap.events!;
+const eventSchema = new protobuf.Root();
+const files = Object.fromEntries(Object.entries(group.sources).map(([logical, physical]) => [logical, path.resolve(physical)]));
+const physical = new Set(Object.values(files));
+eventSchema.resolvePath = (_origin, target) => physical.has(target) ? target : files[target]!;
+eventSchema.loadSync(files[group.entrypoint]!);
+eventSchema.resolveAll();
+const eventType = eventSchema.lookupType('cafe.v1.Event');
+const catalogue = ['menu','ordering','preparation','collection','loyalty'].flatMap(owner =>
+  JSON.parse(readFileSync(`contracts/${owner}/messaging/integration_events/v1/catalogue.json`, 'utf8')) as
+  {name: string; owner: string; consumer: string; visibility: string}[]);
+// These test controls describe private queue routing; private payloads remain opaque.
+const privateDeliveries = [
+  {name: 'loyalty.reward-earned', owner: 'loyalty', consumer: 'loyalty.issue-reward', visibility: 'domain'},
+  {name: 'communication.notification-requested', owner: 'communication', consumer: 'communication.deliver-notice', visibility: 'domain'},
+];
+// Field 1 is the immutable publication ID in the existing delivery mechanism.
+// Replace only that length-delimited header and preserve every private payload byte.
+function freshIdentity(bytes: Buffer, id: string): Buffer {
+  assert.equal(bytes[0], 10);
+  assert.equal(bytes[1], 36);
+  return Buffer.concat([bytes.subarray(0, 2), Buffer.from(id), bytes.subarray(38)]);
+}
 
 export class Evidence {
   private pools = new Map<string, pg.Pool>();
@@ -44,17 +69,16 @@ export class Evidence {
     });
   }
   async redeliver(name: string, aggregate: string): Promise<{id: string; consumer: string}> {
-    const entry = catalogue.find(entry => entry.name === name);
+    const entry = [...catalogue,...privateDeliveries].find(entry => entry.name === name);
     assert.ok(entry, 'Unknown event '+name);
     const records = await this.events(entry.owner, name, aggregate);
     assert.equal(records.length, 1, 'The scenario must identify exactly one original fact');
-    const root = await protobuf.load('contracts/events/proto/cafe/v1/events.proto');
-    const type = root.lookupType('cafe.v1.Event');
-    const decoded = type.toObject(type.decode(records[0]!.body), {longs: String});
+    const decoded = eventType.toObject(eventType.decode(records[0]!.body), {longs: String});
     assert.equal(decoded.visibility, entry.visibility);
     const id = randomUUID();
     decoded.id = id;
-    const body = Buffer.from(type.encode(type.fromObject(decoded)).finish());
+    const body = entry.visibility === 'domain' ? freshIdentity(records[0]!.body, id) :
+      Buffer.from(eventType.encode(eventType.fromObject(decoded)).finish());
     const connection = await amqp.connect({
       hostname: '127.0.0.1', port: Number(this.values.AMQP_PORT), vhost: 'reference',
       username: 'cafe_'+entry.owner, password: this.values[entry.owner.toUpperCase()+'_BROKER_PASSWORD'],

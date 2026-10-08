@@ -1,0 +1,39 @@
+syntax = "proto3";
+package cafe.collection.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1";
+import "cafe/requests/v1/common.proto";
+import "cafe/requests/v1/contexts/collection/collection_queries.proto";
+import "cafe/requests/v1/contexts/collection/collection_replies.proto";
+import "cafe/requests/v1/contexts/collection/collection_commands.proto";
+message Request {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    Command command = 10;
+    Query query = 11;
+  }
+}
+message Command {
+  cafe.requests.v1.CommandMetadata metadata = 1;
+  oneof payload {
+    cafe.collection.requests.v1.CollectOrder collect_order = 23;
+  }
+}
+message Query {
+  oneof payload {
+    cafe.collection.requests.v1.ListPickups list_pickups = 18;
+    cafe.collection.requests.v1.GetPickup get_pickup = 19;
+  }
+}
+message Reply {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    cafe.requests.v1.Outcome outcome = 10;
+    cafe.requests.v1.RequestError error = 11;
+    cafe.collection.requests.v1.LoadedPickup pickup = 28;
+    cafe.collection.requests.v1.Pickups pickups = 29;
+  }
+}

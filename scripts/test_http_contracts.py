@@ -21,8 +21,9 @@ class HTTPContractsTests(unittest.TestCase):
             elif isinstance(value, list):
                 for child in value:
                     visit(child)
-        for content in http_contracts.generated().values():
-            visit(json.loads(content))
+        for path, content in http_contracts.generated().items():
+            if path.suffix == ".json":
+                visit(json.loads(content))
 
     def test_changed_bundle_fails_verification(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -41,7 +42,49 @@ class HTTPContractsTests(unittest.TestCase):
             path = root / "api.openapi.json"
             path.write_text(json.dumps({"paths": {"/escape": {"$ref": "../private.json#/secret"}}}))
             with patch.object(http_contracts, "SOURCE", root):
-                with self.assertRaisesRegex(ValueError, "stay inside contracts/http"):
+                with self.assertRaisesRegex(ValueError, "stay inside contracts"):
+                    http_contracts.bundle(path)
+
+    def test_same_named_schemas_keep_each_owners_wire_shape(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = {}
+            for owner, field_type in (("menu", "string"), ("ordering", "integer")):
+                source = root / "contexts" / owner / "schemas.json"
+                source.parent.mkdir(parents=True)
+                source.write_text(json.dumps({"schemas": {"State": {
+                    "type": "object", "properties": {"value": {"type": field_type}}
+                }}}))
+                paths["/" + owner] = {"get": {"responses": {"200": {"content": {
+                    "application/json": {"schema": {
+                        "$ref": f"contexts/{owner}/schemas.json#/schemas/State"
+                    }}
+                }}}}}
+            path = root / "api.openapi.json"
+            path.write_text(json.dumps({"paths": paths}))
+            with patch.object(http_contracts, "SOURCE", root):
+                document = http_contracts.bundle(path)
+            references = []
+            for owner, field_type in (("menu", "string"), ("ordering", "integer")):
+                reference = document["paths"]["/" + owner]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+                references.append(reference)
+                schema = document["components"]["schemas"][reference.rsplit("/", 1)[1]]
+                self.assertEqual(schema["properties"]["value"]["type"], field_type)
+            self.assertNotEqual(*references)
+
+    def test_ambiguous_component_names_fail_instead_of_reusing_a_schema(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = {}
+            for name in ("contexts/menu/schemas.json", "contexts.menu.schemas.json"):
+                source = root / name
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text(json.dumps({"schemas": {"State": {"type": "string"}}}))
+                paths["/" + name] = {"$ref": name + "#/schemas/State"}
+            path = root / "api.openapi.json"
+            path.write_text(json.dumps({"paths": paths}))
+            with patch.object(http_contracts, "SOURCE", root):
+                with self.assertRaisesRegex(ValueError, "component name collision"):
                     http_contracts.bundle(path)
 
 

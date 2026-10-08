@@ -9,7 +9,6 @@ import (
 	menuhttp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/http"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	s "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/tests/support"
 )
@@ -49,7 +48,7 @@ func TestAddOfferRequiresAnExplicitNonNullAmount(t *testing.T) {
 			editions := s.CommandProbe[d.EditionState]{Loaded: a.Loaded[d.EditionState]{
 				Exists: true, Version: 1, State: d.EditionState{ID: s.Edition, Currency: "EUR", Status: "draft"},
 			}}
-			drinks := s.ProjectionProbe[model.DrinkPublished]{Values: map[string]model.DrinkPublished{
+			drinks := s.ProjectionProbe[app.DrinkPublished]{Values: map[string]app.DrinkPublished{
 				s.Drink + "/1": {DrinkID: s.Drink, Name: "Coffee", Revision: 1},
 			}}
 			mux := http.NewServeMux()

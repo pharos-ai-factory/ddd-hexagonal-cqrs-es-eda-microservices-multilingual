@@ -4,7 +4,7 @@ import "google.golang.org/protobuf/encoding/protowire"
 
 // Validate only the published transport envelope. Snapshot business values remain
 // opaque and the original persisted bytes are forwarded without re-encoding.
-// Field numbers belong to contracts/realtime/proto/cafe/realtime/v1/realtime.proto.
+// Field numbers belong to contracts/shared/realtime/v1/realtime.proto.
 func validEnvelope(body []byte, owner, id string) bool {
 	if id == "" {
 		return false

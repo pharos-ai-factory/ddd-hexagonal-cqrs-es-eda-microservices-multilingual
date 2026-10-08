@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import {Given, When, Then} from '@cucumber/cucumber';
 import {CreditCollection, IssueReward, RedeemReward} from '../../src/contexts/loyalty/application/commands.js';
 import {derivedId} from '../../src/foundation/identity.js';
-import type {RewardEarned} from '../../src/contracts/events.js';
+
+import type {RewardEarned} from '../../src/contexts/loyalty/application/events.js';
 import {customer, metadata, selectedOrder} from './probes.js';
 import type {EngagementWorld as W} from './world.js';
 

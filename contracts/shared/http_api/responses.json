@@ -1,0 +1,68 @@
+{
+  "responses": {
+    "400": {
+      "description": "Malformed request",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/Error"}
+        }
+      }
+    },
+    "401": {
+      "description": "Missing or invalid credentials",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/Error"}
+        }
+      }
+    },
+    "403": {
+      "description": "Origin or authority denied",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/Error"}
+        }
+      }
+    },
+    "404": {
+      "description": "Root not found",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/Error"}
+        }
+      }
+    },
+    "428": {
+      "description": "Expected aggregate version required",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/Error"}
+        }
+      }
+    },
+    "503": {
+      "description": "Infrastructure unavailable; retry the same identity",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/Error"}
+        }
+      }
+    },
+    "409": {
+      "description": "Conflicting version or command identity",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/RejectedOutcome"}
+        }
+      }
+    },
+    "422": {
+      "description": "Recorded business rejection",
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "schemas.json#/schemas/RejectedOutcome"}
+        }
+      }
+    }
+  }
+}

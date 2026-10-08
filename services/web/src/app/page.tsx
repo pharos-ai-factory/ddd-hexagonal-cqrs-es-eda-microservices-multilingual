@@ -1,6 +1,7 @@
 'use client';
 import {useCallback, useEffect, useState} from 'react';
 import {useCafe} from '../features/realtime/useCafe';
+import {request} from '../adaptors/http/client';
 import {useCommand} from '../features/commands/useCommand';
 import {MenuPanel} from '../features/cafe/MenuPanel';
 import {OrderingPanel} from '../features/cafe/OrderingPanel';
@@ -18,7 +19,7 @@ export default function Cafe() {
   const command = useCommand(sessionEnded);
   const disabled = command.busy || Boolean(command.pending) || connection !== 'connected';
   useEffect(() => {
-    void fetch('/auth/session', {cache: 'no-store'}).then(response => setAuthenticated(response.ok))
+    void request('session', {}).then(response => setAuthenticated(response.ok))
       .catch(() => setLoginError('The café API is unavailable. Try opening the café again.'))
       .finally(() => setChecking(false));
     let identity = localStorage.getItem('cafe:customer');
@@ -28,7 +29,7 @@ export default function Cafe() {
   async function login(event: React.FormEvent) {
     event.preventDefault(); setLoginError('');
     try {
-      const response = await fetch('/auth/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password})});
+      const response = await request('login', {body: {password}});
       if (!response.ok) { setLoginError('The access code was not accepted.'); return; }
       setPassword(''); setAuthenticated(true);
     } catch { setLoginError('The café API is unavailable.'); }
@@ -46,7 +47,7 @@ export default function Cafe() {
       <div className="connection"><span className={'indicator '+connection}/><span data-testid="connection">{connection === 'connected' ? 'Live updates connected' : 'Reconnecting…'}</span>
         <button className="quiet" onClick={() => window.dispatchEvent(new Event('cafe-reconnect'))}>Reconnect</button>
         <button className="quiet" onClick={async () => {
-          const response = await fetch('/auth/logout', {method: 'POST'});
+          const response = await request('logout', {});
           if (response.ok) setAuthenticated(false);
         }}>Sign out</button></div>
     </header>

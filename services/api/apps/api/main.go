@@ -12,6 +12,7 @@ import (
 	"time"
 
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/sessions"
 )
 
@@ -35,18 +36,11 @@ func main() {
 	}
 	defer store.Close()
 	go store.Run(ctx)
-	backends := map[string]web.Backend{}
-	for service, owners := range map[string][]string{
-		"storefront": {"menu", "ordering"}, "operations": {"preparation", "collection"},
-		"engagement": {"loyalty", "communication"},
-	} {
-		prefix := strings.ToUpper(service)
-		for _, owner := range owners {
-			backends[owner] = web.Backend{URL: required(prefix + "_URL"), Key: required(prefix + "_API_KEY")}
-		}
-	}
+	owners := []string{"menu", "ordering", "preparation", "collection", "loyalty", "communication"}
+	requests := messaging.NewClient()
+	go requests.Run(ctx, required("API_BROKER_URL"), owners)
 	config := web.Config{Diagnostics: func(ctx context.Context) (any, error) { return store.Diagnostics(ctx) }, Sessions: store, OperatorPassword: required("OPERATOR_PASSWORD"), CLIKey: required("API_KEY"),
-		ProxySecret: required("CONNECT_PROXY_SECRET"), Origins: strings.Split(required("WEB_ORIGINS"), ","), Backends: backends}
+		ProxySecret: required("CONNECT_PROXY_SECRET"), Origins: strings.Split(required("WEB_ORIGINS"), ","), Owners: owners, Requests: requests}
 	server := &http.Server{Addr: ":8080", Handler: config.Handler(), ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout: 10 * time.Second, WriteTimeout: 20 * time.Second, IdleTimeout: 30 * time.Second}
 	go func() {

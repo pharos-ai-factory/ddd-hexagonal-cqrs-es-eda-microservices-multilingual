@@ -1,0 +1,24 @@
+syntax = "proto3";
+package cafe.communication.internal;
+
+// Owner-private delivery format. Domain facts remain plain, unversioned types.
+message NotificationRequested {
+  string notification_id = 1;
+}
+
+message PrivateEvent {
+  string id = 1;
+  string name = 2;
+  string context = 3;
+  string visibility = 4;
+  uint32 format_revision = 5;
+  string aggregate_kind = 6;
+  string aggregate_id = 7;
+  uint64 aggregate_version = 8;
+  string correlation_id = 9;
+  string causation_id = 10;
+  string occurred_at = 11;
+  oneof payload {
+    NotificationRequested notification_requested = 28;
+  }
+}

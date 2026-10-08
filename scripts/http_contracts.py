@@ -2,10 +2,18 @@
 import argparse
 import copy
 import json
+from typed_http_boundaries import OUTPUT as MAPPING_OUTPUT, generate as mapping_generated
+from frontend_contracts import OUTPUT as FRONTEND_OUTPUT, generated as frontend_generated
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "contracts/http"
+SOURCE = ROOT / "contracts"
+DOCUMENTS = {
+    "api": "services/api/http_api/api.openapi.json",
+    "storefront": "services/storefront/http_api/storefront.openapi.json",
+    "gateway": "services/realtime_gateway/http_api/gateway.openapi.json",
+    "provider": "services/notification_provider/http_api/provider.openapi.json",
+}
 OUTPUTS = {
     "api": "services/api/adaptors/openapi/generated",
     "gateway": "services/api/adaptors/openapi/generated",
@@ -17,7 +25,7 @@ OUTPUTS = {
 def bundle(path: Path) -> dict:
     document = json.loads(path.read_text())
     components = document.setdefault("components", {})
-    imported = set()
+    imported = {}
 
     def resolve(value, source):
         if isinstance(value, list):
@@ -31,17 +39,22 @@ def bundle(path: Path) -> dict:
         filename, fragment = value["$ref"].split("#", 1)
         target = (source.parent / filename).resolve() if filename else source
         if not target.is_relative_to(SOURCE.resolve()):
-            raise ValueError("HTTP references must stay inside contracts/http")
+            raise ValueError("HTTP references must stay inside contracts")
         parts = fragment.removeprefix("/").split("/")
         content = json.loads(target.read_text())
         for part in parts:
             content = content[part.replace("~1", "/").replace("~0", "~")]
         if parts[0] in {"schemas", "parameters", "responses"}:
             section = parts[0]
-            name = target.stem + "-" + parts[1]
+            relative = target.relative_to(SOURCE.resolve())
+            namespace = ".".join((*relative.parts[:-1], target.stem))
+            name = namespace + "." + parts[1]
             key = (section, name)
+            origin = (target, fragment)
+            if key in imported and imported[key] != origin:
+                raise ValueError("HTTP component name collision: " + name)
             if key not in imported:
-                imported.add(key)
+                imported[key] = origin
                 components.setdefault(section, {})[name] = resolve(content, target)
             return {"$ref": f"#/components/{section}/{name}"}
         return resolve(content, target)
@@ -52,11 +65,21 @@ def bundle(path: Path) -> dict:
 
 
 def generated() -> dict[Path, str]:
-    return {
+    outputs = {
         ROOT / directory / (name + ".openapi.json"):
-        json.dumps(bundle(SOURCE / (name + ".openapi.json")), indent=2, ensure_ascii=False) + "\n"
+        json.dumps(bundle(SOURCE / DOCUMENTS[name]), indent=2, ensure_ascii=False) + "\n"
         for name, directory in OUTPUTS.items()
     }
+    outputs[ROOT/FRONTEND_OUTPUT] = frontend_generated(bundle(SOURCE/DOCUMENTS["api"]))
+    mapping = mapping_generated(ROOT, bundle(SOURCE/DOCUMENTS["api"]))
+    import subprocess
+    gofmt = ROOT/".tools/go/bin/gofmt"
+    if not gofmt.exists():
+        import shutil
+        gofmt = Path(shutil.which("gofmt") or "gofmt")
+    mapping = subprocess.check_output([str(gofmt)], input=mapping, text=True)
+    outputs[ROOT/MAPPING_OUTPUT] = mapping
+    return outputs
 
 
 def generate(check=False):
@@ -65,6 +88,7 @@ def generate(check=False):
             if not path.exists() or path.read_text() != expected:
                 raise ValueError(f"OpenAPI bundle drift: {path.relative_to(ROOT)}; run pnpm generate:http")
         else:
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(expected)
 

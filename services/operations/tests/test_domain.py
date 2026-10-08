@@ -53,10 +53,10 @@ def test_restored_root_does_not_reemit_creation() -> None:
 
 def test_shared_wire_fixture_and_owner_tampering() -> None:
     root = Path(__file__).resolve().parents[3]
-    raw = bytes.fromhex((root/"contracts/events/fixtures/reward-earned.v1.hex").read_text())
+    raw = bytes.fromhex((root/"contracts/loyalty/messaging/integration_events/v1/fixtures/reward-issued.v1.hex").read_text())
     event, grant = decode(raw)
-    assert (event.name, event.context, event.visibility) == ("loyalty.reward-earned", "loyalty", "domain")
-    assert grant["validDays"] == 7
+    assert (event.name, event.context, event.visibility) == ("loyalty.reward-issued", "loyalty", "integration")
+    assert grant["expiresAt"] == "2026-10-03T12:00:00Z"
     assert Event.FromString(raw).SerializeToString(deterministic=True) == raw
     event.context = "preparation"
     with pytest.raises(ValueError, match="owner"):

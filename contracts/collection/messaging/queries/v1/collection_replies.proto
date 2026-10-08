@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cafe.collection.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1";
+
+message Pickup {
+  string id = 1;
+  string order_id = 2;
+  string customer_id = 3;
+  string code = 4;
+  string status = 5;
+}
+
+message LoadedPickup {
+  bool exists = 1;
+  uint64 version = 2;
+  Pickup state = 3;
+}
+
+message Pickups {
+  repeated LoadedPickup items = 1;
+  bool paged = 2;
+  optional string next_id = 3;
+}

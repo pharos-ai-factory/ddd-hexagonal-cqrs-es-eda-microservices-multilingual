@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cafe.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
+
+message PickupOpened {
+  string pickup_id = 1;
+  string order_id = 2;
+  string customer_id = 3;
+  string collection_code = 4;
+}
+
+message OrderCollected {
+  string order_id = 1;
+  string customer_id = 2;
+}

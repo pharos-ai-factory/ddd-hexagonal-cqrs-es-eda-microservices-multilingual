@@ -5,6 +5,11 @@
       "version": 1,
       "file": "0001_lifecycle_indexes.sql",
       "checksum": "7baaafd3fe04a070def8c365752b4939c5d826c02b5406c512308036649c930a"
+    },
+    {
+      "version": 2,
+      "file": "0002_command_replies.sql",
+      "checksum": "1a250f1f5545194b7dc260c8c34d55b4539b81aceb8ccd142c0e5bf544118661"
     }
   ]
 }

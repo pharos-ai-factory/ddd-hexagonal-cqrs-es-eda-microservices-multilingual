@@ -68,6 +68,11 @@ func (m *Mux) Owner(pattern string) string {
 	return owner
 }
 
+func (m *Mux) Operation(pattern string) *openapi3.Operation {
+	method, path, _ := strings.Cut(pattern, " ")
+	return m.document.Paths.Value(path).GetOperation(method)
+}
+
 func (m *Mux) Handle(pattern string, handler http.Handler) {
 	if !m.declared[pattern] {
 		panic(fmt.Sprintf("HTTP route absent from OpenAPI: %s", pattern))

@@ -1,6 +1,7 @@
 # 0004 — Runtime authority, independent schemas and complete queries
 
 Status: accepted, 29 September 2026. Refines the technical composition in 0002.
+API request/reply authority is extended by [0007](0007-api-broker-requests.md).
 The aggregate, event-delivery and development-only rules remain in force.
 
 ## Workload authority
@@ -84,7 +85,8 @@ Workers record structured, redacted failures and process-lifetime counters.
 Authenticated diagnostics expose durable pending work separately from those
 counters. Dead-letter transfer counts do not claim to be durable queue depth.
 Liveness remains separate from workflow progress; a temporary broker outage does
-not prevent commands from recording durable outgoing intent.
+not prevent an owner handler from recording durable outgoing intent. API
+command submission depends on its RabbitMQ request transport (0007).
 
 ## Evidence
 

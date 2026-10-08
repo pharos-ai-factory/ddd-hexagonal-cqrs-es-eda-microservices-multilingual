@@ -24,7 +24,7 @@ export function EngagementPanel({snapshot, customer, send, disabled}: {
       <small>Valid until {new Date(reward.state.expiresAt).toLocaleDateString('en-GB')}</small>
       {reward.state.status === 'issued' && <button className="quiet" disabled={disabled || !latestOrder}
         onClick={() => {
-          if (latestOrder) void send(`loyalty/rewards/${reward.state.id}/redeem`, {orderId: latestOrder.state.id}, reward.version);
+          if (latestOrder) void send('redeemReward', reward.state.id, {orderId: latestOrder.state.id}, reward.version);
         }}>Record redemption</button>}
     </article>)}</div>
     <div><h3>Customer messages</h3>{notices.filter(n => n.state.recipient === customer).map(notice => <article className="message" data-testid="notification" key={notice.state.id}>

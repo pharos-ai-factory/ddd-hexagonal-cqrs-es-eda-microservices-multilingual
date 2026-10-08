@@ -11,6 +11,10 @@ from operations.adaptors.diagnostics import diagnostics
 from operations.adaptors.delivery import Subscription, consume, realtime_relay, relay
 from operations.adaptors.http import authenticate, mount_command, mount_paged_queries
 from operations.adaptors.postgres import Commands, Database, Queries
+from operations.adaptors.requests import Registry
+from operations.adaptors.replies import relay as reply_relay
+from operations.contexts.preparation.adaptors.messaging import requests as preparation_wire
+from operations.contexts.collection.adaptors.messaging import requests as collection_wire
 from operations.contexts.preparation.application import AcceptOrder, CompletePreparation, StartPreparation
 from operations.contexts.collection.application import CollectOrder, OpenPickup
 from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
@@ -35,6 +39,13 @@ def create_app() -> FastAPI:
         return Pickup.restore(value).snapshot()
     tickets = Commands(databases["preparation"], "ticket", ticket_state)
     pickups = Commands(databases["collection"], "pickup", pickup_state)
+    preparation_requests = Registry("preparation")
+    preparation_requests.command("startPreparation", preparation_wire.start, StartPreparation(tickets).execute)
+    preparation_requests.command("completePreparation", preparation_wire.complete, CompletePreparation(tickets).execute)
+    preparation_requests.queries("ticket", "tickets", Queries(databases["preparation"], "ticket", ticket_state), preparation_wire.item, preparation_wire.listing)
+    collection_requests = Registry("collection")
+    collection_requests.command("collectOrder", collection_wire.collect, CollectOrder(pickups).execute)
+    collection_requests.queries("pickup", "pickups", Queries(databases["collection"], "pickup", pickup_state), collection_wire.item, collection_wire.listing)
     stop = Event()
     workers: list[Thread] = []
 
@@ -45,7 +56,10 @@ def create_app() -> FastAPI:
             workers.append(thread)
             thread.start()
 
+        start(partial(preparation_requests.run, secret("PREPARATION_BROKER_URL"), stop))
+        start(partial(collection_requests.run, secret("COLLECTION_BROKER_URL"), stop))
         for owner, database in databases.items():
+            start(partial(reply_relay, database, secret(owner.upper()+"_BROKER_URL"), stop))
             start(partial(relay, database, secret(owner.upper()+"_BROKER_URL"), stop))
             start(partial(realtime_relay, database, stop))
         accept = Subscription[OrderPlaced]("preparation", "preparation.accept-order", "ordering.order-placed",

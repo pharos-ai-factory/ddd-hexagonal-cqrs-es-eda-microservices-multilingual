@@ -11,15 +11,12 @@
               "oneofs": {
                 "payload": {
                   "oneof": [
-                    "drinkPublished",
                     "menuPublished",
                     "orderPlaced",
                     "drinksReady",
                     "pickupOpened",
                     "orderCollected",
-                    "rewardEarned",
-                    "rewardIssued",
-                    "notificationRequested"
+                    "rewardIssued"
                   ]
                 }
               },
@@ -75,11 +72,6 @@
                   "id": 11,
                   "protoName": "occurred_at"
                 },
-                "drinkPublished": {
-                  "type": "DrinkPublished",
-                  "id": 20,
-                  "protoName": "drink_published"
-                },
                 "menuPublished": {
                   "type": "MenuPublished",
                   "id": 21,
@@ -105,39 +97,29 @@
                   "id": 25,
                   "protoName": "order_collected"
                 },
-                "rewardEarned": {
-                  "type": "RewardEarned",
-                  "id": 26,
-                  "protoName": "reward_earned"
-                },
                 "rewardIssued": {
                   "type": "RewardIssued",
                   "id": 27,
                   "protoName": "reward_issued"
-                },
-                "notificationRequested": {
-                  "type": "NotificationRequested",
-                  "id": 28,
-                  "protoName": "notification_requested"
                 }
-              }
-            },
-            "DrinkPublished": {
-              "fields": {
-                "drinkId": {
-                  "type": "string",
-                  "id": 1,
-                  "protoName": "drink_id"
-                },
-                "name": {
-                  "type": "string",
-                  "id": 2
-                },
-                "revision": {
-                  "type": "uint64",
-                  "id": 3
-                }
-              }
+              },
+              "reserved": [
+                [
+                  20,
+                  20
+                ],
+                [
+                  26,
+                  26
+                ],
+                [
+                  28,
+                  28
+                ],
+                "drink_published",
+                "reward_earned",
+                "notification_requested"
+              ]
             },
             "Offer": {
               "fields": {
@@ -292,29 +274,6 @@
                 }
               }
             },
-            "RewardEarned": {
-              "fields": {
-                "accountId": {
-                  "type": "string",
-                  "id": 1,
-                  "protoName": "account_id"
-                },
-                "grantId": {
-                  "type": "string",
-                  "id": 2,
-                  "protoName": "grant_id"
-                },
-                "benefit": {
-                  "type": "string",
-                  "id": 3
-                },
-                "validDays": {
-                  "type": "int32",
-                  "id": 4,
-                  "protoName": "valid_days"
-                }
-              }
-            },
             "RewardIssued": {
               "fields": {
                 "rewardId": {
@@ -335,15 +294,6 @@
                   "type": "string",
                   "id": 4,
                   "protoName": "expires_at"
-                }
-              }
-            },
-            "NotificationRequested": {
-              "fields": {
-                "notificationId": {
-                  "type": "string",
-                  "id": 1,
-                  "protoName": "notification_id"
                 }
               }
             }

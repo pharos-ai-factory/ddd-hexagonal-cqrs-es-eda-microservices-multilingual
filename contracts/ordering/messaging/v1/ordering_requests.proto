@@ -1,0 +1,42 @@
+syntax = "proto3";
+package cafe.ordering.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1";
+import "cafe/requests/v1/common.proto";
+import "cafe/requests/v1/contexts/ordering/ordering_replies.proto";
+import "cafe/requests/v1/contexts/ordering/ordering_queries.proto";
+import "cafe/requests/v1/contexts/ordering/ordering_commands.proto";
+message Request {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    Command command = 10;
+    Query query = 11;
+  }
+}
+message Command {
+  cafe.requests.v1.CommandMetadata metadata = 1;
+  oneof payload {
+    cafe.ordering.requests.v1.CreateOrder create_order = 17;
+    cafe.ordering.requests.v1.AddLine add_line = 18;
+    cafe.ordering.requests.v1.ChangeQuantity change_quantity = 19;
+    cafe.ordering.requests.v1.PlaceOrder place_order = 20;
+  }
+}
+message Query {
+  oneof payload {
+    cafe.ordering.requests.v1.ListOrders list_orders = 14;
+    cafe.ordering.requests.v1.GetOrder get_order = 15;
+  }
+}
+message Reply {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    cafe.requests.v1.Outcome outcome = 10;
+    cafe.requests.v1.RequestError error = 11;
+    cafe.ordering.requests.v1.LoadedOrder order = 24;
+    cafe.ordering.requests.v1.Orders orders = 25;
+  }
+}

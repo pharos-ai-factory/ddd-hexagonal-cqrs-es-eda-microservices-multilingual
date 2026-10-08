@@ -1,0 +1,9 @@
+syntax = "proto3";
+package cafe.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared;sharedv1";
+import "google/protobuf/descriptor.proto";
+
+// Presence is a published input rule. Fields without this annotation may be absent.
+extend google.protobuf.FieldOptions {
+  bool required_input = 51001;
+}

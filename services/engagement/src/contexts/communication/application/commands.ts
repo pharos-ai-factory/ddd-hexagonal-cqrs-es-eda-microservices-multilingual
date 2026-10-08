@@ -1,6 +1,7 @@
 import type {CommandPort, DeliveryPort, Metadata, QueryPort} from '../../../foundation/application.js';
 import {Rejection} from '../../../foundation/domain.js';
-import type {NotificationRequested, PickupOpened, RewardIssued} from '../../../contracts/events.js';
+import type {PickupOpened, RewardIssued} from '../../../contracts/events.js';
+import type {NotificationRequested} from './events.js';
 import {Notification, type NotificationState} from '../domain/notification.js';
 
 export class RequestNotification {

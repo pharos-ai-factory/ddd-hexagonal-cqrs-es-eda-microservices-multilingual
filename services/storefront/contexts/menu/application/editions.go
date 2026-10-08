@@ -35,7 +35,7 @@ type AddOffer struct {
 }
 type AddOfferHandler struct {
 	Editions a.CommandPort[d.EditionState]
-	Drinks   a.ProjectionPort[model.DrinkPublished]
+	Drinks   a.ProjectionPort[DrinkPublished]
 }
 
 func (h AddOfferHandler) Execute(ctx context.Context, m a.Metadata, c AddOffer) (a.Outcome, error) {

@@ -49,7 +49,7 @@ not query business state or create browser polling.
 
 A changed root, its version, command outcome/receipts, domain/integration outbox
 and **exact Protobuf browser snapshot bytes** commit in the same PostgreSQL
-transaction. The browser contract is `contracts/realtime/proto/.../realtime.proto`.
+transaction. The browser contract is `contracts/shared/realtime/v1/realtime.proto`.
 It is separate from the broker's domain/integration envelope.
 
 Immutable `realtime_publications` and mutable `realtime_dispatches` are separate.
@@ -102,7 +102,9 @@ capability, not a requirement on every query.
 
 ## Command acceptance and uncertainty
 
-All browser commands go through the Go API. Before sending, a window persists
+All browser commands go through the Go API, which translates HTTP JSON into
+Protobuf requests over RabbitMQ. Owner adaptors construct the application command.
+The API waits for its committed outcome; timeout preserves uncertainty. Before sending, a window persists
 its body, root version, command ID and correlation ID in session storage. A
 network failure or server failure retains that attempt for an explicit identical
 retry, including after page reload. An authentication failure also retains the
@@ -116,6 +118,7 @@ state: Centrifugo or an authoritative reconciliation supplies the projection.
 `scripts/browser/cafe.spec.ts` exercises two independent windows, a lost command
 response, the entire three-order workflow, no workflow polling, recoverable
 history, deliberate history loss, mobile layout and logout propagation.
-Go API tests cover proxy authentication, origin checks, channel authority and
-credential replacement. Each runtime's PostgreSQL lane proves atomic realtime
+Go API tests cover authentication, origin checks, channel authority and
+HTTP-to-Protobuf request translation. The broker reply-loss fixture verifies
+recovery of committed commands with their original identities. Each runtime's PostgreSQL lane proves atomic realtime
 intent and lease fencing. `pnpm test:integration` includes the real browser lane.

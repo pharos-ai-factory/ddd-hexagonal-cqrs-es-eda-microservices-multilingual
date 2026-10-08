@@ -11,6 +11,7 @@ from operations.foundation.pagination import Page, PageRequest
 from operations.foundation.application import Change, Loaded, Metadata, Outcome, VersionConflictApplicationError
 from operations.foundation.domain import CorruptState, Rejection, identifier, integer
 from operations.adaptors import codec, receipts
+from operations.adaptors.replies import append as append_reply
 
 type Row = dict[str, object]
 
@@ -79,17 +80,17 @@ class Commands[S: Mapping[str, object]]:
                 if previous:
                     if previous["fingerprint"] != m.source_hash or previous["target"] != target:
                         raise ValueError("Event identity reused with conflicting bytes or target")
-                    return receipts.outcome(previous["outcome"], m.target)
+                    return append_reply(connection, receipts.outcome(previous["outcome"], m.target))
             receipt = connection.execute("""SELECT fingerprint,outcome FROM cafe.command_receipts
                 WHERE kind=%s AND aggregate_id=%s AND command_name=%s AND command_id=%s""",
                 (self.kind, m.target, m.name, m.id)).fetchone()
             if receipt:
                 if receipt["fingerprint"] != digest:
-                    return {"aggregateId": m.target, "version": 0, "status": "", "rejection": {
-                        "code": "idempotency_conflict", "message": "The command identity has different input"}}
+                    return append_reply(connection, {"aggregateId": m.target, "version": 0, "status": "", "rejection": {
+                        "code": "idempotency_conflict", "message": "The command identity has different input"}})
                 outcome = receipts.outcome(receipt["outcome"], m.target)
                 self._incoming(connection, m, target, outcome)
-                return outcome
+                return append_reply(connection, outcome)
             loaded = connection.execute("SELECT version,state FROM cafe.aggregates WHERE kind=%s AND id=%s FOR UPDATE",
                                         (self.kind, m.target)).fetchone()
             version = integer(loaded["version"]) if loaded else 0
@@ -110,7 +111,7 @@ class Commands[S: Mapping[str, object]]:
                 fingerprint,outcome,correlation_id,causation_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
                 (self.kind, m.target, m.name, m.id, digest, Jsonb(outcome), m.correlation, m.causation or None))
             self._incoming(connection, m, target, outcome)
-            return outcome
+            return append_reply(connection, outcome)
 
     def _persist_change(self, connection: Connection[Row], m: Metadata, exists: bool,
                         version: int, change: Change[S]) -> int:

@@ -1,0 +1,9 @@
+[
+  {
+    "name": "preparation.drinks-ready",
+    "owner": "preparation",
+    "visibility": "integration",
+    "consumer": "collection.open-pickup",
+    "kind": "ticket"
+  }
+]

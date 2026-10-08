@@ -1,0 +1,106 @@
+{
+  "nested": {
+    "cafe": {
+      "nested": {
+        "loyalty": {
+          "nested": {
+            "internal": {
+              "nested": {
+                "RewardEarned": {
+                  "fields": {
+                    "accountId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "account_id"
+                    },
+                    "grantId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "grant_id"
+                    },
+                    "benefit": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "validDays": {
+                      "type": "int32",
+                      "id": 4,
+                      "protoName": "valid_days"
+                    }
+                  }
+                },
+                "PrivateEvent": {
+                  "oneofs": {
+                    "payload": {
+                      "oneof": [
+                        "rewardEarned"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "context": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "visibility": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "formatRevision": {
+                      "type": "uint32",
+                      "id": 5,
+                      "protoName": "format_revision"
+                    },
+                    "aggregateKind": {
+                      "type": "string",
+                      "id": 6,
+                      "protoName": "aggregate_kind"
+                    },
+                    "aggregateId": {
+                      "type": "string",
+                      "id": 7,
+                      "protoName": "aggregate_id"
+                    },
+                    "aggregateVersion": {
+                      "type": "uint64",
+                      "id": 8,
+                      "protoName": "aggregate_version"
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "id": 9,
+                      "protoName": "correlation_id"
+                    },
+                    "causationId": {
+                      "type": "string",
+                      "id": 10,
+                      "protoName": "causation_id"
+                    },
+                    "occurredAt": {
+                      "type": "string",
+                      "id": 11,
+                      "protoName": "occurred_at"
+                    },
+                    "rewardEarned": {
+                      "type": "RewardEarned",
+                      "id": 26,
+                      "protoName": "reward_earned"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

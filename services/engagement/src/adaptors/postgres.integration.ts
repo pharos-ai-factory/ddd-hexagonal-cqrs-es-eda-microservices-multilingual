@@ -133,3 +133,45 @@ test('queries traverse more than one page and retain unpaginated reads', async (
     assert.deepEqual(combined, all);
   } finally { await db.pool.end(); }
 });
+
+test('reply bytes commit atomically and a fresh request recovers the stored command outcome', async () => {
+  const {currentReply, claimReply} = await import('./replies.js');
+  const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
+  const commands = new Commands<AccountState>(db, 'account', restoreAccount);
+  const queries = new Queries<AccountState>(db, 'account', restoreAccount);
+  const id = randomUUID(), metadata: Metadata = {id: randomUUID(), target: id, name: 'test.reply', correlation: id, expected: 0, input: {}};
+  const state: AccountState = {id, collections: 0, stampBalance: 0, grantsEarned: 0};
+  const change = () => ({state, status: 'active', changed: true});
+  try {
+    const broken = {id: randomUUID(), committed: false, encode: () => {throw new Error('Reply encoding failed');}};
+    await assert.rejects(currentReply.run(broken, () => commands.execute(metadata, change)), /Reply encoding failed/);
+    assert.equal(broken.committed, false);
+    assert.equal(await queries.get(id), undefined);
+    const first = {id: randomUUID(), committed: false, encode: (value: object) => Buffer.from(JSON.stringify(value))};
+    const outcome = await currentReply.run(first, () => commands.execute(metadata, change));
+    assert.ok(first.committed);
+    const retry = {...first, id: randomUUID(), committed: false};
+    assert.deepEqual(await currentReply.run(retry, () => commands.execute(metadata, () => assert.fail('Replayed decision'))), outcome);
+    assert.ok(retry.committed);
+    for (const intent of [first, retry]) {
+      const {rows: [row]} = await db.pool.query<{body: Buffer}>('SELECT body FROM cafe.command_replies WHERE id=$1', [intent.id]);
+      assert.deepEqual(row!.body, first.encode(outcome));
+    }
+    assert.equal((await db.pool.query('SELECT count(*) FROM cafe.command_receipts WHERE aggregate_id=$1', [id])).rows[0].count, '1');
+    await assert.rejects(db.pool.query('UPDATE cafe.command_replies SET body=body WHERE id=$1', [first.id]));
+    // Leave the committed lease untouched, as a crashed process would.
+    const abandoned = await claimReply(db);
+    assert.ok(abandoned);
+    await db.pool.query("UPDATE cafe.command_reply_dispatches SET available_at=clock_timestamp()+interval '1 hour' WHERE event_id<>$1", [abandoned.id]);
+    const deadline = Date.now()+11000;
+    let recovered: Awaited<ReturnType<typeof claimReply>>;
+    while (!(recovered = await claimReply(db))) {
+      assert.ok(Date.now() < deadline, 'Reply lease did not recover within the caller deadline');
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.equal(recovered.id, abandoned.id);
+    assert.equal(recovered.expired, false);
+    assert.deepEqual(recovered.body, abandoned.body);
+
+  } finally { await db.pool.end(); }
+});

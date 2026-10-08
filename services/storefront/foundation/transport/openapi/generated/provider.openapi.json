@@ -65,14 +65,14 @@
             }
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "500": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Error"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Error"
                 }
               }
             }
@@ -83,7 +83,7 @@
         "operationId": "acceptMessage",
         "parameters": [
           {
-            "$ref": "#/components/parameters/common-CommandID"
+            "$ref": "#/components/parameters/shared.http_api.parameters.CommandID"
           }
         ],
         "requestBody": {
@@ -178,20 +178,20 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           },
           "503": {
-            "$ref": "#/components/responses/common-503"
+            "$ref": "#/components/responses/shared.http_api.responses.503"
           },
           "409": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Error"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Error"
                 }
               }
             }
@@ -201,7 +201,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common-Error"
+                  "$ref": "#/components/schemas/shared.http_api.schemas.Error"
                 }
               }
             }
@@ -261,10 +261,10 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/common-400"
+            "$ref": "#/components/responses/shared.http_api.responses.400"
           },
           "401": {
-            "$ref": "#/components/responses/common-401"
+            "$ref": "#/components/responses/shared.http_api.responses.401"
           }
         }
       }
@@ -278,7 +278,7 @@
       }
     },
     "schemas": {
-      "common-Error": {
+      "shared.http_api.schemas.Error": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -295,39 +295,39 @@
       }
     },
     "responses": {
-      "common-401": {
+      "shared.http_api.responses.401": {
         "description": "Missing or invalid credentials",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-400": {
+      "shared.http_api.responses.400": {
         "description": "Malformed request",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       },
-      "common-503": {
+      "shared.http_api.responses.503": {
         "description": "Infrastructure unavailable; retry the same identity",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/common-Error"
+              "$ref": "#/components/schemas/shared.http_api.schemas.Error"
             }
           }
         }
       }
     },
     "parameters": {
-      "common-CommandID": {
+      "shared.http_api.parameters.CommandID": {
         "name": "Idempotency-Key",
         "in": "header",
         "required": true,

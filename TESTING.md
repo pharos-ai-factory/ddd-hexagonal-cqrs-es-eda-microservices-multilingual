@@ -31,6 +31,7 @@ static export served by the ingress, and runs:
 | Context migrations | Independent owner ledgers, additive upgrade preserving roots, idempotent reapplication, checksum/owner rejection and rollback |
 | Query completeness | More than 100 roots in each language; complete unpaginated arrays and cursor traversal without omissions or duplicates |
 | Cross-language workflow | Menu → order → preparation → collection → account → reward → notifications; Operations outage and paused private Reward consumer |
+| RabbitMQ requests | Restricted API/owner authority, commands and queries across all three runtimes, independent command/query consumers, exact committed reply recovery after an unroutable publication, atomic rollback and stable receipts/outgoing intent |
 | HTTP contracts | Live OpenAPI response validation through the Go API for all six contexts, complete/paginated reads, item DTOs, missing versions, missing roots and conflicting command identities |
 | Gherkin PostgreSQL | Recorded `menu_pending` after projection arrival, new-attempt success and conflicting key reuse; atomic browser intent |
 | Gherkin live workflows | Ten focused scenarios: repeated business facts with new event IDs, duplicate grants/notifications, concurrent collections/redemptions, customer isolation, lost provider response and recorded completion rejection |
@@ -67,6 +68,8 @@ connection control proves that the fixture can refresh its session and receive
 publications. An expired connect grant is an explicit protocol refusal even when
 the unauthenticated WebSocket remains open; a cancelled proxy call is not proof
 of revocation. The fixture's proxy timeout accommodates the deliberate hold.
+On Docker Desktop for macOS, the fixture publishes Centrifugo ports and uses
+`host.docker.internal` for container-to-host access; Linux uses host networking.
 These test controls are absent from the application entry point. The fixture is cleaned up
 on failure; its browser trace remains under `test-results/session-revocation`.
 
@@ -116,3 +119,15 @@ timeout annotation and are checked for becoming unnecessary.
 Executed local results and remaining limits are recorded in `docs/verification.md`.
 Remote CI, cluster availability, load tests, actual email, deployment and independent
 human UAT must be reported separately; this repository has no release lane.
+
+
+`pnpm check:contracts` fails for changed, missing and newly generated bindings.
+`pnpm verify` includes this gate and frontend OpenAPI mutation tests: renaming a
+required request or response field must break real feature compilation, while
+optional additions remain compatible. Required headers and query parameters must
+break real callers, including shared command/list helpers. Protobuf generation
+checks compile overlapping context-local tags/names and multiline field options. Native Go/Python/TypeScript checks
+cover required annotations and explicit zero input values. PostgreSQL integration
+checks cover command reply encoding rollback, recovered receipt outcomes and
+immutable exact response bytes. Every owner language abandons and reclaims a
+real reply lease before reply expiry; the Go lane also fences stale publishers.

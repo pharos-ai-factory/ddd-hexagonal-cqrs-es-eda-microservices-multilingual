@@ -1,0 +1,50 @@
+syntax = "proto3";
+package cafe.menu.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1";
+
+message Drink {
+  string id = 1;
+  string name = 2;
+  uint64 revision = 3;
+  bool published = 4;
+}
+
+message Offer {
+  string code = 1;
+  string drink_id = 2;
+  uint64 drink_revision = 3;
+  string name = 4;
+  int64 minor = 5;
+  string currency = 6;
+}
+
+message Edition {
+  string id = 1;
+  string currency = 2;
+  string status = 3;
+  repeated Offer offers = 4;
+}
+
+message LoadedDrink {
+  bool exists = 1;
+  uint64 version = 2;
+  Drink state = 3;
+}
+
+message Drinks {
+  repeated LoadedDrink items = 1;
+  bool paged = 2;
+  optional string next_id = 3;
+}
+
+message LoadedEdition {
+  bool exists = 1;
+  uint64 version = 2;
+  Edition state = 3;
+}
+
+message Editions {
+  repeated LoadedEdition items = 1;
+  bool paged = 2;
+  optional string next_id = 3;
+}

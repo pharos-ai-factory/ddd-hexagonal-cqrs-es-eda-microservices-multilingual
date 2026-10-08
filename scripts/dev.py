@@ -30,7 +30,7 @@ def configure(path, disposable=False):
     values = read_configuration(path) if path.exists() or path.is_symlink() else {}
     for key in ("POSTGRES_PASSWORD", "BROKER_PASSWORD", "API_KEY", "DELIVERY_KEY", "OPERATOR_PASSWORD",
                 "SESSION_PASSWORD", "REALTIME_REDIS_PASSWORD", "CENTRIFUGO_API_KEY", "CONNECT_PROXY_SECRET",
-                "STOREFRONT_API_KEY", "OPERATIONS_API_KEY", "ENGAGEMENT_API_KEY", "SESSION_REALTIME_KEY"):
+                "STOREFRONT_API_KEY", "OPERATIONS_API_KEY", "ENGAGEMENT_API_KEY", "SESSION_REALTIME_KEY", "API_BROKER_PASSWORD"):
         if key + "_FILE" not in values:
             values.setdefault(key, secrets.token_hex(24))
     for owner in OWNERS:
@@ -71,10 +71,18 @@ def broker_users(values):
                                {"password": values[owner.upper()+"_BROKER_PASSWORD"], "tags": ""})
                 queue = rf"^ref\.{owner}\..*"
                 broker_request(values, "PUT", f"permissions/reference/{user}",
-                               {"configure": "^$", "write": rf"^ref\.{owner}\.delivery$|^cafe\.events$", "read": queue})
+                               {"configure": "^$", "write": rf"^ref\.{owner}\.delivery$|^cafe\.(events|replies)$", "read": queue})
                 broker_request(values, "PUT", f"topic-permissions/reference/{user}",
                                {"exchange": "cafe.events", "write": rf"^(domain|integration)\.{owner}\..*$",
                                 "read": rf"^(domain\.{owner}\..*|integration\..*)$"})
+                broker_request(values, "PUT", f"topic-permissions/reference/{user}",
+                               {"exchange": "cafe.replies", "write": rf"^reply\.{owner}$", "read": "^$"})
+            broker_request(values, "PUT", "users/cafe_api",
+                           {"password": values["API_BROKER_PASSWORD"], "tags": ""})
+            broker_request(values, "PUT", "permissions/reference/cafe_api",
+                           {"configure": "^$", "write": r"^cafe\.requests$", "read": r"^ref\.api\.[a-z]+\.replies$"})
+            broker_request(values, "PUT", "topic-permissions/reference/cafe_api",
+                           {"exchange": "cafe.requests", "write": r"^request\.(menu|ordering|preparation|collection|loyalty|communication)\.(command|query)$", "read": "^$"})
             return
         except (urllib.error.URLError, OSError, http.client.RemoteDisconnected):
             if time.monotonic() >= deadline:
@@ -115,6 +123,7 @@ def test_environment(values):
         prefix = owner.upper()
         result[prefix+"_DATABASE_URL"] = f'postgres://cafe_{owner}:{values[prefix+"_DB_PASSWORD"]}@127.0.0.1:{values["PG_PORT"]}/cafe_{owner}?sslmode=disable'
         result[prefix+"_BROKER_URL"] = f'amqp://cafe_{owner}:{values[prefix+"_BROKER_PASSWORD"]}@127.0.0.1:{values["AMQP_PORT"]}/reference'
+    result["API_BROKER_URL"] = f'amqp://cafe_api:{values["API_BROKER_PASSWORD"]}@127.0.0.1:{values["AMQP_PORT"]}/reference'
     result["BROKER_ADMIN_URL"] = f'amqp://administrator:{values["BROKER_PASSWORD"]}@127.0.0.1:{values["AMQP_PORT"]}/reference'
     result["DATABASE_ADMIN_URL"] = f'postgres://postgres:{values["POSTGRES_PASSWORD"]}@127.0.0.1:{values["PG_PORT"]}/cafe_ordering?sslmode=disable'
     return result

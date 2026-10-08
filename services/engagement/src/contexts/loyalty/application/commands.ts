@@ -1,5 +1,6 @@
 import {ApplicationError, type CommandPort, type IdentityFactory, type Metadata, type Publication} from '../../../foundation/application.js';
-import type {OrderCollected, RewardEarned} from '../../../contracts/events.js';
+import type {OrderCollected} from '../../../contracts/events.js';
+import type {RewardEarned} from './events.js';
 import {LoyaltyAccount, type AccountState} from '../domain/account.js';
 import {Reward, type RewardState} from '../domain/reward.js';
 

@@ -49,7 +49,7 @@ def execute(env_file, keep=False):
         for owner in ("menu", "ordering", "preparation", "collection", "loyalty", "communication"):
             compose(env_file, "exec", "-T", "postgres", "psql", "-U", "postgres", "-d", "cafe_"+owner,
                     "-v", "ON_ERROR_STOP=1", "-c",
-                    "TRUNCATE cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections CASCADE",
+                    "TRUNCATE cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections,cafe.command_replies CASCADE",
                     stdout=subprocess.DEVNULL)
         compose(env_file, "start", "storefront", "operations", "engagement")
         wait_ready(values)
@@ -75,6 +75,7 @@ def execute(env_file, keep=False):
         check("Live OpenAPI conformance", [sys.executable, "scripts/go.py", "run", "./tests/httpconformance"],
               dict(live, CAFE_GO_PROJECT="services/api", CAFE_DISPOSABLE_PROJECT=values["COMPOSE_PROJECT_NAME"],
                    CAFE_HTTP_API_URL="http://127.0.0.1:"+values["API_PORT"], CAFE_HTTP_API_KEY=values["API_KEY"]))
+        check("RabbitMQ request recovery", [sys.executable, "tests/infrastructure/request_recovery.py"], live)
         check("Gherkin live workflows", ["node", "--import", "tsx", "node_modules/@cucumber/cucumber/bin/cucumber.js",
                         "--config", "tests/acceptance/cucumber.mjs"], live)
         check("Gherkin infrastructure reports", ["node", "scripts/check_bdd_reports.mjs", "infrastructure"], live)

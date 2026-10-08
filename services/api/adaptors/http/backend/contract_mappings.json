@@ -1,0 +1,155 @@
+{
+  "listDrinks": {
+    "message": "ListDrinks",
+    "reply": "drinks"
+  },
+  "getDrink": {
+    "message": "GetDrink",
+    "reply": "drink"
+  },
+  "createDrink": {
+    "message": "CreateDrink",
+    "fields": {
+      "name": "name"
+    }
+  },
+  "reviseDrink": {
+    "message": "ReviseDrink",
+    "fields": {
+      "name": "name"
+    }
+  },
+  "publishDrink": {
+    "message": "PublishDrink",
+    "fields": {}
+  },
+  "listEditions": {
+    "message": "ListEditions",
+    "reply": "editions"
+  },
+  "getEdition": {
+    "message": "GetEdition",
+    "reply": "edition"
+  },
+  "createEdition": {
+    "message": "CreateEdition",
+    "fields": {
+      "currency": "currency"
+    }
+  },
+  "addOffer": {
+    "message": "AddOffer",
+    "fields": {
+      "code": "code",
+      "drinkId": "drinkId",
+      "drinkRevision": "drinkRevision",
+      "minor": "minor"
+    }
+  },
+  "changePrice": {
+    "message": "ChangePrice",
+    "fields": {
+      "code": "code",
+      "minor": "minor"
+    }
+  },
+  "publishEdition": {
+    "message": "PublishEdition",
+    "fields": {}
+  },
+  "listOrders": {
+    "message": "ListOrders",
+    "reply": "orders"
+  },
+  "getOrder": {
+    "message": "GetOrder",
+    "reply": "order"
+  },
+  "createOrder": {
+    "message": "CreateOrder",
+    "fields": {
+      "customerId": "customerId",
+      "editionId": "editionId"
+    }
+  },
+  "addLine": {
+    "message": "AddLine",
+    "fields": {
+      "lineId": "lineId",
+      "editionId": "editionId",
+      "offerCode": "offerCode",
+      "quantity": "quantity"
+    }
+  },
+  "changeQuantity": {
+    "message": "ChangeQuantity",
+    "fields": {
+      "lineId": "lineId",
+      "quantity": "quantity"
+    }
+  },
+  "placeOrder": {
+    "message": "PlaceOrder",
+    "fields": {}
+  },
+  "listTickets": {
+    "message": "ListTickets",
+    "reply": "tickets"
+  },
+  "getTicket": {
+    "message": "GetTicket",
+    "reply": "ticket"
+  },
+  "startPreparation": {
+    "message": "StartPreparation",
+    "fields": {}
+  },
+  "completePreparation": {
+    "message": "CompletePreparation",
+    "fields": {}
+  },
+  "listPickups": {
+    "message": "ListPickups",
+    "reply": "pickups"
+  },
+  "getPickup": {
+    "message": "GetPickup",
+    "reply": "pickup"
+  },
+  "collectOrder": {
+    "message": "CollectOrder",
+    "fields": {
+      "code": "code"
+    }
+  },
+  "listAccounts": {
+    "message": "ListAccounts",
+    "reply": "accounts"
+  },
+  "getAccount": {
+    "message": "GetAccount",
+    "reply": "account"
+  },
+  "listRewards": {
+    "message": "ListRewards",
+    "reply": "rewards"
+  },
+  "getReward": {
+    "message": "GetReward",
+    "reply": "reward"
+  },
+  "redeemReward": {
+    "message": "RedeemReward",
+    "fields": {
+      "orderId": "orderId"
+    }
+  },
+  "listNotifications": {
+    "message": "ListNotifications",
+    "reply": "notifications"
+  },
+  "getNotification": {
+    "message": "GetNotification",
+    "reply": "notification"
+  }
+}

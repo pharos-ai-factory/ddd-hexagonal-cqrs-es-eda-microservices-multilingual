@@ -33,10 +33,6 @@ jobs:
           pnpm install --frozen-lockfile
       - name: Verify all five applications and fast Gherkin scenarios
         run: pnpm verify
-      - name: Reproduce all generated contracts
-        run: |
-          pnpm generate:contracts
-          git diff --exit-code -- contracts services
   infrastructure:
     runs-on: ubuntu-24.04
     timeout-minutes: 35

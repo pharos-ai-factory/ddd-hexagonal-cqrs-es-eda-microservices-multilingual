@@ -1,26 +1,21 @@
 package backend
 
 import (
-	"errors"
+	"context"
+	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1"
 	"net/http"
 	"testing"
 
 	test "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http/internal/testsupport"
 )
 
-type unavailableTransport struct{}
-
-func (unavailableTransport) RoundTrip(*http.Request) (*http.Response, error) {
-	return nil, errors.New("backend credential: private-secret")
-}
-
 func TestUnavailableBackendRetainsItsPublicError(t *testing.T) {
 	c := config()
-	proxy := newBackendProxy(Target{URL: "http://backend.local", Key: "private-secret"})
-	proxy.Transport = unavailableTransport{}
-	w := request(t, c.authoriseBackend(proxy), "GET", "/api/v1/menu/drinks", "", map[string]string{"Authorization": "Bearer cli"})
-	if w.Code != http.StatusServiceUnavailable || w.Body.String() != "{\"code\":\"temporarily_unavailable\"}\n" {
-		t.Fatalf("upstream failure status=%d body=%s", w.Code, w.Body.String())
+	c.Owners = []string{"menu"}
+	c.Requests = caller(func(context.Context, pb.Request) (pb.Reply, error) { return nil, unavailable })
+	w := request(t, backendHandler(c), "GET", "/api/v1/menu/drinks", "", map[string]string{"Authorization": "Bearer cli"})
+	if w.Code != 503 || w.Body.String() != "{\"code\":\"temporarily_unavailable\"}\n" {
+		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
 	}
 }
 

@@ -1,0 +1,49 @@
+syntax = "proto3";
+package cafe.menu.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1";
+import "cafe/requests/v1/common.proto";
+import "cafe/requests/v1/contexts/menu/menu_queries.proto";
+import "cafe/requests/v1/contexts/menu/menu_replies.proto";
+import "cafe/requests/v1/contexts/menu/menu_commands.proto";
+message Request {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    Command command = 10;
+    Query query = 11;
+  }
+}
+message Command {
+  cafe.requests.v1.CommandMetadata metadata = 1;
+  oneof payload {
+    cafe.menu.requests.v1.CreateDrink create_drink = 10;
+    cafe.menu.requests.v1.ReviseDrink revise_drink = 11;
+    cafe.menu.requests.v1.PublishDrink publish_drink = 12;
+    cafe.menu.requests.v1.CreateEdition create_edition = 13;
+    cafe.menu.requests.v1.AddOffer add_offer = 14;
+    cafe.menu.requests.v1.ChangePrice change_price = 15;
+    cafe.menu.requests.v1.PublishEdition publish_edition = 16;
+  }
+}
+message Query {
+  oneof payload {
+    cafe.menu.requests.v1.ListDrinks list_drinks = 10;
+    cafe.menu.requests.v1.GetDrink get_drink = 11;
+    cafe.menu.requests.v1.ListEditions list_editions = 12;
+    cafe.menu.requests.v1.GetEdition get_edition = 13;
+  }
+}
+message Reply {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    cafe.requests.v1.Outcome outcome = 10;
+    cafe.requests.v1.RequestError error = 11;
+    cafe.menu.requests.v1.LoadedDrink drink = 20;
+    cafe.menu.requests.v1.Drinks drinks = 21;
+    cafe.menu.requests.v1.LoadedEdition edition = 22;
+    cafe.menu.requests.v1.Editions editions = 23;
+  }
+}

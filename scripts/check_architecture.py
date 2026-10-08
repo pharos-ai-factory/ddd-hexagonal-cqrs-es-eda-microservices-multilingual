@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check service ownership and inward dependencies in all implementation languages."""
 import ast
+from contract_sources import sources, catalogue
 from migration_catalogue import metadata, OUTPUTS
 from hashlib import sha256
 import json
@@ -25,7 +26,11 @@ GENERATED = {
     'services/operations/src/operations/adaptors/generated/cafe/realtime/v1/realtime_pb2.pyi',
     'services/engagement/src/adaptors/generated/events.json',
     'services/engagement/src/adaptors/generated/realtime.json',
+    'services/engagement/src/adaptors/generated/requests.json',
+    'services/engagement/src/adaptors/generated/request-types.ts',
     'services/web/src/adaptors/generated/realtime.json',
+    'services/web/src/adaptors/generated/http.ts',
+    'services/api/adaptors/http/backend/generated/mapping.go',
     'services/storefront/foundation/persistence/postgres/migrations/contexts.json',
     'services/operations/src/operations/adaptors/generated/context-persistence.json',
     'services/engagement/src/adaptors/generated/context-persistence.json',
@@ -35,6 +40,30 @@ GENERATED = {
     'services/storefront/foundation/transport/openapi/generated/provider.openapi.json',
     'pnpm-lock.yaml', 'services/operations/uv.lock',
 }
+
+# Derive exact compiler paths; each service consumes its owned request packages.
+from request_contracts import OWNED
+for contract in ('events', 'realtime', 'requests'):
+    package = {'events': 'cafe/v1', 'realtime': 'cafe/realtime/v1'}
+    for logical in sources(contract):
+        stem = Path(logical).stem
+        relative = Path(logical).with_suffix('').as_posix()
+        owner = logical.split('/contexts/')[1].split('/')[0] if '/contexts/' in logical else None
+        if contract != 'requests' or owner is None or owner in OWNED['storefront']:
+            go_folder = str(Path(logical).parent)+('/shared' if stem in ('common','validation') else '') if contract == 'requests' else package[contract]
+            GENERATED.add(f'services/storefront/contracts/{contract}/generated/{go_folder}/{stem}.pb.go')
+        if contract == 'requests':
+            GENERATED.add(f'services/api/adaptors/messaging/generated/{Path(logical).parent}'+('/shared' if stem in ('common','validation') else '')+f'/{stem}.pb.go')
+        if contract != 'requests' or owner is None or owner in OWNED['operations']:
+            for suffix in ('.py', '.pyi'):
+                GENERATED.add(f'services/operations/src/operations/adaptors/generated/{relative}_pb2{suffix}')
+for folder in ('services/storefront/contracts/requests/generated', 'services/api/adaptors/messaging/generated'):
+    for name in ('envelopes.go',):
+        GENERATED.add(folder+'/cafe/requests/v1/'+name)
+GENERATED.add('services/storefront/contexts/menu/adaptors/messaging/generated/menu_private.pb.go')
+GENERATED.add('services/storefront/apps/topology/generated.json')
+for owner in ('loyalty', 'communication'):
+    GENERATED.add(f'services/engagement/src/contexts/{owner}/adaptors/messaging/generated/private_messages.json')
 
 
 def import_violation(package, imported):
@@ -175,11 +204,13 @@ def check():
                         errors.append(f'{relative}: {reason}: {target}')
             if re.search(r'/domain(?:/|\.py)', relative) and re.search(r'\btime\.Now\s*\(|\bDate\.now\s*\(|new Date\(\)|datetime\.now\s*\(', content):
                 errors.append(f'{relative}: implicit domain clock')
+            if service == 'web' and '/adaptors/http/' not in relative and re.search(r'\bfetch\s*\(', content):
+                errors.append(f'{relative}: frontend HTTP calls must use the generated operation client')
             if service == 'web' and re.search(r'\bnewSubscription\s*\(|\bsetInterval\s*\(', content):
                 errors.append(f'{relative}: client-selected subscription or browser polling')
     if {p.name for p in (ROOT/'services').iterdir() if p.is_dir()} != {*SERVICES, 'api', 'web'}:
         errors.append('expected exactly three domain services, Go API and Next.js web')
-    baseline = ROOT/'contracts/persistence/0001_initial.sql'
+    baseline = ROOT/'devops/postgres/bootstrap/0001_initial.sql'
     if baseline.read_bytes() != (ROOT/'services/storefront/foundation/persistence/postgres/migrations/0001_initial.sql').read_bytes():
         errors.append('Go embedded migration differs from the shared persistence contract')
     try:
@@ -188,27 +219,30 @@ def check():
                 errors.append(service+': context migration metadata drift; run pnpm generate:contracts')
     except (ValueError, KeyError, OSError) as error:
         errors.append(str(error))
-    catalogue = json.loads((ROOT/'contracts/events/catalogue.json').read_text())
+    published = catalogue()
     go_catalogue = (ROOT/'services/storefront/contracts/events/model/catalogue.go').read_text()
     parsed = [{'name': name, 'owner': owner, 'visibility': 'domain' if visibility == 'Private' else 'integration',
                'consumer': consumer, 'kind': kind} for name, owner, visibility, consumer, kind in re.findall(
         r'\{"([^"]+)", "([^"]+)", application\.(Private|Public), \[\]string\{"([^"]+)"\}, "([^"]+)"\}', go_catalogue)]
-    if parsed != catalogue:
+    if sorted(parsed, key=lambda item: item["name"]) != published:
         errors.append('Go event catalogue differs from the canonical wire catalogue')
-    checksums = {str(version): sha256((ROOT/f'contracts/persistence/{name}').read_bytes()).hexdigest()
+    checksums = {str(version): sha256((ROOT/f'devops/postgres/bootstrap/{name}').read_bytes()).hexdigest()
                  for version, name in ((1, '0001_initial.sql'), (2, '0002_realtime.sql'))}
     for folder in ('services/operations/src/operations/adaptors/generated',
                    'services/engagement/src/adaptors/generated'):
-        if json.loads((ROOT/folder/'catalogue.json').read_text()) != catalogue:
+        service = 'operations' if 'operations' in folder else 'engagement'
+        if json.loads((ROOT/folder/'catalogue.json').read_text()) != catalogue(service):
             errors.append(folder+': catalogue drift')
         if json.loads((ROOT/folder/'persistence.json').read_text()) != checksums:
             errors.append(folder+': migration checksum drift')
-    if (ROOT/'contracts/persistence/0002_realtime.sql').read_bytes() != (
+    if (ROOT/'devops/postgres/bootstrap/0002_realtime.sql').read_bytes() != (
             ROOT/'services/storefront/foundation/persistence/postgres/migrations/0002_realtime.sql').read_bytes():
         errors.append('Go realtime migration drift')
-    for name in ('events', 'realtime'):
-        if not (ROOT/f'contracts/{name}/proto').is_dir():
-            errors.append('missing separate wire contract: '+name)
+    for name in ('events', 'realtime', 'requests'):
+        if any(not path.exists() for path in sources(name).values()):
+            errors.append('missing published specification: '+name)
+    if json.loads((ROOT/'services/storefront/apps/topology/generated.json').read_text()) != catalogue('topology'):
+        errors.append('deployment topology metadata drift')
     compose = (ROOT/'devops/compose.yaml').read_text()
     if re.search(r'APP_ENV:\s*(production|staging)', compose):
         errors.append('non-development runtime composition')

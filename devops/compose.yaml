@@ -24,7 +24,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql
       - ./postgres/init.sh:/docker-entrypoint-initdb.d/01-reference.sh:ro
-      - ../contracts/persistence:/reference:ro
+      - ./postgres/bootstrap:/reference:ro
       - ./read-secret.sh:/read-secret.sh:ro
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U postgres -d cafe_communication"]
@@ -225,28 +225,22 @@ services:
       REALTIME_GATEWAY_URL: http://realtime-gateway:8080
       VALKEY_ADDRESS: valkey:6379
       WEB_ORIGINS: "http://localhost:${WEB_PORT},http://127.0.0.1:${WEB_PORT}"
-      STOREFRONT_URL: http://storefront:8080
-      OPERATIONS_URL: http://operations:8080
-      ENGAGEMENT_URL: http://engagement:8080
+      API_BROKER_URL_FILE: /run/secrets/API_BROKER_URL
       API_KEY_FILE: /run/secrets/API_KEY
       OPERATOR_PASSWORD_FILE: /run/secrets/OPERATOR_PASSWORD
       CONNECT_PROXY_SECRET_FILE: /run/secrets/CONNECT_PROXY_SECRET
       SESSION_PASSWORD_FILE: /run/secrets/SESSION_PASSWORD
       SESSION_REALTIME_KEY_FILE: /run/secrets/SESSION_REALTIME_KEY
-      STOREFRONT_API_KEY_FILE: /run/secrets/STOREFRONT_API_KEY
-      OPERATIONS_API_KEY_FILE: /run/secrets/OPERATIONS_API_KEY
-      ENGAGEMENT_API_KEY_FILE: /run/secrets/ENGAGEMENT_API_KEY
     secrets:
+      - {source: API_BROKER_URL, <<: *runtime-secret}
       - {source: API_KEY, <<: *runtime-secret}
       - {source: OPERATOR_PASSWORD, <<: *runtime-secret}
       - {source: CONNECT_PROXY_SECRET, <<: *runtime-secret}
       - {source: SESSION_PASSWORD, <<: *runtime-secret}
       - {source: SESSION_REALTIME_KEY, <<: *runtime-secret}
-      - {source: STOREFRONT_API_KEY, <<: *runtime-secret}
-      - {source: OPERATIONS_API_KEY, <<: *runtime-secret}
-      - {source: ENGAGEMENT_API_KEY, <<: *runtime-secret}
     ports: ["127.0.0.1:${API_PORT}:8080"]
     depends_on:
+      topology: {condition: service_completed_successfully}
       valkey: {condition: service_healthy}
       realtime-gateway: {condition: service_started}
   ingress:
@@ -274,6 +268,7 @@ secrets:
   ENGAGEMENT_API_KEY: {environment: ENGAGEMENT_API_KEY}
   SESSION_REALTIME_KEY: {environment: SESSION_REALTIME_KEY}
   BROKER_ADMIN_URL: {environment: BROKER_ADMIN_URL}
+  API_BROKER_URL: {environment: API_BROKER_URL}
   MENU_DB_PASSWORD: {environment: MENU_DB_PASSWORD}
   MENU_BROKER_PASSWORD: {environment: MENU_BROKER_PASSWORD}
   MENU_DATABASE_URL: {environment: MENU_DATABASE_URL}

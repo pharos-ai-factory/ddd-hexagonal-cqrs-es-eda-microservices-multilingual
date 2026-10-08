@@ -4,6 +4,7 @@ import {VersionConflictApplicationError, type Change, type CommandPort, type Loa
 import type {Page, PageRequest} from '../foundation/pagination.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 import {encode, realtime} from './codec.js';
+import {commitOutcome} from './replies.js';
 import {outcome as decodeOutcome, checkRootIdentity} from './receipts.js';
 import schema from './generated/persistence.json' with {type: 'json'};
 import contextSchemas from './generated/context-persistence.json' with {type: 'json'};
@@ -59,20 +60,19 @@ export class Commands<S> implements CommandPort<S> {
         if (previous) {
           if (previous.fingerprint !== m.sourceHash || previous.target !== target) throw new Error('Conflicting delivery identity');
           const saved = decodeOutcome(previous.outcome, m.target);
-          await client.query('COMMIT'); return saved;
+          return await commitOutcome(client, saved);
         }
       }
       const {rows: [receipt]} = await client.query(`SELECT fingerprint,outcome FROM cafe.command_receipts
         WHERE kind=$1 AND aggregate_id=$2 AND command_name=$3 AND command_id=$4`, [this.kind, m.target, m.name, m.id]);
       if (receipt) {
         if (receipt.fingerprint !== digest) {
-          await client.query('ROLLBACK');
-          return {aggregateId: m.target, version: 0, status: '', rejection: {
-            code: 'idempotency_conflict', message: 'The command identity has different input'}};
+          return await commitOutcome(client, {aggregateId: m.target, version: 0, status: '', rejection: {
+            code: 'idempotency_conflict', message: 'The command identity has different input'}});
         }
         const saved = decodeOutcome(receipt.outcome, m.target);
         await incoming(client, m, target, saved);
-        await client.query('COMMIT'); return saved;
+        return await commitOutcome(client, saved);
       }
       const {rows: [row]} = await client.query('SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2 FOR UPDATE',
         [this.kind, m.target]);
@@ -94,8 +94,7 @@ export class Commands<S> implements CommandPort<S> {
         fingerprint,outcome,correlation_id,causation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
         [this.kind, m.target, m.name, m.id, digest, outcome, m.correlation, m.causation ?? null]);
       await incoming(client, m, target, outcome);
-      await client.query('COMMIT');
-      return outcome;
+      return await commitOutcome(client, outcome);
     } catch (error) {
       await client.query('ROLLBACK').catch(() => {});
       throw error;

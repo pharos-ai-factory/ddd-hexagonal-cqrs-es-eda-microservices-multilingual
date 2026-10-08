@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cafe.ordering.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1";
+
+message Selection {
+  string offer_code = 1;
+  string name = 2;
+  int64 minor = 3;
+}
+
+message Line {
+  string id = 1;
+  Selection selection = 2;
+  int32 quantity = 3;
+}
+
+message Order {
+  string id = 1;
+  string customer_id = 2;
+  string edition_id = 3;
+  string currency = 4;
+  string status = 5;
+  repeated Line lines = 6;
+}
+
+message LoadedOrder {
+  bool exists = 1;
+  uint64 version = 2;
+  Order state = 3;
+}
+
+message Orders {
+  repeated LoadedOrder items = 1;
+  bool paged = 2;
+  optional string next_id = 3;
+}

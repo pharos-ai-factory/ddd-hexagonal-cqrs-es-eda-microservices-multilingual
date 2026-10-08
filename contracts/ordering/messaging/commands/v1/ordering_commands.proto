@@ -1,0 +1,24 @@
+syntax = "proto3";
+package cafe.ordering.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1";
+import "cafe/requests/v1/validation.proto";
+
+message CreateOrder {
+  optional string customer_id = 1 [(cafe.requests.v1.required_input) = true];
+  optional string edition_id = 2 [(cafe.requests.v1.required_input) = true];
+}
+
+message AddLine {
+  optional string line_id = 1 [(cafe.requests.v1.required_input) = true];
+  optional string edition_id = 2 [(cafe.requests.v1.required_input) = true];
+  optional string offer_code = 3 [(cafe.requests.v1.required_input) = true];
+  optional int32 quantity = 4 [(cafe.requests.v1.required_input) = true];
+}
+
+message ChangeQuantity {
+  optional string line_id = 1 [(cafe.requests.v1.required_input) = true];
+  optional int32 quantity = 2 [(cafe.requests.v1.required_input) = true];
+}
+
+message PlaceOrder {
+}

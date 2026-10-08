@@ -67,6 +67,8 @@ def compose_environment(values, owners):
             f"postgres://cafe_{owner}:{password}@postgres:5432/cafe_{owner}?sslmode=disable")
         password = quote(values[prefix + "_BROKER_PASSWORD"], safe="")
         result[prefix + "_BROKER_URL"] = f"amqp://cafe_{owner}:{password}@rabbitmq:5672/reference"
+    password = quote(values["API_BROKER_PASSWORD"], safe="")
+    result["API_BROKER_URL"] = f"amqp://cafe_api:{password}@rabbitmq:5672/reference"
     password = quote(values["BROKER_PASSWORD"], safe="")
     result["BROKER_ADMIN_URL"] = f"amqp://administrator:{password}@rabbitmq:5672/reference"
     return result

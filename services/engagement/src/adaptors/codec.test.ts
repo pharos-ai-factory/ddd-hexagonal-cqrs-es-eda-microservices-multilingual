@@ -5,8 +5,11 @@ import {decode, encode} from './codec.js';
 import {derivedId} from '../foundation/identity.js';
 import protobuf from 'protobufjs';
 import schema from './generated/events.json' with {type: 'json'};
-test('the private domain fixture is understood without treating it as an integration event', () => {
-  const raw = Buffer.from(readFileSync(new URL('../../../../contracts/events/fixtures/reward-earned.v1.hex', import.meta.url), 'utf8').trim(), 'hex');
+import privateSchema from '../contexts/loyalty/adaptors/messaging/generated/private_messages.json' with {type: 'json'};
+test('the owner-local private message retains its historical bytes and scope', () => {
+  const raw = Buffer.from(readFileSync(new URL('../contexts/loyalty/adaptors/messaging/fixtures/reward-earned.hex', import.meta.url), 'utf8').trim(), 'hex');
+  const type = protobuf.Root.fromJSON(privateSchema).lookupType('cafe.loyalty.internal.PrivateEvent');
+  assert.deepEqual(Buffer.from(type.encode(type.decode(raw)).finish()), raw);
   const event = decode(raw);
   assert.equal(event.context, 'loyalty'); assert.equal(event.visibility, 'domain');
   assert.equal(event.name, 'loyalty.reward-earned');
@@ -16,6 +19,18 @@ test('the private domain fixture is understood without treating it as an integra
     {name: event.name, payload: event.payload}), /owner/);
   assert.equal(derivedId('earned-grant', '00000000-0000-4000-8000-000000000001'),
     'f4136e57-6728-8a37-b8f6-a29159aecdc3');
+});
+
+test('the shared integration fixture decodes consistently across languages', () => {
+  const raw = Buffer.from(readFileSync(new URL('../../../../contracts/loyalty/messaging/integration_events/v1/fixtures/reward-issued.v1.hex', import.meta.url), 'utf8').trim(), 'hex');
+  const event = decode(raw);
+  assert.equal(event.name, 'loyalty.reward-issued');
+  assert.equal(event.visibility, 'integration');
+  assert.deepEqual(event.payload, {
+    rewardId: '22222222-2222-4222-8222-222222222222',
+    customerId: '55555555-5555-4555-8555-555555555555',
+    benefit: 'one free drink', expiresAt: '2026-10-03T12:00:00Z',
+  });
 });
 
 function rewardIssuedBytes(payload: object) {

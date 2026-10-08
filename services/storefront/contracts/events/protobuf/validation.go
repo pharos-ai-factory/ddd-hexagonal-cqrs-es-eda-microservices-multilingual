@@ -2,6 +2,7 @@ package protobuf
 
 import (
 	"fmt"
+	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	"regexp"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ func validatePayload(m a.Message) error {
 	var ids []string
 	sourceID := ""
 	switch p := m.Payload.(type) {
-	case model.DrinkPublished:
+	case menu.DrinkPublished:
 		ids = []string{p.DrinkID}
 		sourceID = p.DrinkID
 		if strings.TrimSpace(p.Name) == "" || !utf8.ValidString(p.Name) || utf8.RuneCountInString(p.Name) > 80 || p.Revision == 0 {
@@ -77,21 +78,12 @@ func validatePayload(m a.Message) error {
 		}
 	case model.OrderCollected:
 		ids = []string{p.OrderID, p.CustomerID}
-	case model.RewardEarned:
-		ids = []string{p.AccountID, p.GrantID}
-		sourceID = p.AccountID
-		if p.Benefit == "" || p.ValidDays < 1 || p.ValidDays > 30 {
-			return fmt.Errorf("invalid earned grant terms")
-		}
 	case model.RewardIssued:
 		ids = []string{p.RewardID, p.CustomerID}
 		sourceID = p.RewardID
 		if _, err := time.Parse(time.RFC3339Nano, p.ExpiresAt); err != nil || p.Benefit == "" {
 			return fmt.Errorf("invalid issued reward")
 		}
-	case model.NotificationRequested:
-		ids = []string{p.NotificationID}
-		sourceID = p.NotificationID
 	default:
 		return fmt.Errorf("unknown event payload")
 	}

@@ -18,11 +18,7 @@ export const owners: Record<Kind, string> = {
   drink: 'menu', edition: 'menu', order: 'ordering', ticket: 'preparation', pickup: 'collection',
   account: 'loyalty', reward: 'loyalty', notification: 'communication',
 };
-export const resources: Record<Kind, string> = {
-  drink: 'menu/drinks', edition: 'menu/editions', order: 'ordering/orders', ticket: 'preparation/tickets',
-  pickup: 'collection/pickups', account: 'loyalty/accounts', reward: 'loyalty/rewards',
-  notification: 'communication/notifications',
-};
+
 export function merge(current: Snapshot, update: Projection): Snapshot {
   const key = `${update.kind}/${update.state.id}`;
   if ((current[key]?.version ?? 0) >= update.version) return current;

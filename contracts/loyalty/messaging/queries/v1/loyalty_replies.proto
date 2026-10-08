@@ -1,0 +1,52 @@
+syntax = "proto3";
+package cafe.loyalty.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1";
+
+message Grant {
+  string id = 1;
+  string account_id = 2;
+  string benefit = 3;
+  int32 valid_days = 4;
+}
+
+message Account {
+  string id = 1;
+  int32 stamp_balance = 2;
+  int32 collections = 3;
+  int32 grants_earned = 4;
+  Grant last_grant = 5;
+}
+
+message Reward {
+  string id = 1;
+  string grant_id = 2;
+  string customer_id = 3;
+  string benefit = 4;
+  string status = 5;
+  string expires_at = 6;
+  optional string redeemed_for = 7;
+}
+
+message LoadedAccount {
+  bool exists = 1;
+  uint64 version = 2;
+  Account state = 3;
+}
+
+message Accounts {
+  repeated LoadedAccount items = 1;
+  bool paged = 2;
+  optional string next_id = 3;
+}
+
+message LoadedReward {
+  bool exists = 1;
+  uint64 version = 2;
+  Reward state = 3;
+}
+
+message Rewards {
+  repeated LoadedReward items = 1;
+  bool paged = 2;
+  optional string next_id = 3;
+}

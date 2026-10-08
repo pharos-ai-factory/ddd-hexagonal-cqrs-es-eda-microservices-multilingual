@@ -1,0 +1,92 @@
+{
+  "nested": {
+    "cafe": {
+      "nested": {
+        "communication": {
+          "nested": {
+            "internal": {
+              "nested": {
+                "NotificationRequested": {
+                  "fields": {
+                    "notificationId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "notification_id"
+                    }
+                  }
+                },
+                "PrivateEvent": {
+                  "oneofs": {
+                    "payload": {
+                      "oneof": [
+                        "notificationRequested"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "context": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "visibility": {
+                      "type": "string",
+                      "id": 4
+                    },
+                    "formatRevision": {
+                      "type": "uint32",
+                      "id": 5,
+                      "protoName": "format_revision"
+                    },
+                    "aggregateKind": {
+                      "type": "string",
+                      "id": 6,
+                      "protoName": "aggregate_kind"
+                    },
+                    "aggregateId": {
+                      "type": "string",
+                      "id": 7,
+                      "protoName": "aggregate_id"
+                    },
+                    "aggregateVersion": {
+                      "type": "uint64",
+                      "id": 8,
+                      "protoName": "aggregate_version"
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "id": 9,
+                      "protoName": "correlation_id"
+                    },
+                    "causationId": {
+                      "type": "string",
+                      "id": 10,
+                      "protoName": "causation_id"
+                    },
+                    "occurredAt": {
+                      "type": "string",
+                      "id": 11,
+                      "protoName": "occurred_at"
+                    },
+                    "notificationRequested": {
+                      "type": "NotificationRequested",
+                      "id": 28,
+                      "protoName": "notification_requested"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

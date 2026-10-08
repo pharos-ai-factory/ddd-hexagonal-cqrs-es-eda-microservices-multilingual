@@ -2,7 +2,8 @@
 
 Status: accepted, 27 September 2026. Runtime composition and query reconciliation
 are refined by [0004](0004-runtime-authority-and-queries.md). Clarifies the deployment/language scope of
-0001; its aggregate and event-delivery decisions remain in force.
+0001; API request dispatch is superseded by [0007](0007-api-broker-requests.md). Its aggregate and event-delivery decisions remain in force. Shared specification
+ownership is refined by [0008](0008-published-contract-ownership.md).
 
 ## Service boundary
 
@@ -13,8 +14,9 @@ process. Next.js is a fifth application, responsible for browser presentation.
 
 Organise source under `services/<service>`, with contexts nested inside their
 owner. This keeps build tools, dependencies and deployment boundaries explicit.
-The root shares wire schemas, persistence specifications and behavioural tests,
-not domain implementation. There is no root contexts directory mixing languages.
+The root shares published wire schemas and behavioural tests. Database bootstrap
+SQL lives under development infrastructure; domain implementation stays in its
+owning service.
 
 Generated transport bindings are local build inputs. Domain and application
 packages remain framework/provider independent in each language. Co-location
@@ -30,11 +32,27 @@ published bytes or the original payload used to fingerprint a command receipt.
 Protobuf `.pyi` declarations are generated from the canonical schemas and remain
 beside the adaptor bindings.
 
+Published wire payload sources are grouped first by context, then by messaging,
+realtime or HTTP API boundary (0008). Private domain facts and their delivery
+formats remain in the owning service. Browser snapshots use context files and a
+shared publication envelope. Existing published message names, field numbers and
+Go package paths remain stable. Commands and queries have a separate Protobuf
+request/reply boundary over RabbitMQ, with plain service-local application types
+behind owner adaptors (0007).
+
+The additional Go/Python context bindings have generated-file exceptions to the
+450-line limit. Protoc owns their message accessors and descriptors; the generator
+compiles all context sources, removes stale generated bindings, keeps Go output
+in its existing packages and qualifies Python imports inside Operations. The
+architecture checker derives the exact generated binding paths from those source
+files. TypeScript descriptors include the envelope and imported context payloads.
+
 ## API and browser
 
 The Go API owns technical session state in Valkey, explicit allowed API routes,
-service credential replacement and server-side subscription authorisation.
-It owns no business database or broker connection. Next.js contains no domain
+request translation and server-side subscription authorisation.
+It owns no business database. Its broker credential is restricted to requests
+and replies (0007). Next.js contains no domain
 command authority and does not route around the API.
 
 Use Centrifugo binary transport, a connect proxy and server-selected

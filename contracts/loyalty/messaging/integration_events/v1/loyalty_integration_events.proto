@@ -1,0 +1,10 @@
+syntax = "proto3";
+package cafe.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
+
+message RewardIssued {
+  string reward_id = 1;
+  string customer_id = 2;
+  string benefit = 3;
+  string expires_at = 4;
+}

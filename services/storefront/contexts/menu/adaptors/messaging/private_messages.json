@@ -1,0 +1,9 @@
+[
+  {
+    "name": "menu.drink-published",
+    "owner": "menu",
+    "visibility": "domain",
+    "consumer": "menu.drink-directory",
+    "kind": "drink"
+  }
+]

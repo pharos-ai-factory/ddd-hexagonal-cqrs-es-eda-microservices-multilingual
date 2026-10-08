@@ -62,7 +62,9 @@ In the browser:
 5. Collect three orders for the same customer to earn a reward.
 
 Open a second window to operate the preparation counter. Both windows receive
-updates independently. A command response confirms its own result; subsequent
+updates independently. The API translates OpenAPI HTTP requests into Protobuf
+commands/queries over RabbitMQ, with owner-side adaptors protecting application
+types. See the [request contracts](contracts/shared/messaging/requests.md). A command response confirms its own result; subsequent
 workflow steps appear through Centrifugo. An uncertain response offers an
 explicit retry with the same command identity.
 
@@ -346,8 +348,9 @@ Start with [the walkthrough](docs/walkthrough.md), then:
   [service boundaries and realtime](docs/decisions/0002-polyglot-and-browser.md),
   [executable behaviour](docs/decisions/0003-executable-behaviour.md), and
   [runtime authority and query completeness](docs/decisions/0004-runtime-authority-and-queries.md).
-- [HTTP](contracts/http/README.md), [events](contracts/events/README.md) and
-  [realtime contracts](contracts/realtime/README.md).
+- [Contract guide](contracts/README.md), [HTTP](contracts/shared/http_api/README.md), [requests](contracts/shared/messaging/requests.md),
+  [events](contracts/shared/messaging/events.md) and
+  [realtime contracts](contracts/shared/realtime/README.md).
 - [Testing](TESTING.md), [executed evidence](docs/verification.md),
   [Gherkin specifications](specifications/README.md),
   [contributing](CONTRIBUTING.md) and [adopting these patterns](docs/adopting-patterns.md).

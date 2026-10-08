@@ -65,7 +65,7 @@ func handlers(operation string) http.Handler {
 	case "addLine":
 		orders.Loaded.State.Lines = []order.LineState{}
 	}
-	published := &probe.ProjectionProbe[model.DrinkPublished]{Values: map[string]model.DrinkPublished{other + "/1": {DrinkID: other, Name: "Coffee", Revision: 1}}}
+	published := &probe.ProjectionProbe[menuapp.DrinkPublished]{Values: map[string]menuapp.DrinkPublished{other + "/1": {DrinkID: other, Name: "Coffee", Revision: 1}}}
 	menus := &probe.ProjectionProbe[model.MenuPublished]{Values: map[string]model.MenuPublished{other: {EditionID: other, Currency: "EUR", Offers: []model.Offer{{Code: "C1", DrinkID: other, DrinkRevision: 1, Name: "Coffee", Minor: 0, Currency: "EUR"}}}}}
 	mux := contract.NewMux("storefront", nil)
 	menuhttp.Mount(mux, menuhttp.Handlers{

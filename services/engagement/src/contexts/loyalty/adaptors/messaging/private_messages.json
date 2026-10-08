@@ -1,0 +1,9 @@
+[
+  {
+    "name": "loyalty.reward-earned",
+    "owner": "loyalty",
+    "visibility": "domain",
+    "consumer": "loyalty.issue-reward",
+    "kind": "account"
+  }
+]

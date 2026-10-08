@@ -22,9 +22,15 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.realtime.v1.contexts.menu import menu_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_menu_dot_menu__snapshots__pb2
+from operations.adaptors.generated.cafe.realtime.v1.contexts.ordering import ordering_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_ordering_dot_ordering__snapshots__pb2
+from operations.adaptors.generated.cafe.realtime.v1.contexts.preparation import preparation_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_preparation_dot_preparation__snapshots__pb2
+from operations.adaptors.generated.cafe.realtime.v1.contexts.collection import collection_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_collection_dot_collection__snapshots__pb2
+from operations.adaptors.generated.cafe.realtime.v1.contexts.loyalty import loyalty_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_loyalty_dot_loyalty__snapshots__pb2
+from operations.adaptors.generated.cafe.realtime.v1.contexts.communication import communication_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_communication_dot_communication__snapshots__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x63\x61\x66\x65/realtime/v1/realtime.proto\x12\x10\x63\x61\x66\x65.realtime.v1\"\x82\x04\n\x0bPublication\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x18\n\x10\x63ontract_version\x18\x02 \x01(\r\x12\x0f\n\x07\x63ontext\x18\x03 \x01(\t\x12\x16\n\x0e\x61ggregate_kind\x18\x04 \x01(\t\x12\x14\n\x0c\x61ggregate_id\x18\x05 \x01(\t\x12\x10\n\x08revision\x18\x06 \x01(\x04\x12(\n\x05\x64rink\x18\n \x01(\x0b\x32\x17.cafe.realtime.v1.DrinkH\x00\x12,\n\x07\x65\x64ition\x18\x0b \x01(\x0b\x32\x19.cafe.realtime.v1.EditionH\x00\x12(\n\x05order\x18\x0c \x01(\x0b\x32\x17.cafe.realtime.v1.OrderH\x00\x12*\n\x06ticket\x18\r \x01(\x0b\x32\x18.cafe.realtime.v1.TicketH\x00\x12*\n\x06pickup\x18\x0e \x01(\x0b\x32\x18.cafe.realtime.v1.PickupH\x00\x12,\n\x07\x61\x63\x63ount\x18\x0f \x01(\x0b\x32\x19.cafe.realtime.v1.AccountH\x00\x12*\n\x06reward\x18\x10 \x01(\x0b\x32\x18.cafe.realtime.v1.RewardH\x00\x12\x36\n\x0cnotification\x18\x11 \x01(\x0b\x32\x1e.cafe.realtime.v1.NotificationH\x00\x42\n\n\x08snapshot\"F\n\x05\x44rink\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x10\n\x08revision\x18\x03 \x01(\x04\x12\x11\n\tpublished\x18\x04 \x01(\x08\"n\n\x05Offer\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12\x10\n\x08\x64rink_id\x18\x02 \x01(\t\x12\x16\n\x0e\x64rink_revision\x18\x03 \x01(\x04\x12\x0c\n\x04name\x18\x04 \x01(\t\x12\r\n\x05minor\x18\x05 \x01(\x03\x12\x10\n\x08\x63urrency\x18\x06 \x01(\t\"`\n\x07\x45\x64ition\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08\x63urrency\x18\x02 \x01(\t\x12\x0e\n\x06status\x18\x03 \x01(\t\x12\'\n\x06offers\x18\x04 \x03(\x0b\x32\x17.cafe.realtime.v1.Offer\"<\n\tSelection\x12\x12\n\noffer_code\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05minor\x18\x03 \x01(\x03\"T\n\x04Line\x12\n\n\x02id\x18\x01 \x01(\t\x12.\n\tselection\x18\x02 \x01(\x0b\x32\x1b.cafe.realtime.v1.Selection\x12\x10\n\x08quantity\x18\x03 \x01(\x05\"\x85\x01\n\x05Order\x12\n\n\x02id\x18\x01 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x02 \x01(\t\x12\x12\n\nedition_id\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12%\n\x05lines\x18\x06 \x03(\x0b\x32\x16.cafe.realtime.v1.Line\"a\n\x06Ticket\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08order_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x03 \x01(\t\x12\x14\n\x0cinstructions\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\"Y\n\x06Pickup\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08order_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x03 \x01(\t\x12\x0c\n\x04\x63ode\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\"L\n\x05Grant\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\naccount_id\x18\x02 \x01(\t\x12\x0f\n\x07\x62\x65nefit\x18\x03 \x01(\t\x12\x12\n\nvalid_days\x18\x04 \x01(\x05\"\x85\x01\n\x07\x41\x63\x63ount\x12\n\n\x02id\x18\x01 \x01(\t\x12\x15\n\rstamp_balance\x18\x02 \x01(\x05\x12\x13\n\x0b\x63ollections\x18\x03 \x01(\x05\x12\x15\n\rgrants_earned\x18\x04 \x01(\x05\x12+\n\nlast_grant\x18\x05 \x01(\x0b\x32\x17.cafe.realtime.v1.Grant\"\x86\x01\n\x06Reward\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08grant_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x03 \x01(\t\x12\x0f\n\x07\x62\x65nefit\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x12\n\nexpires_at\x18\x06 \x01(\t\x12\x14\n\x0credeemed_for\x18\x07 \x01(\t\"v\n\x0cNotification\x12\n\n\x02id\x18\x01 \x01(\t\x12\x11\n\trecipient\x18\x02 \x01(\t\x12\x0f\n\x07subject\x18\x03 \x01(\t\x12\x0c\n\x04\x62ody\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x18\n\x10provider_receipt\x18\x06 \x01(\tB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x63\x61\x66\x65/realtime/v1/realtime.proto\x12\x10\x63\x61\x66\x65.realtime.v1\x1a\x33\x63\x61\x66\x65/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\x1a\x41\x63\x61\x66\x65/realtime/v1/contexts/preparation/preparation_snapshots.proto\x1a?cafe/realtime/v1/contexts/collection/collection_snapshots.proto\x1a\x39\x63\x61\x66\x65/realtime/v1/contexts/loyalty/loyalty_snapshots.proto\x1a\x45\x63\x61\x66\x65/realtime/v1/contexts/communication/communication_snapshots.proto\"\x82\x04\n\x0bPublication\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x18\n\x10\x63ontract_version\x18\x02 \x01(\r\x12\x0f\n\x07\x63ontext\x18\x03 \x01(\t\x12\x16\n\x0e\x61ggregate_kind\x18\x04 \x01(\t\x12\x14\n\x0c\x61ggregate_id\x18\x05 \x01(\t\x12\x10\n\x08revision\x18\x06 \x01(\x04\x12(\n\x05\x64rink\x18\n \x01(\x0b\x32\x17.cafe.realtime.v1.DrinkH\x00\x12,\n\x07\x65\x64ition\x18\x0b \x01(\x0b\x32\x19.cafe.realtime.v1.EditionH\x00\x12(\n\x05order\x18\x0c \x01(\x0b\x32\x17.cafe.realtime.v1.OrderH\x00\x12*\n\x06ticket\x18\r \x01(\x0b\x32\x18.cafe.realtime.v1.TicketH\x00\x12*\n\x06pickup\x18\x0e \x01(\x0b\x32\x18.cafe.realtime.v1.PickupH\x00\x12,\n\x07\x61\x63\x63ount\x18\x0f \x01(\x0b\x32\x19.cafe.realtime.v1.AccountH\x00\x12*\n\x06reward\x18\x10 \x01(\x0b\x32\x18.cafe.realtime.v1.RewardH\x00\x12\x36\n\x0cnotification\x18\x11 \x01(\x0b\x32\x1e.cafe.realtime.v1.NotificationH\x00\x42\n\n\x08snapshotB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,30 +38,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.realtime.v1.realtime_p
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\236\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1'
-  _globals['_PUBLICATION']._serialized_start=54
-  _globals['_PUBLICATION']._serialized_end=568
-  _globals['_DRINK']._serialized_start=570
-  _globals['_DRINK']._serialized_end=640
-  _globals['_OFFER']._serialized_start=642
-  _globals['_OFFER']._serialized_end=752
-  _globals['_EDITION']._serialized_start=754
-  _globals['_EDITION']._serialized_end=850
-  _globals['_SELECTION']._serialized_start=852
-  _globals['_SELECTION']._serialized_end=912
-  _globals['_LINE']._serialized_start=914
-  _globals['_LINE']._serialized_end=998
-  _globals['_ORDER']._serialized_start=1001
-  _globals['_ORDER']._serialized_end=1134
-  _globals['_TICKET']._serialized_start=1136
-  _globals['_TICKET']._serialized_end=1233
-  _globals['_PICKUP']._serialized_start=1235
-  _globals['_PICKUP']._serialized_end=1324
-  _globals['_GRANT']._serialized_start=1326
-  _globals['_GRANT']._serialized_end=1402
-  _globals['_ACCOUNT']._serialized_start=1405
-  _globals['_ACCOUNT']._serialized_end=1538
-  _globals['_REWARD']._serialized_start=1541
-  _globals['_REWARD']._serialized_end=1675
-  _globals['_NOTIFICATION']._serialized_start=1677
-  _globals['_NOTIFICATION']._serialized_end=1795
+  _globals['_PUBLICATION']._serialized_start=430
+  _globals['_PUBLICATION']._serialized_end=944
 # @@protoc_insertion_point(module_scope)

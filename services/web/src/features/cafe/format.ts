@@ -1,4 +1,4 @@
-export type SendCommand = (path: string, body: object, version: number) => Promise<boolean>;
+export type {SendCommand} from '../../adaptors/generated/http';
 
 export const short = (id: string) => id.slice(0, 8);
 export const money = (minor: number, currency = 'EUR') =>

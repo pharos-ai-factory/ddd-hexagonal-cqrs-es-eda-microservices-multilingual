@@ -1,0 +1,31 @@
+syntax = "proto3";
+package cafe.realtime.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1";
+
+import "cafe/realtime/v1/contexts/menu/menu_snapshots.proto";
+import "cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto";
+import "cafe/realtime/v1/contexts/preparation/preparation_snapshots.proto";
+import "cafe/realtime/v1/contexts/collection/collection_snapshots.proto";
+import "cafe/realtime/v1/contexts/loyalty/loyalty_snapshots.proto";
+import "cafe/realtime/v1/contexts/communication/communication_snapshots.proto";
+
+// Browser projections have their own contract, independently of domain delivery.
+// Revision orders one aggregate; Centrifugo epoch/offset orders channel history.
+message Publication {
+  string event_id = 1;
+  uint32 contract_version = 2;
+  string context = 3;
+  string aggregate_kind = 4;
+  string aggregate_id = 5;
+  uint64 revision = 6;
+  oneof snapshot {
+    Drink drink = 10;
+    Edition edition = 11;
+    Order order = 12;
+    Ticket ticket = 13;
+    Pickup pickup = 14;
+    Account account = 15;
+    Reward reward = 16;
+    Notification notification = 17;
+  }
+}

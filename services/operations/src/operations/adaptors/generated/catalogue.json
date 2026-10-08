@@ -1,10 +1,24 @@
 [
   {
-    "name": "menu.drink-published",
-    "owner": "menu",
-    "visibility": "domain",
-    "consumer": "menu.drink-directory",
-    "kind": "drink"
+    "name": "collection.order-collected",
+    "owner": "collection",
+    "visibility": "integration",
+    "consumer": "loyalty.credit-collection",
+    "kind": "pickup"
+  },
+  {
+    "name": "collection.pickup-opened",
+    "owner": "collection",
+    "visibility": "integration",
+    "consumer": "communication.pickup-notice",
+    "kind": "pickup"
+  },
+  {
+    "name": "loyalty.reward-issued",
+    "owner": "loyalty",
+    "visibility": "integration",
+    "consumer": "communication.reward-notice",
+    "kind": "reward"
   },
   {
     "name": "menu.edition-published",
@@ -26,40 +40,5 @@
     "visibility": "integration",
     "consumer": "collection.open-pickup",
     "kind": "ticket"
-  },
-  {
-    "name": "collection.pickup-opened",
-    "owner": "collection",
-    "visibility": "integration",
-    "consumer": "communication.pickup-notice",
-    "kind": "pickup"
-  },
-  {
-    "name": "collection.order-collected",
-    "owner": "collection",
-    "visibility": "integration",
-    "consumer": "loyalty.credit-collection",
-    "kind": "pickup"
-  },
-  {
-    "name": "loyalty.reward-earned",
-    "owner": "loyalty",
-    "visibility": "domain",
-    "consumer": "loyalty.issue-reward",
-    "kind": "account"
-  },
-  {
-    "name": "loyalty.reward-issued",
-    "owner": "loyalty",
-    "visibility": "integration",
-    "consumer": "communication.reward-notice",
-    "kind": "reward"
-  },
-  {
-    "name": "communication.notification-requested",
-    "owner": "communication",
-    "visibility": "domain",
-    "consumer": "communication.deliver-notice",
-    "kind": "notification"
   }
 ]

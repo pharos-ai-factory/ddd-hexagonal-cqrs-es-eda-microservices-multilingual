@@ -59,5 +59,16 @@ class ArchitectureTests(unittest.TestCase):
                 for target in check_architecture.python_imports(path, source):
                     self.assertIsNone(core_violation(relative, target))
 
+    def test_frontend_raw_http_calls_fail_enforcement(self):
+        path = check_architecture.ROOT/"services/web/src/features/realtime/useCafe.ts"
+        read_text = Path.read_text
+        def source_text(candidate, *args, **kwargs):
+            return "export const bypass = () => fetch('/api/v1/menu/drinks');" if candidate == path else read_text(candidate, *args, **kwargs)
+        with patch.object(check_architecture, "files", return_value=[path]), \
+             patch.object(Path, "read_text", source_text), \
+             patch.object(check_architecture.subprocess, "run", return_value=SimpleNamespace(stdout="")):
+            with self.assertRaisesRegex(SystemExit, "frontend HTTP calls"):
+                check_architecture.check()
+
 if __name__ == "__main__":
     unittest.main()

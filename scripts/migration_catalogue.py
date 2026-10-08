@@ -23,7 +23,7 @@ OUTPUTS = {
 
 def manifests(root=ROOT):
     for name, checksum in LEGACY.items():
-        if sha256((root/'contracts/persistence'/name).read_bytes()).hexdigest() != checksum:
+        if sha256((root/'devops/postgres/bootstrap'/name).read_bytes()).hexdigest() != checksum:
             raise ValueError('Historical migration is immutable: '+name)
     result = {}
     for service, (base, owners) in CONTEXTS.items():

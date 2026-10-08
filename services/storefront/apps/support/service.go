@@ -25,13 +25,14 @@ import (
 )
 
 type Service struct {
-	Context       context.Context
-	Mux           *contract.Mux
-	Databases     map[string]*postgres.Database
-	URLs          map[string]string
-	subscriptions []broker.Subscription
-	cancel        context.CancelFunc
-	apiKey        string
+	Context        context.Context
+	Mux            *contract.Mux
+	Databases      map[string]*postgres.Database
+	RequestWorkers map[string]func(context.Context, string)
+	URLs           map[string]string
+	subscriptions  []broker.Subscription
+	cancel         context.CancelFunc
+	apiKey         string
 }
 
 func Open(contexts ...string) (*Service, error) {
@@ -47,7 +48,7 @@ func Open(contexts ...string) (*Service, error) {
 		return nil, fmt.Errorf("a development API key of at least 32 characters is required")
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	service := &Service{Context: ctx, Mux: contract.NewMux("storefront", nil), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, cancel: cancel, apiKey: apiKey}
+	service := &Service{Context: ctx, Mux: contract.NewMux("storefront", nil), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, RequestWorkers: map[string]func(context.Context, string){}, cancel: cancel, apiKey: apiKey}
 	for _, owner := range contexts {
 		databaseURL, err := config.Secret(strings.ToUpper(owner) + "_DATABASE_URL")
 		if err != nil {
@@ -112,7 +113,14 @@ func (s *Service) Run() error {
 			return err
 		}
 		go workers.Relay(s.Context, db, s.URLs[owner], codec.Decode)
+		go workers.Replies(s.Context, db, s.URLs[owner], owner)
 		go workers.Realtime(s.Context, db, gatewayURL, realtimeKey)
+	}
+	for owner, run := range s.RequestWorkers {
+		if s.Databases[owner] == nil {
+			return fmt.Errorf("request worker bound outside its owner")
+		}
+		go run(s.Context, s.URLs[owner])
 	}
 	paused := "," + os.Getenv("PAUSED_CONSUMERS") + ","
 	for _, sub := range s.subscriptions {
@@ -155,10 +163,22 @@ func Subscribe[P any](s *Service, consumer string, target func(P) string, handle
 		panic("unregistered consumer: " + consumer)
 	}
 	owner := strings.SplitN(consumer, ".", 2)[0]
-	if s.Databases[owner] == nil {
+	binding := broker.Binding{Consumer: consumer, Event: definition.Name, Visibility: string(definition.Visibility), Context: owner}
+	bindSubscription(s, binding, target, handle)
+}
+
+// SubscribePrivate binds owner-internal delivery explicitly in the composition;
+// it does not add that message to the published integration catalogue.
+func SubscribePrivate[P any](s *Service, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
+	if binding.Visibility != string(a.Private) || !strings.HasPrefix(binding.Event, binding.Context+".") {
+		panic("invalid private owner binding")
+	}
+	bindSubscription(s, binding, target, handle)
+}
+func bindSubscription[P any](s *Service, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
+	if s.Databases[binding.Context] == nil || strings.SplitN(binding.Consumer, ".", 2)[0] != binding.Context {
 		panic("consumer bound outside its context")
 	}
-	binding := broker.Binding{Consumer: consumer, Event: definition.Name, Visibility: string(definition.Visibility), Context: owner}
 	s.subscriptions = append(s.subscriptions, broker.Subscription{Binding: binding, Handle: func(ctx context.Context, metadata a.Metadata, message a.Message) error {
 		payload, ok := message.Payload.(P)
 		if !ok {

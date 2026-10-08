@@ -1,30 +1,72 @@
 package backend
 
 import (
+	"context"
+	"errors"
+	mapping "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http/backend/generated"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http/internal/response"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http/internal/security"
+	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1"
 	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/openapi"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/application"
 )
 
-type Target struct{ URL, Key string }
+type Requests interface {
+	Call(context.Context, pb.Request) (pb.Reply, error)
+}
 
 type Config struct {
 	Sessions a.Sessions
 	CLIKey   string
 	Origins  []string
-	Backends map[string]Target
+	Owners   []string
+	Requests Requests
 }
 
 func (c Config) Mount(mux *contract.Mux) {
-	for owner, backend := range c.Backends {
-		handler := c.authoriseBackend(newBackendProxy(backend))
+	for _, owner := range c.Owners {
 		registered := false
 		for _, pattern := range mux.Patterns() {
 			if mux.Owner(pattern) == owner {
-				mux.Handle(pattern, handler)
+				operation := mux.Operation(pattern)
+				if !mapping.Supported(operation.OperationID) {
+					panic("OpenAPI operation has no typed boundary mapping: " + operation.OperationID)
+				}
+				_, path, _ := strings.Cut(pattern, " ")
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					request, err := translate(r, owner, path, operation)
+					if err != nil {
+						var rejected requestError
+						if errors.As(err, &rejected) {
+							response.JSON(w, rejected.status, response.ErrorResponse{Code: rejected.code})
+						} else {
+							response.TemporarilyUnavailable.Write(w)
+						}
+						return
+					}
+					ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
+					defer cancel()
+					if c.Requests == nil {
+						response.TemporarilyUnavailable.Write(w)
+						return
+					}
+					reply, err := c.Requests.Call(ctx, request)
+					if err != nil {
+						response.TemporarilyUnavailable.Write(w)
+						return
+					}
+					status, body, err := translateReply(request, reply, path)
+					if err != nil {
+						response.TemporarilyUnavailable.Write(w)
+						return
+					}
+					response.JSON(w, status, body)
+				})
+				mux.Handle(pattern, c.authoriseBackend(handler))
 				registered = true
 			}
 		}

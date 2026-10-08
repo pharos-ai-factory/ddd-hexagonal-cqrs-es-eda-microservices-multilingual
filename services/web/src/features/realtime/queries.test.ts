@@ -1,14 +1,15 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {query, queryAll, subscriptionBarrier} from './queries';
+import {subscriptionBarrier} from './queries';
+import {scan} from './httpProjection';
 import {merge, type Snapshot} from './model';
 
-test('paginated scans load every row beyond 100 and preserve newer live revisions', async () => {
+test('paginated scans load every row beyond 100 and preserve newer live revisions', async t => {
   const urls: string[] = [];
   let state: Snapshot = {};
   const rows = Array.from({length: 205}, (_, index) => ({kind: 'drink' as const, version: 1,
     state: {id: String(index), name: 'old', revision: 1, published: false}}));
-  const loaded = await queryAll('/drinks', async url => {
+  t.mock.method(globalThis, 'fetch', async (url: string) => {
     urls.push(url);
     const cursor = new URL(url, 'http://test').searchParams.get('cursor');
     const offset = Number(cursor ?? 0);
@@ -17,9 +18,10 @@ test('paginated scans load every row beyond 100 and preserve newer live revision
       // A root inserted behind the current cursor arrives through the subscription.
       state = merge(state, {...rows[0]!, state: {...rows[0]!.state, id: '-1', name: 'new'}});
     }
-    return {items: rows.slice(offset, offset+100), nextCursor: offset < 200 ? String(offset+100) : null};
+    return new Response(JSON.stringify({items: rows.slice(offset, offset+100), nextCursor: offset < 200 ? String(offset+100) : null}));
   });
-  loaded.forEach(row => { state = merge(state, row); });
+  const loaded = await scan('listDrinks', new AbortController().signal);
+  loaded.forEach(row => { state = merge(state, {...row, kind: 'drink'}); });
   assert.equal(loaded.length, 205);
   assert.equal(urls.length, 3);
   assert.match(urls[1]!, /cursor=100/);
@@ -29,25 +31,17 @@ test('paginated scans load every row beyond 100 and preserve newer live revision
   assert.equal(state['drink/-1']!.state.id, '-1');
 });
 
-test('a failed continuation fails the scan and repeated cursors cannot loop', async () => {
+test('a failed continuation fails the scan and repeated cursors cannot loop', async t => {
   let calls = 0;
-  await assert.rejects(queryAll('/rows', async () => {
+  t.mock.method(globalThis, 'fetch', async () => {
     if (++calls === 2) throw new Error('unavailable');
-    return {items: [1], nextCursor: 'next'};
-  }), /unavailable/);
-  await assert.rejects(queryAll('/rows', async () => ({items: [], nextCursor: 'same'})), /did not advance/);
-  const empty: number[] = await queryAll('/rows', async () => ({items: [], nextCursor: null}));
-  assert.deepEqual(empty, []);
-});
-
-test('ordinary query responses need no pagination fields', async t => {
-  const urls: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (url: string) => {
-    urls.push(url);
-    return new Response(JSON.stringify({total: 205}));
+    return new Response(JSON.stringify({items: [], nextCursor: 'next'}));
   });
-  assert.deepEqual(await query<{total: number}>('/summary'), {total: 205});
-  assert.deepEqual(urls, ['/summary']);
+  await assert.rejects(scan('listDrinks', new AbortController().signal), /unavailable/);
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({items: [], nextCursor: 'same'})));
+  await assert.rejects(scan('listDrinks', new AbortController().signal), /did not advance/);
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({items: [], nextCursor: null})));
+  assert.deepEqual(await scan('listDrinks', new AbortController().signal), []);
 });
 
 test('all subscriptions must attach before initial or gap scans; recovered history needs none', () => {

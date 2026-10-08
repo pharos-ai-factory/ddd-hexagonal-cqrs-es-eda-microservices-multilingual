@@ -1,0 +1,43 @@
+syntax = "proto3";
+package cafe.loyalty.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1";
+import "cafe/requests/v1/common.proto";
+import "cafe/requests/v1/contexts/loyalty/loyalty_replies.proto";
+import "cafe/requests/v1/contexts/loyalty/loyalty_queries.proto";
+import "cafe/requests/v1/contexts/loyalty/loyalty_commands.proto";
+message Request {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    Command command = 10;
+    Query query = 11;
+  }
+}
+message Command {
+  cafe.requests.v1.CommandMetadata metadata = 1;
+  oneof payload {
+    cafe.loyalty.requests.v1.RedeemReward redeem_reward = 24;
+  }
+}
+message Query {
+  oneof payload {
+    cafe.loyalty.requests.v1.ListAccounts list_accounts = 20;
+    cafe.loyalty.requests.v1.GetAccount get_account = 21;
+    cafe.loyalty.requests.v1.ListRewards list_rewards = 22;
+    cafe.loyalty.requests.v1.GetReward get_reward = 23;
+  }
+}
+message Reply {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    cafe.requests.v1.Outcome outcome = 10;
+    cafe.requests.v1.RequestError error = 11;
+    cafe.loyalty.requests.v1.LoadedAccount account = 30;
+    cafe.loyalty.requests.v1.Accounts accounts = 31;
+    cafe.loyalty.requests.v1.LoadedReward reward = 32;
+    cafe.loyalty.requests.v1.Rewards rewards = 33;
+  }
+}

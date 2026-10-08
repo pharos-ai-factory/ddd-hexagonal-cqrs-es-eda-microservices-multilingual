@@ -16,8 +16,8 @@ def migration_sql(owner, root=ROOT):
     if owner not in entries:
         raise ValueError('Unknown migration owner')
     _, directory, manifest = entries[owner]
-    initial = (root/'contracts/persistence/0001_initial.sql').read_bytes()
-    realtime = (root/'contracts/persistence/0002_realtime.sql').read_text()
+    initial = (root/'devops/postgres/bootstrap/0001_initial.sql').read_bytes()
+    realtime = (root/'devops/postgres/bootstrap/0002_realtime.sql').read_text()
     initial_hash, realtime_hash = sha256(initial).hexdigest(), sha256(realtime.encode()).hexdigest()
     # Legacy schemas stay frozen. Existing volumes may predate realtime support.
     statements = [r'\set ON_ERROR_STOP on', f"""DO $$ BEGIN

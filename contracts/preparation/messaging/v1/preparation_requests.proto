@@ -1,0 +1,40 @@
+syntax = "proto3";
+package cafe.preparation.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1";
+import "cafe/requests/v1/common.proto";
+import "cafe/requests/v1/contexts/preparation/preparation_queries.proto";
+import "cafe/requests/v1/contexts/preparation/preparation_replies.proto";
+import "cafe/requests/v1/contexts/preparation/preparation_commands.proto";
+message Request {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    Command command = 10;
+    Query query = 11;
+  }
+}
+message Command {
+  cafe.requests.v1.CommandMetadata metadata = 1;
+  oneof payload {
+    cafe.preparation.requests.v1.StartPreparation start_preparation = 21;
+    cafe.preparation.requests.v1.CompletePreparation complete_preparation = 22;
+  }
+}
+message Query {
+  oneof payload {
+    cafe.preparation.requests.v1.ListTickets list_tickets = 16;
+    cafe.preparation.requests.v1.GetTicket get_ticket = 17;
+  }
+}
+message Reply {
+  uint32 contract_version = 1;
+  string request_id = 2;
+  string context = 3;
+  oneof payload {
+    cafe.requests.v1.Outcome outcome = 10;
+    cafe.requests.v1.RequestError error = 11;
+    cafe.preparation.requests.v1.LoadedTicket ticket = 26;
+    cafe.preparation.requests.v1.Tickets tickets = 27;
+  }
+}

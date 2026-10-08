@@ -1,0 +1,181 @@
+{
+  "connect": {
+    "post": {
+      "operationId": "realtimeConnect",
+      "security": [
+        {
+          "RealtimeProxy": []
+        }
+      ],
+      "description": "Internal Centrifugo proxy. Cookie and Origin carry the original session authority. Subscription choices are selected by the server.",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "result"
+                    ],
+                    "properties": {
+                      "result": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "user",
+                          "subs",
+                          "expire_at"
+                        ],
+                        "properties": {
+                          "user": {
+                            "type": "string"
+                          },
+                          "subs": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [],
+                              "properties": {}
+                            }
+                          },
+                          "expire_at": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "disconnect"
+                    ],
+                    "properties": {
+                      "disconnect": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "code",
+                          "reason"
+                        ],
+                        "properties": {
+                          "code": {
+                            "type": "integer"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"}
+      }
+    }
+  },
+  "refresh": {
+    "post": {
+      "operationId": "realtimeRefresh",
+      "security": [
+        {
+          "RealtimeProxy": []
+        }
+      ],
+      "description": "Internal Centrifugo proxy. Cookie and Origin carry the original session authority. Subscription choices are selected by the server.",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "result"
+                    ],
+                    "properties": {
+                      "result": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "expire_at"
+                        ],
+                        "properties": {
+                          "expire_at": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "result"
+                    ],
+                    "properties": {
+                      "result": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "expired"
+                        ],
+                        "properties": {
+                          "expired": {
+                            "type": "boolean",
+                            "enum": [
+                              true
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"}
+      }
+    }
+  }
+}

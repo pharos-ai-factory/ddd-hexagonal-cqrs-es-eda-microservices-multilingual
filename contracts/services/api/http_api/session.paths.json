@@ -1,0 +1,185 @@
+{
+  "login": {
+    "post": {
+      "operationId": "login",
+      "security": [],
+      "parameters": [
+        {
+          "name": "Origin",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "description": "Local operator access code; at most 4096 bytes.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "password"
+              ],
+              "properties": {
+                "password": {
+                  "type": "string"
+                }
+              }
+            },
+            "example": {
+              "password": "code"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "authenticated"
+                ],
+                "properties": {
+                  "authenticated": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "headers": {
+            "Set-Cookie": {
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "400": {"$ref": "../../../shared/http_api/responses.json#/responses/400"},
+        "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"},
+        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"},
+        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+      }
+    }
+  },
+  "session": {
+    "get": {
+      "operationId": "session",
+      "security": [
+        {
+          "OperatorSession": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "subject",
+                  "name",
+                  "role"
+                ],
+                "properties": {
+                  "subject": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "operator"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "authenticated"
+                ],
+                "properties": {
+                  "authenticated": {
+                    "type": "boolean",
+                    "enum": [
+                      false
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+      }
+    }
+  },
+  "logout": {
+    "post": {
+      "operationId": "logout",
+      "security": [],
+      "parameters": [
+        {
+          "name": "Origin",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "authenticated"
+                ],
+                "properties": {
+                  "authenticated": {
+                    "type": "boolean",
+                    "enum": [
+                      false
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"},
+        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+      }
+    }
+  }
+}

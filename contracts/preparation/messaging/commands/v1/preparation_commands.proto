@@ -1,0 +1,9 @@
+syntax = "proto3";
+package cafe.preparation.requests.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1";
+
+message StartPreparation {
+}
+
+message CompletePreparation {
+}

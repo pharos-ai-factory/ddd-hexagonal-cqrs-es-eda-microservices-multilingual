@@ -32,6 +32,7 @@
     "generate:http": "python3 scripts/http_contracts.py",
     "check:http": "python3 scripts/http_contracts.py --check",
     "generate:contracts": "python3 scripts/generate.py",
-    "test:browser": "python3 scripts/browser.py"
+    "test:browser": "python3 scripts/browser.py",
+    "check:contracts": "python3 scripts/check_contracts.py"
   }
 }

@@ -1,6 +1,7 @@
 # 0001 — Aggregate consistency and durable delivery
 
-Status: accepted for the initial reference, 26 September 2026.
+Status: accepted for the initial reference, 26 September 2026. Private message
+ownership is clarified by [0008](0008-published-contract-ownership.md).
 
 ## Decision
 
@@ -25,13 +26,14 @@ mistakes, not a sandbox against hostile code holding a database credential.
 Domain facts describe completed transitions without AMQP or Protobuf dependencies.
 Applications select the facts that require delivery:
 
-- Private domain contracts support reactions inside their owning context.
+- Private domain messages support reactions inside their owning context.
 - Integration contracts publish facts for other contexts.
 
 Both use the same outbox, dispatch, publisher, consumer, receipt, retry,
 dead-letter and replay code. RabbitMQ topic permissions prevent another context
-from binding a private domain routing key. Private contracts may evolve with their
-owner, but persisted messages still require an explicit version policy.
+from binding a private domain routing key. Private domain facts and delivery
+formats are owner-local implementation details. Owners preserve compatibility
+with their stored messages when changing an internal delivery format (0008).
 
 Facts with no asynchronous reaction, such as an ordinary draft quantity change,
 need not be published. There is no second, unreliable in-memory delivery path.

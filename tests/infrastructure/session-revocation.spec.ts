@@ -3,7 +3,8 @@ import {readFileSync} from 'node:fs';
 
 const env = Object.fromEntries(readFileSync(process.env.CAFE_ENV_FILE!, 'utf8')
   .trim().split('\n').map(line => line.split('=')));
-const api = `http://127.0.0.1:${env.API_PORT}`;
+const host = env.CAFE_TEST_HOST ?? '127.0.0.1';
+const api = `http://${host}:${env.API_PORT}`;
 type Reply = {connect?: {client: string}; push?: {pub?: unknown}; error?: {code: number}};
 declare global {
   interface Window {
@@ -12,14 +13,14 @@ declare global {
 }
 
 async function connect(page: Page) {
-  await page.evaluate(port => {
-    const socket = new WebSocket(`ws://127.0.0.1:${port}/connection/websocket`);
+  await page.evaluate(({host, port}) => {
+    const socket = new WebSocket(`ws://${host}:${port}/connection/websocket`);
     const state = {socket, replies: [] as Reply[], closed: false};
     window.revocationProbe = state;
     socket.onopen = () => socket.send(JSON.stringify({id: 1, connect: {}}));
     socket.onmessage = event => state.replies.push(JSON.parse(String(event.data)) as Reply);
     socket.onclose = () => { state.closed = true; };
-  }, env.REALTIME_PORT!);
+  }, {host, port: env.REALTIME_PORT!});
 }
 
 test('logout revokes a connection whose successful authentication response is still in flight',
@@ -30,7 +31,7 @@ test('logout revokes a connection whose successful authentication response is st
     expect(login.status()).toBe(200);
     await page.goto(api+'/auth/session');
     const publish = async () => {
-      const response = await context.request.post(`http://127.0.0.1:${env.REALTIME_ADMIN_PORT}/api/publish`, {
+      const response = await context.request.post(`http://${host}:${env.REALTIME_ADMIN_PORT}/api/publish`, {
         headers: {'X-API-Key': env.CENTRIFUGO_API_KEY!, 'X-Centrifugo-Error-Mode': 'transport'},
         data: {channel: 'cafe:menu', b64data: Buffer.from(JSON.stringify({marker: 'revocation regression'})).toString('base64')},
       });

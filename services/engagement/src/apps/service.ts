@@ -5,6 +5,10 @@ import {redeemInput} from '../adaptors/inputs.js';
 import {relay, consume, type Subscription} from '../adaptors/broker.js';
 import {realtimeRelay} from '../adaptors/dispatch.js';
 import {server} from '../adaptors/http.js';
+import {replyRelay} from '../adaptors/replies.js';
+import {Registry} from '../adaptors/requests.js';
+import * as loyaltyWire from '../contexts/loyalty/adaptors/messaging/requests.js';
+import {notification as notificationWire} from '../contexts/communication/adaptors/messaging/requests.js';
 import {HttpDelivery} from '../adaptors/provider.js';
 import {derivedId} from '../foundation/identity.js';
 import type {Metadata, Outcome} from '../foundation/application.js';
@@ -13,7 +17,9 @@ import type {RewardState} from '../contexts/loyalty/domain/reward.js';
 import type {NotificationState} from '../contexts/communication/domain/notification.js';
 import {CreditCollection, IssueReward, RedeemReward} from '../contexts/loyalty/application/commands.js';
 import {PickupNotice, RewardNotice, DeliverNotification} from '../contexts/communication/application/commands.js';
-import type {OrderCollected, RewardEarned, RewardIssued, PickupOpened, NotificationRequested} from '../contracts/events.js';
+import type {OrderCollected, RewardIssued, PickupOpened} from '../contracts/events.js';
+import type {NotificationRequested} from '../contexts/communication/application/events.js';
+import type {RewardEarned} from '../contexts/loyalty/application/events.js';
 
 import {secret as required} from '../foundation/secrets.js';
 if (!['local', 'development'].includes(process.env.APP_ENV ?? '')) throw new Error('Development environments only');
@@ -29,6 +35,7 @@ const noticeQueries = new Queries<NotificationState>(databases.communication, 'n
 const controller = new AbortController();
 const tasks: Promise<void>[] = [];
 for (const [owner, db] of Object.entries(databases)) {
+  tasks.push(replyRelay(db, required(owner.toUpperCase()+'_BROKER_URL'), controller.signal));
   tasks.push(relay(db, required(owner.toUpperCase()+'_BROKER_URL'), controller.signal));
   tasks.push(realtimeRelay(db, required('REALTIME_GATEWAY_URL'), required(owner.toUpperCase()+'_REALTIME_KEY'), controller.signal));
 }
@@ -51,6 +58,14 @@ subscribe<NotificationRequested>('communication', 'communication.deliver-notice'
   event => event.notificationId, new DeliverNotification(notices, noticeQueries,
     new HttpDelivery(required('DELIVERY_URL'), required('DELIVERY_KEY'))));
 const redeem = new RedeemReward(rewards, () => new Date());
+const loyaltyRequests = new Registry('loyalty');
+loyaltyRequests.command('redeemReward', loyaltyWire.redeem, (m, input) => redeem.execute(m, input));
+loyaltyRequests.queries('account', 'accounts', new Queries<AccountState>(databases.loyalty, 'account', restoreAccount), loyaltyWire.account);
+loyaltyRequests.queries('reward', 'rewards', new Queries<RewardState>(databases.loyalty, 'reward', restoreReward), loyaltyWire.reward);
+const communicationRequests = new Registry('communication');
+communicationRequests.queries('notification', 'notifications', noticeQueries, notificationWire);
+tasks.push(loyaltyRequests.run(required('LOYALTY_BROKER_URL'), controller.signal));
+tasks.push(communicationRequests.run(required('COMMUNICATION_BROKER_URL'), controller.signal));
 const http = server(required('API_KEY'), [
   {resource: '/v1/loyalty/accounts', queries: new Queries<AccountState>(databases.loyalty, 'account', restoreAccount)},
   {resource: '/v1/loyalty/rewards', queries: new Queries<RewardState>(databases.loyalty, 'reward', restoreReward),

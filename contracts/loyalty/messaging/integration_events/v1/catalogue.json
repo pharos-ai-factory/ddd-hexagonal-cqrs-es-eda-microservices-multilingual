@@ -1,0 +1,9 @@
+[
+  {
+    "name": "loyalty.reward-issued",
+    "owner": "loyalty",
+    "visibility": "integration",
+    "consumer": "communication.reward-notice",
+    "kind": "reward"
+  }
+]

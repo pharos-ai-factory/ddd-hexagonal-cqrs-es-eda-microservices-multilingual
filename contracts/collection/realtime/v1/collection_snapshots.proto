@@ -1,0 +1,11 @@
+syntax = "proto3";
+package cafe.realtime.v1;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1";
+
+message Pickup {
+  string id = 1;
+  string order_id = 2;
+  string customer_id = 3;
+  string code = 4;
+  string status = 5;
+}

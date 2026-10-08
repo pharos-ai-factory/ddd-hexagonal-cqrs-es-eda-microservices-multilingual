@@ -16,7 +16,7 @@ import (
 type menuWorld struct {
 	drinks    s.CommandProbe[d.DrinkState]
 	editions  s.CommandProbe[d.EditionState]
-	directory s.ProjectionProbe[model.DrinkPublished]
+	directory s.ProjectionProbe[app.DrinkPublished]
 }
 
 func (w *menuWorld) publishDrink() error {
@@ -28,7 +28,7 @@ func (w *menuWorld) publishDrink() error {
 		return err
 	}
 	state := w.drinks.Loaded.State
-	w.directory.Values[fmt.Sprintf("%s/%d", s.Drink, state.Revision)] = model.DrinkPublished{DrinkID: s.Drink, Name: state.Name, Revision: state.Revision}
+	w.directory.Values[fmt.Sprintf("%s/%d", s.Drink, state.Revision)] = app.DrinkPublished{DrinkID: s.Drink, Name: state.Name, Revision: state.Revision}
 	return nil
 }
 func (w *menuWorld) add(code string, minor int64) error {
@@ -57,7 +57,7 @@ func TestMenuFeatures(t *testing.T) {
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
 			w := &menuWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
-				*w = menuWorld{directory: s.ProjectionProbe[model.DrinkPublished]{Values: map[string]model.DrinkPublished{}}}
+				*w = menuWorld{directory: s.ProjectionProbe[app.DrinkPublished]{Values: map[string]app.DrinkPublished{}}}
 				return ctx, nil
 			})
 			sc.Step(`^a published drink named "([^"]*)"$`, func(name string) error {
@@ -148,7 +148,7 @@ func TestMenuFeatures(t *testing.T) {
 				if len(p) != 1 || p[0].Name != "menu.drink-published" || p[0].Visibility != a.Private {
 					return fmt.Errorf("wrong private mapping: %+v", p)
 				}
-				event, ok := p[0].Payload.(model.DrinkPublished)
+				event, ok := p[0].Payload.(app.DrinkPublished)
 				if !ok || event.DrinkID != s.Drink || event.Revision != 2 || event.Name != name {
 					return fmt.Errorf("wrong drink revision: %+v", event)
 				}

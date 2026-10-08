@@ -12,24 +12,24 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/application"
 )
 
-type Backend = backend.Target
 type Config struct {
 	Diagnostics                           func(context.Context) (any, error)
 	Sessions                              a.Sessions
 	OperatorPassword, CLIKey, ProxySecret string
 	Origins                               []string
-	Backends                              map[string]Backend
+	Owners                                []string
+	Requests                              backend.Requests
 }
 
 func (c Config) Handler() http.Handler {
 	owners := map[string]bool{}
-	for owner := range c.Backends {
+	for _, owner := range c.Owners {
 		owners[owner] = true
 	}
 	mux := contract.NewMux("api", owners)
 	operational.Config{CLIKey: c.CLIKey, Diagnostics: c.Diagnostics}.Mount(mux)
 	session.Config{Sessions: c.Sessions, OperatorPassword: c.OperatorPassword, Origins: c.Origins}.Mount(mux)
 	realtime.Config{Sessions: c.Sessions, ProxySecret: c.ProxySecret, Origins: c.Origins}.Mount(mux)
-	backend.Config{Sessions: c.Sessions, CLIKey: c.CLIKey, Origins: c.Origins, Backends: c.Backends}.Mount(mux)
+	backend.Config{Sessions: c.Sessions, CLIKey: c.CLIKey, Origins: c.Origins, Owners: c.Owners, Requests: c.Requests}.Mount(mux)
 	return mux.Handler()
 }

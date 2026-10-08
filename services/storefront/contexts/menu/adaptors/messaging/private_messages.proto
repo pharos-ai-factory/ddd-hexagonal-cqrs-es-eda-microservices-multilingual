@@ -1,0 +1,27 @@
+syntax = "proto3";
+package cafe.menu.internal;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated;menuinternal";
+
+// Owner-private delivery format. Domain facts remain plain, unversioned types.
+message DrinkPublished {
+  string drink_id = 1;
+  string name = 2;
+  uint64 revision = 3;
+}
+
+message PrivateEvent {
+  string id = 1;
+  string name = 2;
+  string context = 3;
+  string visibility = 4;
+  uint32 format_revision = 5;
+  string aggregate_kind = 6;
+  string aggregate_id = 7;
+  uint64 aggregate_version = 8;
+  string correlation_id = 9;
+  string causation_id = 10;
+  string occurred_at = 11;
+  oneof payload {
+    DrinkPublished drink_published = 20;
+  }
+}

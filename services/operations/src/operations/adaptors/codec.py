@@ -15,17 +15,15 @@ from operations.foundation.identity import new_id
 CATALOGUE = {item["name"]: item for item in json.loads(
     (Path(__file__).parent/"generated/catalogue.json").read_text())}
 PAYLOADS = {
-    "menu.drink-published": "drink_published", "menu.edition-published": "menu_published",
+    "menu.edition-published": "menu_published",
     "ordering.order-placed": "order_placed", "preparation.drinks-ready": "drinks_ready",
     "collection.pickup-opened": "pickup_opened", "collection.order-collected": "order_collected",
-    "loyalty.reward-earned": "reward_earned", "loyalty.reward-issued": "reward_issued",
-    "communication.notification-requested": "notification_requested",
+    "loyalty.reward-issued": "reward_issued",
 }
 SOURCE_IDENTITIES = {
-    "menu.drink-published": "drink_id", "menu.edition-published": "edition_id",
+    "menu.edition-published": "edition_id",
     "ordering.order-placed": "order_id", "collection.pickup-opened": "pickup_id",
-    "loyalty.reward-earned": "account_id", "loyalty.reward-issued": "reward_id",
-    "communication.notification-requested": "notification_id",
+    "loyalty.reward-issued": "reward_id",
 }
 
 
