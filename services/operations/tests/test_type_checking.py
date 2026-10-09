@@ -4,12 +4,12 @@ from mypy import api
 
 IMPORTS = """\
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
-from operations.contexts.collection.domain.pickup import PickupSnapshot
-from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
+from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
+from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket
 from operations.contracts.events import DrinksReady
-from operations.foundation.application import AggregateCommandPort, Metadata
+from operations.foundation.write_repository import CommandContext, WriteRepository
 
-def caller(pickups: AggregateCommandPort[PickupSnapshot], tickets: AggregateCommandPort[TicketSnapshot], metadata: Metadata) -> None:
+def caller(pickups: WriteRepository[Pickup], tickets: WriteRepository[PreparationTicket], metadata: CommandContext) -> None:
     collect = CollectOrderCommandHandler(pickups)
     collect.execute(metadata, {"code": "ABC123"})
     ready: DrinksReady = {"orderId": metadata.target, "customerId": metadata.target}

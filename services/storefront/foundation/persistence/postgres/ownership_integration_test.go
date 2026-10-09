@@ -40,7 +40,7 @@ func TestSecondAggregateWriteIsRejectedByDatabase(t *testing.T) {
 		t.Fatal("a second aggregate entered the same transaction")
 	}
 	_ = tx.Rollback(t.Context())
-	loaded, err := Query[counter](db, "test_counter").Get(t.Context(), first)
+	loaded, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), first)
 	if err != nil || loaded.Exists {
 		t.Fatal("first aggregate did not roll back with the rejected second write")
 	}
@@ -71,7 +71,7 @@ func TestDispatchLeaseFencesExpiredPublisher(t *testing.T) {
 	owner := admin(t)
 	id := NewID()
 	clean(t, owner, id)
-	_, err := Command[counter](db, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
+	_, err := snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
 		return a.Changed(counter{1}, "active", a.Publication{Name: "test.created", Visibility: a.Private}), nil
 	})
 	if err != nil {

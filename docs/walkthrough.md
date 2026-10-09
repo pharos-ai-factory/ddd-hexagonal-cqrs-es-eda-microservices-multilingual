@@ -58,9 +58,9 @@ Use `GET /api/v1/ordering/orders/{id}` and run `pnpm context ordering`.
 The API sends the owner query through RabbitMQ. Ordering's messaging/query
 adaptors construct `GetOrderQuery`; the
 [query handler](../services/storefront/contexts/ordering/application/queries/get_order.go)
-reads through `OrderReader` and returns an application-owned `OrderView`.
+reads through `OrderReadRepository` and returns an application-owned `OrderView`.
 
-The [PostgreSQL reader](../services/storefront/contexts/ordering/adaptors/postgres/order_reader.go)
+The [PostgreSQL read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go)
 validates the stored Order before selecting view fields. It preserves the root
 revision; a missing row remains absent. The wire reply and HTTP response map that
 view to their published shapes. The query acquires no aggregate mutation capability.

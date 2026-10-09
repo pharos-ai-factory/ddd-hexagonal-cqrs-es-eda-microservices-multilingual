@@ -43,7 +43,7 @@ command returns its recorded outcome. Reusing the identity with different
 material input is a conflict. Duplicate/no-op transitions emit no new events.
 
 Queries have named input/handler pairs, application-owned read models and named
-reader ports. Persistence adaptors validate stored authority and select view
+read repository ports. Persistence adaptors validate stored authority and select view
 fields. A query preserves root revisions, missing resources and explicit pagination
 without acquiring mutation capability. Domain methods have no network,
 database, logging, wall-clock or random-number calls; time and identity arrive
@@ -93,7 +93,7 @@ business-key protection or concurrency; a decision probe cannot prove those.
 
 Python commands, outcomes, published DTOs, read views and restored snapshots have
 explicit shapes, including literal lifecycle states. Command ports retain the
-owning snapshot type; reader ports expose application views. Domain facts use
+owning snapshot type; read repository ports expose application views. Domain facts use
 immutable context-owned dataclasses.
 Static types do not validate external JSON or stored state. Boundary decoders
 must still reject malformed input and classify corrupt authority as a retryable
@@ -112,6 +112,15 @@ records why this repository accepts the extra durable hand-off.
 Each command or query DTO lives beside its handler in one business-named file
 under `application/commands/` or `application/queries/`. Each event reaction has
 its own module. Application handlers never call another command handler, and a
-command handler has at most one direct aggregate-store invocation. Plain constructor
+command execution changes one aggregate through its named write repository. Plain constructor
 ports keep these use cases independent of DI, transport and persistence. See
 [decisions 0012–0014](docs/decisions/README.md).
+
+## Persistence and command infrastructure
+
+Command handlers load and save through `<Aggregate>WriteRepository`. The root
+records domain facts while enforcing its rules. A central command executor and
+owner persistence/message adaptors commit the aggregate and selected outgoing
+facts together with technical receipt/outcome records. This local transaction
+belongs to one aggregate and one context database. Feature code carries no
+transaction callbacks or delivery bookkeeping. See [decision 0015](docs/decisions/0015-explicit-persistence-role-names.md).

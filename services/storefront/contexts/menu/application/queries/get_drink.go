@@ -11,8 +11,8 @@ import (
 type GetDrinkQuery struct{ ID string }
 
 // GetDrinkQueryHandler reads one drink through its application capability.
-type GetDrinkQueryHandler struct{ Read ports.DrinkReader }
+type GetDrinkQueryHandler struct{ ReadRepository ports.DrinkReadRepository }
 
 func (h GetDrinkQueryHandler) Execute(ctx context.Context, q GetDrinkQuery) (a.Loaded[view.DrinkView], error) {
-	return h.Read.Get(ctx, q.ID)
+	return h.ReadRepository.Get(ctx, q.ID)
 }

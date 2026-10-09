@@ -24,7 +24,7 @@ questions help identify where a pattern would address a concrete problem.
 | Restricted realtime gateway | Give publishers authority over their own channel and session workers only disconnection authority |
 | Protected developer secret files | Use individual provider credentials with scopes and spending controls outside generated configuration |
 | Named command/query pairs and checked context navigation | Make business use cases discoverable through a stable source layout and live index |
-| Application read models and named reader ports | Let queries evolve independently from aggregate storage while retaining validated authority |
+| Application read models and named read repository ports | Let queries evolve independently from aggregate storage while retaining validated authority |
 | Durable event-to-command acceptance | Make command execution/retry ownership explicit after the receiving event is acknowledged |
 | Explicit DI at composition roots | Inject plain ports, validate the graph and dispose owned resources after workers drain |
 | Historical contract/fixture checks | Preserve public consumers and queued private work as code evolves |
@@ -33,7 +33,7 @@ questions help identify where a pattern would address a concrete problem.
 ## Transfer the rules with their evidence
 
 Start with `pnpm context <name>` and the context README. Read the affected
-[accepted decisions](decisions/README.md), particularly 0010–0014 for the current
+[accepted decisions](decisions/README.md), particularly 0010–0015 for the current
 composition and use-case conventions.
 Name the immediate invariant and the allowed pending state before changing a
 transaction. Introduce the command/receipt/outbox boundary with rollback,

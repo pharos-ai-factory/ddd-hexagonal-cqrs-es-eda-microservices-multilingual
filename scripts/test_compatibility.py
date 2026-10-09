@@ -2,6 +2,7 @@ import copy
 import unittest
 from compatibility import proto_changes
 from http_compatibility import changes
+from http_retirements import compatible_changes, RETIRED_STOREFRONT_OPERATIONS
 
 
 def document():
@@ -11,6 +12,21 @@ def document():
 
 
 class CompatibilityTests(unittest.TestCase):
+    def test_only_the_explicitly_retired_owner_operations_are_exempt(self):
+        self.assertEqual(len(RETIRED_STOREFRONT_OPERATIONS), 17)
+        for operation in RETIRED_STOREFRONT_OPERATIONS:
+            method, path = operation.split(' ', 1)
+            old = {'paths': {path: {method.lower(): {'responses': {}}}}}
+            removed = {'paths': {}}
+            self.assertEqual(compatible_changes('storefront', old, removed), [])
+            self.assertTrue(compatible_changes('api', old, removed))
+            changed = copy.deepcopy(old)
+            changed['paths'][path][method.lower()]['security'] = []
+            self.assertTrue(compatible_changes('storefront', old, changed))
+        for path in ('/healthz', '/diagnostics', '/future-operation'):
+            old = {'paths': {path: {'get': {'responses': {}}}}}
+            self.assertTrue(compatible_changes('storefront', old, {'paths': {}}))
+
     def test_required_request_addition_fails_but_optional_addition_passes(self):
         old, new = document(), document()
         schema = new['paths']['/orders']['post']['requestBody']['content']['application/json']['schema']

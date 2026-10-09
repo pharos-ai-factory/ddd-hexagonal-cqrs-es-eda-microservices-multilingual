@@ -15,14 +15,14 @@ func TestCommandReplyAtomicityRetryAndLeaseFencing(t *testing.T) {
 	db, pool := fixtureDB(t), admin(t)
 	id := NewID()
 	clean(t, pool, id)
-	store := Command[counter](db, "test_counter")
+	store := snapshotDecisions[counter](db, "test_counter")
 	m := metadata(id, 0)
 	intent := &ReplyIntent{ID: NewID(), Encode: func(a.Outcome) ([]byte, error) { return nil, fmt.Errorf("reply encoding failed") }}
 	ctx := WithReply(t.Context(), intent)
 	if _, err := store.Execute(ctx, m, increment); err == nil || intent.Committed {
 		t.Fatal("reply encoding failure did not roll back")
 	}
-	loaded, err := Query[counter](db, "test_counter").Get(t.Context(), id)
+	loaded, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), id)
 	if err != nil || loaded.Exists {
 		t.Fatal("root escaped reply rollback")
 	}

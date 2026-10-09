@@ -71,8 +71,6 @@ def test_partial_worker_startup_drains_before_resource_cleanup() -> None:
         patch.object(preparation_di, "subscriptions", return_value=()),
         patch.object(collection_di, "subscriptions", return_value=()),
         patch.object(service, "authenticate"),
-        patch.object(service, "mount_paged_queries"),
-        patch.object(service, "mount_command"),
         patch.object(service, "Thread", side_effect=thread_factory),
     ):
         app = service.create_app()

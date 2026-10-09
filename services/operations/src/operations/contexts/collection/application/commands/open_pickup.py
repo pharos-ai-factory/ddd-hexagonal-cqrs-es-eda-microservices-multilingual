@@ -1,8 +1,8 @@
+from operations.foundation.write_repository import CommandResult, CommandContext
+from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
 from collections.abc import Callable
 from typing import TypedDict
-from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot, PickupOpened
-from operations.contracts import events
-from operations.foundation.application import Change, AggregateCommandPort, Metadata, Outcome, Publication
+from operations.contexts.collection.domain.pickup import Pickup
 
 
 class OpenPickupCommand(TypedDict):
@@ -13,18 +13,16 @@ class OpenPickupCommand(TypedDict):
 
 class OpenPickupCommandHandler:
     """Create one Pickup and its collection code in the command transaction."""
-    def __init__(self, pickups: AggregateCommandPort[PickupSnapshot], identities: Callable[[str, str], str]) -> None:
-        self.pickups, self.identities = pickups, identities
+    def __init__(self, repository: PickupWriteRepository, identities: Callable[[str, str], str]) -> None:
+        self.repository, self.identities = repository, identities
 
-    def execute(self, metadata: Metadata, command: OpenPickupCommand) -> Outcome:
-        def decide(state: PickupSnapshot | None) -> Change[PickupSnapshot]:
-            if state is not None:
-                restored = Pickup.restore(state).snapshot()
-                return Change(restored, restored["status"], changed=False)
-            code = self.identities("collection-code", command["orderId"])[:6].upper()
-            pickup = Pickup.open(metadata.target, command["orderId"], command["customerId"], code)
-            publications = tuple(Publication("collection.pickup-opened", events.PickupOpened(
-                pickupId=fact.pickup_id, orderId=fact.order_id, customerId=fact.customer_id, collectionCode=fact.code))
-                for fact in pickup.events() if isinstance(fact, PickupOpened))
-            return Change(pickup.snapshot(), "ready", publications=publications)
-        return self.pickups.execute(metadata, decide)
+    def execute(self, context: CommandContext, command: OpenPickupCommand) -> CommandResult:
+        loaded = self.repository.get(context.target)
+        state = loaded["state"] if loaded else None
+        if state is not None:
+            restored = state.snapshot()
+            return CommandResult(restored["status"])
+        code = self.identities("collection-code", command["orderId"])[:6].upper()
+        pickup = Pickup.open(context.target, command["orderId"], command["customerId"], code)
+        self.repository.save(pickup)
+        return CommandResult("ready")

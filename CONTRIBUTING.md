@@ -32,11 +32,11 @@ Paths in this table are relative to the owning context.
 | Aggregate and its invariants | `domain/<business-name>`; children have no independent repositories |
 | Command | `application/commands/<action>`; one named DTO and matching `CommandHandler` together |
 | Query | `application/queries/<question>`; one named DTO and matching `QueryHandler` together |
-| Reader capability | `application/ports/`; use a named reader interface/protocol |
+| Read repository | `application/ports/<resource>_read_repository` (Go/Python) or `<resource>-read-repository` (TypeScript); name the interface/protocol `<Resource>ReadRepository` |
 | Read representation | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript) |
 | Event reaction | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript) |
 | Projection update | Go's current reactions live in `application/projections/` |
-| HTTP/Protobuf input mapping | `adaptors/http/` and `adaptors/messaging/` |
+| Protobuf input mapping | `adaptors/messaging/`; HTTP mapping lives in `services/api/adaptors/http/backend/` relative to the repository root |
 | Stored-state restoration and view mapping | `adaptors/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript) |
 | DI bindings and worker/resource lifetime | Owning service's `apps/` composition module |
 
@@ -50,14 +50,21 @@ Name handlers by their role: `CommandHandler`, `QueryHandler`,
 Aggregates retain business names. Document class/struct responsibilities and
 important invariants with Go comments, Python docstrings or JSDoc. Concrete
 adaptor names, or their Go package names, identify the implementation technology.
+Use `<Resource>ReadRepository` for query persistence ports. Concrete classes use
+`Postgres<Resource>ReadRepository`; Go factories use `postgres.New<Resource>ReadRepository`.
+Use `<Aggregate>WriteRepository` for authoritative aggregate loads and saves.
+Keep snapshot restoration and domain-fact publication mapping in owner adaptors.
+The central command executor owns transactions, receipts and outgoing intent. See [decision 0015](docs/decisions/0015-explicit-persistence-role-names.md).
 Keep handwritten source and documentation below 450 lines; record and explicitly
 classify any justified exception in [the responsibility review](docs/large-file-review.md).
 
 ## Preserve execution and failure boundaries
 
 A runtime aggregate business change starts in its named command handler. Make
-at most one direct aggregate-store call in `Execute`/`execute`, with domain
-mutation inside its decision callback. Commit one root, receipts, outcome and
+the handler a plain repository consumer: load the target, invoke aggregate
+behaviour and save. Register it through the central command executor in composition.
+Feature handlers receive `CommandContext` and a business result; infrastructure
+owns delivery metadata, deduplication, versions and transaction coordination. Commit one root, receipts, outcome and
 outgoing event/realtime intent atomically. API commands also commit exact reply
 bytes. Domain tests can exercise aggregate behaviour directly; rehydration,
 projection updates and migrations have separate responsibilities.
@@ -70,7 +77,7 @@ replay. This applies between roots in one context as well as across contexts.
 Go's current subscriptions update projections; a new aggregate-changing Go
 reaction requires the explicit durable-command port/adaptor and paired consumers.
 
-Queries use application-owned read models and named reader ports. Persistence
+Queries use application-owned read models and named read repository ports. Persistence
 adaptors restore and validate stored authority before mapping it into a view.
 Preserve absent-resource behaviour, revisions and continuation identities. An
 unpaginated list remains complete; pagination is explicit.
@@ -99,7 +106,7 @@ receipt identities survive class or file renames.
 
 | Change | Source of truth | Required follow-through |
 | --- | --- | --- |
-| HTTP operation | `contracts/<context>/http_api/` | Update explicit API/owner mappings and frontend calls; run `pnpm generate:http` |
+| HTTP operation | `contracts/<context>/http_api/` | Update API HTTP translation, owner messaging mappings and frontend calls; run `pnpm generate:http` |
 | Published command/query/event | `contracts/<context>/messaging/{commands,queries,integration_events}/` and owner envelopes in `messaging/v1/` | Update boundary decoders/mappings and run `pnpm generate:contracts` |
 | Browser projection | `contracts/<context>/realtime/` | Update atomic publication and browser mapping; run `pnpm generate:contracts` |
 | Private queued command/event | Owning context's `adaptors/messaging/` | Preserve stored-byte compatibility, codec tests and historical fixtures; run `pnpm generate:contracts` |

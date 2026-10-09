@@ -3,7 +3,7 @@ import type {AccountView} from '../application/read-models/account.js';
 import type {GetAccountQueryHandler} from '../application/queries/get-account.js';
 import type {ListAccountsQueryHandler} from '../application/queries/list-accounts.js';
 
-/** Translate HTTP and RabbitMQ query arguments into named loyalty use cases. */
+/** Translate RabbitMQ query arguments into named loyalty use cases. */
 export function accountQueryEndpoints(get: GetAccountQueryHandler, list: ListAccountsQueryHandler) {
   return {
     get: (id: string) => get.execute({id}),

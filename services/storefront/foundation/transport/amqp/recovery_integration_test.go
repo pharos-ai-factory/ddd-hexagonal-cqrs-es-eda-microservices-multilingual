@@ -13,6 +13,7 @@ import (
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
+	support "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/tests/support"
 	rabbit "github.com/rabbitmq/amqp091-go"
 	"os"
 	"strings"
@@ -101,8 +102,8 @@ func TestCommitThenLostAcknowledgementDoesNotRepeatEffect(t *testing.T) {
 	}
 	defer db.Close()
 	type Count struct{ Value int }
-	commands := store.Command[Count](db, "test_counter")
-	queries := store.Query[Count](db, "test_counter")
+	commands := support.SnapshotDecisionFixture[Count]{Transaction: store.NewAggregateTransaction[Count, Count](db, "test_counter", func(repo a.WriteRepository[Count]) a.WriteRepository[Count] { return repo })}
+	queries := store.NewSnapshotReadRepository[Count](db, "test_counter")
 	target := store.NewID()
 	var decisions atomic.Int32
 	apply := func(m a.Metadata) error {

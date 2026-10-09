@@ -16,14 +16,14 @@ def render(kind, context, name):
         return service, render_query(service, context, name, snake)
     role = {'command': 'CommandHandler', 'subscription': 'IntegrationEventHandler'}[kind]
     if service == 'engagement':
-        port = {'command': 'AggregateCommandPort<S>', 'subscription': 'DurableCommandPort<C>'}[kind]
+        port = {'command': 'WriteRepository<S>', 'subscription': 'DurableCommandPort<C>'}[kind]
         generic = '<C extends object>' if kind == 'subscription' else '<S>'
-        body = {'command': "return this.port.execute(metadata, () => { throw new Error('Define the aggregate transition'); });",
+        body = {'command': "throw new Error('Load the owner aggregate, apply behaviour and save through this.port');",
                 'subscription': 'return this.port.enqueue(metadata, command);'}[kind]
-        args = {'command': 'metadata: Metadata, command: '+name+'Command',
+        args = {'command': 'context: CommandContext, command: '+name+'Command',
                 'subscription': 'metadata: Metadata, command: C'}[kind]
         method = 'handle' if kind == 'subscription' else 'execute'
-        imports = {'command': 'AggregateCommandPort, Metadata', 'subscription': 'DurableCommandPort, Metadata'}[kind]
+        imports = {'command': 'CommandContext, WriteRepository', 'subscription': 'DurableCommandPort, Metadata'}[kind]
         source = f"""import type {{{imports}}} from '../../../foundation/application.js';
 /** Define the owner-local inputs for {name}. */
 export type {name}Command = Readonly<{{}}>;
@@ -33,21 +33,21 @@ export class {name}{role}{generic} {{
   {method}({args}) {{ {body} }}
 }}
 """
+        if kind == 'command':
+            source = source.replace("foundation/application.js", "foundation/write-repository.js").replace("  execute(", "  async execute(")
         test = f"import {{test}} from 'node:test';\nimport assert from 'node:assert/strict';\ntest('{name}: define its business outcome', () => {{ assert.fail('Replace with an aggregate or port assertion'); }});\n"
         files = {snake+'.ts': source, snake+'.test.ts': test}
         registration = f"// Add to the context's typed dependency record and container.register:\n{name[0].lower()+name[1:]}: asFunction(c => new {name}{role}(c.owningPort)).singleton(),\n"
     elif service == 'operations':
-        port = {'command': 'AggregateCommandPort[S]', 'subscription': 'DurableCommandPort[C]'}[kind]
+        port = {'command': 'WriteRepository[S]', 'subscription': 'DurableCommandPort[C]'}[kind]
         generic = '[C]' if kind == 'subscription' else '[S]'
-        args = {'command': f'metadata: Metadata, command: {name}Command',
+        args = {'command': f'context: CommandContext, command: {name}Command',
                 'subscription': 'metadata: Metadata, command: C'}[kind]
-        result = 'Outcome'
-        body = {'command': '''def decide(state: S | None) -> Change[S]:
-            raise NotImplementedError("Define the aggregate transition")
-        return self.port.execute(metadata, decide)''',
+        result = 'CommandResult' if kind == 'command' else 'Outcome'
+        body = {'command': '''raise NotImplementedError("Load the owner aggregate, apply behaviour and save through self.port")''',
                 'subscription': 'return self.port.enqueue(metadata, command)'}[kind]
         method = 'handle' if kind == 'subscription' else 'execute'
-        imports = {'command': 'AggregateCommandPort, Metadata, Outcome, Change', 'subscription': 'DurableCommandPort, Metadata, Outcome'}[kind]
+        imports = {'command': 'CommandContext, CommandResult, WriteRepository', 'subscription': 'DurableCommandPort, Metadata, Outcome'}[kind]
         source = f'''from typing import TypedDict
 from operations.foundation.application import {imports}
 
@@ -63,11 +63,13 @@ class {name}{role}{generic}:
     def {method}(self, {args}) -> {result}:
         {body}
 '''
+        if kind == 'command':
+            source = source.replace('operations.foundation.application import', 'operations.foundation.write_repository import')
         test = f'def test_{snake}() -> None:\n    raise AssertionError("Replace with the expected business outcome")\n'
         files = {snake+'.py': source, 'test_'+snake+'.py': test}
         registration = f'# Add to the owning DeclarativeContainer:\n{snake} = providers.Singleton({name}{role}, owning_port)\n'
     else:
-        port = {'command': 'a.AggregateCommandPort[S]', 'subscription': ''}[kind]
+        port = {'command': 'a.WriteRepository[S]', 'subscription': ''}[kind]
         if kind == 'subscription':
             files = {snake+'.go': f'''package application
 import (
@@ -95,10 +97,10 @@ import (
 // {name}Command defines owner-local intent.
 type {name}Command struct {{}}
 // {name}{role} owns one application responsibility.
-type {name}{role}[S any] struct {{ Store {port} }}
+type {name}{role}[S any] struct {{ Repository {port} }}
 '''
-            source += f'''func (h {name}{role}[S]) Execute(ctx context.Context, m a.Metadata, command {name}Command) (a.Outcome, error) {{
- return h.Store.Execute(ctx, m, func(state a.Loaded[S]) (a.Mutation[S], error) {{ panic("Define the aggregate transition") }})
+            source += f'''func (h {name}{role}[S]) Execute(ctx context.Context, m a.CommandContext, command {name}Command) (a.CommandResult, error) {{
+ panic("Load the owner aggregate, apply behaviour and save through h.Repository")
 }}
 '''
             files = {snake+'.go': source}
@@ -118,7 +120,11 @@ type {name}{role}[S any] struct {{ Store {port} }}
         files = arranged
         files['placement.txt'] = ('Place commands/ under the owning context application/ directory.\n'
             'Keep the command DTO and handler together; import their module directly.\n'
+            'Replace the generic aggregate type with the owner root and use its named WriteRepository port.\n'
+            'Register through the central command executor; it provides a fresh repository and owns transaction policy.\n'
             'Place Python test modules under tests/contexts/<context>/application/commands/.\n')
+    if kind == 'command':
+        registration += 'Bind this plain handler through the existing context command executor factory; register that executor with the owner RabbitMQ adaptor.\n'
     files['registration.txt'] = registration
     if kind == 'subscription':
         # Reactions use the command from its command/handler module.

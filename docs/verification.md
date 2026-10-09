@@ -1,5 +1,57 @@
 # Executed verification
 
+## Owner HTTP boundary cleanup, 9 October 2026
+
+Retired direct business HTTP routes and JSON decoders across Storefront,
+Operations and Engagement. Go composition now injects typed executors and query
+handlers directly into messaging registries. Owner HTTP retains health and
+authenticated diagnostics. Public API OpenAPI/Protobuf contracts and frontend
+bindings remain unchanged; the 17 intentional Storefront development operation
+removals have a fixed compatibility exception documented by
+[decision 0016](decisions/0016-owner-messaging-boundary.md).
+
+`pnpm verify` passed all five applications, including the new architecture
+negative fixtures, native operational surface checks, exhaustive public-path
+rejection probes, historical compatibility, Go race/vet, Python/TypeScript checks
+and all 51 fast Gherkin scenarios.
+
+`pnpm test:integration` passed database and RabbitMQ recovery, all 31 live API
+business operations, all 12 infrastructure scenarios, authenticated business-path
+rejection on every owner process, both browser scenarios and session revocation.
+All required environment-dependent checks ran. Disposable resources were removed.
+
+Changed-document local links and `git diff --check` pass. Remote CI and load tests
+were not run. Local logs: `.local/owner-http-verify.log` and
+`.local/owner-http-integration.log`.
+
+## Named repositories and central command execution, 9 October 2026
+
+Decision 0015 names all eight read and write repositories across Go, Python and
+TypeScript. All 21 feature command handlers receive named write repositories and
+a target-only command context. Central executors own transaction and delivery
+bookkeeping. Owner mappers select outgoing aggregate facts during save; Reward
+and Notification now record their creation facts inside the aggregate.
+
+`pnpm verify` passed all five applications, generation/compatibility, architectural
+checks, DI graphs, Go race/vet, strict Python/TypeScript checks and all 51 fast
+Gherkin scenarios. Regression checks cover write capabilities outside commands,
+transaction coordination in application code, repository identity/lifetime,
+rejection after staging, snapshot isolation and preflight projection reads.
+
+`pnpm test:integration` passed real transaction rollback/replay/concurrency,
+PostgreSQL/RabbitMQ recovery, all 31 live OpenAPI operations, all 12 infrastructure
+scenarios, both browser scenarios and the separate session-revocation fixture.
+All required environment-dependent checks ran, and disposable resources were
+removed. The final run and cleanup are recorded in
+`.local/hidden-integration-final.log`.
+
+Public schemas, stored message definitions and queue identities retain their
+existing contracts. Generated files match their sources. All 182 local links in
+the changed guides resolve; command/query scaffolds were inspected in all three
+languages and `git diff --check` passed. Remote CI and load tests were not run.
+
+Logs: `.local/hidden-verify-final.log` and `.local/hidden-integration-final.log`.
+
 ## Working guidance, 9 October 2026
 
 Agent and contributor guidance now applies decisions 0010–0014 consistently.

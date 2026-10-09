@@ -1,10 +1,12 @@
+import {EventRecordingWriteRepository} from '../../src/adaptors/command-execution.js';
+import type {AggregateTransaction} from '../../src/adaptors/command-execution.js';
 import assert from 'node:assert/strict';
-import type {Change, AggregateCommandPort, Loaded, Metadata, Outcome, Publication, QueryPort} from '../../src/foundation/application.js';
+import type {Change, Loaded, Metadata, Outcome, Publication, QueryPort} from '../../src/foundation/application.js';
 import {Rejection} from '../../src/foundation/domain.js';
 
 // A decision probe calls the real handler. It deliberately does not implement
 // durable receipts, transactions or delivery; the integration lane proves those.
-export class CommandProbe<S> implements AggregateCommandPort<S>, QueryPort<S> {
+export class CommandProbe<S> implements QueryPort<S> {
   loaded: Loaded<S> | undefined;
   before: Loaded<S> | undefined;
   publications: Publication[] = [];
@@ -26,6 +28,20 @@ export class CommandProbe<S> implements AggregateCommandPort<S>, QueryPort<S> {
       this.outcome.rejection = {code: error.code, message: error.message};
     }
     return this.outcome;
+  }
+  transaction<A>(restore: (state: S) => A, snapshot: (aggregate: A) => S, publications: (aggregate: A) => Publication[]): AggregateTransaction<A> {
+    return {execute: async (metadata, work) => {
+      let saved: S | undefined;
+      const loaded = structuredClone(this.loaded);
+      const repository = new EventRecordingWriteRepository<A>({
+        get: async id => { assert.equal(id, metadata.target); return loaded ? {...loaded, state: restore(loaded.state)} : undefined; },
+        save: async aggregate => { saved = snapshot(aggregate); },
+      }, publications);
+      const result = await work(repository).catch(error => this.execute(metadata, () => { throw error; }));
+      if ('aggregateId' in result) return result;
+      return this.execute(metadata, () => ({state: saved ?? loaded?.state as S, changed: saved !== undefined,
+        status: result.status, publications: [...result.publications ?? [], ...repository.publications]}));
+    }};
   }
   async get(_id: string) { return structuredClone(this.loaded); }
   async list() { return this.loaded ? [structuredClone(this.loaded)] : []; }

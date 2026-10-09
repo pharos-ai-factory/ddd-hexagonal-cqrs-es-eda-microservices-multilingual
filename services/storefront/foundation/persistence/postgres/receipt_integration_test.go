@@ -33,7 +33,7 @@ func TestConsumerIdentityCannotChangeTargetsConcurrently(t *testing.T) {
 			<-start
 			m := metadata(target, 0)
 			m.Consumer, m.SourceEventID, m.SourceHash = consumer, event, "same-wire-bytes"
-			_, err := Command[counter](db, "test_counter").Execute(t.Context(), m, func(s a.Loaded[counter]) (a.Mutation[counter], error) {
+			_, err := snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), m, func(s a.Loaded[counter]) (a.Mutation[counter], error) {
 				decisions.Add(1)
 				return increment(s)
 			})
@@ -54,7 +54,7 @@ func TestConsumerIdentityCannotChangeTargetsConcurrently(t *testing.T) {
 	}
 	count := 0
 	for _, target := range targets {
-		state, err := Query[counter](db, "test_counter").Get(t.Context(), target)
+		state, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), target)
 		if err != nil {
 			t.Fatal(err)
 		}

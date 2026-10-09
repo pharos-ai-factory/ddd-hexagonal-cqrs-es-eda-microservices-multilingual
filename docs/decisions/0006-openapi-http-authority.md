@@ -2,7 +2,9 @@
 
 Status: accepted, 6 October 2026. API dispatch is refined by
 [0007](0007-api-broker-requests.md); source layout by
-[0008](0008-published-contract-ownership.md).
+[0008](0008-published-contract-ownership.md). The direct Storefront business
+operations below are subsequently retired by [0016](0016-owner-messaging-boundary.md);
+Storefront retains its operational HTTP contract.
 
 ## Decision
 

@@ -23,19 +23,19 @@ func TestRealtimeIntentIsAtomicAndDispatchIsFenced(t *testing.T) {
 		return nil, errors.New("encoding failed after state write")
 	}
 	m := metadata(id, 0)
-	if _, err := Command[counter](db, "test_counter").Execute(t.Context(), m, increment); err == nil {
+	if _, err := snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), m, increment); err == nil {
 		t.Fatal("missing injected encoding failure")
 	}
-	loaded, err := Query[counter](db, "test_counter").Get(t.Context(), id)
+	loaded, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), id)
 	if err != nil || loaded.Exists {
 		t.Fatal("state escaped realtime rollback")
 	}
 	db.realtime = encoder
-	first, err := Command[counter](db, "test_counter").Execute(t.Context(), m, increment)
+	first, err := snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), m, increment)
 	if err != nil {
 		t.Fatal(err)
 	}
-	repeated, err := Command[counter](db, "test_counter").Execute(t.Context(), m, func(a.Loaded[counter]) (a.Mutation[counter], error) {
+	repeated, err := snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), m, func(a.Loaded[counter]) (a.Mutation[counter], error) {
 		t.Fatal("replayed command ran again")
 		return a.Mutation[counter]{}, nil
 	})

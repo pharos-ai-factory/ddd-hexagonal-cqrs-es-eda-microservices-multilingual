@@ -11,12 +11,12 @@ import (
 type ListDrinksQuery struct{ Page *a.PageRequest }
 
 // ListDrinksQueryHandler reads drinks with stable continuation semantics.
-type ListDrinksQueryHandler struct{ Read ports.DrinkReader }
+type ListDrinksQueryHandler struct{ ReadRepository ports.DrinkReadRepository }
 
 func (h ListDrinksQueryHandler) Execute(ctx context.Context, q ListDrinksQuery) (a.Page[view.DrinkView], error) {
 	if q.Page != nil {
-		return h.Read.Page(ctx, *q.Page)
+		return h.ReadRepository.Page(ctx, *q.Page)
 	}
-	items, err := h.Read.List(ctx)
+	items, err := h.ReadRepository.List(ctx)
 	return a.Page[view.DrinkView]{Items: items}, err
 }

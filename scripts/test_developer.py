@@ -39,7 +39,7 @@ class DeveloperTests(unittest.TestCase):
         self.assertIn('commands/cancel_ticket.py', python)
         self.assertIn('test_cancel_ticket.py', python)
         _, typescript = render('command', 'loyalty', 'CancelReward')
-        self.assertIn("'../../../../foundation/application.js'", typescript['commands/cancel-reward.ts'])
+        self.assertIn("'../../../../foundation/write-repository.js'", typescript['commands/cancel-reward.ts'])
         self.assertIn('commands/cancel-reward.test.ts', typescript)
 
     def test_python_focused_lane_discovers_all_owned_tests(self):

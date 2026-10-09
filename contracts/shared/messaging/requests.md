@@ -86,7 +86,7 @@ Commands retain the supplied command ID, aggregate ID, expected version and
 workflow correlation ID. Transport request IDs change on retries and match replies;
 they never become command deduplication keys. Query adaptors construct named
 application query DTOs; their handlers use application-owned read models and
-named reader ports. Pagination sends an owner identity cursor; the API translates that
+named read repository ports. Pagination sends an owner identity cursor; the API translates that
 into the resource-bound opaque HTTP cursor.
 
 The API waits up to twelve seconds. A timeout or lost connection returns HTTP
@@ -97,8 +97,10 @@ messages after fifteen seconds; expiry cannot cancel a handler already running.
 Replies expire after thirty seconds; late and duplicate replies are acknowledged
 and discarded when no caller remains.
 
-Direct owner HTTP endpoints remain available for development inspection and their
-own OpenAPI conformance. API business dispatch uses RabbitMQ exclusively.
+Owner HTTP exposes health and authenticated diagnostics. Inspect business state
+through the API; commands and queries enter owners through RabbitMQ. Decision
+[0016](../../../docs/decisions/0016-owner-messaging-boundary.md) retires the earlier
+direct owner HTTP inspection endpoints.
 Centrifugo session callbacks, realtime publication and the development notification
 provider retain their dedicated technical transports.
 

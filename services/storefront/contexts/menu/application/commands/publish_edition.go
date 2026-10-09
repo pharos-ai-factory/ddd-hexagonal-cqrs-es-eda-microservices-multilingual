@@ -2,8 +2,7 @@ package commands
 
 import (
 	"context"
-	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
@@ -13,25 +12,23 @@ type PublishEditionCommand struct{}
 
 // PublishEditionCommandHandler applies PublishEdition through one aggregate command transaction.
 type PublishEditionCommandHandler struct {
-	Editions a.AggregateCommandPort[d.EditionState]
+	Repository ports.EditionWriteRepository
 }
 
-func (h PublishEditionCommandHandler) Execute(ctx context.Context, m a.Metadata, _ PublishEditionCommand) (a.Outcome, error) {
-	return h.Editions.Execute(ctx, m, func(s a.Loaded[d.EditionState]) (a.Mutation[d.EditionState], error) {
-		if !s.Exists {
-			return a.Mutation[d.EditionState]{}, core.Reject("not_found", "The edition does not exist")
-		}
-		edition, err := d.RestoreEdition(s.State)
-		if err != nil {
-			return a.Mutation[d.EditionState]{}, err
-		}
-		if err = edition.Publish(); err != nil {
-			return a.Mutation[d.EditionState]{}, err
-		}
-		payload := model.MenuPublished{EditionID: s.State.ID, Currency: s.State.Currency, Offers: []model.Offer{}}
-		for _, offer := range edition.Snapshot().Offers {
-			payload.Offers = append(payload.Offers, model.Offer{Code: offer.Code, DrinkID: offer.DrinkID, DrinkRevision: offer.DrinkRevision, Name: offer.Name, Minor: offer.Minor, Currency: offer.Currency})
-		}
-		return a.Changed(edition.Snapshot(), "published", a.Publication{Name: "menu.edition-published", Visibility: a.Public, Payload: payload}), nil
-	})
+func (h PublishEditionCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ PublishEditionCommand) (a.CommandResult, error) {
+	s, err := h.Repository.Get(ctx, m.Target)
+	if err != nil {
+		return a.CommandResult{}, err
+	}
+	if !s.Exists {
+		return a.CommandResult{}, core.Reject("not_found", "The edition does not exist")
+	}
+	edition := s.State
+	if err = edition.Publish(); err != nil {
+		return a.CommandResult{}, err
+	}
+	if err = h.Repository.Save(ctx, edition); err != nil {
+		return a.CommandResult{}, err
+	}
+	return a.Result("published"), nil
 }

@@ -1,4 +1,8 @@
 """Real receiving commits, immutable command bytes and independent queue recovery."""
+from operations.adaptors.command_execution import CommandExecutor
+from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
+from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.contexts.preparation.adaptors.persistence.ticket_write_repository import PostgresTicketWriteRepository
 from dataclasses import replace
 from threading import Event, Thread
 from time import monotonic, sleep
@@ -8,10 +12,11 @@ from urllib.parse import urlsplit, urlunsplit
 import psycopg
 import pytest
 from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec, command_header
-from operations.contexts.preparation.adaptors.persistence.tickets import restore
+from operations.contexts.preparation.adaptors.persistence.ticket_snapshot import restore_ticket_snapshot
 from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
 from operations.adaptors.delivery import EventSubscription, binary, broker_connection, claim, consume, finish, relay
-from operations.adaptors.postgres import PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries
+from operations.adaptors.postgres import PostgresContextDatabase
+from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand, AcceptOrderCommandHandler
 from operations.foundation.application import Metadata, Outcome
@@ -30,8 +35,8 @@ def test_internal_command_acceptance_and_recovery() -> None:
     metadata = Metadata(id=derived_id(codec.consumer, source), target=target, name=codec.consumer,
         correlation=correlation, causation=source, consumer=codec.consumer, source_id=source, source_hash="a"*64,
         input={"source": "original event receipt"})
-    handler = AcceptOrderCommandHandler(PostgresAggregateCommandStore(database, "ticket", restore))
-    queries = PostgresAggregateQueries(database, "ticket", restore)
+    handler = CommandExecutor(PostgresAggregateTransaction(database, "ticket", restore_ticket_snapshot, PostgresTicketWriteRepository, ticket_publications), AcceptOrderCommandHandler)
+    queries = PostgresSnapshotReadRepository(database, "ticket", restore_ticket_snapshot)
     stop = Event()
     workers: list[Thread] = []
     attempts, completed = 0, 0

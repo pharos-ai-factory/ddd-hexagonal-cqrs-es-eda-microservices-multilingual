@@ -1,10 +1,17 @@
 """A valid UUID in stored state must still identify the locked aggregate."""
+from operations.adaptors.command_execution import CommandExecutor
+from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
+from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.contexts.collection.adaptors.persistence.pickup_snapshot import restore_pickup_snapshot
+from operations.contexts.collection.adaptors.persistence.pickup_write_repository import PostgresPickupWriteRepository
+from tests.adaptors.persistence.snapshot_decisions import SnapshotDecisionFixture
 import os
 import pytest
 from psycopg import Connection, connect
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
-from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresContextDatabase, PostgresAggregateQueries, Row
+from operations.adaptors.postgres import PostgresContextDatabase, Row
+from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 from operations.foundation.application import Change, Metadata
@@ -30,8 +37,7 @@ def test_pickup_identity_must_match_its_storage_key(matching_identity: bool) -> 
             admin.execute("SELECT set_config('cafe.command_target',%s,true)", ("pickup:"+identity,))
             admin.execute("INSERT INTO cafe.aggregates(kind,id,version,state) VALUES('pickup',%s,1,%s)",
                           (identity, Jsonb(state)))
-        commands = PostgresAggregateCommandStore[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
-        handler = CollectOrderCommandHandler(commands)
+        handler = CommandExecutor(PostgresAggregateTransaction(database, "pickup", restore_pickup_snapshot, PostgresPickupWriteRepository, pickup_publications), CollectOrderCommandHandler)
         if not matching_identity:
             with pytest.raises(CorruptState):
                 handler.execute(metadata, {"code": "ABC123"})
@@ -40,7 +46,7 @@ def test_pickup_identity_must_match_its_storage_key(matching_identity: bool) -> 
             assert stored == {"version": 1, "state": state}
             evidence(admin, identity, source, 0)
             with pytest.raises(CorruptState):
-                PostgresAggregateQueries(database, "pickup", lambda value: Pickup.restore(value).snapshot()).get(identity)
+                PostgresSnapshotReadRepository(database, "pickup", lambda value: Pickup.restore(value).snapshot()).get(identity)
             with admin.transaction():
                 admin.execute("SET LOCAL session_replication_role='replica'")
                 admin.execute("UPDATE cafe.aggregates SET state=%s WHERE kind='pickup' AND id=%s",
@@ -69,7 +75,7 @@ def test_proposed_pickup_identity_cannot_change_the_command_target() -> None:
     admin: Connection[Row] = connect(os.environ["DATABASE_ADMIN_URL"], dbname="cafe_collection",
                                      row_factory=dict_row, autocommit=True)
     try:
-        commands = PostgresAggregateCommandStore[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
+        commands = SnapshotDecisionFixture[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
         with pytest.raises(CorruptState):
             commands.execute(metadata, lambda _: Change(state, "ready", True))
         assert admin.execute("SELECT id FROM cafe.aggregates WHERE id=%s", (identity,)).fetchone() is None

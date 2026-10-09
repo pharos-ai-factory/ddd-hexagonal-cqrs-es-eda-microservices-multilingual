@@ -73,12 +73,6 @@ type Mutation[S any] struct {
 	Publications []Publication
 }
 
-// AggregateCommandPort is permanently bound to one context and aggregate kind.
-// It exposes neither a database transaction nor a second repository.
-type AggregateCommandPort[S any] interface {
-	Execute(context.Context, Metadata, func(Loaded[S]) (Mutation[S], error)) (Outcome, error)
-}
-
 type QueryPort[S any] interface {
 	Get(context.Context, string) (Loaded[S], error)
 	List(context.Context) ([]Loaded[S], error)

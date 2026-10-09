@@ -5,7 +5,7 @@ The OpenAPI 3.0.3 documents are the authoritative HTTP wire contracts:
 | Document | Surface |
 | --- | --- |
 | [api.openapi.json](../../services/api/http_api/api.openapi.json) | Go API: all six contexts' HTTP commands and queries, sessions, health, diagnostics and internal Centrifugo proxies |
-| [storefront.openapi.json](../../services/storefront/http_api/storefront.openapi.json) | Direct Go Storefront commands, queries, health and diagnostics |
+| [storefront.openapi.json](../../services/storefront/http_api/storefront.openapi.json) | Go Storefront operational health and diagnostics |
 | [gateway.openapi.json](../../services/realtime_gateway/http_api/gateway.openapi.json) | Internal Go realtime publication and disconnection gateway |
 | [provider.openapi.json](../../services/notification_provider/http_api/provider.openapi.json) | Go development notification provider and its failure controls |
 

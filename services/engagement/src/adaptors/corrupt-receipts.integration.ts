@@ -1,9 +1,11 @@
+import {SnapshotDecisionFixture} from './snapshot-decisions.test-support.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {Pool} from 'pg';
-import {PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries} from './postgres.js';
-import {restoreAccount} from '../contexts/loyalty/adaptors/persistence/accounts.js';
+import {PostgresContextDatabase} from './postgres.js';
+import {PostgresSnapshotReadRepository} from './snapshot-read-repository.js';
+import {restoreAccountSnapshot} from '../contexts/loyalty/adaptors/persistence/account-snapshot.js';
 import type {AccountState} from '../contexts/loyalty/domain/loyalty-account.js';
 import type {Metadata, Outcome} from '../foundation/application.js';
 import {CorruptState, Rejection} from '../foundation/domain.js';
@@ -19,8 +21,8 @@ for (const receipt of ['command', 'consumer'] as const) {
       const db = new PostgresContextDatabase('loyalty', process.env.LOYALTY_DATABASE_URL!);
       try {
         await db.verify();
-        const commands = new PostgresAggregateCommandStore<AccountState>(db, 'account', restoreAccount);
-        const queries = new PostgresAggregateQueries<AccountState>(db, 'account', restoreAccount);
+        const commands = new SnapshotDecisionFixture<AccountState>(db, 'account', restoreAccountSnapshot);
+        const queries = new PostgresSnapshotReadRepository<AccountState>(db, 'account', restoreAccountSnapshot);
         const id = randomUUID();
         const state: AccountState = {id, collections: 0, grantsEarned: 0, stampBalance: 0};
         const m: Metadata = {id: randomUUID(), target: id, name: 'test.open', correlation: randomUUID(),
@@ -75,8 +77,8 @@ test('stored and proposed account identities must match the locked root', async 
   const db = new PostgresContextDatabase('loyalty', process.env.LOYALTY_DATABASE_URL!);
   try {
     await db.verify();
-    const commands = new PostgresAggregateCommandStore<AccountState>(db, 'account', restoreAccount);
-    const queries = new PostgresAggregateQueries<AccountState>(db, 'account', restoreAccount);
+    const commands = new SnapshotDecisionFixture<AccountState>(db, 'account', restoreAccountSnapshot);
+    const queries = new PostgresSnapshotReadRepository<AccountState>(db, 'account', restoreAccountSnapshot);
     const id = randomUUID(), other = randomUUID();
     const state: AccountState = {id, collections: 0, grantsEarned: 0, stampBalance: 0};
     const m: Metadata = {id: randomUUID(), target: id, name: 'test.identity', correlation: randomUUID(),

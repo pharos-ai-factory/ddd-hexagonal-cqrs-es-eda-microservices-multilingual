@@ -1,3 +1,4 @@
+import {bindCommand} from '../../src/adaptors/command-execution.js';
 import assert from 'node:assert/strict';
 import {Given, When, Then} from '@cucumber/cucumber';
 import {CreditCollectionCommandHandler} from '../../src/contexts/loyalty/application/commands/credit-collection.js';
@@ -12,7 +13,7 @@ import type {EngagementWorld as W} from './world.js';
 async function credit(w: W, count: number) {
   for (let i = 0; i < count; i++) {
     const orderId = derivedId('scenario-order', String(++w.credits));
-    await new CreditCollectionCommandHandler(w.accounts, derivedId).execute(metadata(customer), {orderId, customerId: customer});
+    await bindCommand(w.accountsTransaction, repository => new CreditCollectionCommandHandler(repository, derivedId)).execute(metadata(customer), {orderId, customerId: customer});
     w.accounts.succeeded();
     w.earned.push(...w.accounts.publications);
   }
@@ -26,12 +27,12 @@ async function issue(w: W, instant: string) {
   const grant = w.earned[0]?.payload as RewardEarned;
   assert.ok(grant);
   const id = derivedId('reward', grant.grantId);
-  await new IssueRewardCommandHandler(w.rewards, derivedId, () => w.now).execute(metadata(id), grant);
+  await bindCommand(w.rewardsTransaction, repository => new IssueRewardCommandHandler(repository, () => w.now)).execute(metadata(id), grant);
 }
 async function redeem(w: W, instant: string) {
   w.now = new Date(instant);
   assert.ok(w.rewards.loaded);
-  await new RedeemRewardCommandHandler(w.rewards, () => w.now).execute(metadata(w.rewards.loaded.state.id), {orderId: selectedOrder});
+  await bindCommand(w.rewardsTransaction, repository => new RedeemRewardCommandHandler(repository, () => w.now)).execute(metadata(w.rewards.loaded.state.id), {orderId: selectedOrder});
 }
 
 Given('a customer has no credited collections', function(this: W) {

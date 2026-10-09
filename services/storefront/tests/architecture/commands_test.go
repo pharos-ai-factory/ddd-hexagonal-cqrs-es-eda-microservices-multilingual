@@ -45,13 +45,13 @@ func mutationObject(object types.Object) bool {
 		if isAggregate(receiver.Type()) {
 			return method.Name() != "Snapshot" && method.Name() != "Events"
 		}
-		if method.Name() == "Execute" {
+		if method.Name() == "Execute" || method.Name() == "Save" {
 			value := receiver.Type()
 			if pointer, ok := value.(*types.Pointer); ok {
 				value = pointer.Elem()
 			}
 			if named, ok := value.(*types.Named); ok {
-				return named.Obj().Name() == "AggregateCommandPort" || named.Obj().Name() == "AggregateCommandStore"
+				return (named.Obj().Name() == "Transaction" && method.Name() == "Execute") || (strings.HasSuffix(named.Obj().Name(), "WriteRepository") && method.Name() == "Save")
 			}
 		}
 	}
@@ -85,7 +85,7 @@ func executionRole(object types.Object) string {
 		return ""
 	}
 	name := named.Obj().Name()
-	if name == "AggregateCommandPort" || name == "AggregateCommandStore" {
+	if name == "Transaction" {
 		return "store"
 	}
 	if strings.HasSuffix(name, "CommandHandler") {
@@ -131,6 +131,9 @@ func violations(file *ast.File, info *types.Info, application bool) []token.Pos 
 			if name, ok := node.(*ast.Ident); ok {
 				role := executionRole(info.Uses[name])
 				if application && role == "handler" {
+					errors = append(errors, node.Pos())
+				}
+				if role == "store" && application {
 					errors = append(errors, node.Pos())
 				}
 				if role == "store" && allowed {
@@ -233,7 +236,7 @@ func TestProductionCommandBoundaries(t *testing.T) {
 	fileset := token.NewFileSet()
 	imports := importer.ForCompiler(fileset, "gc", func(name string) (io.ReadCloser, error) { return os.Open(exports[name]) })
 	for _, p := range packages {
-		if strings.Contains(p.ImportPath, "/domain") || strings.Contains(p.ImportPath, "/generated") || strings.Contains(p.ImportPath, "/foundation/") {
+		if strings.Contains(p.ImportPath, "/domain") || strings.Contains(p.ImportPath, "/generated") || strings.Contains(p.ImportPath, "/foundation/") || strings.Contains(p.ImportPath, "/tests/") {
 			continue
 		}
 		var files []*ast.File
@@ -348,10 +351,10 @@ func TestUseCaseBoundaryNegativeFixtures(t *testing.T) {
 		t.Run(body, func(t *testing.T) {
 			fset := token.NewFileSet()
 			source := `package application
-    type AggregateCommandPort interface { Execute() }
+    type Transaction interface { Execute() }
     type NextCommandHandler struct{}
     func (NextCommandHandler) Execute() {}
-    type ChangeCommandHandler struct { Store AggregateCommandPort; Next NextCommandHandler }
+    type ChangeCommandHandler struct { Store Transaction; Next NextCommandHandler }
     func (h ChangeCommandHandler) Execute() { ` + body + ` }`
 			file, err := parser.ParseFile(fset, "fixture.go", source, 0)
 			if err != nil {
@@ -366,5 +369,27 @@ func TestUseCaseBoundaryNegativeFixtures(t *testing.T) {
 				t.Fatal("use-case boundary bypass accepted")
 			}
 		})
+	}
+}
+
+func TestWriteRepositoryCapabilities(t *testing.T) {
+	for _, body := range []string{"repo.Save()", "save:=repo.Save;save()"} {
+		fset := token.NewFileSet()
+		source := `package application
+  type WriteRepository interface{Save()}
+  type QueryHandler struct{}
+  func(QueryHandler) Execute(repo WriteRepository){` + body + `}`
+		file, err := parser.ParseFile(fset, "fixture.go", source, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		info := &types.Info{Uses: map[*ast.Ident]types.Object{}}
+		config := types.Config{}
+		if _, err = config.Check("fixture/application", fset, []*ast.File{file}, info); err != nil {
+			t.Fatal(err)
+		}
+		if len(violations(file, info, true)) == 0 {
+			t.Fatal("query acquired repository save capability")
+		}
 	}
 }

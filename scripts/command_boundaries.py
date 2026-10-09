@@ -21,7 +21,11 @@ def violations(source, aggregates, path='contexts/example/application.py'):
     tree = ast.parse(source)
     parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     symbols = {}
-    ports = {'AggregateCommandPort', 'PostgresAggregateCommandStore'}
+    ports = {'AggregateTransaction', 'PostgresAggregateTransaction'}
+    repositories = {'WriteRepository': '@repository'}
+    for name in aggregates:
+        resource = {'PreparationTicket': 'Ticket', 'LoyaltyAccount': 'Account'}.get(name, name)
+        repositories[resource+'WriteRepository'] = '@repository:'+name
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef) and node.name.endswith('CommandHandler'):
             symbols[node.name] = '@handler'
@@ -30,8 +34,10 @@ def violations(source, aggregates, path='contexts/example/application.py'):
             for item in node.names:
                 if item.name in aggregates and '.domain' in (node.module or ''):
                     symbols[item.asname or item.name] = item.name
-                if item.name in {'AggregateCommandPort', 'PostgresAggregateCommandStore'}:
+                if item.name in {'AggregateTransaction', 'PostgresAggregateTransaction'}:
                     ports.add(item.asname or item.name)
+                if item.name in repositories:
+                    repositories[item.asname or item.name] = repositories[item.name]
                 if item.name.endswith('CommandHandler'):
                     symbols[item.asname or item.name] = '@handler'
 
@@ -48,13 +54,26 @@ def violations(source, aggregates, path='contexts/example/application.py'):
                         symbols[(item.asname or item.name)+'.'+name] = name
 
     def resolve(node):
+        if isinstance(node, ast.IfExp):
+            return resolve(node.body) or resolve(node.orelse)
         if isinstance(node, ast.Subscript):
-            return resolve(node.value)
+            identity = resolve(node.value)
+            if identity == '@repository':
+                return '@repository:'+str(resolve(node.slice))
+            if identity and identity.startswith('@loaded:') and isinstance(node.slice, ast.Constant) and node.slice.value == 'state':
+                return identity.removeprefix('@loaded:')
+            return identity
+        if isinstance(node, ast.Name) and node.id in repositories:
+            return repositories[node.id]
         if isinstance(node, ast.Name) and node.id in ports:
-            return '@command-store'
+            return '@transaction'
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             return symbols.get(node.value)
         if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute) and node.func.attr == 'get':
+                identity = resolve(node.func.value)
+                if identity and identity.startswith('@repository:'):
+                    return '@loaded:'+identity.removeprefix('@repository:')
             return resolve(node.func)
         if isinstance(node, ast.Attribute) and node.attr in READ_METHODS | {'open'}:
             return resolve(node.value)
@@ -103,7 +122,9 @@ def violations(source, aggregates, path='contexts/example/application.py'):
             identity = resolve(node.value)
             if identity == '@handler' and '/application' in '/'+path:
                 errors.append(f'{path}:{node.lineno}: direct command-handler capability in application')
-            if identity == '@command-store' and node.attr == 'execute' and allowed(node):
+            if identity == '@transaction' and node.attr == 'execute' and '/application' in '/'+path:
+                errors.append(f'{path}:{node.lineno}: transaction coordination belongs in command infrastructure')
+            if identity == '@transaction' and node.attr == 'execute' and allowed(node):
                 parent, repeated = parents.get(node), False
                 if not isinstance(parent, ast.Call) or parent.func is not node:
                     repeated = True
@@ -117,16 +138,16 @@ def violations(source, aggregates, path='contexts/example/application.py'):
                         repeated = True
                     parent = parents.get(parent)
                 if repeated:
-                    errors.append(f'{path}:{node.lineno}: aggregate store execution must be one direct, non-repeated call')
+                    errors.append(f'{path}:{node.lineno}: unit of work execution must be one direct, non-repeated call')
             if identity in aggregates and node.attr.startswith('_'):
                 errors.append(f'{path}:{node.lineno}: aggregate internals accessed outside its domain')
                 continue
-            mutation = (identity in aggregates and node.attr in aggregates[identity]) or (identity == '@command-store' and node.attr == 'execute')
+            mutation = (bool(identity and identity.startswith('@repository')) and node.attr == 'save' and '/application' in '/'+path) or (identity in aggregates and node.attr in aggregates[identity]) or (identity == '@transaction' and node.attr == 'execute' and '/contexts/' in '/'+path)
         if isinstance(node, ast.Call):
             mutation |= symbols.get(ast.unparse(node.func)) in aggregates
         # Restrict the write-port capability to command handler classes. This also
         # rejects indirect calls through a stored execute alias in event handlers.
-        if isinstance(node, ast.Name) and node.id in ports and '/application' in '/'+path:
+        if isinstance(node, ast.Name) and node.id in ports and '/application' in '/'+path and '/ports/' not in path:
             parent = parents.get(node)
             while parent and not isinstance(parent, ast.ClassDef):
                 parent = parents.get(parent)
@@ -138,7 +159,7 @@ def violations(source, aggregates, path='contexts/example/application.py'):
             errors.append(f'{path}:{node.lineno}: aggregate mutation outside CommandHandler.execute')
     for method, count in stores.items():
         if count > 1:
-            errors.append(f'{path}:{method.lineno}: a command handler may invoke the aggregate store once')
+            errors.append(f'{path}:{method.lineno}: a command handler may invoke the unit of work once')
     return errors
 
 

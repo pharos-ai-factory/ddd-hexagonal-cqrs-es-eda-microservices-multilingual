@@ -12,6 +12,7 @@ export type RewardState = Readonly<{
 }>;
 /** Owns issuance, expiry and redemption of one earned reward. */
 export class Reward {
+  #events: {type: 'RewardIssued'; reward: RewardState}[] = [];
   #state: RewardState;
   constructor(state: RewardState) {
     try {
@@ -30,8 +31,10 @@ export class Reward {
     if (!grant.benefit || !Number.isInteger(grant.validDays) || grant.validDays < 1 || grant.validDays > 30) {
       throw new Rejection('invalid_grant', 'The earned grant has invalid terms');
     }
-    return new Reward({id, grantId: grant.id, customerId: grant.accountId, benefit: grant.benefit,
+    const reward = new Reward({id, grantId: grant.id, customerId: grant.accountId, benefit: grant.benefit,
       status: 'issued', expiresAt: new Date(now.getTime() + grant.validDays * 86400000).toISOString()});
+    reward.#events.push({type: 'RewardIssued', reward: reward.snapshot()});
+    return reward;
   }
   redeem(orderId: string, now: Date): void {
     identifier(orderId);
@@ -44,5 +47,6 @@ export class Reward {
     if (now.getTime() < Date.parse(this.#state.expiresAt)) throw new Rejection('reward_not_expired', 'Validity has not ended');
     this.#state = {...this.#state, status: 'expired'};
   }
+  events(): readonly {type: 'RewardIssued'; reward: RewardState}[] { return structuredClone(this.#events); }
   snapshot(): RewardState { return {...this.#state}; }
 }

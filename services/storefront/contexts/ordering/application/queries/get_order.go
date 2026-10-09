@@ -11,8 +11,8 @@ import (
 type GetOrderQuery struct{ ID string }
 
 // GetOrderQueryHandler reads one order through its application capability.
-type GetOrderQueryHandler struct{ Read ports.OrderReader }
+type GetOrderQueryHandler struct{ ReadRepository ports.OrderReadRepository }
 
 func (h GetOrderQueryHandler) Execute(ctx context.Context, q GetOrderQuery) (a.Loaded[view.OrderView], error) {
-	return h.Read.Get(ctx, q.ID)
+	return h.ReadRepository.Get(ctx, q.ID)
 }

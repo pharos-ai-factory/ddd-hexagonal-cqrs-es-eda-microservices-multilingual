@@ -2,6 +2,9 @@
 
 Status: accepted, 9 October 2026. Extends decisions 0012 and 0013.
 
+The persistence names below are refined by
+[decision 0015](0015-explicit-persistence-role-names.md).
+
 ## Decision
 
 Keep bounded contexts within their owning service. Within a context, name files

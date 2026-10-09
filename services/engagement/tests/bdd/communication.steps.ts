@@ -1,3 +1,5 @@
+import {NotificationDeliveryCommandExecutor} from '../../src/contexts/communication/adaptors/persistence/notification-delivery-command-executor.js';
+import {bindCommand} from '../../src/adaptors/command-execution.js';
 import assert from 'node:assert/strict';
 import {Given, When, Then} from '@cucumber/cucumber';
 import {PickupOpenedIntegrationEventHandler} from '../../src/contexts/communication/application/event-handlers/pickup-opened.js';
@@ -13,7 +15,7 @@ function handoffProbe(w: W) {
   return {enqueue: async (m: Metadata, command: RequestNotificationCommand) => {
     commands.push({m, command}); return {aggregateId: m.target, version: 0, status: 'queued'};
   }, drain: async () => {
-    for (const {m, command} of commands) await new RequestNotificationCommandHandler(w.notices).execute(m, command);
+    for (const {m, command} of commands) await bindCommand(w.noticesTransaction, repository => new RequestNotificationCommandHandler(repository)).execute(m, command);
   }};
 }
 async function request(w: W, code = 'ABC123') {
@@ -29,7 +31,7 @@ async function deliver(w: W) {
   w.commandsBeforeDelivery = w.notices.calls;
   w.deliveryError = undefined;
   try {
-    await new DeliverNotificationCommandHandler(w.notices, w.notices, w.provider).execute(metadata(notification), {notificationId: notification});
+    await new NotificationDeliveryCommandExecutor(w.noticesTransaction, w.notices, w.provider).execute(metadata(notification), {notificationId: notification});
   } catch (error) { w.deliveryError = error; }
 }
 When('Communication handles an opened pickup with code {string}', function(this: W, code: string) { return request(this, code); });

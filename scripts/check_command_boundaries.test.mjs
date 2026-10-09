@@ -19,9 +19,11 @@ const base = productionProgram();
 function check(body, location = 'application') {
   const fixture = path.resolve('services/engagement/src/contexts/loyalty/'+location+'/boundary-fixture.ts');
   let source = `import {LoyaltyAccount as Account} from '../domain/loyalty-account.js';
-import type {AggregateCommandPort, Metadata} from '../../../foundation/application.js';
+import type {Metadata} from '../../../foundation/application.js';
+import type {AggregateTransaction} from '../../../adaptors/command-execution.js';
+import type {WriteRepository} from '../../../foundation/write-repository.js';
 import type {AccountState} from '../domain/loyalty-account.js';\n${body}`;
-  if (location !== 'application') source = source.replaceAll("'../domain/", "'../../domain/").replaceAll("'../../../foundation/", "'../../../../foundation/");
+  if (location !== 'application') source = source.replaceAll("'../domain/", "'../../domain/").replaceAll("'../../../foundation/", "'../../../../foundation/").replaceAll("'../../../adaptors/", "'../../../../adaptors/");
   const host = ts.createCompilerHost(base.getCompilerOptions()), original = host.getSourceFile.bind(host);
   host.getSourceFile = (name, language, onError, create) => name === fixture
     ? ts.createSourceFile(name, source, language, true) : original(name, language, onError, create);
@@ -35,7 +37,7 @@ test('reject event-handler mutation, including renamed imports and captured meth
     assert.ok(check(`class CollectedIntegrationEventHandler { handle(account: Account) { ${expression}; } }`).length);
 });
 test('reject direct aggregate-store access and mutation hidden in an extra handler method', () => {
-  assert.ok(check('class Reaction { constructor(private store: AggregateCommandPort<AccountState>) {} handle() { const execute = this.store.execute; } }').length);
+  assert.ok(check('class Reaction { constructor(private store: AggregateTransaction<AccountState>) {} handle() { const execute = this.store.execute; } }').length);
   assert.ok(check('class CreditCommandHandler { handle(account: Account) { account.credit("order", "grant"); } }').length);
 });
 test('allow aggregate behaviour only inside command execution, and read-only access elsewhere', () => {
@@ -48,11 +50,11 @@ test('reject synchronous handler chaining and repeated store execution', () => {
      class EventHandler { constructor(private next: CreditCommandHandler) {} handle() { this.next.execute(); } }`,
     `class CreditCommandHandler { execute() {} }
      class SecondCommandHandler { execute(next: CreditCommandHandler) { const action = next.execute; action(); } }`,
-    `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>, m: Metadata) {
+    `class CreditCommandHandler { execute(store: AggregateTransaction<AccountState>, m: Metadata) {
       store.execute(m, () => {throw Error()}); store.execute(m, () => {throw Error()}); } }`,
-    `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>, m: Metadata) {
+    `class CreditCommandHandler { execute(store: AggregateTransaction<AccountState>, m: Metadata) {
       for (const id of [1,2]) store.execute(m, () => {throw Error()}); } }`,
-    `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>) { const run = store.execute; } }`,
+    `class CreditCommandHandler { execute(store: AggregateTransaction<AccountState>) { const run = store.execute; } }`,
   ]) assert.ok(check(body).length, body);
 });
 
@@ -71,4 +73,13 @@ test('persistence can restore aggregate snapshots but cannot change aggregate be
   assert.deepEqual(check(restore, 'adaptors/persistence'), []);
   assert.ok(check('const write = (account: Account) => account.credit("order", "grant");', 'adaptors/persistence').length);
   assert.ok(check(restore).length);
+});
+
+test('write repositories cannot grant query or event handlers mutation authority', () => {
+  for (const body of [
+    'await repository.save(account);',
+    'const save = repository.save; await save(account);',
+    'const loaded = await repository.get("id"); loaded?.state.credit("order", "grant");',
+  ]) assert.ok(check(`class AccountQueryHandler { async execute(repository: WriteRepository<Account>, account: Account) { ${body} } }`).length);
+  assert.deepEqual(check('class AccountQueryHandler { async execute(repository: WriteRepository<Account>) { return (await repository.get("id"))?.state.snapshot(); } }'), []);
 });

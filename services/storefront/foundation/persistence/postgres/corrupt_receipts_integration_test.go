@@ -36,7 +36,7 @@ func TestCorruptReceiptsRequireRepairBeforeRetry(t *testing.T) {
 				if receipt == "command" {
 					initial.Consumer = ""
 				}
-				store := Command[counter](db, "test_counter")
+				store := snapshotDecisions[counter](db, "test_counter")
 				first, err := store.Execute(t.Context(), initial, increment)
 				if err != nil || first.Rejection != nil {
 					t.Fatalf("fixture creation: %+v %v", first, err)
@@ -79,7 +79,7 @@ func TestCorruptReceiptsRequireRepairBeforeRetry(t *testing.T) {
 				if called {
 					t.Error("corrupt receipt caused the decision to run")
 				}
-				loaded, err := Query[counter](db, "test_counter").Get(t.Context(), id)
+				loaded, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), id)
 				if err != nil || loaded.Version != 1 || loaded.State.Value != 1 {
 					t.Errorf("receipt corruption changed the root: %+v %v", loaded, err)
 				}

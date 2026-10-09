@@ -23,7 +23,7 @@ Use a nearby implementation as the starting point:
 | Command and handler | [PlaceOrder](../services/storefront/contexts/ordering/application/commands/place_order.go) | [AcceptOrder](../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py) | [CreditCollection](../services/engagement/src/contexts/loyalty/application/commands/credit-collection.ts) |
 | Query and handler | [GetOrder](../services/storefront/contexts/ordering/application/queries/get_order.go) | [GetTicket](../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py) | [GetAccount](../services/engagement/src/contexts/loyalty/application/queries/get-account.ts) |
 | Event/projection reaction | [MenuPublished projection](../services/storefront/contexts/ordering/application/projections/menu_published.go) | [OrderPlaced reaction](../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py) | [RewardEarned reaction](../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts) |
-| Read persistence mapping | [Order reader](../services/storefront/contexts/ordering/adaptors/postgres/order_reader.go) | [Ticket reader](../services/operations/src/operations/contexts/preparation/adaptors/persistence/tickets.py) | [Account reader](../services/engagement/src/contexts/loyalty/adaptors/persistence/accounts.ts) |
+| Read persistence mapping | [Order read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go) | [Ticket read repository](../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) | [Account read repository](../services/engagement/src/contexts/loyalty/adaptors/persistence/account-read-repository.ts) |
 | DI composition | [Ordering Fx module](../services/storefront/apps/storefront/ordering.go) | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py) | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts) |
 
 ## The edit/test loop
@@ -65,12 +65,12 @@ keep the 450-line responsibility limit.
 ## Choose the owning aggregate
 
 Name the business invariant, the context and the aggregate before adding code.
-A command changes one root through one store call. Its domain method owns the
+A command loads and saves one root through its named write repository. Its domain method owns the
 rule. A query reads through a query port. An event handler translates a fact into
 a durable owner command; the receiving command handler changes the root later.
-Application handlers never call another command handler. Keep the one store call
-directly inside `Execute`/`execute`; the decision callback restores and mutates
-the aggregate. A projection reaction updates read data without changing a root.
+Application handlers never call another command handler. Register each handler
+through the central command executor; it supplies the repository and owns
+transaction and delivery bookkeeping. A projection reaction updates read data without changing a root.
 
 Every context puts commands in `application/commands/`, with one command DTO and
 its matching handler in the same file. Name the file after the business action:
@@ -78,7 +78,7 @@ Go and Python use `create_order.go` / `accept_order.py`; TypeScript uses
 `credit-collection.ts`. Import the concrete command package or module directly.
 Shared errors and event DTOs have their own files. Event reactions and query
 handlers remain separate from command execution. Queries use `application/queries/`,
-with one named query DTO and matching handler per file. Their named reader ports
+with one named query DTO and matching handler per file. Their named read repository ports
 and read models live in `application/ports/` and `readmodels/` (Go), `read_models/`
 (Python) or `read-models/` (TypeScript). Each event reaction has its own module in
 `event_handlers/` (Python), `event-handlers/` (TypeScript) or `projections/` (Go's
@@ -94,7 +94,7 @@ pnpm scaffold subscription loyalty CreditPurchase
 
 The result is under `.local/scaffolds/<context>/<name>/`. An existing output is
 never overwritten. Review the inputs, replace generic snapshot types with the
-owner's type. Query starters include an application view and reader port; reuse
+owner's type. Query starters include an application view and read repository port; reuse
 an existing one when suitable. Place the code in the existing application layout.
 The generated test deliberately fails until you specify observable behaviour. Registration
 snippets identify the composition change; subscription starters additionally
@@ -105,11 +105,12 @@ field numbers or silently register unfinished policy.
 
 1. Add the named command DTO and handler together in
    `services/storefront/contexts/ordering/application/commands/cancel_order.go`.
-   Use `package commands`; follow `change_quantity.go` for the transaction shape.
-2. Implement and test the root behaviour in `domain/order.go`. Restore the root
-   inside the store decision, call its method, return its snapshot and publications.
+   Use `package commands`; follow `change_quantity.go` for the load, mutate and save flow.
+2. Implement and test the root behaviour in `domain/order.go`. Use `OrderWriteRepository` to load the root, call its method and save it.
+   The aggregate records facts; the owner publication mapper selects outgoing messages.
 3. Register the handler in `apps/storefront/ordering.go`, receiving
-   `AggregateCommandPort[domain.OrderState]` through the Fx provider.
+   the invocation-scoped `OrderWriteRepository` through `command.Bind`.
+   Register the returned executor with the owner RabbitMQ adaptor.
 4. For an API operation, update Ordering's OpenAPI and Protobuf request sources,
    owner messaging translation and API mapping. Run contract generation.
 5. Add a Gherkin example and native binding. Run the focused Ordering lane.
@@ -123,9 +124,9 @@ handler is a starting point for that explicit implementation.
 
 1. Add a TypedDict command and named handler together in Preparation's
    `application/commands/<action>.py` module.
-   Use `AggregateCommandPort[TicketSnapshot]`; make one direct `execute` call.
+   Inject `TicketWriteRepository`; load the root, invoke its behaviour and save it.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
-3. Bind the handler as a provider in `apps/composition/preparation.py`.
+3. Bind its factory through `CommandExecutor` in `apps/composition/preparation.py`.
 4. For an event reaction, use the context's typed definition in
    `adaptors/messaging/incoming_event.py`.
    Map its payload in the application event handler and enqueue the owner command.
@@ -145,7 +146,8 @@ It receives no Pika connection or SQL transaction.
    constructor receives application ports.
 2. Implement the aggregate rule and its domain test.
 3. Extend `LoyaltyDependencies` and the explicit Awilix factory in
-   `apps/composition/loyalty.ts`. Select concrete adaptors in composition; keep
+   `apps/composition/loyalty.ts`. Wrap its factory with `bindCommand`.
+   Select concrete adaptors in composition; keep
    decoding and restoration in the owning adaptor modules.
 4. For a reaction, add the typed event name/payload association in `EventPayloads`,
    map it in the event handler, and add its private command codec/manifest/fixture.
@@ -199,14 +201,22 @@ lane. See [decision 0011](decisions/0011-durable-commands-before-aggregate-mutat
 ## Add or change a query
 
 1. Define its input and handler in the owning `application/queries/` file.
-2. Select the required fields in an application read model and name the reader
+2. Select the required fields in an application read model and name the read repository
    capability. Keep aggregate snapshots inside command/persistence code.
-3. Implement the reader under the context's persistence adaptor, validating stored
+3. Implement the read repository under the context's persistence adaptor, validating stored
    state before mapping it. Preserve revisions and pagination continuations.
 4. Map transport arguments to the query in the context query adaptor. Bind the
-   reader and named handlers in composition, then register the transport operation.
+   read repository and named handlers in composition, then register the transport operation.
 5. Update the owner OpenAPI/Protobuf boundary if its public shape changes and run
    generation. Test missing resources, storage failures and relevant read behaviour.
+
+Name the port `<Resource>ReadRepository` and its concrete Python/TypeScript class
+`Postgres<Resource>ReadRepository`. Go uses `postgres.New<Resource>ReadRepository`.
+Use `_read_repository` filenames in Go/Python and `-read-repository` in TypeScript.
+Keep shared snapshot restoration in its own owner persistence module. Use a named `WriteRepository` for authoritative aggregate reads and saves.
+The central command executor supplies a fresh repository and owns the local
+transaction, receipt/outcome records and outgoing intent. [Decision 0015](decisions/0015-explicit-persistence-role-names.md)
+records the distinction and examples.
 
 Python focused tests recursively discover `tests/contexts/<context>/` and run the
 context's Gherkin binding. Go and TypeScript discover tests beside their subjects.
@@ -217,9 +227,10 @@ Cross-context transport conformance and infrastructure checks remain service-wid
 1. Edit the owning OpenAPI fragment under `contracts/<context>/http_api/`.
    For an API-to-owner operation, also update the owner's published Protobuf
    request/reply sources. These describe separate boundaries.
-2. Update the API's explicit translation and owner HTTP/messaging adaptors.
+2. Update the API's explicit translation and owner messaging adaptors.
    Keep generated messages outside application/domain packages. The API sends
-   business commands and queries through RabbitMQ.
+   business commands and queries through RabbitMQ. Owner services expose only
+   health and diagnostics over HTTP; inspect business state through the API.
 3. Run `pnpm generate:contracts` for a combined change, or `pnpm generate:http`
    for OpenAPI alone. Review generated frontend types, Go bundles and wire mappings.
 4. Update the feature and relevant conformance examples. Feature requests use

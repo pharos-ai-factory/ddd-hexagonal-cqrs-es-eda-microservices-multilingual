@@ -1,18 +1,20 @@
-import {ApplicationError, type AggregateCommandPort, type Metadata} from '../../../../foundation/application.js';
-import {Reward, type RewardState} from '../../domain/reward.js';
+import type {CommandContext} from '../../../../foundation/write-repository.js';
+import type {RewardWriteRepository} from '../ports/reward-write-repository.js';
+import {ApplicationError} from '../../../../foundation/application.js';
+import {Reward} from '../../domain/reward.js';
 
 export type RedeemRewardCommand = {orderId: string};
 
 /** Applies the reward redemption rule using the injected clock and one aggregate transaction. */
 export class RedeemRewardCommandHandler {
-  constructor(private rewards: AggregateCommandPort<RewardState>, private clock: () => Date) {}
-  execute(m: Metadata, command: RedeemRewardCommand) {
-    return this.rewards.execute(m, loaded => {
-      if (!loaded) throw new RewardNotFoundApplicationError();
-      const reward = new Reward(loaded.state);
-      reward.redeem(command.orderId, this.clock());
-      return {state: reward.snapshot(), status: 'redeemed', changed: true};
-    });
+  constructor(private repository: RewardWriteRepository, private clock: () => Date) {}
+  async execute(context: CommandContext, command: RedeemRewardCommand) {
+    const loaded = await this.repository.get(context.target);
+    if (!loaded) throw new RewardNotFoundApplicationError();
+    const reward = loaded.state;
+    reward.redeem(command.orderId, this.clock());
+    await this.repository.save(reward);
+    return {status: 'redeemed'};
   }
 }
 

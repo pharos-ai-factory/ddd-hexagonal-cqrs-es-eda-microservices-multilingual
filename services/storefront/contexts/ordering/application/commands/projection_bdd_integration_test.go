@@ -6,6 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	orderpg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/postgres"
+	orderingports "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	"os"
 	"reflect"
 	"testing"
@@ -34,7 +37,9 @@ type projectionWorld struct {
 
 func (w *projectionWorld) request() error {
 	w.m.Input = w.input
-	result, err := (orderingcommands.CreateOrderCommandHandler{Orders: pg.Command[d.OrderState](w.db, "order"), Menus: w.menus}).Execute(context.Background(), w.m, w.input)
+	result, err := (execution.Bind(orderpg.NewOrderTransaction(w.db), func(repository orderingports.OrderWriteRepository) orderingcommands.CreateOrderCommandHandler {
+		return orderingcommands.CreateOrderCommandHandler{Repository: repository, Menus: w.menus}
+	})).Execute(context.Background(), w.m, w.input)
 	w.last = result
 	return err
 }
@@ -44,7 +49,7 @@ func (w *projectionWorld) arrive() error {
 		Offers: []model.Offer{{Code: "C1", DrinkID: pg.NewID(), DrinkRevision: 1, Name: "Coffee", Minor: 300, Currency: "EUR"}}})
 }
 func (w *projectionWorld) noOrder() error {
-	state, err := pg.Query[d.OrderState](w.db, "order").Get(context.Background(), w.m.AggregateID)
+	state, err := pg.NewSnapshotReadRepository[d.OrderState](w.db, "order").Get(context.Background(), w.m.AggregateID)
 	if err != nil {
 		return err
 	}
@@ -121,7 +126,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 				}
 				w.first = w.last
 				var err error
-				w.original, err = pg.Query[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
+				w.original, err = pg.NewSnapshotReadRepository[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
 				return err
 			})
 			sc.Step(`^the decision is recorded as "([^"]*)" without creating an order$`, func(code string) error {
@@ -154,7 +159,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 				if w.last.Rejection != nil || w.last.Version != 1 {
 					return fmt.Errorf("new attempt failed: %+v", w.last)
 				}
-				order, err := pg.Query[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
+				order, err := pg.NewSnapshotReadRepository[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
 				if err != nil {
 					return err
 				}
@@ -172,7 +177,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 			})
 			sc.Step(`^the new input is rejected as "([^"]*)"$`, w.rejected)
 			sc.Step(`^the original order and its publication remain unchanged$`, func() error {
-				order, err := pg.Query[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
+				order, err := pg.NewSnapshotReadRepository[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
 				if err != nil {
 					return err
 				}

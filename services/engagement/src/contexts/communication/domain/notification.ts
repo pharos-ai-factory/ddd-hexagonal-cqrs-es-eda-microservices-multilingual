@@ -12,6 +12,7 @@ function validateContent(id: string, recipient: string, subject: string, body: s
 }
 /** Owns requested content and the recorded result of idempotent provider delivery. */
 export class Notification {
+  #events: {type: 'NotificationRequested'; notificationId: string}[] = [];
   #state: NotificationState;
   constructor(state: NotificationState) {
     try {
@@ -28,7 +29,9 @@ export class Notification {
   }
   static request(id: string, recipient: string, subject: string, body: string) {
     validateContent(id, recipient, subject, body);
-    return new Notification({id, recipient, subject, body, status: 'requested'});
+    const notification = new Notification({id, recipient, subject, body, status: 'requested'});
+    notification.#events.push({type: 'NotificationRequested', notificationId: id});
+    return notification;
   }
   recordDelivery(receipt: string): boolean {
     if (this.#state.status === 'sent') return false;
@@ -36,5 +39,6 @@ export class Notification {
     this.#state = {...this.#state, status: 'sent', providerReceipt: receipt};
     return true;
   }
+  events(): readonly {type: 'NotificationRequested'; notificationId: string}[] { return structuredClone(this.#events); }
   snapshot(): NotificationState { return {...this.#state}; }
 }

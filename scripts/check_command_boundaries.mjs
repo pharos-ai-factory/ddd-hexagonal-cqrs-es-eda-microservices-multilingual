@@ -1,4 +1,4 @@
-/** Compiler-resolved checks for aggregate behaviour and command-store access. */
+/** Compiler-resolved checks for aggregate behaviour and unit-of-work access. */
 import ts from 'typescript';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -64,8 +64,12 @@ export function violations(program, selected) {
         const core = file.fileName.replaceAll('\\', '/').includes('/application/');
         if (core && declarations.some(d => ts.isClassDeclaration(d.parent) && d.parent.name?.text.endsWith('CommandHandler')))
           report(node, 'application handlers must use durable commands; direct command-handler capabilities are forbidden');
+        const repositorySave = name === 'save' && declarations.some(d =>
+          ['WriteRepository', 'MappedWriteRepository', 'PostgresSnapshotWriteRepository'].includes(d.parent.name?.text));
+        if (repositorySave && core && !commandExecution(node)) report(node, 'aggregate save outside CommandHandler.execute');
         const store = declarations.some(d => (ts.isInterfaceDeclaration(d.parent) || ts.isClassDeclaration(d.parent)) &&
-          ['AggregateCommandPort', 'PostgresAggregateCommandStore'].includes(d.parent.name?.text) && name === 'execute');
+          ['AggregateTransaction', 'PostgresAggregateTransaction'].includes(d.parent.name?.text) && name === 'execute');
+        if (store && core) report(node, 'transaction coordination belongs in command infrastructure');
         if (store && commandExecution(node)) {
           const method = enclosing(node, ts.isMethodDeclaration);
           stores.set(method, (stores.get(method) ?? 0) + 1);
@@ -73,13 +77,13 @@ export function violations(program, selected) {
           for (let p = node.parent; p && p !== method; p = p.parent)
             if (ts.isIterationStatement(p, false) || ts.isFunctionLike(p)) repeated = true;
           if (!ts.isCallExpression(node.parent) || node.parent.expression !== node || repeated)
-            report(node, 'aggregate store execution must be one direct, non-repeated call');
+            report(node, 'unit of work execution must be one direct, non-repeated call');
         }
         forbidden ||= declarations.some(declaration => {
           const owner = declaration.parent;
           return (aggregateClass(owner) && !readMethods.has(name)) ||
             ((ts.isInterfaceDeclaration(owner) || ts.isClassDeclaration(owner)) &&
-              ['AggregateCommandPort', 'PostgresAggregateCommandStore'].includes(owner.name?.text) && name === 'execute');
+              ['AggregateTransaction', 'PostgresAggregateTransaction'].includes(owner.name?.text) && name === 'execute' && core);
         });
       }
       if (forbidden && !commandExecution(node)) {
@@ -89,7 +93,7 @@ export function violations(program, selected) {
       ts.forEachChild(node, visit);
     }
     visit(file);
-    for (const [method, count] of stores) if (count > 1) report(method, 'a command handler may invoke the aggregate store once');
+    for (const [method, count] of stores) if (count > 1) report(method, 'a command handler may invoke the unit of work once');
   }
   return errors;
 }
@@ -101,7 +105,7 @@ export function productionProgram() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const program = productionProgram();
   const selected = name => name.startsWith(path.join(root, 'services/engagement/src')) &&
-    !/\/(generated|domain)\/|\.(test|integration)\.ts$/.test(name);
+    !/\/(generated|domain)\/|\.(test|integration|test-support)\.ts$/.test(name);
   const errors = violations(program, selected);
   for (const file of program.getSourceFiles())
     if (selected(file.fileName) && file.fileName.includes('/application/')) errors.push(...commandLayout(file));

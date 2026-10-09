@@ -7,13 +7,11 @@ import os
 from threading import Event, Thread
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from operations.contexts.preparation.adaptors.http import inputs as preparation_inputs
-from operations.contexts.collection.adaptors.http import inputs as collection_inputs
 from operations.contexts.preparation.adaptors.messaging import accept_order_codec
 from operations.contexts.collection.adaptors.messaging import open_pickup_codec
 from operations.adaptors.diagnostics import diagnostics
 from operations.adaptors.delivery import realtime_relay, relay
-from operations.adaptors.http import authenticate, mount_command, mount_paged_queries
+from operations.adaptors.http import authenticate
 from operations.adaptors.requests import RabbitMQRequestRegistry
 from operations.adaptors.replies import relay as reply_relay
 from operations.contexts.preparation.adaptors.messaging import requests as preparation_wire
@@ -91,12 +89,4 @@ def configure_app(resources: ExitStack) -> FastAPI:
     authenticate(app)
     app.get("/healthz")(lambda: {"status": "ok", "language": "python"})
     app.get("/diagnostics")(lambda: JSONResponse(diagnostics(databases), headers={"Cache-Control": "no-store"}))
-    mount_paged_queries(app, "/v1/preparation/tickets", preparation.queries())
-    mount_paged_queries(app, "/v1/collection/pickups", collection.queries())
-    mount_command(app, "/v1/preparation/tickets/{identity}/start", "preparation.StartPreparation",
-                  preparation.start().execute, preparation_inputs.start_preparation)
-    mount_command(app, "/v1/preparation/tickets/{identity}/complete", "preparation.CompletePreparation",
-                  preparation.complete().execute, preparation_inputs.complete_preparation)
-    mount_command(app, "/v1/collection/pickups/{identity}/collect", "collection.CollectOrder",
-                  collection.collect().execute, collection_inputs.collect_order)
     return app

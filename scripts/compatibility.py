@@ -97,14 +97,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--against', default=os.environ.get('CAFE_CONTRACT_BASE') or BASELINE)
     args = parser.parse_args()
-    from http_compatibility import changes
+    from http_retirements import compatible_changes
     with tempfile.TemporaryDirectory() as directory:
         baseline = Path(directory)
         checkout(args.against, baseline)
         old, new = snapshot(baseline), snapshot(ROOT)
     errors = proto_changes(old['protobuf'], new['protobuf'])
     for name, document in old['http'].items():
-        errors += [name+': '+error for error in changes(document, new['http'][name])]
+        errors += [name+': '+error for error in compatible_changes(name, document, new['http'][name])]
     for name, data in old['fixtures'].items():
         if new['fixtures'].get(name) != data:
             errors.append(name+': historical queued-command fixture changed or removed')

@@ -7,7 +7,7 @@ from operations.contexts.preparation.application.queries.list_tickets import Lis
 
 
 class TicketQueryEndpoints:
-    """Share explicit query translation between HTTP and RabbitMQ adaptors."""
+    """Translate RabbitMQ query arguments into named application use cases."""
     def __init__(self, get: GetTicketQueryHandler, listing: ListTicketsQueryHandler) -> None:
         self.get_handler, self.list_handler = get, listing
 

@@ -5,8 +5,8 @@ Use British English and concise, direct prose. Read [ARCHITECTURE.md](ARCHITECTU
 [TESTING.md](TESTING.md) before architectural changes. Follow
 [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer workflow](docs/developer-workflow.md).
 The [decision index](docs/decisions/README.md) explains which accepted decisions
-refine earlier rules. Decisions 0010–0014 define DI, durable command reactions,
-enforcement and the current source layout.
+refine earlier rules. Decisions 0010–0015 define DI, durable command reactions,
+enforcement, the source layout and persistence role names.
 
 ## Start with ownership
 
@@ -25,8 +25,9 @@ enforcement and the current source layout.
 ## Commands, queries and reactions
 
 - Every runtime aggregate business transition, including creation, starts in a
-  named owner command handler. Make at most one direct aggregate-store call in
-  `Execute`/`execute`; mutate the root inside that store's decision callback.
+  named owner command handler. Inject its named write repository, load the target,
+  invoke aggregate behaviour and save. The central command executor owns the
+  invocation transaction; feature code has no transaction callbacks.
   Domain tests, read-only rehydration, projections and migrations have distinct roles.
 - Application handlers never invoke another command handler. Integration and
   private domain event handlers enqueue owner commands through `DurableCommandPort`.
@@ -37,7 +38,7 @@ enforcement and the current source layout.
   bounded retries, dead-letter and replay mechanisms.
 - Commit one aggregate, receipts, outcome and outgoing event/realtime intent
   atomically. API commands also persist exact reply bytes. ACK after commit.
-- Query handlers use named application reader ports and application-owned read
+- Query handlers use named application read repository ports and application-owned read
   models. Context persistence adaptors validate stored authority and map views.
   Preserve missing-resource behaviour, revisions and complete/paginated reads.
 - Use stable identifiers, immutable published revisions, typed business rejections
@@ -56,6 +57,11 @@ enforcement and the current source layout.
   Keep Python package initialisers documentation-only.
 - Keep decoding, restoration and business mappings in the owning context's
   adaptors. Shared infrastructure stays technical; generated catalogues may be shared.
+- Name query persistence ports `<Resource>ReadRepository`; use
+  `Postgres<Resource>ReadRepository` in Python/TypeScript and
+  `postgres.New<Resource>ReadRepository` constructors in Go. Keep snapshot
+  restoration separate. Use `<Aggregate>WriteRepository` in command handlers;
+  central command executors own transactions and delivery bookkeeping.
 - Use explicit role names (`CommandHandler`, `QueryHandler`, `IntegrationEventHandler`,
   `DomainEventHandler`, `ProjectionHandler`) and document responsibilities with
   Go comments, Python docstrings or JSDoc. Aggregates retain business names.
@@ -72,6 +78,8 @@ enforcement and the current source layout.
 
 - The API translates OpenAPI HTTP JSON into Protobuf commands/queries over
   RabbitMQ. Owner adaptors translate wire messages into plain application DTOs.
+  Owner services expose only health and authenticated diagnostics over HTTP.
+  Register business handlers with messaging adaptors; keep HTTP routes in the API.
 - Published sources use `contracts/<context>/{messaging,realtime,http_api}`.
   Messaging groups published commands, queries and integration events.
 - Keep domain facts separate from versioned transport envelopes. Domain events

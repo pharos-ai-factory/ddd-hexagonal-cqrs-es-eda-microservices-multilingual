@@ -4,6 +4,21 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Retire direct business HTTP routes in all three owner services. Wire command
+  executors and query handlers directly to RabbitMQ; retain health and diagnostics.
+  Keep context-owned OpenAPI fragments at the public API boundary. Add native,
+  architectural and live checks against owner HTTP bypasses; record the exact
+  development endpoint retirements in decision 0016.
+
+- Name read and write repositories explicitly across all three languages. Keep
+  feature commands focused on loading an aggregate, invoking behaviour and saving.
+  Central command executors provide fresh repositories and own transaction,
+  deduplication, receipt and reply handling. Owner adaptors map aggregate facts
+  into the atomic outbox. Update scaffolds, guidance and architectural checks.
+- Cover rejected staged saves, repository identity/lifetime and immutable
+  projection preflight. Preserve local transaction scope, replay, provider recovery
+  and the existing public and stored contracts.
+
 - Consolidate agent/contributor guidance around decisions 0010–0014, with a
   decision index, concrete extension recipes and a rule-to-check command table.
   Align transaction diagrams, query terminology, generated-file guidance and

@@ -7,7 +7,7 @@ from operations.contexts.collection.application.queries.list_pickups import List
 
 
 class PickupQueryEndpoints:
-    """Share explicit query translation between HTTP and RabbitMQ adaptors."""
+    """Translate RabbitMQ query arguments into named application use cases."""
     def __init__(self, get: GetPickupQueryHandler, listing: ListPickupsQueryHandler) -> None:
         self.get_handler, self.list_handler = get, listing
 

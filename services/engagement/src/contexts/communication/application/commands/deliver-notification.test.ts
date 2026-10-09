@@ -1,8 +1,9 @@
+import type {AggregateTransaction} from '../../../../adaptors/command-execution.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import type {AggregateCommandPort, Loaded, Metadata, QueryPort} from '../../../../foundation/application.js';
-import type {NotificationState} from '../../domain/notification.js';
-import {DeliverNotificationCommandHandler} from './deliver-notification.js';
+import type {Loaded, Metadata, QueryPort} from '../../../../foundation/application.js';
+import type {NotificationState, Notification} from '../../domain/notification.js';
+import {NotificationDeliveryCommandExecutor as DeliverNotificationCommandHandler} from '../../adaptors/persistence/notification-delivery-command-executor.js';
 
 test('invalid stored notification content is rejected before any provider request', async () => {
   const id = '00000000-0000-4000-8000-000000000001';
@@ -11,11 +12,8 @@ test('invalid stored notification content is rejected before any provider reques
   const queries: QueryPort<NotificationState> = {
     get: async () => loaded, list: async () => [loaded],
   };
-  const commands: AggregateCommandPort<NotificationState> = {
-    async execute(m, decide) {
-      const result = decide(loaded);
-      return {aggregateId: m.target, version: 2, status: result.status};
-    },
+  const commands: AggregateTransaction<Notification> = {
+    async execute() { throw new Error('Invalid state must fail before entering a command transaction'); },
   };
   let providerRequests = 0;
   const handler = new DeliverNotificationCommandHandler(commands, queries, {

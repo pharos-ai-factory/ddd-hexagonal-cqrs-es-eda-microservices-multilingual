@@ -4,16 +4,17 @@ import (
 	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/queries"
 	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering"
+	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/integrations/requests"
 )
 
 // OrderingRequestHandlers groups the explicitly typed handlers mounted by this transport adaptor.
 type OrderingRequestHandlers struct {
 	Queries        endpoints.OrderQueryEndpoints
-	CreateOrder    orderingcommands.CreateOrderCommandHandler
-	AddLine        orderingcommands.AddLineCommandHandler
-	ChangeQuantity orderingcommands.ChangeQuantityCommandHandler
-	PlaceOrder     orderingcommands.PlaceOrderCommandHandler
+	CreateOrder    execution.Executor[orderingcommands.CreateOrderCommand]
+	AddLine        execution.Executor[orderingcommands.AddLineCommand]
+	ChangeQuantity execution.Executor[orderingcommands.ChangeQuantityCommand]
+	PlaceOrder     execution.Executor[orderingcommands.PlaceOrderCommand]
 }
 
 func Bind(h OrderingRequestHandlers) *rpc.RabbitMQRequestRegistry {

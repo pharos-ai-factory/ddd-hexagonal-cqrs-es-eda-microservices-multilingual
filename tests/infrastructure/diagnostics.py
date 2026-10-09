@@ -47,7 +47,28 @@ def main():
             assert state["pendingRevocations"] >= 0
             assert state["expiredSessionsAwaitingRevocation"] >= 0
         assert key not in json.dumps(state), "Diagnostic response leaked its credential"
+        if owners:
+            assert_business_http_absent(url, key)
     print("All runtimes protect diagnostics and expose owned durable backlog metrics")
+
+
+def assert_business_http_absent(url, key):
+    """Probe the running composition with valid owner credentials and every public business path."""
+    document = json.loads((ROOT/'contracts/services/api/http_api/api.openapi.json').read_text())
+    paths = [path.removeprefix('/api').replace('{id}', '11111111-1111-4111-8111-111111111111')
+             for path in document['paths'] if path.startswith('/api/v1/')]
+    assert paths
+    for path in paths:
+        for method in ('GET', 'POST'):
+            probe = urllib.request.Request(url+path, method=method,
+                data=b'{}' if method == 'POST' else None,
+                headers={'Authorization': 'Bearer '+key, 'Content-Type': 'application/json'})
+            try:
+                response = urllib.request.urlopen(probe, timeout=10)
+            except urllib.error.HTTPError as error:
+                response = error
+            with response:
+                assert response.status == 404, method+' '+url+path+' exposed an owner business route'
 
 
 if __name__ == "__main__":

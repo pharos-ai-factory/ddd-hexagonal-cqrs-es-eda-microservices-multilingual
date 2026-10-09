@@ -4,6 +4,8 @@ Status: accepted, 8 October 2026. Supersedes the API HTTP forwarding and absence
 of broker authority in 0002. Refines request authority in 0004 and the mapping of
 OpenAPI operations in 0006. Aggregate, event-delivery and browser rules continue. Decision 0009 subsequently
 refines owner request packages, queue separation and durable reply acknowledgement.
+Decision [0016](0016-owner-messaging-boundary.md) subsequently retires the direct
+owner HTTP inspection exception below; the current owner HTTP surface is operational.
 
 ## Decision
 

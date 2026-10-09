@@ -45,7 +45,7 @@ Each context has `application/commands/` and `application/queries/`, with one
 named DTO and its matching handler per business use-case file. Go/Python filenames
 use snake_case; TypeScript uses kebab-case. Callers import those packages/modules
 directly. Event reactions and projection handlers have separate business-named
-files. Read models and named reader ports belong to the application; decoding,
+files. Read models and named read repository ports belong to the application; decoding,
 restoration and view mapping belong to context adaptors. Shared infrastructure
 contains technical behaviour. See decisions
 [0013](docs/decisions/0013-command-module-layout.md) and
@@ -65,7 +65,7 @@ workflow runner. Test decision probes make no transaction or delivery claims;
 real infrastructure proves those boundaries. See decision 0003 and `TESTING.md`.
 
 Operations uses explicit `TypedDict` commands, published DTOs, outcomes, snapshots
-and read views. Command ports retain the owning snapshot type; named readers
+and read views. Command ports retain the owning snapshot type; named read repositories
 expose application-owned views. Domain
 facts are immutable dataclasses owned by their context. HTTP, Protobuf and
 PostgreSQL adaptors validate external values before exposing typed application
@@ -84,7 +84,14 @@ and permits an identical retry. Owner request packages, explicit ACL mappings,
 separate command/query consumers and transactionally stored response bytes are
 defined by decision 0009. See decision 0007 and `contracts/shared/messaging/requests.md`.
 
-Its HTTP adaptor has separate `operational`, `session`, `realtime` and `backend`
+Owner services expose only health and authenticated diagnostics over HTTP.
+Their composition injects typed executors and query handlers directly into the
+RabbitMQ request registry. Contexts have messaging adaptors for incoming business
+requests. The earlier direct owner HTTP inspection endpoints were retired by
+[decision 0016](docs/decisions/0016-owner-messaging-boundary.md); local inspection
+uses the public API and the same broker path.
+
+The API's HTTP adaptor has separate `operational`, `session`, `realtime` and `backend`
 packages with tests beside their handlers. The parent package composes those
 routes and verifies the assembled OpenAPI surface. Shared response and security
 helpers stay under `http/internal`; each route package receives its own technical
@@ -126,9 +133,9 @@ from browser ingress. `/healthz` reports liveness separately from workflow progr
 ## Transaction rule
 
 Every runtime aggregate business transition starts in a named owner command
-handler. Its `Execute`/`execute` method makes at most one direct aggregate-store
-call and changes at most one root inside the decision callback. That transaction
-also commits receipts, the recorded outcome and outgoing event/realtime intent.
+handler. Its `Execute`/`execute` method loads the target through its write
+repository, changes that root and saves it. The central command executor wraps
+the invocation and commits receipts, the outcome and outgoing event/realtime intent.
 API command processing includes exact reply bytes. Application ports expose one
 aggregate operation and never expose a SQL transaction or an arbitrary collection
 of repositories.
@@ -180,13 +187,32 @@ The broker does not participate in either database transaction. A lost commit
 response is an unknown outcome resolved by idempotent retry. A queue being empty
 does not establish business completion.
 
+## Feature command execution
+
+Command handlers depend on named write repositories and a target-only
+`CommandContext`. They load an aggregate, invoke its behaviour and save it.
+The aggregate records private domain events; owner adaptor mappers stage the
+selected outgoing messages when the repository saves.
+
+A central executor supplies a fresh repository to each invocation and owns the
+local PostgreSQL transaction, receipt checks, expected versions, outcomes and
+outgoing bytes. Rejected commands can commit a durable rejection without saving
+an aggregate. Infrastructure failures roll back the whole attempt. There is no
+application `UnitOfWork` dependency or transaction callback. Each transaction is
+restricted to one aggregate in one context database; cross-context work proceeds
+through RabbitMQ. Composition binds the shared executor once per use case.
+
 ## Reads and external effects
 
-Each query has a named input, handler, reader port and application-owned read model.
-HTTP/RabbitMQ query adaptors construct that input. Persistence readers validate
+Each query has a named input, handler, read repository port and application-owned read model.
+Owner RabbitMQ query adaptors construct that input after the API translates HTTP to Protobuf. Persistence read repositories validate
 stored aggregate authority and select its read fields; query handlers and read
-models stay independent of aggregate implementations. The current readers use
+models stay independent of aggregate implementations. The current read repositories use
 stored snapshots; specialised read tables can implement the same ports later.
+Ports use `<Resource>ReadRepository`; Python/TypeScript implementations include
+`Postgres`, while Go uses the package-qualified `postgres.New<Resource>ReadRepository`
+factory. Snapshot restoration is independently reusable by read repositories and
+write repositories. See [decision 0015](docs/decisions/0015-explicit-persistence-role-names.md).
 Consumer-owned projections contain only published facts. Published menus remain immutable and orderable in
 this example; introducing withdrawal would require an explicit owner protocol.
 
@@ -264,7 +290,7 @@ against an accepted revision independently from generated-file drift.
 Each context has a source-root README. `pnpm context <name>` lists its current
 commands, queries and reactions, plus contracts, specifications and its focused
 test command. `docs/contexts.json` records the six owners and their browser features.
-Application queries have named inputs, handlers, read models and reader ports;
+Application queries have named inputs, handlers, read models and read repository ports;
 context adaptors restore stored authority and map transport arguments. Individual
 event reactions and domain aggregates have business-named files. Browser features
 follow user tasks, with reusable delivery/recovery code in `shared/`.

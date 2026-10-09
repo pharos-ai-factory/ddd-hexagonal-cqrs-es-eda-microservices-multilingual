@@ -12,7 +12,9 @@ A loyalty account earns each third-collection grant; a reward independently cont
 - [Event reactions](application/event-handlers)
 - [Read models](application/read-models)
 - [Application ports](application/ports)
-- [HTTP request boundary](adaptors/http)
+- [Account write repository](adaptors/persistence/account-write-repository.ts)
+- [Account read repository](adaptors/persistence/account-read-repository.ts)
+- [Reward read repository](adaptors/persistence/reward-read-repository.ts)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
 - [Persistence mapping](adaptors/persistence)
 - [Published contracts](../../../../../contracts/loyalty)
@@ -26,7 +28,8 @@ Start with the named file in `application/commands/` or `application/queries/`.
 The DTO and handler live together. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
 Event reactions enqueue owner commands durably; their handlers execute later.
-Queries return application-owned views. Persistence adaptors validate stored
+Queries use named read repository ports and return application-owned views.
+Persistence adaptors validate stored
 authority and select the fields exposed by those views.
 
 ## Work locally

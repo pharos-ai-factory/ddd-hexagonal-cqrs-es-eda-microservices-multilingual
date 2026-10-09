@@ -1,3 +1,6 @@
+from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
+from operations.adaptors.command_execution import CommandExecutor
+from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket
 import pytest
 from pytest_bdd import given, when, then, parsers, scenarios
 
@@ -34,7 +37,7 @@ def accept(probe: PreparationProbe, metadata: Metadata) -> None:
             commands.append(command)
             return Outcome(aggregateId=incoming.target, version=0, status="queued")
     OrderPlacedIntegrationEventHandler(QueueProbe()).handle(metadata, probe.incoming())
-    AcceptOrderCommandHandler(probe).execute(metadata, commands[0])
+    CommandExecutor(probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications), lambda repository: AcceptOrderCommandHandler(repository)).execute(metadata, commands[0])
 
 
 @given("Preparation has accepted the placed order")
@@ -45,7 +48,7 @@ def accepted(probe: PreparationProbe, metadata: Metadata) -> None:
 
 @when("the barista starts the ticket")
 def start(probe: PreparationProbe, metadata: Metadata) -> None:
-    StartPreparationCommandHandler(probe).execute(metadata, {})
+    CommandExecutor(probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications), lambda repository: StartPreparationCommandHandler(repository)).execute(metadata, {})
 
 
 @given("the ticket is being prepared")
@@ -57,7 +60,7 @@ def preparing(probe: PreparationProbe, metadata: Metadata) -> None:
 
 @when("the barista completes the ticket")
 def complete(probe: PreparationProbe, metadata: Metadata) -> None:
-    CompletePreparationCommandHandler(probe).execute(metadata, {})
+    CommandExecutor(probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications), lambda repository: CompletePreparationCommandHandler(repository)).execute(metadata, {})
 
 
 @given("the ticket has been completed")

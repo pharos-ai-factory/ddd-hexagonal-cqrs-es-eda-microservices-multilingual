@@ -1,27 +1,17 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Caf\u00e9 Go Storefront",
+    "title": "Café Go Storefront",
     "version": "1.0.0",
-    "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
+    "description": "Development-only operational HTTP contract. Business commands and queries enter through RabbitMQ; their public HTTP boundary is the Go API."
   },
   "paths": {
-    "/v1/menu/drinks": {"$ref": "../../../menu/http_api/drinks.paths.json#/list"},
-    "/v1/menu/drinks/{id}": {"$ref": "../../../menu/http_api/drinks.paths.json#/item"},
-    "/v1/menu/drinks/{id}/revise": {"$ref": "../../../menu/http_api/drinks.paths.json#/revise"},
-    "/v1/menu/drinks/{id}/publish": {"$ref": "../../../menu/http_api/drinks.paths.json#/publish"},
-    "/v1/menu/editions": {"$ref": "../../../menu/http_api/editions.paths.json#/list"},
-    "/v1/menu/editions/{id}": {"$ref": "../../../menu/http_api/editions.paths.json#/item"},
-    "/v1/menu/editions/{id}/offers": {"$ref": "../../../menu/http_api/editions.paths.json#/offers"},
-    "/v1/menu/editions/{id}/prices": {"$ref": "../../../menu/http_api/editions.paths.json#/prices"},
-    "/v1/menu/editions/{id}/publish": {"$ref": "../../../menu/http_api/editions.paths.json#/publish"},
-    "/v1/ordering/orders": {"$ref": "../../../ordering/http_api/orders.paths.json#/list"},
-    "/v1/ordering/orders/{id}": {"$ref": "../../../ordering/http_api/orders.paths.json#/item"},
-    "/v1/ordering/orders/{id}/lines": {"$ref": "../../../ordering/http_api/orders.paths.json#/lines"},
-    "/v1/ordering/orders/{id}/quantities": {"$ref": "../../../ordering/http_api/orders.paths.json#/quantities"},
-    "/v1/ordering/orders/{id}/place": {"$ref": "../../../ordering/http_api/orders.paths.json#/place"},
-    "/healthz": {"$ref": "operational.paths.json#/health"},
-    "/diagnostics": {"$ref": "operational.paths.json#/diagnostics"}
+    "/healthz": {
+      "$ref": "operational.paths.json#/health"
+    },
+    "/diagnostics": {
+      "$ref": "operational.paths.json#/diagnostics"
+    }
   },
   "components": {
     "securitySchemes": {

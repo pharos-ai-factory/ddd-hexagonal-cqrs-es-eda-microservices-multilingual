@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
@@ -14,25 +14,29 @@ type ReviseDrinkCommand struct {
 
 // ReviseDrinkCommandHandler applies ReviseDrink through one aggregate command transaction.
 type ReviseDrinkCommandHandler struct {
-	Drinks a.AggregateCommandPort[d.DrinkState]
+	Repository ports.DrinkWriteRepository
 }
 
-func (h ReviseDrinkCommandHandler) Execute(ctx context.Context, m a.Metadata, c ReviseDrinkCommand) (a.Outcome, error) {
-	return h.Drinks.Execute(ctx, m, func(s a.Loaded[d.DrinkState]) (a.Mutation[d.DrinkState], error) {
-		if !s.Exists {
-			return a.Mutation[d.DrinkState]{}, core.Reject("not_found", "The drink does not exist")
+func (h ReviseDrinkCommandHandler) Execute(ctx context.Context, m a.CommandContext, c ReviseDrinkCommand) (a.CommandResult, error) {
+	s, err := h.Repository.Get(ctx, m.Target)
+	if err != nil {
+		return a.CommandResult{}, err
+	}
+	if !s.Exists {
+		return a.CommandResult{}, core.Reject("not_found", "The drink does not exist")
+	}
+	drink := s.State
+	if err = drink.Revise(c.Name); err != nil {
+		return a.CommandResult{}, err
+	}
+	status := "draft"
+	if drink.Snapshot().Published {
+		status = "published"
+	}
+	if len(drink.Events()) > 0 {
+		if err = h.Repository.Save(ctx, drink); err != nil {
+			return a.CommandResult{}, err
 		}
-		drink, err := d.RestoreDrink(s.State)
-		if err != nil {
-			return a.Mutation[d.DrinkState]{}, err
-		}
-		if err = drink.Revise(c.Name); err != nil {
-			return a.Mutation[d.DrinkState]{}, err
-		}
-		status := "draft"
-		if drink.Snapshot().Published {
-			status = "published"
-		}
-		return a.Mutation[d.DrinkState]{State: drink.Snapshot(), Changed: len(drink.Events()) > 0, Status: status}, nil
-	})
+	}
+	return a.Result(status), nil
 }

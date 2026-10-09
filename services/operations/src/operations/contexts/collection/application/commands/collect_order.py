@@ -1,7 +1,7 @@
+from operations.foundation.write_repository import CommandResult, CommandContext
+from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
 from typing import TypedDict
-from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot, OrderCollected
-from operations.contracts import events
-from operations.foundation.application import ApplicationError, Change, AggregateCommandPort, Metadata, Outcome, Publication
+from operations.foundation.application import ApplicationError
 
 
 class CollectOrderCommand(TypedDict):
@@ -17,17 +17,15 @@ class PickupNotFoundApplicationError(ApplicationError):
 
 class CollectOrderCommandHandler:
     """Checks the collection code through the aggregate and commits its collection fact."""
-    def __init__(self, pickups: AggregateCommandPort[PickupSnapshot]) -> None:
-        self.pickups = pickups
+    def __init__(self, repository: PickupWriteRepository) -> None:
+        self.repository = repository
 
-    def execute(self, metadata: Metadata, command: CollectOrderCommand) -> Outcome:
-        def decide(state: PickupSnapshot | None) -> Change[PickupSnapshot]:
-            if state is None:
-                raise PickupNotFoundApplicationError()
-            pickup = Pickup.restore(state)
-            pickup.collect(command["code"])
-            publications = tuple(Publication("collection.order-collected", events.OrderCollected(
-                orderId=fact.order_id, customerId=fact.customer_id))
-                for fact in pickup.events() if isinstance(fact, OrderCollected))
-            return Change(pickup.snapshot(), "collected", publications=publications)
-        return self.pickups.execute(metadata, decide)
+    def execute(self, context: CommandContext, command: CollectOrderCommand) -> CommandResult:
+        loaded = self.repository.get(context.target)
+        state = loaded["state"] if loaded else None
+        if state is None:
+            raise PickupNotFoundApplicationError()
+        pickup = state
+        pickup.collect(command["code"])
+        self.repository.save(pickup)
+        return CommandResult("collected")

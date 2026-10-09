@@ -39,11 +39,12 @@ def execute(env_file, keep=False):
               dict(test_environment(values), BDD_REPORT_DIR=str(reports)))
         check("Python PostgreSQL/RabbitMQ", ["uv", "run", "--project", "services/operations", "pytest", "-q",
                         "services/operations/tests/persistence_integration.py",
+                        "services/operations/tests/command_transaction_integration.py",
                         "services/operations/tests/delivery_integration.py",
                         "services/operations/tests/identity_integration.py",
                         "services/operations/tests/internal_commands_integration.py"], test_environment(values))
         check("TypeScript PostgreSQL/RabbitMQ", ["pnpm", "--filter", "@cafe/engagement", "exec", "tsx", "--test",
-                        "src/adaptors/postgres.integration.ts", "src/adaptors/broker.integration.ts",
+                        "src/adaptors/postgres.integration.ts", "src/adaptors/command-transaction.integration.ts", "src/adaptors/broker.integration.ts",
                         "src/adaptors/corrupt-receipts.integration.ts", "src/adaptors/internal-commands.integration.ts"], test_environment(values))
         # Component fixtures deliberately contain partial roots. The journey
         # starts from empty business tables in this disposable project only.

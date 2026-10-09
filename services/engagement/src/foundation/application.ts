@@ -20,9 +20,6 @@ export type Outcome = {
 export type Loaded<S> = {exists: boolean; version: number; state: S};
 export type Publication = {name: string; payload: object};
 export type Change<S> = {state: S; status: string; changed: boolean; publications?: Publication[]};
-export interface AggregateCommandPort<S> {
-  execute(metadata: Metadata, decide: (loaded: Loaded<S> | undefined) => Change<S>): Promise<Outcome>;
-}
 export interface QueryPort<S> {
   get(id: string): Promise<Loaded<S> | undefined>;
   list(): Promise<Loaded<S>[]>;

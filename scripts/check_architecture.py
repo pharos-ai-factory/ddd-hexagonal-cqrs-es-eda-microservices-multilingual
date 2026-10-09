@@ -3,6 +3,7 @@
 import ast
 from contract_sources import sources, catalogue, command_subscriptions
 from migration_catalogue import metadata, OUTPUTS
+from owner_http_boundary import violation as owner_http_violation
 from hashlib import sha256
 import json
 import os
@@ -201,6 +202,8 @@ def check():
                 normal = (path.parent/target).resolve().relative_to(ROOT).as_posix() if target.startswith('.') else target
                 if reason := core_violation(relative, normal):
                     errors.append(f'{relative}: {reason}: {target}')
+        if reason := owner_http_violation(relative, content):
+            errors.append(f'{relative}: {reason}')
         if relative.startswith('services/'):
             service = relative.split('/')[1]
             if '/contexts/' in relative and path.name != '__init__.py':

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from operations.foundation.application import Loaded
-from operations.contexts.collection.application.ports.pickup_reader import PickupReader
+from operations.contexts.collection.application.ports.pickup_read_repository import PickupReadRepository
 from operations.contexts.collection.application.read_models.pickup import PickupView
 
 
@@ -12,8 +12,8 @@ class GetPickupQuery:
 
 class GetPickupQueryHandler:
     """Execute the GetPickup read use case through its owning application port."""
-    def __init__(self, reader: PickupReader) -> None:
-        self.reader = reader
+    def __init__(self, read_repository: PickupReadRepository) -> None:
+        self.read_repository = read_repository
 
     def execute(self, query: GetPickupQuery) -> Loaded[PickupView] | None:
-        return self.reader.get(query.identity)
+        return self.read_repository.get(query.identity)

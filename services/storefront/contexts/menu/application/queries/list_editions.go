@@ -11,12 +11,12 @@ import (
 type ListEditionsQuery struct{ Page *a.PageRequest }
 
 // ListEditionsQueryHandler reads editions with stable continuation semantics.
-type ListEditionsQueryHandler struct{ Read ports.EditionReader }
+type ListEditionsQueryHandler struct{ ReadRepository ports.EditionReadRepository }
 
 func (h ListEditionsQueryHandler) Execute(ctx context.Context, q ListEditionsQuery) (a.Page[view.EditionView], error) {
 	if q.Page != nil {
-		return h.Read.Page(ctx, *q.Page)
+		return h.ReadRepository.Page(ctx, *q.Page)
 	}
-	items, err := h.Read.List(ctx)
+	items, err := h.ReadRepository.List(ctx)
 	return a.Page[view.EditionView]{Items: items}, err
 }

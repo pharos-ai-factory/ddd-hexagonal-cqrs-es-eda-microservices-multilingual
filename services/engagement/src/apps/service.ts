@@ -3,7 +3,6 @@ import type {Server} from 'node:http';
 import {composeLoyalty} from './composition/loyalty.js';
 import {composeCommunication} from './composition/communication.js';
 import {diagnostics} from '../adaptors/diagnostics.js';
-import {redeemInput} from '../contexts/loyalty/adaptors/http/inputs.js';
 import {relay, consume} from '../adaptors/broker.js';
 import {realtimeRelay} from '../adaptors/dispatch.js';
 import {server} from '../adaptors/http.js';
@@ -50,15 +49,7 @@ const communicationRequests = new RabbitMQRequestRegistry('communication');
 communicationRequests.queries('notification', 'notifications', noticeQueries, notificationWire);
 tasks.push(loyaltyRequests.run(required('LOYALTY_BROKER_URL'), controller.signal));
 tasks.push(communicationRequests.run(required('COMMUNICATION_BROKER_URL'), controller.signal));
-http = server(required('API_KEY'), [
-  {resource: '/v1/loyalty/accounts', queries: loyalty.accountQueries},
-  {resource: '/v1/loyalty/rewards', queries: loyalty.rewardQueries,
-    commands: {redeem: {name: 'loyalty.RedeemReward', invoke: (m, value) => {
-      const input = redeemInput(value);
-      return redeem.execute({...m, input}, input);
-    }}}},
-  {resource: '/v1/communication/notifications', queries: noticeQueries},
-], () => diagnostics(databases));
+http = server(required('API_KEY'), () => diagnostics(databases));
 await new Promise<void>((resolve, reject) => {
   http!.once('error', reject);
   http!.listen(8080, '0.0.0.0', () => { console.info('Engagement HTTP listening (TypeScript)'); resolve(); });

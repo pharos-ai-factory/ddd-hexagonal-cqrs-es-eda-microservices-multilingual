@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
@@ -14,21 +14,25 @@ type ChangeQuantityCommand struct {
 
 // ChangeQuantityCommandHandler applies ChangeQuantity through one aggregate command transaction.
 type ChangeQuantityCommandHandler struct {
-	Orders a.AggregateCommandPort[d.OrderState]
+	Repository ports.OrderWriteRepository
 }
 
-func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.Metadata, c ChangeQuantityCommand) (a.Outcome, error) {
-	return h.Orders.Execute(ctx, m, func(s a.Loaded[d.OrderState]) (a.Mutation[d.OrderState], error) {
-		if !s.Exists {
-			return a.Mutation[d.OrderState]{}, orderNotFound()
+func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c ChangeQuantityCommand) (a.CommandResult, error) {
+	s, err := h.Repository.Get(ctx, m.Target)
+	if err != nil {
+		return a.CommandResult{}, err
+	}
+	if !s.Exists {
+		return a.CommandResult{}, orderNotFound()
+	}
+	order := s.State
+	if err = order.ChangeQuantity(c.LineID, c.Quantity); err != nil {
+		return a.CommandResult{}, err
+	}
+	if len(order.Events()) > 0 {
+		if err = h.Repository.Save(ctx, order); err != nil {
+			return a.CommandResult{}, err
 		}
-		order, err := d.Restore(s.State)
-		if err != nil {
-			return a.Mutation[d.OrderState]{}, err
-		}
-		if err = order.ChangeQuantity(c.LineID, c.Quantity); err != nil {
-			return a.Mutation[d.OrderState]{}, err
-		}
-		return a.Mutation[d.OrderState]{State: order.Snapshot(), Changed: len(order.Events()) > 0, Status: "draft"}, nil
-	})
+	}
+	return a.Result("draft"), nil
 }

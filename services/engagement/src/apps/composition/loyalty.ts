@@ -1,21 +1,31 @@
+import {bindCommand, type CommandExecutor} from '../../adaptors/command-execution.js';
+import {accountPublications} from '../../contexts/loyalty/adaptors/messaging/account-publications.js';
+import {rewardPublications} from '../../contexts/loyalty/adaptors/messaging/reward-publications.js';
+import type {Reward} from '../../contexts/loyalty/domain/reward.js';
+import {PostgresRewardWriteRepository} from '../../contexts/loyalty/adaptors/persistence/reward-write-repository.js';
+import type {LoyaltyAccount} from '../../contexts/loyalty/domain/loyalty-account.js';
+import {PostgresAccountWriteRepository} from '../../contexts/loyalty/adaptors/persistence/account-write-repository.js';
+import type {AggregateTransaction} from '../../adaptors/command-execution.js';
+import {PostgresAggregateTransaction} from '../../adaptors/aggregate-transaction.js';
 import {rewardQueryEndpoints} from '../../contexts/loyalty/adaptors/reward-query-endpoints.js';
 import {ListRewardsQueryHandler} from '../../contexts/loyalty/application/queries/list-rewards.js';
 import {GetRewardQueryHandler} from '../../contexts/loyalty/application/queries/get-reward.js';
-import {restoreReward, PostgresRewardReader} from '../../contexts/loyalty/adaptors/persistence/rewards.js';
+import {restoreRewardSnapshot} from '../../contexts/loyalty/adaptors/persistence/reward-snapshot.js';
+import {PostgresRewardReadRepository} from '../../contexts/loyalty/adaptors/persistence/reward-read-repository.js';
 import {accountQueryEndpoints} from '../../contexts/loyalty/adaptors/account-query-endpoints.js';
 import {ListAccountsQueryHandler} from '../../contexts/loyalty/application/queries/list-accounts.js';
 import {GetAccountQueryHandler} from '../../contexts/loyalty/application/queries/get-account.js';
-import {restoreAccount, PostgresAccountReader} from '../../contexts/loyalty/adaptors/persistence/accounts.js';
+import {restoreAccountSnapshot} from '../../contexts/loyalty/adaptors/persistence/account-snapshot.js';
+import {PostgresAccountReadRepository} from '../../contexts/loyalty/adaptors/persistence/account-read-repository.js';
 import {creditCodec, issueCodec} from '../../contexts/loyalty/adaptors/messaging/command-codecs.js';
-import type {AggregateCommandPort} from '../../foundation/application.js';
 import {asFunction, asValue, createContainer} from 'awilix';
-import {PostgresContextDatabase, PostgresAggregateCommandStore} from '../../adaptors/postgres.js';
+import {PostgresContextDatabase} from '../../adaptors/postgres.js';
 import {InternalCommandCodec, PostgresDurableCommandOutbox, commandPublication} from '../../adaptors/internal-commands.js';
 import {derivedId} from '../../foundation/identity.js';
 import {secret} from '../../foundation/secrets.js';
 import {CreditCollectionCommandHandler, type CreditCollectionCommand} from '../../contexts/loyalty/application/commands/credit-collection.js';
 import {IssueRewardCommandHandler, type IssueRewardCommand} from '../../contexts/loyalty/application/commands/issue-reward.js';
-import {RedeemRewardCommandHandler} from '../../contexts/loyalty/application/commands/redeem-reward.js';
+import {RedeemRewardCommandHandler, type RedeemRewardCommand} from '../../contexts/loyalty/application/commands/redeem-reward.js';
 import {OrderCollectedIntegrationEventHandler} from '../../contexts/loyalty/application/event-handlers/order-collected.js';
 import {RewardEarnedDomainEventHandler} from '../../contexts/loyalty/application/event-handlers/reward-earned.js';
 import schema from '../../contexts/loyalty/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};
@@ -25,15 +35,15 @@ import {commandSubscription, completeSubscriptions} from '../runtime.js';
 /** Typed provider bindings for the Loyalty context. */
 export type LoyaltyDependencies = {
     database: PostgresContextDatabase;
-    accounts: AggregateCommandPort<ReturnType<typeof restoreAccount>>;
-    rewards: AggregateCommandPort<ReturnType<typeof restoreReward>>;
-    accountReader: PostgresAccountReader;
+    accountTransaction: AggregateTransaction<LoyaltyAccount>;
+    rewardTransaction: AggregateTransaction<Reward>;
+    accountReadRepository: PostgresAccountReadRepository;
     getAccount: GetAccountQueryHandler; listAccounts: ListAccountsQueryHandler;
     accountQueries: ReturnType<typeof accountQueryEndpoints>;
-    rewardReader: PostgresRewardReader;
+    rewardReadRepository: PostgresRewardReadRepository;
     getReward: GetRewardQueryHandler; listRewards: ListRewardsQueryHandler;
     rewardQueries: ReturnType<typeof rewardQueryEndpoints>;
-    credit: CreditCollectionCommandHandler; issue: IssueRewardCommandHandler; redeem: RedeemRewardCommandHandler;
+    credit: CommandExecutor<CreditCollectionCommand>; issue: CommandExecutor<IssueRewardCommand>; redeem: CommandExecutor<RedeemRewardCommand>;
     creditCodec: InternalCommandCodec<CreditCollectionCommand>; issueCodec: InternalCommandCodec<IssueRewardCommand>;
     collected: OrderCollectedIntegrationEventHandler; earned: RewardEarnedDomainEventHandler; clock: () => Date;
   };
@@ -44,19 +54,19 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
   container.register({
     database: asFunction(() => new PostgresContextDatabase('loyalty', databaseURL)).singleton().disposer(db => db.pool.end()),
     clock: asValue(clock), creditCodec: asFunction(creditCodec).singleton(), issueCodec: asFunction(issueCodec).singleton(),
-    accounts: asFunction((c: LoyaltyDependencies) => new PostgresAggregateCommandStore(c.database, 'account', restoreAccount)).singleton(),
-    rewards: asFunction((c: LoyaltyDependencies) => new PostgresAggregateCommandStore(c.database, 'reward', restoreReward)).singleton(),
-    accountReader: asFunction((c: LoyaltyDependencies) => new PostgresAccountReader(c.database)).singleton(),
-    getAccount: asFunction((c: LoyaltyDependencies) => new GetAccountQueryHandler(c.accountReader)).singleton(),
-    listAccounts: asFunction((c: LoyaltyDependencies) => new ListAccountsQueryHandler(c.accountReader)).singleton(),
+    accountTransaction: asFunction((c: LoyaltyDependencies) => new PostgresAggregateTransaction(c.database, 'account', restoreAccountSnapshot, source => new PostgresAccountWriteRepository(source), accountPublications)).singleton(),
+    rewardTransaction: asFunction((c: LoyaltyDependencies) => new PostgresAggregateTransaction(c.database, 'reward', restoreRewardSnapshot, source => new PostgresRewardWriteRepository(source), rewardPublications)).singleton(),
+    accountReadRepository: asFunction((c: LoyaltyDependencies) => new PostgresAccountReadRepository(c.database)).singleton(),
+    getAccount: asFunction((c: LoyaltyDependencies) => new GetAccountQueryHandler(c.accountReadRepository)).singleton(),
+    listAccounts: asFunction((c: LoyaltyDependencies) => new ListAccountsQueryHandler(c.accountReadRepository)).singleton(),
     accountQueries: asFunction((c: LoyaltyDependencies) => accountQueryEndpoints(c.getAccount, c.listAccounts)).singleton(),
-    rewardReader: asFunction((c: LoyaltyDependencies) => new PostgresRewardReader(c.database)).singleton(),
-    getReward: asFunction((c: LoyaltyDependencies) => new GetRewardQueryHandler(c.rewardReader)).singleton(),
-    listRewards: asFunction((c: LoyaltyDependencies) => new ListRewardsQueryHandler(c.rewardReader)).singleton(),
+    rewardReadRepository: asFunction((c: LoyaltyDependencies) => new PostgresRewardReadRepository(c.database)).singleton(),
+    getReward: asFunction((c: LoyaltyDependencies) => new GetRewardQueryHandler(c.rewardReadRepository)).singleton(),
+    listRewards: asFunction((c: LoyaltyDependencies) => new ListRewardsQueryHandler(c.rewardReadRepository)).singleton(),
     rewardQueries: asFunction((c: LoyaltyDependencies) => rewardQueryEndpoints(c.getReward, c.listRewards)).singleton(),
-    credit: asFunction((c: LoyaltyDependencies) => new CreditCollectionCommandHandler(c.accounts, derivedId)).singleton(),
-    issue: asFunction((c: LoyaltyDependencies) => new IssueRewardCommandHandler(c.rewards, derivedId, c.clock)).singleton(),
-    redeem: asFunction((c: LoyaltyDependencies) => new RedeemRewardCommandHandler(c.rewards, c.clock)).singleton(),
+    credit: asFunction((c: LoyaltyDependencies) => bindCommand(c.accountTransaction, repository => new CreditCollectionCommandHandler(repository, derivedId), (m, command) => ({...m, id: derivedId('collection-credit', command.orderId)}))).singleton(),
+    issue: asFunction((c: LoyaltyDependencies) => bindCommand(c.rewardTransaction, repository => new IssueRewardCommandHandler(repository, c.clock), (m, command) => ({...m, id: derivedId('issue-reward', command.grantId)}))).singleton(),
+    redeem: asFunction((c: LoyaltyDependencies) => bindCommand(c.rewardTransaction, repository => new RedeemRewardCommandHandler(repository, c.clock))).singleton(),
     collected: asFunction((c: LoyaltyDependencies) => new OrderCollectedIntegrationEventHandler(new PostgresDurableCommandOutbox(c.database, c.creditCodec))).singleton(),
     earned: asFunction((c: LoyaltyDependencies) => new RewardEarnedDomainEventHandler(new PostgresDurableCommandOutbox(c.database, c.issueCodec))).singleton(),
   });

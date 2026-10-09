@@ -1,10 +1,11 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {asFunction} from 'awilix';
+import {asFunction, asValue} from 'awilix';
 import {createLoyaltyContainer} from './loyalty.js';
 import {createCommunicationContainer} from './communication.js';
 import {OrderCollectedIntegrationEventHandler} from '../../contexts/loyalty/application/event-handlers/order-collected.js';
-import {CreditCollectionCommandHandler} from '../../contexts/loyalty/application/commands/credit-collection.js';
+import type {AggregateTransaction} from '../../adaptors/command-execution.js';
+import type {LoyaltyAccount, AccountState} from '../../contexts/loyalty/domain/loyalty-account.js';
 
 const url = 'postgresql://unused:unused@127.0.0.1:1/unused';
 test('every context provider resolves with isolated resources and pool disposal', async () => {
@@ -21,13 +22,23 @@ test('every context provider resolves with isolated resources and pool disposal'
     assert.equal(closed, 1);
   }
 });
-test('Awilix resolves plain application handlers and reports a broken binding', async () => {
+test('Awilix binds feature execution to the shared command boundary and reports missing dependencies', async () => {
   const container = createLoyaltyContainer(url);
   assert.ok(container.resolve('collected') instanceof OrderCollectedIntegrationEventHandler);
-  assert.ok(container.resolve('credit') instanceof CreditCollectionCommandHandler);
+  const saved: AccountState[] = [];
+  const transaction: AggregateTransaction<LoyaltyAccount> = {execute: async (metadata, work) => {
+    const result = await work({get: async () => undefined, save: async account => { saved.push(account.snapshot()); }});
+    return {aggregateId: metadata.target, version: 1, status: result.status};
+  }};
+  container.register({accountTransaction: asValue(transaction)});
+  const id = '00000000-0000-4000-8000-000000000001';
+  const outcome = await container.resolve('credit').execute({id, target: id, correlation: id, name: 'fixture', input: {}}, {customerId: id, orderId: id});
+  assert.equal(outcome.status, 'active');
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0]?.collections, 1);
   await container.dispose();
   const broken = createLoyaltyContainer(url);
-  broken.register({accounts: asFunction(() => { throw new Error('missing aggregate port'); }).singleton()});
+  broken.register({accountTransaction: asFunction(() => { throw new Error('missing aggregate port'); }).singleton()});
   assert.throws(() => broken.resolve('credit'), /missing aggregate port/);
   await broken.dispose();
 });

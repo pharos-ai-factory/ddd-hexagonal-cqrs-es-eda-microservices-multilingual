@@ -16,13 +16,13 @@ func TestProposedRootMustIdentifyTheCommandTarget(t *testing.T) {
 	id := NewID()
 	clean(t, owner, id)
 	m := metadata(id, 0)
-	store := Command[root](db, "test_counter")
+	store := snapshotDecisions[root](db, "test_counter")
 	if _, err := store.Execute(t.Context(), m, func(a.Loaded[root]) (a.Mutation[root], error) {
 		return a.Changed(root{ID: NewID()}, "active"), nil
 	}); err == nil {
 		t.Fatal("persisted a proposal identifying another root")
 	}
-	if loaded, err := Query[root](db, "test_counter").Get(t.Context(), id); err != nil || loaded.Exists {
+	if loaded, err := NewSnapshotReadRepository[root](db, "test_counter").Get(t.Context(), id); err != nil || loaded.Exists {
 		t.Fatalf("failed proposal changed stored authority: %+v %v", loaded, err)
 	}
 	for _, table := range []string{"command_receipts", "outbox_events", "realtime_publications"} {

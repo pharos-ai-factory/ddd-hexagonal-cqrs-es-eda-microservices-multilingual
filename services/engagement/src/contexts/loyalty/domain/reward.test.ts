@@ -7,6 +7,8 @@ test('redemption is single use and validity has an exact supplied deadline', () 
   const reward = Reward.issue(ids[0]!, {id: ids[1]!, accountId: ids[2]!, benefit: 'coffee', validDays: 7},
     new Date('2026-01-01T00:00:00Z'));
   const before = reward.snapshot();
+  assert.deepEqual(reward.events(), [{type: 'RewardIssued', reward: before}]);
+  assert.deepEqual(new Reward(before).events(), []);
   assert.throws(() => reward.redeem(ids[3]!, new Date('2026-01-08T00:00:00Z')), {code: 'reward_expired'});
   assert.deepEqual(reward.snapshot(), before);
   reward.redeem(ids[3]!, new Date('2026-01-07T23:59:59Z'));

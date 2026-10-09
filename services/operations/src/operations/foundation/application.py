@@ -1,6 +1,6 @@
 """One-aggregate ports; neither transactions nor transport objects cross them."""
 from dataclasses import dataclass, field
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from typing import Literal, NotRequired, Protocol, TypedDict
 from operations.foundation.domain import Rejection, RejectionDetail
 
@@ -59,12 +59,6 @@ class Change[S]:
     status: str
     changed: bool = True
     publications: tuple[Publication, ...] = ()
-
-
-class AggregateCommandPort[S](Protocol):
-    """Executes one command decision against a single aggregate with atomic receipts and publications."""
-    def execute(self, metadata: Metadata, decide: Callable[[S | None], Change[S]]) -> Outcome: ...
-
 
 class QueryPort[S](Protocol):
     """Reads restored aggregate snapshots without granting mutation authority."""

@@ -11,8 +11,8 @@ import (
 type GetEditionQuery struct{ ID string }
 
 // GetEditionQueryHandler reads one edition through its application capability.
-type GetEditionQueryHandler struct{ Read ports.EditionReader }
+type GetEditionQueryHandler struct{ ReadRepository ports.EditionReadRepository }
 
 func (h GetEditionQueryHandler) Execute(ctx context.Context, q GetEditionQuery) (a.Loaded[view.EditionView], error) {
-	return h.Read.Get(ctx, q.ID)
+	return h.ReadRepository.Get(ctx, q.ID)
 }

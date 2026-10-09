@@ -11,12 +11,12 @@ import (
 type ListOrdersQuery struct{ Page *a.PageRequest }
 
 // ListOrdersQueryHandler reads orders with stable continuation semantics.
-type ListOrdersQueryHandler struct{ Read ports.OrderReader }
+type ListOrdersQueryHandler struct{ ReadRepository ports.OrderReadRepository }
 
 func (h ListOrdersQueryHandler) Execute(ctx context.Context, q ListOrdersQuery) (a.Page[view.OrderView], error) {
 	if q.Page != nil {
-		return h.Read.Page(ctx, *q.Page)
+		return h.ReadRepository.Page(ctx, *q.Page)
 	}
-	items, err := h.Read.List(ctx)
+	items, err := h.ReadRepository.List(ctx)
 	return a.Page[view.OrderView]{Items: items}, err
 }

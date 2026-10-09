@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
@@ -15,21 +15,25 @@ type ChangePriceCommand struct {
 
 // ChangePriceCommandHandler applies ChangePrice through one aggregate command transaction.
 type ChangePriceCommandHandler struct {
-	Editions a.AggregateCommandPort[d.EditionState]
+	Repository ports.EditionWriteRepository
 }
 
-func (h ChangePriceCommandHandler) Execute(ctx context.Context, m a.Metadata, c ChangePriceCommand) (a.Outcome, error) {
-	return h.Editions.Execute(ctx, m, func(s a.Loaded[d.EditionState]) (a.Mutation[d.EditionState], error) {
-		if !s.Exists {
-			return a.Mutation[d.EditionState]{}, core.Reject("not_found", "The edition does not exist")
+func (h ChangePriceCommandHandler) Execute(ctx context.Context, m a.CommandContext, c ChangePriceCommand) (a.CommandResult, error) {
+	s, err := h.Repository.Get(ctx, m.Target)
+	if err != nil {
+		return a.CommandResult{}, err
+	}
+	if !s.Exists {
+		return a.CommandResult{}, core.Reject("not_found", "The edition does not exist")
+	}
+	edition := s.State
+	if err = edition.ChangePrice(c.Code, c.Minor); err != nil {
+		return a.CommandResult{}, err
+	}
+	if len(edition.Events()) > 0 {
+		if err = h.Repository.Save(ctx, edition); err != nil {
+			return a.CommandResult{}, err
 		}
-		edition, err := d.RestoreEdition(s.State)
-		if err != nil {
-			return a.Mutation[d.EditionState]{}, err
-		}
-		if err = edition.ChangePrice(c.Code, c.Minor); err != nil {
-			return a.Mutation[d.EditionState]{}, err
-		}
-		return a.Mutation[d.EditionState]{State: edition.Snapshot(), Changed: len(edition.Events()) > 0, Status: "draft"}, nil
-	})
+	}
+	return a.Result("draft"), nil
 }

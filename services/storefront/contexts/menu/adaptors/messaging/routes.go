@@ -4,20 +4,21 @@ import (
 	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/queries"
 	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu"
+	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/integrations/requests"
 )
 
 // MenuRequestHandlers groups the explicitly typed handlers mounted by this transport adaptor.
 type MenuRequestHandlers struct {
 	DrinkQueries   endpoints.DrinkQueryEndpoints
-	CreateDrink    menucommands.CreateDrinkCommandHandler
-	PublishDrink   menucommands.PublishDrinkCommandHandler
-	ReviseDrink    menucommands.ReviseDrinkCommandHandler
+	CreateDrink    execution.Executor[menucommands.CreateDrinkCommand]
+	PublishDrink   execution.Executor[menucommands.PublishDrinkCommand]
+	ReviseDrink    execution.Executor[menucommands.ReviseDrinkCommand]
 	EditionQueries endpoints.EditionQueryEndpoints
-	CreateEdition  menucommands.CreateEditionCommandHandler
-	AddOffer       menucommands.AddOfferCommandHandler
-	ChangePrice    menucommands.ChangePriceCommandHandler
-	PublishEdition menucommands.PublishEditionCommandHandler
+	CreateEdition  execution.Executor[menucommands.CreateEditionCommand]
+	AddOffer       execution.Executor[menucommands.AddOfferCommand]
+	ChangePrice    execution.Executor[menucommands.ChangePriceCommand]
+	PublishEdition execution.Executor[menucommands.PublishEditionCommand]
 }
 
 func Bind(h MenuRequestHandlers) *rpc.RabbitMQRequestRegistry {

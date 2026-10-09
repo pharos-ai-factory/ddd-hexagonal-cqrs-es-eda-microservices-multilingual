@@ -10,6 +10,8 @@
 - Frozen Python dependencies, Ruff, strict Mypy over handwritten source/tests,
   type-gate negative examples and domain/contract tests.
 - Engagement and web TypeScript checks and behaviour tests.
+- Owner HTTP boundary guards, operational endpoint authentication and rejection of
+  every public business path on each owner service.
 - 51 executable Gherkin scenarios through native Go/Python/TypeScript handlers;
   catalogue validation, typed step bindings and a dry run of workflow bindings.
 
@@ -33,6 +35,10 @@ that the live workflows passed.
 | Historical public/private compatibility | `pnpm check:compatibility --against <commit>` | A published interface or accepted stored-message fixture is incompatible with that revision |
 | Complete deterministic gate | `pnpm verify` | At least one generation, compatibility, architecture, type, native or fast-scenario check failed |
 | Real infrastructure and browser | `pnpm test:integration` | A real authority, transaction, delivery, workflow or browser boundary failed |
+
+The compatibility gate permits only the 17 direct Storefront business operation
+removals recorded by [decision 0016](docs/decisions/0016-owner-messaging-boundary.md).
+Public API operations and owner operational endpoints retain full compatibility checks.
 
 Run commands from the repository root unless a service directory is specified.
 The Go wrapper defaults to Storefront; `CAFE_GO_PROJECT=services/api` selects the
@@ -61,13 +67,13 @@ static export served by the ingress, and runs:
 | Boundary | Required evidence |
 | --- | --- |
 | Go PostgreSQL | State/receipt/outbox atomicity, terminated connection, concurrent commands, conflicting consumer identities, restricted roles, immutable evidence and fenced leases |
-| Python and TypeScript PostgreSQL | Encoder-failure rollback, recorded retry outcomes, conflicting input, expected-version races, atomic browser publications and realtime lease fencing |
+| Python and TypeScript PostgreSQL | Repository scope/lifetime, rejected staged saves, encoder-failure rollback, recorded retry outcomes, conflicting input, expected-version races, atomic browser publications and realtime lease fencing |
 | RabbitMQ | Protobuf metadata, confirmed mandatory publication, commit-before-ACK redelivery, bounded retry, dead-letter preservation, replay, private-topic restrictions and denial of runtime topology mutation |
 | Context migrations | Independent owner ledgers, additive upgrade preserving roots, idempotent reapplication, checksum/owner rejection and rollback |
 | Query completeness | More than 100 roots in each language; complete unpaginated arrays and cursor traversal without omissions or duplicates |
 | Cross-language workflow | Menu → order → preparation → collection → account → reward → notifications; Operations outage and paused private Reward consumer |
 | RabbitMQ requests | Restricted API/owner authority, commands and queries across all three runtimes, independent command/query consumers, exact committed reply recovery after an unroutable publication, atomic rollback and stable receipts/outgoing intent |
-| HTTP contracts | Live OpenAPI response validation through the Go API for all six contexts, complete/paginated reads, item DTOs, missing versions, missing roots and conflicting command identities |
+| HTTP contracts | Authenticated probes reject direct business HTTP on all owner processes; live OpenAPI response validation through the Go API for all six contexts, complete/paginated reads, item DTOs, missing versions, missing roots and conflicting command identities |
 | Gherkin PostgreSQL | Recorded `menu_pending` after projection arrival, new-attempt success and conflicting key reuse; atomic browser intent |
 | Gherkin live workflows | Ten focused scenarios: repeated business facts with new event IDs, duplicate grants/notifications, concurrent collections/redemptions, customer isolation, lost provider response and recorded completion rejection |
 | Provider | Acceptance followed by a lost response creates one provider effect |

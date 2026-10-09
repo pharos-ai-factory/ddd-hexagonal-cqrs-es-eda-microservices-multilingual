@@ -43,7 +43,7 @@ func TestDiagnosticsReportsDurableBacklogAndUnavailableAuthority(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Command[counter](db, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
+	if _, err := snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
 		return a.Changed(counter{1}, "active", a.Publication{Name: "test.created", Visibility: a.Private, Payload: counter{1}}), nil
 	}); err != nil {
 		t.Fatal(err)

@@ -12,7 +12,9 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
 - [Application ports](application/ports)
-- [HTTP request boundary](adaptors/http)
+- [Drink write repository](adaptors/postgres/drink_write_repository.go)
+- [Drink read repository](adaptors/postgres/drink_read_repository.go)
+- [Edition read repository](adaptors/postgres/edition_read_repository.go)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
 - [Persistence mapping](adaptors/postgres)
 - [Published contracts](../../../../contracts/menu)
@@ -25,8 +27,12 @@ A menu edition owns its offers; every offer pins a published drink revision.
 Start with the named file in `application/commands/` or `application/queries/`.
 The DTO and handler live together. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
+Command handlers load, mutate and save through named write repositories.
+Composition registers a central executor that supplies each invocation's repository
+and manages its transaction. Owner adaptors map aggregate facts into outgoing messages.
 Projection handlers update consumer-owned read data without changing aggregates.
-Queries return application-owned views. Persistence adaptors validate stored
+Queries use named read repository ports and return application-owned views.
+Persistence adaptors validate stored
 authority and select the fields exposed by those views.
 
 ## Work locally

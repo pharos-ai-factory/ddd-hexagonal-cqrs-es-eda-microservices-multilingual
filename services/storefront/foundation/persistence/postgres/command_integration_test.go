@@ -73,7 +73,7 @@ func TestAtomicReceiptAndOptimisticConcurrency(t *testing.T) {
 	owner := admin(t)
 	id := NewID()
 	clean(t, owner, id)
-	store := Command[counter](db, "test_counter")
+	store := snapshotDecisions[counter](db, "test_counter")
 	m := metadata(id, 0)
 	decide := func(s a.Loaded[counter]) (a.Mutation[counter], error) {
 		return a.Changed(counter{1}, "active", a.Publication{Name: "test.created", Visibility: a.Private, Payload: counter{1}}), nil
@@ -130,7 +130,7 @@ func TestAtomicReceiptAndOptimisticConcurrency(t *testing.T) {
 	if success != 1 || stale != 1 {
 		t.Fatalf("concurrent decisions success=%d stale=%d", success, stale)
 	}
-	loaded, err := Query[counter](db, "test_counter").Get(t.Context(), id)
+	loaded, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), id)
 	if err != nil || loaded.Version != 2 || loaded.State.Value != 2 {
 		t.Fatalf("invalid final counter %+v %v", loaded, err)
 	}
@@ -144,13 +144,13 @@ func TestOutboxFailureRollsBackAggregateAndReceipt(t *testing.T) {
 	broken.encode = func(a.Message) ([]byte, error) {
 		return nil, fmt.Errorf("injected publication failure after aggregate SQL")
 	}
-	_, err := Command[counter](&broken, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
+	_, err := snapshotDecisions[counter](&broken, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
 		return a.Changed(counter{1}, "active", a.Publication{Name: "test.created", Visibility: a.Private}), nil
 	})
 	if err == nil {
 		t.Fatal("injected failure was lost")
 	}
-	loaded, err := Query[counter](db, "test_counter").Get(t.Context(), id)
+	loaded, err := NewSnapshotReadRepository[counter](db, "test_counter").Get(t.Context(), id)
 	if err != nil || loaded.Exists {
 		t.Fatal("aggregate escaped rollback")
 	}
@@ -185,13 +185,13 @@ func TestDatabaseConnectionLossRollsBackUncommittedState(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	_, err = Command[counter](db, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
+	_, err = snapshotDecisions[counter](db, "test_counter").Execute(t.Context(), metadata(id, 0), func(a.Loaded[counter]) (a.Mutation[counter], error) {
 		return a.Changed(counter{1}, "active", a.Publication{Name: "test.created", Visibility: a.Private}), nil
 	})
 	if err == nil {
 		t.Fatal("connection termination did not fail the transaction")
 	}
-	loaded, err := Query[counter](normal, "test_counter").Get(t.Context(), id)
+	loaded, err := NewSnapshotReadRepository[counter](normal, "test_counter").Get(t.Context(), id)
 	if err != nil || loaded.Exists {
 		t.Fatalf("state survived uncommitted connection loss: %+v %v", loaded, err)
 	}
