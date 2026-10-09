@@ -19,7 +19,7 @@ type WorkerGroup struct {
 func NewWorkerGroup(lifecycle fx.Lifecycle) *WorkerGroup {
 	ctx, cancel := context.WithCancel(context.Background())
 	group := &WorkerGroup{Context: ctx, cancel: cancel}
-	lifecycle.Append(fx.Hook{OnStop: func(context.Context) error { cancel(); group.workers.Wait(); return nil }})
+	lifecycle.Append(fx.Hook{OnStop: func(context.Context) error { group.Close(); return nil }})
 	return group
 }
 func (g *WorkerGroup) Start(run func(context.Context)) {
@@ -45,3 +45,6 @@ func Serve(lifecycle fx.Lifecycle, shutdown fx.Shutdowner, server *http.Server) 
 		OnStop: server.Shutdown,
 	})
 }
+
+// Close drains cancelled workers before their dependent resources can close.
+func (g *WorkerGroup) Close() { g.cancel(); g.workers.Wait() }

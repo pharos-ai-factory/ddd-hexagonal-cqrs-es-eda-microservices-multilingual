@@ -9,6 +9,7 @@ import {PostgresDurableCommandOutbox, commandPublication} from './internal-comma
 import schema from '../contexts/loyalty/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};
 import {claim, finish} from './dispatch.js';
 import {consume, confirmed, relay} from './broker.js';
+import {processWorkers} from './diagnostics.js';
 import {derivedId} from '../foundation/identity.js';
 import type {Metadata} from '../foundation/application.js';
 
@@ -62,6 +63,9 @@ test('durable hand-off, rollback, lease recovery, bounded command retry and repl
     let quarantined: amqp.GetMessage | false = false;
     await until(async () => { quarantined = await channel.get(queue+'.dead', {noAck: false}); return Boolean(quarantined); });
     assert.equal(attempts, 4);
+    const failure = processWorkers()['loyalty/'+codec.consumer]?.lastFailure;
+    assert.equal(failure?.event, m.id);
+    assert.equal(failure?.correlation, m.correlation);
     const dead = quarantined as unknown as amqp.GetMessage;
     assert.deepEqual(dead.content, saved);
     assert.equal(await c.accountQueries.get(target), undefined);

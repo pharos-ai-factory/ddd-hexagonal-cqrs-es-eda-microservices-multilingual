@@ -96,6 +96,7 @@ export class RabbitMQRequestRegistry {
     await Promise.all([this.runKind(url,signal,'command'),this.runKind(url,signal,'query')]);
   }
   private async runKind(url: string, signal: AbortSignal, kind: 'command'|'query') {
+    const inFlight = new Set<Promise<void>>();
     const queue = 'ref.'+this.owner+(kind === 'command' ? '.commands' : '.queries');
     while (!signal.aborted) {
       let connection: Awaited<ReturnType<typeof amqp.connect>> | undefined;
@@ -108,10 +109,11 @@ export class RabbitMQRequestRegistry {
         const closed = new Promise<void>(resolve => current.once('close', resolve));
         const abort = () => { void current.close().catch(() => {}); };
         signal.addEventListener('abort', abort, {once: true});
+        if (signal.aborted) { abort(); return; }
         await channel.prefetch(1);
         await channel.consume(queue, message => {
           if (!message) { void current.close().catch(() => {}); return; }
-          void (async () => {
+          const work = (async () => {
             let request: Request;
             try {
               const properties = message.properties;
@@ -137,11 +139,13 @@ export class RabbitMQRequestRegistry {
               type: 'reply', appId: this.owner, messageId: request.id, correlationId: request.id});
             channel.ack(message);
           })().catch(error => { failure(this.owner, 'requests.reply', error); void current.close().catch(() => {}); });
+          inFlight.add(work);
+          void work.finally(() => inFlight.delete(work));
         }, {noAck: false});
         await closed;
         signal.removeEventListener('abort', abort);
       } catch (error) { failure(this.owner, 'requests.reconnect', error); await pause(signal, 1000); }
-      finally { await connection?.close().catch(() => {}); }
+      finally { await Promise.allSettled(inFlight); await connection?.close().catch(() => {}); }
     }
   }
 }

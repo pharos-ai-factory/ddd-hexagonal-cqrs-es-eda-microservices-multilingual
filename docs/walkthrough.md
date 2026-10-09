@@ -31,14 +31,16 @@ the immediate invariant; the issued voucher is a subsequent workflow result.
 
 Use `POST /api/v1/ordering/orders/{id}/place` as the example:
 
-1. `services/storefront/contexts/ordering/adaptors/http/routes.go` binds a named application handler.
-2. `services/storefront/foundation/transport/http/http.go` parses a typed body, command identity and
-   expected aggregate version.
-3. `services/storefront/contexts/ordering/application/commands.go` loads through a port bound to the
-   Order kind, restores the root, calls `Place`, and selects an outgoing contract.
-4. `services/storefront/contexts/ordering/domain/order.go` enforces the invariant and records its fact.
-5. `services/storefront/foundation/persistence/postgres/command.go` commits the
-   state, receipt, outcome, outgoing event and exact browser projection bytes together.
+1. The Go API authenticates the HTTP request and translates its OpenAPI input
+   into an owner Protobuf command, retaining command identity and expected version.
+2. The API publishes the request through RabbitMQ. Ordering's messaging adaptor
+   translates it into the plain `PlaceOrderCommand` application value.
+3. `services/storefront/contexts/ordering/application/commands.go` loads through
+   the Order port, restores the root, calls `Place`, and selects outgoing facts.
+4. `services/storefront/contexts/ordering/domain/order.go` enforces the invariant.
+5. The PostgreSQL adaptor commits state, receipt, outcome, outgoing events,
+   realtime bytes and reply intent. Confirmed reply publication completes the
+   API's HTTP response; downstream workflows continue independently.
 
 The application never receives `pgx.Tx`, an AMQP delivery or a generated Protobuf
 message. Its callback cannot obtain another aggregate repository from the port.
@@ -55,9 +57,11 @@ The relay claims its mutable dispatch row, publishes the original bytes with
 mandatory routing and waits for broker confirmation.
 
 Python Preparation consumes the event under its own credentials. Its application
-entry point is `services/operations/src/operations/contexts/preparation/application.py`. Its handler creates
-one PreparationTicket with a stable derived identity, stores its receipt, commits,
-and only then acknowledges the delivery.
+entry point is `services/operations/src/operations/contexts/preparation/application.py`. Its integration-event handler maps the fact into an AcceptOrder command and
+commits the receiving receipt plus exact command bytes before acknowledging the
+event. The command relay publishes those bytes to its dedicated RabbitMQ queue.
+The command consumer creates one PreparationTicket, commits its outcome/receipts,
+and then acknowledges the command.
 
 Preparation completion publishes DrinksReady. Collection opens a Pickup. The
 operator supplies its code to collect the order. OrderCollected then reaches
@@ -103,7 +107,7 @@ returned acceptance receipt. The accepted-message count remains four.
 For an exhausted consumer, repair the cause and replay one original message:
 
 ```sh
-pnpm events:replay loyalty.issue-reward
+pnpm events:replay loyalty.issue-reward.command
 ```
 
 `replayed=false` means the queue contained no message. Replay preserves the event
@@ -142,3 +146,5 @@ dispatch rows show delivery progress without changing the source event.
   transaction roles despite their different language constructs.
 
 Cancellation remains a modelling exercise. The multilingual workflow is implemented.
+
+For extension steps and focused tooling, follow [the developer workflow](developer-workflow.md).

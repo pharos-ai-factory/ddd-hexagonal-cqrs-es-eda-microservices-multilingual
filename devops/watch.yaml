@@ -1,0 +1,29 @@
+# Development-only overlay. Compose rebuilds just the service whose source changed.
+services:
+  storefront:
+    develop:
+      watch:
+        - { action: rebuild, path: ../services/storefront, ignore: ['**/*_test.go'] }
+  operations:
+    develop:
+      watch:
+        - { action: rebuild, path: ../services/operations/src }
+        - { action: rebuild, path: ../services/operations/uv.lock }
+  engagement:
+    develop:
+      watch:
+        - {
+            action: rebuild,
+            path: ../services/engagement/src,
+            ignore: ['**/*.test.ts', '**/*.integration.ts'],
+          }
+        - { action: rebuild, path: ../pnpm-lock.yaml }
+  api:
+    develop:
+      watch:
+        - { action: rebuild, path: ../services/api, ignore: ['**/*_test.go'] }
+  ingress:
+    develop:
+      watch:
+        - { action: rebuild, path: ../services/web/src }
+        - { action: rebuild, path: ../pnpm-lock.yaml }

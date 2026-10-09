@@ -125,8 +125,11 @@ class RabbitMQRequestRegistry:
         from threading import Thread
         command = Thread(target=self._run_kind, args=(url, stop, "command"), daemon=True)
         command.start()
-        self._run_kind(url, stop, "query")
-        command.join(timeout=6)
+        try:
+            self._run_kind(url, stop, "query")
+        finally:
+            stop.set()
+            command.join()
 
     def _run_kind(self, url: str, stop: Event, kind: str) -> None:
         queue = "ref."+self.owner+(".commands" if kind == "command" else ".queries")

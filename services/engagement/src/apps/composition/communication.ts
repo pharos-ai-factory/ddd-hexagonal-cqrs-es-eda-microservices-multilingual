@@ -14,7 +14,7 @@ import {PickupOpenedIntegrationEventHandler, RewardIssuedIntegrationEventHandler
   NotificationRequestedDomainEventHandler} from '../../contexts/communication/application/event-handlers.js';
 import schema from '../../contexts/communication/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};
 import definitions from '../../contexts/communication/adaptors/messaging/subscriptions.json' with {type: 'json'};
-import {commandSubscription} from '../runtime.js';
+import {commandSubscription, completeSubscriptions} from '../runtime.js';
 
 /** Stable owner-local subscriptions; each installs a separate command queue. */
 export enum CommunicationSubscription {
@@ -66,13 +66,15 @@ export function createCommunicationContainer(databaseURL: string, deliveryURL: s
   });
   return container;
 }
-export function composeCommunication() {
+export async function composeCommunication() {
   const container = createCommunicationContainer(secret('COMMUNICATION_DATABASE_URL'), secret('DELIVERY_URL'), secret('DELIVERY_KEY'));
+  try {
   const c = container.cradle;
   return {database: c.database, queries: c.queries, commandHeader: commandPublication(schema, 'communication'),
-    dispose: () => container.dispose(), subscriptions: [
-      ...commandSubscription(c.pickupCodec, definitions, event => derivedId('pickup-notice', event.pickupId), c.pickup, c.request),
-      ...commandSubscription(c.rewardCodec, definitions, event => derivedId('reward-notice', event.rewardId), c.reward, c.request),
-      ...commandSubscription(c.deliveryCodec, definitions, event => event.notificationId, c.requested, c.deliver),
-    ]};
+    dispose: () => container.dispose(), subscriptions: completeSubscriptions('communication', definitions, [
+      ...commandSubscription('collection.pickup-opened', c.pickupCodec, definitions, event => derivedId('pickup-notice', event.pickupId), c.pickup, c.request),
+      ...commandSubscription('loyalty.reward-issued', c.rewardCodec, definitions, event => derivedId('reward-notice', event.rewardId), c.reward, c.request),
+      ...commandSubscription('communication.notification-requested', c.deliveryCodec, definitions, event => event.notificationId, c.requested, c.deliver),
+    ])};
+  } catch (error) { await container.dispose(); throw error; }
 }

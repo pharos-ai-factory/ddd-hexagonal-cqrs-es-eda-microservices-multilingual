@@ -15,6 +15,7 @@ def run(*args, cwd=ROOT, env=None):
 
 
 run(sys.executable, 'scripts/check_contracts.py')
+run('uv', 'run', '--no-project', '--with', 'grpcio-tools==1.84.0', 'python', 'scripts/compatibility.py')
 run(sys.executable, 'scripts/check_architecture.py')
 run('node', 'scripts/check_command_boundaries.mjs')
 run('node', '--test', 'scripts/check_command_boundaries.test.mjs')

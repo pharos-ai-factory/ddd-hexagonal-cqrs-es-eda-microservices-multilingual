@@ -104,18 +104,17 @@ def up(path):
     return values
 
 def wait_ready(values, services=("STOREFRONT", "OPERATIONS", "ENGAGEMENT", "API", "WEB")):
+    from readiness import report
     deadline = time.monotonic()+90
-    for service in services:
-        while True:
-            try:
-                with urllib.request.urlopen(f'http://127.0.0.1:{values[service+"_PORT"]}/healthz', timeout=2) as response:
-                    if response.status == 200:
-                        break
-            except (urllib.error.URLError, OSError, http.client.RemoteDisconnected):
-                pass
-            if time.monotonic()>deadline:
-                raise RuntimeError("Development services did not become healthy")
-            time.sleep(0.25)
+    while True:
+        state = report(values, services)
+        if state['ready']:
+            return
+        if time.monotonic() > deadline:
+            unavailable = [name for name, status in state['checks'].items() if status != 'ready']
+            raise RuntimeError("Development readiness timed out: "+", ".join(unavailable))
+        time.sleep(0.25)
+
 
 def test_environment(values):
     result = dict(os.environ, APP_ENV="development", CAFE_DISPOSABLE_PROJECT=values["COMPOSE_PROJECT_NAME"])

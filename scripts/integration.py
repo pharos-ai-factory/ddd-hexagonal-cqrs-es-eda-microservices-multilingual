@@ -82,6 +82,7 @@ def execute(env_file, keep=False):
                         "--config", "tests/acceptance/cucumber.mjs"], live)
         check("Gherkin infrastructure reports", ["node", "scripts/check_bdd_reports.mjs", "infrastructure"], live)
         check("Realtime publisher permissions", [sys.executable, "tests/infrastructure/realtime_permissions.py"], live)
+        check("Developer readiness and inspection", [sys.executable, "tests/infrastructure/developer_tools.py"], live)
         check("Workflow diagnostics", [sys.executable, "tests/infrastructure/diagnostics.py"], live)
         check("Browser recovery", [sys.executable, "scripts/browser.py"], live)
         check("Valkey permissions", [sys.executable, "tests/infrastructure/valkey_permissions.py"], live)

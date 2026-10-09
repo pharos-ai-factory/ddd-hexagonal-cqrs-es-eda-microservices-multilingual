@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "golang.go",
+    "ms-python.python",
+    "ms-python.debugpy",
+    "esbenp.prettier-vscode",
+    "charliermarsh.ruff"
+  ]
+}

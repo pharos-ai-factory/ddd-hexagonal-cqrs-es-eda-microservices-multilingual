@@ -36,3 +36,26 @@ class PlacedIntegrationEventHandler:
     def test_private_state_is_owned_by_the_aggregate_even_inside_a_command_handler(self):
         for owner in ('EventHandler', 'StartCommandHandler'):
             self.assertTrue(violations(f'from operations.contexts.preparation.domain import PreparationTicket\nclass {owner}:\n def execute(self, ticket: PreparationTicket): ticket._state = None', aggregate_methods()))
+
+    def test_direct_command_handler_and_alias_are_rejected(self):
+        for owner in ('EventHandler', 'OtherCommandHandler'):
+            source = f'''from operations.contexts.preparation.application import AcceptOrderCommandHandler as Accept
+class {owner}:
+ def __init__(self, handler: Accept): self.handler = handler
+ def execute(self, m, c):
+  invoke = self.handler.execute
+  return invoke(m, c)
+'''
+            self.assertTrue(violations(source, aggregate_methods()))
+
+    def test_multiple_repeated_and_captured_store_calls_are_rejected(self):
+        for body in ('self.store.execute(m, decide); self.store.execute(m, decide)',
+                     'for item in items: self.store.execute(m, decide)',
+                     'invoke = self.store.execute; invoke(m, decide)',
+                     'def nested(): self.store.execute(m, decide)'):
+            source = f'''class ChangeCommandHandler:
+ def __init__(self, store: AggregateCommandPort): self.store = store
+ def execute(self, m, decide):
+  {body}
+'''
+            self.assertTrue(violations(source, aggregate_methods()), body)

@@ -220,3 +220,9 @@ execution, retries and replay. Projection handlers retain their read-model role.
 `ProjectionHandler` suffixes identify application responsibilities. Domain roots
 retain their business names. Transport and persistence classes identify their
 concrete adaptor role; Go package-qualified types supply that infrastructure scope.
+
+[Decision 0012](docs/decisions/0012-enforcement-and-developer-workflow.md) strengthens
+command entry-point enforcement, partial-startup cleanup and exhaustive typed
+subscription registration. `pnpm dev:status` checks authority connections and
+actual broker consumers; `dev:up` waits on it. Historical compatibility is checked
+against an accepted revision independently from generated-file drift.

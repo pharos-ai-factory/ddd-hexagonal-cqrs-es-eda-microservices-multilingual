@@ -3,6 +3,8 @@ on:
   pull_request:
   push:
     branches: [main]
+env:
+  CAFE_CONTRACT_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'caa3206' }}
 permissions:
   contents: read
 concurrency:
@@ -16,6 +18,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.27.1'
@@ -40,6 +43,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.27.1'

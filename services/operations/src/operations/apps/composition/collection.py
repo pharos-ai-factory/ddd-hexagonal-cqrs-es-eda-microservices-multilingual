@@ -1,7 +1,7 @@
 """Collection's providers bind its own database and durable command port."""
 from enum import StrEnum
 from dependency_injector import containers, providers
-from operations.adaptors import codec
+from operations.apps.incoming_events import DRINKS_READY
 from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresAggregateQueries
 from operations.adaptors.internal_commands import InternalCommandCodec, PostgresDurableCommandOutbox
 from operations.adaptors.generated.cafe.internal.collection.internal_commands_pb2 import CommandEnvelope
@@ -10,7 +10,7 @@ from operations.contexts.collection.application import (OpenPickupCommand, OpenP
 from operations.contexts.collection.domain import Pickup, PickupSnapshot
 from operations.foundation.domain import identifier, record
 from operations.foundation.identity import derived_id
-from operations.apps.runtime import command_subscription, SubscriptionWorker
+from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
 
@@ -46,8 +46,9 @@ class CollectionContainer(containers.DeclarativeContainer):
 
 
 def subscriptions(container: CollectionContainer) -> tuple[SubscriptionWorker, ...]:
-    return command_subscription(container.codec(), subscription_definitions("collection"), codec.drinks_ready,
-        lambda event: derived_id("pickup", event["orderId"]), container.ready().handle, container.open().execute)
+    definitions = subscription_definitions("collection")
+    return complete_subscriptions("collection", definitions, command_subscription(container.codec(), definitions, DRINKS_READY,
+        lambda event: derived_id("pickup", event["orderId"]), container.ready().handle, container.open().execute))
 
 
 def command_header(body: bytes) -> tuple[str, str, str]:

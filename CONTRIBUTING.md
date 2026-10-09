@@ -120,3 +120,9 @@ acceptance plus command execution. Resolve all new providers in the composition
 test. `pnpm verify` rejects aggregate mutation outside command execution and DI
 imports outside composition. Published class-name changes must never silently
 rename stored command identities, queues or wire fields.
+
+Use [the developer workflow](docs/developer-workflow.md) for adding a use case in
+each language. `pnpm test:focused <service> --context <context>` gives local
+feedback; `pnpm verify` also compares historical contracts. Application handlers
+cannot invoke another command handler or execute an aggregate store twice.
+Subscription declarations must be exhaustive at composition. See decision 0012.

@@ -4,6 +4,14 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Enforce durable application hand-offs and one aggregate-store invocation per command.
+- Close resources on partial composition/startup failure and drain request workers.
+- Check historical interface compatibility and exhaustive typed subscriptions.
+- Add focused tests, readiness, prerequisite checks, Compose Watch, test debugger profiles,
+  role-based scaffolding, formatting and read-only workflow inspection.
+- Update the command/event walkthrough and per-language extension guide.
+
+
 - Adopt Awilix, Python Dependency Injector and Go Fx with explicit context
   bindings, framework-free application constructors and owned resource cleanup.
   Record comparisons and trade-offs in decisions 0010 and 0011.

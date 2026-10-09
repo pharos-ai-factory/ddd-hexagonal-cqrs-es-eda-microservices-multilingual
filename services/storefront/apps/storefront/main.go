@@ -4,13 +4,26 @@ import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/apps/support"
 	"go.uber.org/fx"
+	"log"
+	"os"
 )
 
 func composition() fx.Option {
-	return fx.Options(fx.Provide(func() (*support.StorefrontRuntime, error) { return support.Open("menu", "ordering") }),
+	return fx.Options(fx.Provide(func(scope *support.ResourceScope) (*support.StorefrontRuntime, error) {
+		service, err := support.Open("menu", "ordering")
+		if err == nil {
+			scope.Add(service.Close)
+		}
+		return service, err
+	}),
 		menuModule(), orderingModule(), fx.Invoke(startService))
 }
-func main() { fx.New(composition()).Run() }
+func main() {
+	if err := support.Run(composition()); err != nil {
+		log.Print(err)
+		os.Exit(1)
+	}
+}
 
 func startService(lifecycle fx.Lifecycle, shutdown fx.Shutdowner, service *support.StorefrontRuntime) {
 	done := make(chan error, 1)

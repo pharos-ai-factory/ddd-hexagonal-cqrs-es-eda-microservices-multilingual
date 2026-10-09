@@ -1,5 +1,38 @@
 # Executed verification
 
+## Architecture enforcement and developer workflow, 9 October 2026
+
+All eight review findings are addressed in decision 0012 and the
+[developer workflow](developer-workflow.md). `pnpm verify` passed historical
+OpenAPI/Protobuf compatibility, generated drift, architecture checks, native
+tests, Go race tests/vet, strict Python/TypeScript checks and all 51 fast Gherkin
+scenarios. Negative fixtures cover handler chaining, captured execution methods,
+repeated aggregate-store calls and incomplete or incompatible subscriptions.
+Lifecycle tests exercise partial construction, worker draining, cleanup failures
+and Fx failure exit status.
+
+`pnpm test:integration` passed persistence/broker recovery, 15 Python infrastructure
+checks, command failure identity logging, all 31 live OpenAPI operations, all
+12 infrastructure Gherkin scenarios, workflow inspection, browser recovery and
+in-flight session revocation. The new readiness fixture checks a stopped owner
+and its missing consumers. Its first run exposed a test assumption about immediate
+RabbitMQ management statistics; bounded observation fixed the assertion and the
+complete rerun passed. No required environment-dependent checks were skipped.
+
+A subsequent readiness addition checks Centrifugo's health endpoint. Its unit
+tests and a disposable live stop/restart probe passed: endpoint loss makes
+readiness fail, and restart restores readiness. Disposable stacks and volumes
+were removed after both live runs.
+
+Focused Loyalty tests, all nine scaffold variants, workflow identity extraction,
+doctor output, formatting and Compose Watch configuration validation passed.
+Debugger profiles and the interactive watch session were not exercised. Scaffolds
+remain reviewable starters with deliberately failing behaviour tests; developers
+supply domain policy and registration. Remote CI and load testing were not run.
+
+Logs: `.local/dx-verify-final.log`, `.local/dx-integration-final.log`,
+`.local/dx-realtime-readiness.log` and `.local/dx-focused.log`.
+
 ## Dependency injection and durable command reactions, 9 October 2026
 
 Decisions 0010 and 0011 record the framework comparison, explicit composition

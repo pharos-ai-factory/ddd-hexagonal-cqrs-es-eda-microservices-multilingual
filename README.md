@@ -90,6 +90,9 @@ pnpm dev:down             # Stop development containers; preserve their data
 Published ports bind to loopback. Change ports in `.local/dev.env` before
 starting if necessary.
 
+See [the developer workflow](docs/developer-workflow.md) for focused tests, automatic
+service rebuilds, debugger profiles, scaffolding and workflow inspection.
+
 ## Follow the story
 
 ```mermaid

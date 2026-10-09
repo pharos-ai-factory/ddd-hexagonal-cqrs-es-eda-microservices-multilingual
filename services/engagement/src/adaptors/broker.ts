@@ -75,12 +75,13 @@ export async function consume(url: string, sub: EventSubscription, signal: Abort
       const closed = new Promise<void>(resolve => current.once('close', resolve));
       const abort = () => { void current.close().catch(() => {}); };
       signal.addEventListener('abort', abort, {once: true});
+        if (signal.aborted) { abort(); return; }
       await channel.prefetch(1);
       await channel.consume(queue, message => {
         if (!message) { void current.close().catch(() => {}); return; }
         const work = (async () => {
           let validating = true;
-          let decoded: WireEvent | undefined;
+          let identity: {id: string; correlationId: string} | undefined;
           const incomingHeaders = message.properties.headers ?? {};
           const counter = 'ref-attempt' in incomingHeaders ? incomingHeaders['ref-attempt'] : 0;
           const validAttempt = typeof counter === 'number' && Number.isInteger(counter) && counter >= 0 && counter <= 3;
@@ -90,13 +91,14 @@ export async function consume(url: string, sub: EventSubscription, signal: Abort
             let m: Metadata, payload: object;
             if (sub.decodeCommand) {
               ({metadata: m, payload} = sub.decodeCommand(message.content));
+              identity = {id: m.id, correlationId: m.correlation};
               const p = message.properties;
               if (p.contentType !== 'application/x-protobuf' || p.deliveryMode !== 2 || p.messageId !== m.id ||
                 p.type !== sub.consumer+'.command' || p.appId !== sub.owner || p.correlationId !== m.correlation ||
                 p.headers?.['contract-version'] !== 1) throw new Error('Invalid command properties');
             } else {
               const event = decode(message.content);
-              decoded = event;
+              identity = event;
               if (event.name !== sub.event || (event.visibility === 'domain' && event.context !== sub.owner) ||
                 !validProperties(message.properties, event)) throw new Error('Invalid delivery metadata');
               payload = event.payload;
@@ -115,7 +117,7 @@ export async function consume(url: string, sub: EventSubscription, signal: Abort
             headers['ref-failure'] = errorClass(error);
             await confirmed(channel, 'ref.'+sub.owner+'.delivery', queue+suffix, message.content,
               {...message.properties, headers});
-            failure(sub.owner, sub.consumer, error, decoded?.id, decoded?.correlationId, suffix === '.dead');
+            failure(sub.owner, sub.consumer, error, identity?.id, identity?.correlationId, suffix === '.dead');
           }
           channel.ack(message);
         })().catch(error => { failure(sub.owner, sub.consumer+'.transfer', error); void current.close().catch(() => {}); });

@@ -30,3 +30,16 @@ test('allow aggregate behaviour only inside command execution, and read-only acc
   assert.deepEqual(check('class CreditCommandHandler { execute(account: Account) { account.credit("order", "grant"); } }'), []);
   assert.deepEqual(check('class AccountQueryHandler { handle(account: Account) { return account.snapshot(); } }'), []);
 });
+test('reject synchronous handler chaining and repeated store execution', () => {
+  for (const body of [
+    `class CreditCommandHandler { execute() {} }
+     class EventHandler { constructor(private next: CreditCommandHandler) {} handle() { this.next.execute(); } }`,
+    `class CreditCommandHandler { execute() {} }
+     class SecondCommandHandler { execute(next: CreditCommandHandler) { const action = next.execute; action(); } }`,
+    `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>, m: Metadata) {
+      store.execute(m, () => {throw Error()}); store.execute(m, () => {throw Error()}); } }`,
+    `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>, m: Metadata) {
+      for (const id of [1,2]) store.execute(m, () => {throw Error()}); } }`,
+    `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>) { const run = store.execute; } }`,
+  ]) assert.ok(check(body).length, body);
+});

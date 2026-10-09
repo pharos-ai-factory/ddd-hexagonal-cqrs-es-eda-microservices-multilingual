@@ -9,6 +9,7 @@ import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/sessions"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/apps/support"
 	"go.uber.org/fx"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -32,20 +33,22 @@ func settings() (APISettings, error) {
 	}
 	return values, nil
 }
-func sessionStore(lifecycle fx.Lifecycle, settings APISettings) (*sessions.ValkeySessionStore, error) {
+func sessionStore(lifecycle fx.Lifecycle, scope *support.ResourceScope, settings APISettings) (*sessions.ValkeySessionStore, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	store, err := sessions.Open(ctx, settings["VALKEY_ADDRESS"], settings["SESSION_PASSWORD"], settings["REALTIME_GATEWAY_URL"], settings["SESSION_REALTIME_KEY"])
 	if err != nil {
 		return nil, err
 	}
-	lifecycle.Append(fx.Hook{OnStop: func(context.Context) error { store.Close(); return nil }})
+	scope.Add(store.Close)
 	return store, nil
 }
 
 // The store dependency ensures worker shutdown precedes store disposal in reverse hook order.
-func workers(lifecycle fx.Lifecycle, _ *sessions.ValkeySessionStore) *support.WorkerGroup {
-	return support.NewWorkerGroup(lifecycle)
+func workers(lifecycle fx.Lifecycle, scope *support.ResourceScope, _ *sessions.ValkeySessionStore) *support.WorkerGroup {
+	group := support.NewWorkerGroup(lifecycle)
+	scope.Add(group.Close)
+	return group
 }
 func server(lifecycle fx.Lifecycle, group *support.WorkerGroup, store *sessions.ValkeySessionStore, requests *messaging.RabbitMQRequestClient, settings APISettings) *http.Server {
 	owners := []string{"menu", "ordering", "preparation", "collection", "loyalty", "communication"}
@@ -63,4 +66,9 @@ func server(lifecycle fx.Lifecycle, group *support.WorkerGroup, store *sessions.
 func composition() fx.Option {
 	return fx.Options(fx.Provide(settings, sessionStore, workers, messaging.NewClient, server), fx.Invoke(support.Serve))
 }
-func main() { fx.New(composition()).Run() }
+func main() {
+	if err := support.Run(composition()); err != nil {
+		log.Print(err)
+		os.Exit(1)
+	}
+}

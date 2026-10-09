@@ -141,3 +141,11 @@ lane additionally verifies receiving-record rollback, immutable exact bytes, fen
 command dispatch recovery, bounded command retries and replay without a second
 aggregate transition. Run `pnpm verify` and `pnpm test:integration` together for a
 complete hand-off; static analysis assumes the supported typed coding conventions.
+
+Focused native tests use `pnpm test:focused <service> --context <context>`; omit
+the context for service-wide tests. `pnpm test:unit` runs native tests across all
+services without generation/type/architecture gates. Full verification includes
+historical OpenAPI/Protobuf comparison and negative fixtures for handler chaining,
+repeated store calls, subscription completeness and lifecycle failure cleanup.
+Infrastructure verification also stops a service to test readiness and inspects
+a completed workflow without consuming its messages. See decision 0012.

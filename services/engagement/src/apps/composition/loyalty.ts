@@ -12,7 +12,7 @@ import {CreditCollectionCommandHandler, IssueRewardCommandHandler, RedeemRewardC
 import {OrderCollectedIntegrationEventHandler, RewardEarnedDomainEventHandler} from '../../contexts/loyalty/application/event-handlers.js';
 import schema from '../../contexts/loyalty/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};
 import definitions from '../../contexts/loyalty/adaptors/messaging/subscriptions.json' with {type: 'json'};
-import {commandSubscription} from '../runtime.js';
+import {commandSubscription, completeSubscriptions} from '../runtime.js';
 
 /** Stable queue identities survive class renames, releases and replay. */
 export enum LoyaltySubscription {
@@ -62,12 +62,14 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
   });
   return container;
 }
-export function composeLoyalty() {
+export async function composeLoyalty() {
   const container = createLoyaltyContainer(secret('LOYALTY_DATABASE_URL'));
+  try {
   const c = container.cradle;
   return {database: c.database, accountQueries: c.accountQueries, rewardQueries: c.rewardQueries, redeem: c.redeem,
-    commandHeader: commandPublication(schema, 'loyalty'), dispose: () => container.dispose(), subscriptions: [
-      ...commandSubscription(c.creditCodec, definitions, event => event.customerId, c.collected, c.credit),
-      ...commandSubscription(c.issueCodec, definitions, event => derivedId('reward', event.grantId), c.earned, c.issue),
-    ]};
+    commandHeader: commandPublication(schema, 'loyalty'), dispose: () => container.dispose(), subscriptions: completeSubscriptions('loyalty', definitions, [
+      ...commandSubscription('collection.order-collected', c.creditCodec, definitions, event => event.customerId, c.collected, c.credit),
+      ...commandSubscription('loyalty.reward-earned', c.issueCodec, definitions, event => derivedId('reward', event.grantId), c.earned, c.issue),
+    ])};
+  } catch (error) { await container.dispose(); throw error; }
 }

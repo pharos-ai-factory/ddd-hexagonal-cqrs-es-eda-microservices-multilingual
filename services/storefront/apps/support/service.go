@@ -101,6 +101,7 @@ func (s *StorefrontRuntime) Stop() { s.cancel() }
 
 func (s *StorefrontRuntime) Close() {
 	s.cancel()
+	s.workers.Wait()
 	for _, db := range s.Databases {
 		db.Close()
 	}

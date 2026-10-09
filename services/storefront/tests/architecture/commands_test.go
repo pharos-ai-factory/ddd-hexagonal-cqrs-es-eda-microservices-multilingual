@@ -65,6 +65,34 @@ func mutationObject(object types.Object) bool {
 	}
 	return false
 }
+
+// executionRole identifies typed store and handler methods, including method values.
+func executionRole(object types.Object) string {
+	method, ok := object.(*types.Func)
+	if !ok || method.Name() != "Execute" {
+		return ""
+	}
+	signature := method.Type().(*types.Signature)
+	if signature.Recv() == nil {
+		return ""
+	}
+	value := signature.Recv().Type()
+	if pointer, ok := value.(*types.Pointer); ok {
+		value = pointer.Elem()
+	}
+	named, ok := value.(*types.Named)
+	if !ok {
+		return ""
+	}
+	name := named.Obj().Name()
+	if name == "AggregateCommandPort" || name == "AggregateCommandStore" {
+		return "store"
+	}
+	if strings.HasSuffix(name, "CommandHandler") {
+		return "handler"
+	}
+	return ""
+}
 func violations(file *ast.File, info *types.Info, application bool) []token.Pos {
 	var errors []token.Pos
 	for _, declaration := range file.Decls {
@@ -75,16 +103,60 @@ func violations(file *ast.File, info *types.Info, application bool) []token.Pos 
 			if pointer, ok := receiver.(*ast.StarExpr); ok {
 				receiver = pointer.X
 			}
+			if indexed, ok := receiver.(*ast.IndexExpr); ok {
+				receiver = indexed.X
+			}
+			if indexed, ok := receiver.(*ast.IndexListExpr); ok {
+				receiver = indexed.X
+			}
 			if name, ok := receiver.(*ast.Ident); ok {
 				allowed = strings.HasSuffix(name.Name, "CommandHandler")
 			}
 		}
+		parents := map[ast.Node]ast.Node{}
+		var stack []ast.Node
 		ast.Inspect(declaration, func(node ast.Node) bool {
+			if node == nil {
+				stack = stack[:len(stack)-1]
+				return false
+			}
+			if len(stack) > 0 {
+				parents[node] = stack[len(stack)-1]
+			}
+			stack = append(stack, node)
+			return true
+		})
+		stores := 0
+		ast.Inspect(declaration, func(node ast.Node) bool {
+			if name, ok := node.(*ast.Ident); ok {
+				role := executionRole(info.Uses[name])
+				if application && role == "handler" {
+					errors = append(errors, node.Pos())
+				}
+				if role == "store" && allowed {
+					stores++
+					selector := parents[node]
+					call, direct := parents[selector].(*ast.CallExpr)
+					invalid := !direct || call.Fun != selector
+					for p := parents[selector]; p != nil && p != declaration; p = parents[p] {
+						switch p.(type) {
+						case *ast.ForStmt, *ast.RangeStmt, *ast.FuncLit, *ast.GoStmt, *ast.DeferStmt:
+							invalid = true
+						}
+					}
+					if invalid {
+						errors = append(errors, node.Pos())
+					}
+				}
+			}
 			if name, ok := node.(*ast.Ident); ok && mutationObject(info.Uses[name]) && !allowed {
 				errors = append(errors, node.Pos())
 			}
 			return true
 		})
+		if stores > 1 {
+			errors = append(errors, declaration.Pos())
+		}
 	}
 	return errors
 }
@@ -190,3 +262,36 @@ func TestMutationBoundaryNegativeFixtures(t *testing.T) {
 type fixtureImporter struct{ dependency *types.Package }
 
 func (i fixtureImporter) Import(string) (*types.Package, error) { return i.dependency, nil }
+
+func TestUseCaseBoundaryNegativeFixtures(t *testing.T) {
+	for _, body := range []string{
+		"h.Next.Execute()",
+		"invoke := h.Next.Execute; invoke()",
+		"h.Store.Execute(); h.Store.Execute()",
+		"for i:=0;i<2;i++ { h.Store.Execute() }",
+		"invoke := h.Store.Execute; invoke()",
+		"run := func(){ h.Store.Execute() }; run(); run()",
+	} {
+		t.Run(body, func(t *testing.T) {
+			fset := token.NewFileSet()
+			source := `package application
+    type AggregateCommandPort interface { Execute() }
+    type NextCommandHandler struct{}
+    func (NextCommandHandler) Execute() {}
+    type ChangeCommandHandler struct { Store AggregateCommandPort; Next NextCommandHandler }
+    func (h ChangeCommandHandler) Execute() { ` + body + ` }`
+			file, err := parser.ParseFile(fset, "fixture.go", source, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			info := &types.Info{Uses: map[*ast.Ident]types.Object{}}
+			config := types.Config{}
+			if _, err = config.Check("fixture/application", fset, []*ast.File{file}, info); err != nil {
+				t.Fatal(err)
+			}
+			if len(violations(file, info, true)) == 0 {
+				t.Fatal("use-case boundary bypass accepted")
+			}
+		})
+	}
+}

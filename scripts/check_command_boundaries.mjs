@@ -28,6 +28,8 @@ export function violations(program, selected) {
   }
   for (const file of program.getSourceFiles()) {
     if (!selected(file.fileName)) continue;
+    const stores = new Map();
+    const report = (node, message) => errors.push(`${file.fileName}:${file.getLineAndCharacterOfPosition(node.getStart()).line+1}: ${message}`);
     function visit(node) {
       let forbidden = false;
       if (ts.isNewExpression(node)) {
@@ -42,6 +44,20 @@ export function violations(program, selected) {
         if (!symbol && ts.isElementAccessExpression(node) && ts.isStringLiteral(key))
           symbol = checker.getPropertyOfType(checker.getTypeAtLocation(node.expression), key.text);
         const declarations = symbol?.declarations ?? [];
+        const core = file.fileName.replaceAll('\\', '/').includes('/application/');
+        if (core && declarations.some(d => ts.isClassDeclaration(d.parent) && d.parent.name?.text.endsWith('CommandHandler')))
+          report(node, 'application handlers must use durable commands; direct command-handler capabilities are forbidden');
+        const store = declarations.some(d => (ts.isInterfaceDeclaration(d.parent) || ts.isClassDeclaration(d.parent)) &&
+          ['AggregateCommandPort', 'PostgresAggregateCommandStore'].includes(d.parent.name?.text) && name === 'execute');
+        if (store && commandExecution(node)) {
+          const method = enclosing(node, ts.isMethodDeclaration);
+          stores.set(method, (stores.get(method) ?? 0) + 1);
+          let repeated = false;
+          for (let p = node.parent; p && p !== method; p = p.parent)
+            if (ts.isIterationStatement(p, false) || ts.isFunctionLike(p)) repeated = true;
+          if (!ts.isCallExpression(node.parent) || node.parent.expression !== node || repeated)
+            report(node, 'aggregate store execution must be one direct, non-repeated call');
+        }
         forbidden ||= declarations.some(declaration => {
           const owner = declaration.parent;
           return (aggregateClass(owner) && !readMethods.has(name)) ||
@@ -56,6 +72,7 @@ export function violations(program, selected) {
       ts.forEachChild(node, visit);
     }
     visit(file);
+    for (const [method, count] of stores) if (count > 1) report(method, 'a command handler may invoke the aggregate store once');
   }
   return errors;
 }

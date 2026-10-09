@@ -1,7 +1,7 @@
 """Preparation's explicit providers and typed subscription declaration."""
 from enum import StrEnum
 from dependency_injector import containers, providers
-from operations.adaptors import codec
+from operations.apps.incoming_events import ORDER_PLACED
 from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresAggregateQueries
 from operations.adaptors.internal_commands import InternalCommandCodec, PostgresDurableCommandOutbox
 from operations.adaptors.generated.cafe.internal.preparation.internal_commands_pb2 import CommandEnvelope
@@ -10,7 +10,7 @@ from operations.contexts.preparation.application import (AcceptOrderCommand, Acc
 from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
 from operations.foundation.domain import identifier, record, text
 from operations.foundation.identity import derived_id
-from operations.apps.runtime import command_subscription, SubscriptionWorker
+from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
 
@@ -48,8 +48,9 @@ class PreparationContainer(containers.DeclarativeContainer):
 
 
 def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, ...]:
-    return command_subscription(container.codec(), subscription_definitions("preparation"), codec.order_placed,
-        lambda event: derived_id("ticket", event["orderId"]), container.accepted().handle, container.accept().execute)
+    definitions = subscription_definitions("preparation")
+    return complete_subscriptions("preparation", definitions, command_subscription(container.codec(), definitions, ORDER_PLACED,
+        lambda event: derived_id("ticket", event["orderId"]), container.accepted().handle, container.accept().execute))
 
 
 def command_header(body: bytes) -> tuple[str, str, str]:

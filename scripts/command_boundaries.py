@@ -23,12 +23,17 @@ def violations(source, aggregates, path='contexts/example/application.py'):
     symbols = {}
     ports = {'AggregateCommandPort', 'PostgresAggregateCommandStore'}
     for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name.endswith('CommandHandler'):
+            symbols[node.name] = '@handler'
+    for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             for item in node.names:
                 if item.name in aggregates and (node.module or '').endswith('.domain'):
                     symbols[item.asname or item.name] = item.name
                 if item.name in {'AggregateCommandPort', 'PostgresAggregateCommandStore'}:
                     ports.add(item.asname or item.name)
+                if item.name.endswith('CommandHandler'):
+                    symbols[item.asname or item.name] = '@handler'
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -91,10 +96,28 @@ def violations(source, aggregates, path='contexts/example/application.py'):
         return owner and owner.endswith('CommandHandler') and method == 'execute' and '/application' in '/'+path
 
     errors = []
+    stores = {}
     for node in ast.walk(tree):
         mutation = False
         if isinstance(node, ast.Attribute):
             identity = resolve(node.value)
+            if identity == '@handler' and '/application' in '/'+path:
+                errors.append(f'{path}:{node.lineno}: direct command-handler capability in application')
+            if identity == '@command-store' and node.attr == 'execute' and allowed(node):
+                parent, repeated = parents.get(node), False
+                if not isinstance(parent, ast.Call) or parent.func is not node:
+                    repeated = True
+                while parent:
+                    if isinstance(parent, (ast.For, ast.AsyncFor, ast.While, ast.Lambda, ast.comprehension)):
+                        repeated = True
+                    if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        if parent.name == 'execute' and isinstance(parents.get(parent), ast.ClassDef):
+                            stores[parent] = stores.get(parent, 0) + 1
+                            break
+                        repeated = True
+                    parent = parents.get(parent)
+                if repeated:
+                    errors.append(f'{path}:{node.lineno}: aggregate store execution must be one direct, non-repeated call')
             if identity in aggregates and node.attr.startswith('_'):
                 errors.append(f'{path}:{node.lineno}: aggregate internals accessed outside its domain')
                 continue
@@ -113,6 +136,9 @@ def violations(source, aggregates, path='contexts/example/application.py'):
                 continue
         if mutation and not allowed(node):
             errors.append(f'{path}:{node.lineno}: aggregate mutation outside CommandHandler.execute')
+    for method, count in stores.items():
+        if count > 1:
+            errors.append(f'{path}:{method.lineno}: a command handler may invoke the aggregate store once')
     return errors
 
 

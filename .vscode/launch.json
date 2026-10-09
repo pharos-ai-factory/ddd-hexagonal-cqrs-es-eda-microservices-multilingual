@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Go: current Storefront test package",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}",
+      "cwd": "${workspaceFolder}/services/storefront"
+    },
+    {
+      "name": "Go: API composition tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/services/api/apps/api",
+      "cwd": "${workspaceFolder}/services/api"
+    },
+    {
+      "name": "Python: current test",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-q"],
+      "python": "${workspaceFolder}/services/operations/.venv/bin/python",
+      "cwd": "${workspaceFolder}/services/operations"
+    },
+    {
+      "name": "TypeScript: current test",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": ["--import", "tsx", "--test", "${file}"],
+      "cwd": "${workspaceFolder}/services/engagement",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
