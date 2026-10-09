@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {Given, When, Then} from '@cucumber/cucumber';
-import {CreditCollectionCommandHandler, IssueRewardCommandHandler, RedeemRewardCommandHandler} from '../../src/contexts/loyalty/application/commands.js';
+import {CreditCollectionCommandHandler} from '../../src/contexts/loyalty/application/commands/credit-collection.js';
+import {IssueRewardCommandHandler} from '../../src/contexts/loyalty/application/commands/issue-reward.js';
+import {RedeemRewardCommandHandler} from '../../src/contexts/loyalty/application/commands/redeem-reward.js';
 import {derivedId} from '../../src/foundation/identity.js';
 
 import type {RewardEarned} from '../../src/contexts/loyalty/application/events.js';

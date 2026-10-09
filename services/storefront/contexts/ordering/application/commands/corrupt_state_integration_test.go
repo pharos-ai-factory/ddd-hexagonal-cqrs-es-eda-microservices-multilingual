@@ -1,6 +1,6 @@
 //go:build integration
 
-package application_test
+package commands_test
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime"
@@ -72,7 +72,7 @@ func TestStoredOrderPriceMustBeExplicit(t *testing.T) {
 			m := a.Metadata{ID: pg.NewID(), AggregateID: id, Name: "ordering.PlaceOrder",
 				ExpectedVersion: a.Expected(1), CorrelationID: pg.NewID(), Input: struct{}{},
 				Consumer: "ordering.test-corrupt-price", SourceEventID: pg.NewID(), SourceHash: "fixture"}
-			handler := app.PlaceOrderCommandHandler{Orders: pg.Command[d.OrderState](db, "order")}
+			handler := orderingcommands.PlaceOrderCommandHandler{Orders: pg.Command[d.OrderState](db, "order")}
 			outcome, failure := handler.Execute(t.Context(), m, struct{}{})
 			if name == "missing" || name == "null" || name == "different_root" {
 				var violation *core.Violation

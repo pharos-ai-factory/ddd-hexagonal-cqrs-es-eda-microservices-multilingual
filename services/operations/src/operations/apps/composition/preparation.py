@@ -5,8 +5,10 @@ from operations.apps.incoming_events import ORDER_PLACED
 from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresAggregateQueries
 from operations.adaptors.internal_commands import InternalCommandCodec, PostgresDurableCommandOutbox
 from operations.adaptors.generated.cafe.internal.preparation.internal_commands_pb2 import CommandEnvelope
-from operations.contexts.preparation.application import (AcceptOrderCommand, AcceptOrderCommandHandler,
-    StartPreparationCommandHandler, CompletePreparationCommandHandler, OrderPlacedIntegrationEventHandler)
+from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand, AcceptOrderCommandHandler
+from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommandHandler
+from operations.contexts.preparation.application.commands.complete_preparation import CompletePreparationCommandHandler
+from operations.contexts.preparation.application.event_handlers import OrderPlacedIntegrationEventHandler
 from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
 from operations.foundation.domain import identifier, record, text
 from operations.foundation.identity import derived_id

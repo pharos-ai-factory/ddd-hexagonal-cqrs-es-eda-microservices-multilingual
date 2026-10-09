@@ -1,4 +1,4 @@
-package application_test
+package commands_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/cucumber/godog"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -20,7 +21,7 @@ type menuWorld struct {
 }
 
 func (w *menuWorld) publishDrink() error {
-	_, err := (app.PublishDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), struct{}{})
+	_, err := (menucommands.PublishDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), struct{}{})
 	if err != nil {
 		return err
 	}
@@ -32,16 +33,16 @@ func (w *menuWorld) publishDrink() error {
 	return nil
 }
 func (w *menuWorld) add(code string, minor int64) error {
-	_, err := (app.AddOfferCommandHandler{Editions: &w.editions, Drinks: &w.directory}).Execute(context.Background(), s.Metadata(s.Edition),
-		app.AddOfferCommand{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
+	_, err := (menucommands.AddOfferCommandHandler{Editions: &w.editions, Drinks: &w.directory}).Execute(context.Background(), s.Metadata(s.Edition),
+		menucommands.AddOfferCommand{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
 	return err
 }
 func (w *menuWorld) publish() error {
-	_, err := (app.PublishEditionCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), struct{}{})
+	_, err := (menucommands.PublishEditionCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), struct{}{})
 	return err
 }
 func (w *menuWorld) price(code string, minor int64) error {
-	_, err := (app.ChangePriceCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), app.ChangePriceCommand{Code: code, Minor: minor})
+	_, err := (menucommands.ChangePriceCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), menucommands.ChangePriceCommand{Code: code, Minor: minor})
 	return err
 }
 func (w *menuWorld) offer() (d.OfferState, error) {
@@ -53,7 +54,7 @@ func (w *menuWorld) offer() (d.OfferState, error) {
 
 func TestMenuFeatures(t *testing.T) {
 	suite := godog.TestSuite{Name: "menu",
-		Options: s.FeatureOptions(t, "menu", "../../../../../specifications/menu", "@fast"),
+		Options: s.FeatureOptions(t, "menu", "../../../../../../specifications/menu", "@fast"),
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
 			w := &menuWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
@@ -61,7 +62,7 @@ func TestMenuFeatures(t *testing.T) {
 				return ctx, nil
 			})
 			sc.Step(`^a published drink named "([^"]*)"$`, func(name string) error {
-				_, err := (app.CreateDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), app.CreateDrinkCommand{Name: name})
+				_, err := (menucommands.CreateDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), menucommands.CreateDrinkCommand{Name: name})
 				if err != nil {
 					return err
 				}
@@ -71,7 +72,7 @@ func TestMenuFeatures(t *testing.T) {
 				return w.publishDrink()
 			})
 			sc.Step(`^a draft menu edition in "([^"]*)"$`, func(currency string) error {
-				_, err := (app.CreateEditionCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), app.CreateEditionCommand{Currency: currency})
+				_, err := (menucommands.CreateEditionCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), menucommands.CreateEditionCommand{Currency: currency})
 				if err != nil {
 					return err
 				}
@@ -124,7 +125,7 @@ func TestMenuFeatures(t *testing.T) {
 				return nil
 			})
 			sc.Step(`^the drink is renamed to "([^"]*)" and published again$`, func(name string) error {
-				_, err := (app.ReviseDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), app.ReviseDrinkCommand{Name: name})
+				_, err := (menucommands.ReviseDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), menucommands.ReviseDrinkCommand{Name: name})
 				if err != nil {
 					return err
 				}

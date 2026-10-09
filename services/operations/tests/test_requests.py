@@ -4,7 +4,7 @@ from operations.contexts.collection.adaptors.messaging import requests as collec
 from operations.adaptors.requests import RabbitMQRequestRegistry, validate
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Request
 from operations.foundation.application import Metadata, Outcome
-from operations.contexts.collection.application import CollectOrderCommand
+from operations.contexts.collection.application.commands.collect_order import CollectOrderCommand
 
 ID = "11111111-1111-4111-8111-111111111111"
 

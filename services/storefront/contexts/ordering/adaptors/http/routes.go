@@ -2,6 +2,7 @@ package http
 
 import (
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/http"
 	"net/http"
 )
@@ -9,10 +10,10 @@ import (
 // OrderingHTTPHandlers groups the explicitly typed handlers mounted by this transport adaptor.
 type OrderingHTTPHandlers struct {
 	OrderingQueries app.OrderingQueries
-	CreateOrder     app.CreateOrderCommandHandler
-	AddLine         app.AddLineCommandHandler
-	ChangeQuantity  app.ChangeQuantityCommandHandler
-	PlaceOrder      app.PlaceOrderCommandHandler
+	CreateOrder     orderingcommands.CreateOrderCommandHandler
+	AddLine         orderingcommands.AddLineCommandHandler
+	ChangeQuantity  orderingcommands.ChangeQuantityCommandHandler
+	PlaceOrder      orderingcommands.PlaceOrderCommandHandler
 }
 
 func Mount(mux interface {

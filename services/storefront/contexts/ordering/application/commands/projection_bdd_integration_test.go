@@ -1,6 +1,6 @@
 //go:build integration
 
-package application_test
+package commands_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/jackc/pgx/v5/pgxpool"
-	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
@@ -27,14 +27,14 @@ type projectionWorld struct {
 	evidence    *pgxpool.Pool
 	menus       *pg.ProjectionStore[model.MenuPublished]
 	m           a.Metadata
-	input       app.CreateOrderCommand
+	input       orderingcommands.CreateOrderCommand
 	first, last a.Outcome
 	original    a.Loaded[d.OrderState]
 }
 
 func (w *projectionWorld) request() error {
 	w.m.Input = w.input
-	result, err := (app.CreateOrderCommandHandler{Orders: pg.Command[d.OrderState](w.db, "order"), Menus: w.menus}).Execute(context.Background(), w.m, w.input)
+	result, err := (orderingcommands.CreateOrderCommandHandler{Orders: pg.Command[d.OrderState](w.db, "order"), Menus: w.menus}).Execute(context.Background(), w.m, w.input)
 	w.last = result
 	return err
 }
@@ -93,14 +93,14 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 	}
 	defer evidence.Close()
 	suite := godog.TestSuite{Name: "ordering-postgres",
-		Options: s.FeatureOptions(t, "ordering-postgres", "../../../../../specifications/ordering", "@postgres"),
+		Options: s.FeatureOptions(t, "ordering-postgres", "../../../../../../specifications/ordering", "@postgres"),
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
 			w := &projectionWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 				zero := uint64(0)
 				*w = projectionWorld{db: db, evidence: evidence, menus: pg.Project[model.MenuPublished](db, "menu-directory"),
 					m:     a.Metadata{ID: pg.NewID(), AggregateID: pg.NewID(), Name: "create-order", CorrelationID: pg.NewID(), ExpectedVersion: &zero},
-					input: app.CreateOrderCommand{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
+					input: orderingcommands.CreateOrderCommand{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
 				return ctx, nil
 			})
 			sc.Step(`^a published menu has not reached Ordering$`, func() error {

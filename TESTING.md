@@ -142,6 +142,11 @@ command dispatch recovery, bounded command retries and replay without a second
 aggregate transition. Run `pnpm verify` and `pnpm test:integration` together for a
 complete hand-off; static analysis assumes the supported typed coding conventions.
 
+Command layout checks require one DTO/handler pair per file in each context's
+`application/commands/` directory. Negative fixtures cover grouped pairs, a
+missing handler and the previous flat layout. Go checks include nested
+application packages; native scenario runners discover the relocated tests.
+
 Focused native tests use `pnpm test:focused <service> --context <context>`; omit
 the context for service-wide tests. `pnpm test:unit` runs native tests across all
 services without generation/type/architecture gates. Full verification includes

@@ -111,7 +111,10 @@ by its `generated/` directory. A domain service receives only its own request
 packages. Generate all service clients with `pnpm generate:contracts`.
 
 For a new event-driven aggregate change, add the owner command DTO and
-`CommandHandler`, map the fact in an `IntegrationEventHandler` or
+`CommandHandler` together in `application/commands/<action>`, one pair per file.
+Use snake_case filenames in Go/Python and kebab-case in TypeScript. Import the
+owning command package or module directly; see decision 0013.
+Map the fact in an `IntegrationEventHandler` or
 `DomainEventHandler`, and register its durable subscription in the context
 composition. Keep the stable subscription identifier in its typed definition and
 `adaptors/messaging/subscriptions.json`. Add the private Protobuf command under

@@ -9,7 +9,7 @@ from starlette.routing import Route
 from starlette.types import Message
 from operations.adaptors.http import mount_command
 from operations.adaptors.inputs import start_preparation
-from operations.contexts.preparation.application import StartPreparationCommand
+from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommand
 from operations.foundation.application import Metadata, Outcome
 
 ID = "00000000-0000-4000-8000-000000000001"

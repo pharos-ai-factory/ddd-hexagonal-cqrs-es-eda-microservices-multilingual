@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import type {AggregateCommandPort, Loaded, Metadata, QueryPort} from '../../../foundation/application.js';
-import type {NotificationState} from '../domain/notification.js';
-import {DeliverNotificationCommandHandler} from './commands.js';
+import type {AggregateCommandPort, Loaded, Metadata, QueryPort} from '../../../../foundation/application.js';
+import type {NotificationState} from '../../domain/notification.js';
+import {DeliverNotificationCommandHandler} from './deliver-notification.js';
 
 test('invalid stored notification content is rejected before any provider request', async () => {
   const id = '00000000-0000-4000-8000-000000000001';

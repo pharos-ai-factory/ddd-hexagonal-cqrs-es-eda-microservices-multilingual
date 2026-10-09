@@ -1,7 +1,8 @@
 import type {DurableCommandPort, Metadata} from '../../../foundation/application.js';
 import type {PickupOpened, RewardIssued} from '../../../contracts/events.js';
 import type {NotificationRequested} from './events.js';
-import type {RequestNotificationCommand, DeliverNotificationCommand} from './commands.js';
+import type {RequestNotificationCommand} from './commands/request-notification.js';
+import type {DeliverNotificationCommand} from './commands/deliver-notification.js';
 
 /** Owns notification wording and durably requests a notification aggregate. */
 export class PickupOpenedIntegrationEventHandler {

@@ -3,7 +3,7 @@ from pathlib import Path
 from mypy import api
 
 IMPORTS = """\
-from operations.contexts.collection.application import CollectOrderCommandHandler
+from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain import PickupSnapshot
 from operations.contexts.preparation.domain import TicketSnapshot
 from operations.contracts.events import DrinksReady

@@ -161,6 +161,37 @@ func violations(file *ast.File, info *types.Info, application bool) []token.Pos 
 	return errors
 }
 
+func applicationPackage(name string) bool {
+	return strings.Contains(name, "/contexts/") && strings.Contains(name+"/", "/application/")
+}
+
+func commandLayout(file *ast.File, packagePath string) bool {
+	var commands, handlers []string
+	for _, declaration := range file.Decls {
+		group, ok := declaration.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range group.Specs {
+			named, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			name := named.Name.Name
+			if strings.HasSuffix(name, "CommandHandler") {
+				handlers = append(handlers, name)
+			} else if strings.HasSuffix(name, "Command") {
+				commands = append(commands, name)
+			}
+		}
+	}
+	if len(commands)+len(handlers) == 0 {
+		return true
+	}
+	return strings.HasSuffix(packagePath, "/application/commands") && len(commands) == 1 &&
+		len(handlers) == 1 && handlers[0] == commands[0]+"Handler"
+}
+
 func TestProductionCommandBoundaries(t *testing.T) {
 	root := filepath.Join("..", "..")
 	command := exec.Command("go", "list", "-export", "-json", "-deps", "./...")
@@ -207,9 +238,34 @@ func TestProductionCommandBoundaries(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, file := range files {
-			for _, pos := range violations(file, info, strings.HasSuffix(p.ImportPath, "/application")) {
+			application := applicationPackage(p.ImportPath)
+			if application && !commandLayout(file, p.ImportPath) {
+				t.Errorf("%s: keep one command and its handler together in application/commands", fileset.Position(file.Pos()))
+			}
+			for _, pos := range violations(file, info, application) {
 				t.Errorf("%s: aggregate mutation capability outside CommandHandler.Execute", fileset.Position(pos))
 			}
+		}
+	}
+}
+
+func TestCommandPackageLayout(t *testing.T) {
+	for _, fixture := range []struct {
+		path, source string
+		valid        bool
+	}{
+		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", true},
+		{"fixture/contexts/ordering/application/commands", "type OrderNotFoundApplicationError struct{}", true},
+		{"fixture/contexts/ordering/application", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", false},
+		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}", false},
+		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}; type AddLineCommand struct{}; type AddLineCommandHandler struct{}", false},
+	} {
+		file, err := parser.ParseFile(token.NewFileSet(), "fixture.go", "package commands; "+fixture.source, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !applicationPackage(fixture.path) || commandLayout(file, fixture.path) != fixture.valid {
+			t.Errorf("incorrect layout result for %s: %s", fixture.path, fixture.source)
 		}
 	}
 }

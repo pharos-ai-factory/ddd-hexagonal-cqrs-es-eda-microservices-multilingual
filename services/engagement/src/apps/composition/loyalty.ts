@@ -7,8 +7,9 @@ import {InternalCommandCodec, PostgresDurableCommandOutbox, commandPublication} 
 import {derivedId} from '../../foundation/identity.js';
 import {secret} from '../../foundation/secrets.js';
 import {identifier} from '../../foundation/domain.js';
-import {CreditCollectionCommandHandler, IssueRewardCommandHandler, RedeemRewardCommandHandler,
-  type CreditCollectionCommand, type IssueRewardCommand} from '../../contexts/loyalty/application/commands.js';
+import {CreditCollectionCommandHandler, type CreditCollectionCommand} from '../../contexts/loyalty/application/commands/credit-collection.js';
+import {IssueRewardCommandHandler, type IssueRewardCommand} from '../../contexts/loyalty/application/commands/issue-reward.js';
+import {RedeemRewardCommandHandler} from '../../contexts/loyalty/application/commands/redeem-reward.js';
 import {OrderCollectedIntegrationEventHandler, RewardEarnedDomainEventHandler} from '../../contexts/loyalty/application/event-handlers.js';
 import schema from '../../contexts/loyalty/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};
 import definitions from '../../contexts/loyalty/adaptors/messaging/subscriptions.json' with {type: 'json'};

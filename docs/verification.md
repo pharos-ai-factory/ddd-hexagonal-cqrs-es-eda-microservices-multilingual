@@ -1,5 +1,29 @@
 # Executed verification
 
+## Command module layout, 9 October 2026
+
+Decision 0013 organises all 21 command/handler pairs under their six owning
+contexts' `application/commands/` directories. Composition roots, adaptors, event
+reactions and tests import the command packages/modules directly. Existing Go
+scenario and PostgreSQL fixtures moved beside the command package; native runners
+include nested packages. The scaffold creates the same directory structure.
+
+`pnpm verify` passed generation and historical compatibility, architecture checks
+across 70 Go packages, both Go race/vet lanes, Python Ruff/strict Mypy, native
+tests, TypeScript checks and all 51 fast scenarios. Compiler/AST negative fixtures
+reject grouped pairs, missing partners and command declarations outside the
+command directory. Go mutation checks cover nested application packages.
+
+`pnpm test:integration` passed persistence and broker recovery, all 31 live HTTP
+operations, all 12 infrastructure scenarios, readiness and workflow inspection,
+both browser scenarios and in-flight session revocation. No required
+environment-dependent checks were skipped. Disposable containers and volumes
+were removed. Command scaffolds were also written and inspected for all three
+languages. Remote CI and load testing were not run.
+
+Logs: `.local/command-layout-verify.log` and
+`.local/command-layout-integration.log`.
+
 ## Architecture enforcement and developer workflow, 9 October 2026
 
 All eight review findings are addressed in decision 0012 and the

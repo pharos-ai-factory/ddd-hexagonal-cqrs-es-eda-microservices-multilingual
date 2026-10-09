@@ -12,7 +12,7 @@ from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
 from operations.adaptors.delivery import EventSubscription, binary, broker_connection, claim, consume, finish, relay
 from operations.adaptors.postgres import PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
-from operations.contexts.preparation.application import AcceptOrderCommand, AcceptOrderCommandHandler
+from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand, AcceptOrderCommandHandler
 from operations.foundation.application import Metadata, Outcome
 from operations.foundation.identity import derived_id
 

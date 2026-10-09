@@ -30,3 +30,14 @@ class DeveloperTests(unittest.TestCase):
                 self.assertIn('registration.txt', files)
                 self.assertTrue(any('test' in name for name in files))
         with self.assertRaises(ValueError): render('command', 'ordering', '../escape')
+
+    def test_command_starters_follow_the_owner_module_layout(self):
+        _, go = render('command', 'ordering', 'CancelOrder')
+        self.assertIn('package commands', go['commands/cancel_order.go'])
+        self.assertIn('commands/cancel_order_test.go', go)
+        _, python = render('command', 'preparation', 'CancelTicket')
+        self.assertIn('commands/cancel_ticket.py', python)
+        self.assertIn('test_cancel_ticket.py', python)
+        _, typescript = render('command', 'loyalty', 'CancelReward')
+        self.assertIn("'../../../../foundation/application.js'", typescript['commands/cancel-reward.ts'])
+        self.assertIn('commands/cancel-reward.test.ts', typescript)

@@ -35,7 +35,7 @@ Use `POST /api/v1/ordering/orders/{id}/place` as the example:
    into an owner Protobuf command, retaining command identity and expected version.
 2. The API publishes the request through RabbitMQ. Ordering's messaging adaptor
    translates it into the plain `PlaceOrderCommand` application value.
-3. `services/storefront/contexts/ordering/application/commands.go` loads through
+3. `services/storefront/contexts/ordering/application/commands/place_order.go` loads through
    the Order port, restores the root, calls `Place`, and selects outgoing facts.
 4. `services/storefront/contexts/ordering/domain/order.go` enforces the invariant.
 5. The PostgreSQL adaptor commits state, receipt, outcome, outgoing events,
@@ -57,7 +57,7 @@ The relay claims its mutable dispatch row, publishes the original bytes with
 mandatory routing and waits for broker confirmation.
 
 Python Preparation consumes the event under its own credentials. Its application
-entry point is `services/operations/src/operations/contexts/preparation/application.py`. Its integration-event handler maps the fact into an AcceptOrder command and
+entry point is `services/operations/src/operations/contexts/preparation/application/event_handlers.py`. Its integration-event handler maps the fact into an AcceptOrder command and
 commits the receiving receipt plus exact command bytes before acknowledging the
 event. The command relay publishes those bytes to its dedicated RabbitMQ queue.
 The command consumer creates one PreparationTicket, commits its outcome/receipts,

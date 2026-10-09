@@ -40,6 +40,11 @@ Go and TypeScript unit tests sit beside their subjects. Python tests and
 TypeScript Gherkin bindings live under their service's `tests` directory.
 Go Gherkin bindings sit beside the owning application handlers.
 Generated contracts stay in transport/adaptor rings.
+Each context has an `application/commands/` package or directory with one command
+DTO and its matching handler per business-action file. Go/Python filenames use
+snake_case; TypeScript uses kebab-case. Callers import those packages/modules
+directly. Shared application values stay separate from command execution.
+See [decision 0013](docs/decisions/0013-command-module-layout.md).
 Published Protobuf payload sources identify their context and interface category.
 Context folders contain `messaging/{commands,queries,integration_events}`,
 `realtime` and `http_api`. Private domain facts are plain application/domain types;

@@ -5,8 +5,9 @@ from operations.apps.incoming_events import DRINKS_READY
 from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresAggregateQueries
 from operations.adaptors.internal_commands import InternalCommandCodec, PostgresDurableCommandOutbox
 from operations.adaptors.generated.cafe.internal.collection.internal_commands_pb2 import CommandEnvelope
-from operations.contexts.collection.application import (OpenPickupCommand, OpenPickupCommandHandler,
-    CollectOrderCommandHandler, DrinksReadyIntegrationEventHandler)
+from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand, OpenPickupCommandHandler
+from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
+from operations.contexts.collection.application.event_handlers import DrinksReadyIntegrationEventHandler
 from operations.contexts.collection.domain import Pickup, PickupSnapshot
 from operations.foundation.domain import identifier, record
 from operations.foundation.identity import derived_id

@@ -7,7 +7,7 @@ import {restoreAccount, restoreReward} from './restore.js';
 import {claim, finish} from './dispatch.js';
 import type {AccountState} from '../contexts/loyalty/domain/account.js';
 import type {Metadata} from '../foundation/application.js';
-import {RedeemRewardCommandHandler} from '../contexts/loyalty/application/commands.js';
+import {RedeemRewardCommandHandler} from '../contexts/loyalty/application/commands/redeem-reward.js';
 import type {RewardState} from '../contexts/loyalty/domain/reward.js';
 import {CorruptState, Rejection} from '../foundation/domain.js';
 import {spawn} from 'node:child_process';

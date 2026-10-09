@@ -4,7 +4,7 @@ import {asFunction} from 'awilix';
 import {createLoyaltyContainer} from './loyalty.js';
 import {createCommunicationContainer} from './communication.js';
 import {OrderCollectedIntegrationEventHandler} from '../../contexts/loyalty/application/event-handlers.js';
-import {CreditCollectionCommandHandler} from '../../contexts/loyalty/application/commands.js';
+import {CreditCollectionCommandHandler} from '../../contexts/loyalty/application/commands/credit-collection.js';
 
 const url = 'postgresql://unused:unused@127.0.0.1:1/unused';
 test('every context provider resolves with isolated resources and pool disposal', async () => {

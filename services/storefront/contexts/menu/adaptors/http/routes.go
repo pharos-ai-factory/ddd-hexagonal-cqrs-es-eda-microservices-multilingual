@@ -2,6 +2,7 @@ package http
 
 import (
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/http"
 	"net/http"
 )
@@ -9,14 +10,14 @@ import (
 // MenuHTTPHandlers groups the explicitly typed handlers mounted by this transport adaptor.
 type MenuHTTPHandlers struct {
 	DrinkQueries   app.DrinkQueries
-	CreateDrink    app.CreateDrinkCommandHandler
-	PublishDrink   app.PublishDrinkCommandHandler
-	ReviseDrink    app.ReviseDrinkCommandHandler
+	CreateDrink    menucommands.CreateDrinkCommandHandler
+	PublishDrink   menucommands.PublishDrinkCommandHandler
+	ReviseDrink    menucommands.ReviseDrinkCommandHandler
 	EditionQueries app.EditionQueries
-	CreateEdition  app.CreateEditionCommandHandler
-	AddOffer       app.AddOfferCommandHandler
-	ChangePrice    app.ChangePriceCommandHandler
-	PublishEdition app.PublishEditionCommandHandler
+	CreateEdition  menucommands.CreateEditionCommandHandler
+	AddOffer       menucommands.AddOfferCommandHandler
+	ChangePrice    menucommands.ChangePriceCommandHandler
+	PublishEdition menucommands.PublishEditionCommandHandler
 }
 
 func Mount(mux interface {

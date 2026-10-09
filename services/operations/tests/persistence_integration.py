@@ -8,7 +8,7 @@ from operations.adaptors.delivery import claim, finish
 from operations.foundation.application import Change, Metadata, Outcome, Publication
 from operations.foundation.domain import record
 from operations.foundation.identity import new_id
-from operations.contexts.collection.application import CollectOrderCommandHandler
+from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain import Pickup, PickupSnapshot
 from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
 

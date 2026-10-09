@@ -6,6 +6,7 @@ import (
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging"
 	pg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/postgres"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
@@ -30,26 +31,26 @@ func menuModule() fx.Option {
 		func(s *support.StorefrontRuntime) a.ProjectionPort[app.DrinkPublished] {
 			return store.Project[app.DrinkPublished](s.Databases["menu"], "published-drinks")
 		},
-		func(port a.AggregateCommandPort[d.DrinkState]) app.CreateDrinkCommandHandler {
-			return app.CreateDrinkCommandHandler{Drinks: port}
+		func(port a.AggregateCommandPort[d.DrinkState]) menucommands.CreateDrinkCommandHandler {
+			return menucommands.CreateDrinkCommandHandler{Drinks: port}
 		},
-		func(port a.AggregateCommandPort[d.DrinkState]) app.PublishDrinkCommandHandler {
-			return app.PublishDrinkCommandHandler{Drinks: port}
+		func(port a.AggregateCommandPort[d.DrinkState]) menucommands.PublishDrinkCommandHandler {
+			return menucommands.PublishDrinkCommandHandler{Drinks: port}
 		},
-		func(port a.AggregateCommandPort[d.DrinkState]) app.ReviseDrinkCommandHandler {
-			return app.ReviseDrinkCommandHandler{Drinks: port}
+		func(port a.AggregateCommandPort[d.DrinkState]) menucommands.ReviseDrinkCommandHandler {
+			return menucommands.ReviseDrinkCommandHandler{Drinks: port}
 		},
-		func(port a.AggregateCommandPort[d.EditionState]) app.CreateEditionCommandHandler {
-			return app.CreateEditionCommandHandler{Editions: port}
+		func(port a.AggregateCommandPort[d.EditionState]) menucommands.CreateEditionCommandHandler {
+			return menucommands.CreateEditionCommandHandler{Editions: port}
 		},
-		func(port a.AggregateCommandPort[d.EditionState], directory a.ProjectionPort[app.DrinkPublished]) app.AddOfferCommandHandler {
-			return app.AddOfferCommandHandler{Editions: port, Drinks: directory}
+		func(port a.AggregateCommandPort[d.EditionState], directory a.ProjectionPort[app.DrinkPublished]) menucommands.AddOfferCommandHandler {
+			return menucommands.AddOfferCommandHandler{Editions: port, Drinks: directory}
 		},
-		func(port a.AggregateCommandPort[d.EditionState]) app.ChangePriceCommandHandler {
-			return app.ChangePriceCommandHandler{Editions: port}
+		func(port a.AggregateCommandPort[d.EditionState]) menucommands.ChangePriceCommandHandler {
+			return menucommands.ChangePriceCommandHandler{Editions: port}
 		},
-		func(port a.AggregateCommandPort[d.EditionState]) app.PublishEditionCommandHandler {
-			return app.PublishEditionCommandHandler{Editions: port}
+		func(port a.AggregateCommandPort[d.EditionState]) menucommands.PublishEditionCommandHandler {
+			return menucommands.PublishEditionCommandHandler{Editions: port}
 		},
 		func(read a.PagedQueryPort[d.DrinkState]) app.DrinkQueries { return app.DrinkQueries{Read: read} },
 		func(read a.PagedQueryPort[d.EditionState]) app.EditionQueries { return app.EditionQueries{Read: read} },
@@ -62,13 +63,13 @@ type MenuHandlerDependencies struct {
 	fx.In
 	DrinkQueries   app.DrinkQueries
 	EditionQueries app.EditionQueries
-	CreateDrink    app.CreateDrinkCommandHandler
-	PublishDrink   app.PublishDrinkCommandHandler
-	ReviseDrink    app.ReviseDrinkCommandHandler
-	CreateEdition  app.CreateEditionCommandHandler
-	AddOffer       app.AddOfferCommandHandler
-	ChangePrice    app.ChangePriceCommandHandler
-	PublishEdition app.PublishEditionCommandHandler
+	CreateDrink    menucommands.CreateDrinkCommandHandler
+	PublishDrink   menucommands.PublishDrinkCommandHandler
+	ReviseDrink    menucommands.ReviseDrinkCommandHandler
+	CreateEdition  menucommands.CreateEditionCommandHandler
+	AddOffer       menucommands.AddOfferCommandHandler
+	ChangePrice    menucommands.ChangePriceCommandHandler
+	PublishEdition menucommands.PublishEditionCommandHandler
 }
 
 func menuHTTPHandlers(p MenuHandlerDependencies) web.MenuHTTPHandlers {

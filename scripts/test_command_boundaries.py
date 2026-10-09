@@ -1,8 +1,17 @@
 import unittest
-from command_boundaries import violations, aggregate_methods, check
+from command_boundaries import violations, aggregate_methods, check, layout_violations
 
 
 class CommandBoundaryTests(unittest.TestCase):
+    def test_command_module_layout(self):
+        path = 'contexts/preparation/application/commands/accept_order.py'
+        pair = 'class AcceptOrderCommand: pass\nclass AcceptOrderCommandHandler: pass\n'
+        self.assertEqual(layout_violations(pair, path), [])
+        self.assertEqual(layout_violations('class MissingTicketError: pass', path), [])
+        self.assertTrue(layout_violations(pair, 'contexts/preparation/application.py'))
+        self.assertTrue(layout_violations('class AcceptOrderCommand: pass', path))
+        self.assertTrue(layout_violations(pair+'class StartCommand: pass\nclass StartCommandHandler: pass', path))
+
     def test_real_python_application(self):
         self.assertEqual(check(), [])
 
@@ -39,7 +48,7 @@ class PlacedIntegrationEventHandler:
 
     def test_direct_command_handler_and_alias_are_rejected(self):
         for owner in ('EventHandler', 'OtherCommandHandler'):
-            source = f'''from operations.contexts.preparation.application import AcceptOrderCommandHandler as Accept
+            source = f'''from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommandHandler as Accept
 class {owner}:
  def __init__(self, handler: Accept): self.handler = handler
  def execute(self, m, c):

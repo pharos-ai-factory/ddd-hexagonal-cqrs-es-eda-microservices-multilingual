@@ -1,4 +1,4 @@
-package application_test
+package commands_test
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/cucumber/godog"
-	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -19,22 +19,22 @@ type orderWorld struct {
 }
 
 func (w *orderWorld) add(id, edition, code string, quantity int) error {
-	_, err := (app.AddLineCommandHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
-		app.AddLineCommand{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
+	_, err := (orderingcommands.AddLineCommandHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
+		orderingcommands.AddLineCommand{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) quantity(quantity int) error {
-	_, err := (app.ChangeQuantityCommandHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order),
-		app.ChangeQuantityCommand{LineID: s.FirstLine, Quantity: quantity})
+	_, err := (orderingcommands.ChangeQuantityCommandHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order),
+		orderingcommands.ChangeQuantityCommand{LineID: s.FirstLine, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) place() error {
-	_, err := (app.PlaceOrderCommandHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order), struct{}{})
+	_, err := (orderingcommands.PlaceOrderCommandHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order), struct{}{})
 	return err
 }
 func TestOrderingFeatures(t *testing.T) {
 	suite := godog.TestSuite{Name: "ordering",
-		Options: s.FeatureOptions(t, "ordering", "../../../../../specifications/ordering", "@fast"),
+		Options: s.FeatureOptions(t, "ordering", "../../../../../../specifications/ordering", "@fast"),
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
 			w := &orderWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
@@ -46,8 +46,8 @@ func TestOrderingFeatures(t *testing.T) {
 					{Code: "C1", DrinkID: s.Drink, DrinkRevision: 1, Name: name, Minor: minor, Currency: "EUR"}}}
 			})
 			sc.Step(`^a customer has a draft order for that edition$`, func() error {
-				_, err := (app.CreateOrderCommandHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
-					app.CreateOrderCommand{CustomerID: s.Customer, EditionID: s.Edition})
+				_, err := (orderingcommands.CreateOrderCommandHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
+					orderingcommands.CreateOrderCommand{CustomerID: s.Customer, EditionID: s.Edition})
 				if err != nil {
 					return err
 				}

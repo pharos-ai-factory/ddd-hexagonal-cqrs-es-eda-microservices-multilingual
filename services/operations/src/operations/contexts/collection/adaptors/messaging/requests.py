@@ -4,7 +4,7 @@ from operations.foundation.application import Loaded
 from operations.contexts.collection.domain import PickupSnapshot
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_replies_pb2 import Pickup, LoadedPickup, Pickups
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Reply
-from operations.contexts.collection.application import CollectOrderCommand
+from operations.contexts.collection.application.commands.collect_order import CollectOrderCommand
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_commands_pb2 import CollectOrder
 
 

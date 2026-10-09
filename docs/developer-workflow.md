@@ -48,6 +48,13 @@ A command changes one root through one store call. Its domain method owns the
 rule. A query reads through a query port. An event handler translates a fact into
 a durable owner command; the receiving command handler changes the root later.
 
+Every context puts commands in `application/commands/`, with one command DTO and
+its matching handler in the same file. Name the file after the business action:
+Go and Python use `create_order.go` / `accept_order.py`; TypeScript uses
+`credit-collection.ts`. Import the concrete command package or module directly.
+Shared errors and event DTOs have their own files. Event reactions and query
+handlers remain separate from command execution. See decision 0013.
+
 Create a starter, for example:
 
 ```sh
@@ -66,8 +73,9 @@ field numbers or silently register unfinished policy.
 
 ## Go: add an Ordering command
 
-1. Add the named command DTO and handler in `services/storefront/contexts/ordering/application/`.
-   Follow `ChangeQuantityCommandHandler` for the transaction shape.
+1. Add the named command DTO and handler together in
+   `services/storefront/contexts/ordering/application/commands/cancel_order.go`.
+   Use `package commands`; follow `change_quantity.go` for the transaction shape.
 2. Implement and test the root behaviour in `domain/order.go`. Restore the root
    inside the store decision, call its method, return its snapshot and publications.
 3. Register the handler in `apps/storefront/ordering.go`, receiving
@@ -83,7 +91,8 @@ handler is a starting point for that explicit implementation.
 
 ## Python: add a Preparation command or subscription
 
-1. Add a TypedDict command and named handler to the Preparation application.
+1. Add a TypedDict command and named handler together in Preparation's
+   `application/commands/<action>.py` module.
    Use `AggregateCommandPort[TicketSnapshot]`; make one direct `execute` call.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
 3. Bind the handler as a provider in `apps/composition/preparation.py`.
@@ -100,8 +109,9 @@ It receives no Pika connection or SQL transaction.
 
 ## TypeScript: add a Loyalty command or subscription
 
-1. Add the command DTO and plain handler under Loyalty's application folder.
-   Follow `CreditCollectionCommandHandler`; its constructor receives application ports.
+1. Add the command DTO and plain handler together under Loyalty's
+   `application/commands/<action>.ts`. Follow `credit-collection.ts`; its
+   constructor receives application ports.
 2. Implement the aggregate rule and its domain test.
 3. Extend `LoyaltyDependencies` and the explicit Awilix factory in
    `apps/composition/loyalty.ts`. Keep concrete resources inside composition.

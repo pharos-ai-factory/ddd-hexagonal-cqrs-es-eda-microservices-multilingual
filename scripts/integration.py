@@ -35,7 +35,7 @@ def execute(env_file, keep=False):
               dict(os.environ, CAFE_ENV_FILE=str(env_file.resolve())))
         check("Go PostgreSQL/RabbitMQ", [sys.executable, "scripts/go.py", "test", "-race", "-tags", "integration", "-count=1", "-timeout=120s",
                         "./foundation/persistence/postgres", "./foundation/transport/amqp",
-                        "./contexts/ordering/application"],
+                        "./contexts/ordering/application/..."],
               dict(test_environment(values), BDD_REPORT_DIR=str(reports)))
         check("Python PostgreSQL/RabbitMQ", ["uv", "run", "--project", "services/operations", "pytest", "-q",
                         "services/operations/tests/persistence_integration.py",

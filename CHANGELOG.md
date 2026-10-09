@@ -4,6 +4,10 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Organise all 21 command/handler pairs under their context's `application/commands/`,
+  with one business action per file, direct imports and matching scaffold output.
+  Enforce the layout and retain mutation checks across nested Go application packages.
+
 - Enforce durable application hand-offs and one aggregate-store invocation per command.
 - Close resources on partial composition/startup failure and drain request workers.
 - Check historical interface compatibility and exhaustive typed subscriptions.

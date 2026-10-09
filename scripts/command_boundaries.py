@@ -149,4 +149,19 @@ def check(root=ROOT):
         if 'generated' in path.parts or 'foundation' in path.parts or path.name == 'domain.py':
             continue
         errors.extend(violations(path.read_text(), aggregates, path.relative_to(root).as_posix()))
+        if 'application' in path.parts or path.name == 'application.py':
+            errors.extend(layout_violations(path.read_text(), path.relative_to(root).as_posix()))
     return errors
+
+
+def layout_violations(source, path):
+    """Keep each command DTO and its handler in one discoverable use-case module."""
+    names = [node.name for node in ast.parse(source).body if isinstance(node, ast.ClassDef)]
+    commands = [name for name in names if name.endswith('Command')]
+    handlers = [name for name in names if name.endswith('CommandHandler')]
+    if not commands and not handlers:
+        return []
+    if (Path(path).parent.as_posix().endswith('/application/commands') and len(commands) == 1
+            and handlers == [commands[0]+'Handler']):
+        return []
+    return [f'{path}: keep one command and its handler together in application/commands']

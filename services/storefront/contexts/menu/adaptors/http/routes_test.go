@@ -8,6 +8,7 @@ import (
 
 	menuhttp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/http"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	s "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/tests/support"
@@ -22,7 +23,7 @@ func TestPriceCommandRequiresAnExplicitNonNullAmount(t *testing.T) {
 						Name: "Coffee", Minor: 350, Currency: "EUR"}}},
 			}}
 			mux := http.NewServeMux()
-			menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{ChangePrice: app.ChangePriceCommandHandler{Editions: &editions}})
+			menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{ChangePrice: menucommands.ChangePriceCommandHandler{Editions: &editions}})
 			request := httptest.NewRequest("POST", "/v1/menu/editions/"+s.Edition+"/prices", strings.NewReader(body))
 			request.Header.Set("Idempotency-Key", s.Customer)
 			request.Header.Set("If-Match", "1")
@@ -52,7 +53,7 @@ func TestAddOfferRequiresAnExplicitNonNullAmount(t *testing.T) {
 				s.Drink + "/1": {DrinkID: s.Drink, Name: "Coffee", Revision: 1},
 			}}
 			mux := http.NewServeMux()
-			menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{AddOffer: app.AddOfferCommandHandler{Editions: &editions, Drinks: &drinks}})
+			menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{AddOffer: menucommands.AddOfferCommandHandler{Editions: &editions, Drinks: &drinks}})
 			body := `{"code":"C1","drinkId":"` + s.Drink + `","drinkRevision":1` + amount + `}`
 			request := httptest.NewRequest("POST", "/v1/menu/editions/"+s.Edition+"/offers", strings.NewReader(body))
 			request.Header.Set("Idempotency-Key", s.Customer)

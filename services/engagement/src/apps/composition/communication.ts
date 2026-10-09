@@ -8,8 +8,8 @@ import {HttpNotificationDelivery} from '../../adaptors/provider.js';
 import {secret} from '../../foundation/secrets.js';
 import {derivedId} from '../../foundation/identity.js';
 import {identifier} from '../../foundation/domain.js';
-import {RequestNotificationCommandHandler, DeliverNotificationCommandHandler,
-  type RequestNotificationCommand, type DeliverNotificationCommand} from '../../contexts/communication/application/commands.js';
+import {RequestNotificationCommandHandler, type RequestNotificationCommand} from '../../contexts/communication/application/commands/request-notification.js';
+import {DeliverNotificationCommandHandler, type DeliverNotificationCommand} from '../../contexts/communication/application/commands/deliver-notification.js';
 import {PickupOpenedIntegrationEventHandler, RewardIssuedIntegrationEventHandler,
   NotificationRequestedDomainEventHandler} from '../../contexts/communication/application/event-handlers.js';
 import schema from '../../contexts/communication/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};

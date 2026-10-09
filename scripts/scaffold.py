@@ -71,15 +71,13 @@ import (
  "context"
  a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
-// {name}Command carries owner-local intent.
-type {name}Command struct {{}}
 // {name}Event describes the incoming fact; replace with the published application DTO.
 type {name}Event struct {{}}
 // {name}CommandQueue accepts the command durably before returning.
-type {name}CommandQueue interface {{ Enqueue(context.Context, a.Metadata, {name}Command) (a.Outcome,error) }}
+type {name}CommandQueue[C any] interface {{ Enqueue(context.Context, a.Metadata, C) (a.Outcome,error) }}
 // {name}IntegrationEventHandler translates the fact into a durable owner command.
-type {name}IntegrationEventHandler struct {{ Commands {name}CommandQueue }}
-func(h {name}IntegrationEventHandler) Handle(ctx context.Context, m a.Metadata, event {name}Event) (a.Outcome,error) {{
+type {name}IntegrationEventHandler[C any] struct {{ Commands {name}CommandQueue[C] }}
+func(h {name}IntegrationEventHandler[C]) Handle(ctx context.Context, m a.Metadata, event {name}Event) (a.Outcome,error) {{
  panic("Map the incoming fact, then return h.Commands.Enqueue(ctx, m, command)")
 }}
 '''}
@@ -113,8 +111,29 @@ type {name}{role}[S any] struct {{ Store {port} }}
     if kind == 'query':
         for filename in list(files):
             files[filename] = files[filename].replace(name+'Command', name+'Query')
+    if kind == 'command':
+        arranged = {}
+        for filename, content in files.items():
+            if service == 'engagement':
+                filename = filename.replace('_', '-')
+                content = content.replace("'../../../foundation/", "'../../../../foundation/")
+            if service == 'storefront':
+                content = content.replace('package application', 'package commands')
+            # Python keeps its native tests under the service tests tree.
+            destination = filename if service == 'operations' and filename.startswith('test_') else 'commands/'+filename
+            arranged[destination] = content
+        files = arranged
+        files['placement.txt'] = ('Place commands/ under the owning context application/ directory.\n'
+            'Keep the command DTO and handler together; import their module directly.\n'
+            'Place Python test modules under tests/contexts/<context>/application/commands/.\n')
     files['registration.txt'] = registration
     if kind == 'subscription':
+        # Reactions use the command from its command/handler module.
+        for filename, content in files.items():
+            content = re.sub(r'/\*\* Define the owner-local inputs for [^\n]+\*/\nexport type '+name+r'Command = Readonly<\{\}>;\n', '', content)
+            content = content.replace('from typing import TypedDict\n', '')
+            content = re.sub(r'class '+name+r'Command\(TypedDict\):\n    """[^\n]+"""\n    pass\n\n', '', content)
+            files[filename] = content
         files['subscription.json'] = json.dumps({'consumer': context+'.'+snake.replace('_','-'),
             'event': 'REPLACE_WITH_PUBLISHED_EVENT', 'command': name[0].lower()+name[1:]}, indent=2)+'\n'
         files['wiring.txt'] = ('Add the typed incoming event and owner command DTO. Map the event inside handle; the starter forwards an already mapped command.\n'
@@ -138,7 +157,9 @@ def main():
         parser.error('Output already exists; select a fresh directory')
     target.mkdir(parents=True)
     for name, content in files.items():
-        (target/name).write_text(content)
+        output = target/name
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(content)
     print(f'{service}/{args.context} starter: {target}\nReview the types and domain policy, then copy into the owner. Tests intentionally fail until the behaviour is specified.')
 
 

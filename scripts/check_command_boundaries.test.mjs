@@ -2,7 +2,18 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
 import path from 'node:path';
-import {violations, productionProgram} from './check_command_boundaries.mjs';
+import {violations, productionProgram, commandLayout} from './check_command_boundaries.mjs';
+
+test('require one command and its handler per command module', () => {
+  const filename = 'contexts/loyalty/application/commands/credit-collection.ts';
+  const pair = 'type CreditCollectionCommand = {}; class CreditCollectionCommandHandler {}';
+  const checkLayout = (source, name = filename) => commandLayout(ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true));
+  assert.deepEqual(checkLayout(pair), []);
+  assert.deepEqual(checkLayout('class RewardNotFoundError {}'), []);
+  assert.ok(checkLayout(pair, 'contexts/loyalty/application/commands.ts').length);
+  assert.ok(checkLayout('type CreditCollectionCommand = {};').length);
+  assert.ok(checkLayout(pair+' type IssueRewardCommand = {}; class IssueRewardCommandHandler {}').length);
+});
 
 const base = productionProgram();
 const fixture = path.resolve('services/engagement/src/contexts/loyalty/application/boundary-fixture.ts');

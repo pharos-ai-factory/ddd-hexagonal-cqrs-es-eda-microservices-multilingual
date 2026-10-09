@@ -6,6 +6,7 @@ import (
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
 	pg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/postgres"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -24,17 +25,17 @@ func orderingModule() fx.Option {
 		func(s *support.StorefrontRuntime) a.ProjectionPort[model.MenuPublished] {
 			return store.Project[model.MenuPublished](s.Databases["ordering"], "published-menus")
 		},
-		func(port a.AggregateCommandPort[d.OrderState], directory a.ProjectionPort[model.MenuPublished]) app.CreateOrderCommandHandler {
-			return app.CreateOrderCommandHandler{Orders: port, Menus: directory}
+		func(port a.AggregateCommandPort[d.OrderState], directory a.ProjectionPort[model.MenuPublished]) orderingcommands.CreateOrderCommandHandler {
+			return orderingcommands.CreateOrderCommandHandler{Orders: port, Menus: directory}
 		},
-		func(port a.AggregateCommandPort[d.OrderState], directory a.ProjectionPort[model.MenuPublished]) app.AddLineCommandHandler {
-			return app.AddLineCommandHandler{Orders: port, Menus: directory}
+		func(port a.AggregateCommandPort[d.OrderState], directory a.ProjectionPort[model.MenuPublished]) orderingcommands.AddLineCommandHandler {
+			return orderingcommands.AddLineCommandHandler{Orders: port, Menus: directory}
 		},
-		func(port a.AggregateCommandPort[d.OrderState]) app.ChangeQuantityCommandHandler {
-			return app.ChangeQuantityCommandHandler{Orders: port}
+		func(port a.AggregateCommandPort[d.OrderState]) orderingcommands.ChangeQuantityCommandHandler {
+			return orderingcommands.ChangeQuantityCommandHandler{Orders: port}
 		},
-		func(port a.AggregateCommandPort[d.OrderState]) app.PlaceOrderCommandHandler {
-			return app.PlaceOrderCommandHandler{Orders: port}
+		func(port a.AggregateCommandPort[d.OrderState]) orderingcommands.PlaceOrderCommandHandler {
+			return orderingcommands.PlaceOrderCommandHandler{Orders: port}
 		},
 		func(read a.PagedQueryPort[d.OrderState]) app.OrderingQueries { return app.OrderingQueries{Read: read} },
 		orderingHTTPHandlers,
@@ -45,10 +46,10 @@ func orderingModule() fx.Option {
 type OrderingHandlerDependencies struct {
 	fx.In
 	Queries        app.OrderingQueries
-	CreateOrder    app.CreateOrderCommandHandler
-	AddLine        app.AddLineCommandHandler
-	ChangeQuantity app.ChangeQuantityCommandHandler
-	PlaceOrder     app.PlaceOrderCommandHandler
+	CreateOrder    orderingcommands.CreateOrderCommandHandler
+	AddLine        orderingcommands.AddLineCommandHandler
+	ChangeQuantity orderingcommands.ChangeQuantityCommandHandler
+	PlaceOrder     orderingcommands.PlaceOrderCommandHandler
 }
 
 func orderingHTTPHandlers(p OrderingHandlerDependencies) web.OrderingHTTPHandlers {

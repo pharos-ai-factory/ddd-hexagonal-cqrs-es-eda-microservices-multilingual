@@ -5,6 +5,16 @@ import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const readMethods = new Set(['snapshot', 'events']);
+export function commandLayout(file) {
+  const names = file.statements.filter(node => ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
+    .map(node => node.name?.text ?? '');
+  const commands = names.filter(name => name.endsWith('Command'));
+  const handlers = names.filter(name => name.endsWith('CommandHandler'));
+  if (!commands.length && !handlers.length) return [];
+  if (path.dirname(file.fileName).replaceAll('\\', '/').endsWith('/application/commands') && commands.length === 1 &&
+    handlers.length === 1 && handlers[0] === commands[0]+'Handler') return [];
+  return [`${file.fileName}: keep one command and its handler together in application/commands`];
+}
 function enclosing(node, predicate) {
   for (let parent = node.parent; parent; parent = parent.parent) if (predicate(parent)) return parent;
 }
@@ -82,8 +92,12 @@ export function productionProgram() {
   return ts.createProgram(parsed.fileNames, parsed.options);
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const errors = violations(productionProgram(), name => name.startsWith(path.join(root, 'services/engagement/src')) &&
-    !/\/(generated|domain)\/|\.(test|integration)\.ts$/.test(name));
+  const program = productionProgram();
+  const selected = name => name.startsWith(path.join(root, 'services/engagement/src')) &&
+    !/\/(generated|domain)\/|\.(test|integration)\.ts$/.test(name);
+  const errors = violations(program, selected);
+  for (const file of program.getSourceFiles())
+    if (selected(file.fileName) && file.fileName.includes('/application/')) errors.push(...commandLayout(file));
   if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
   else console.info('TypeScript command mutation boundaries verified');
 }

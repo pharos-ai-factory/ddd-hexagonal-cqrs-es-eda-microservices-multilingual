@@ -4,7 +4,8 @@ from operations.foundation.application import Loaded
 from operations.contexts.preparation.domain import TicketSnapshot
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_replies_pb2 import Ticket, LoadedTicket, Tickets
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_requests_pb2 import Reply
-from operations.contexts.preparation.application import StartPreparationCommand, CompletePreparationCommand
+from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommand
+from operations.contexts.preparation.application.commands.complete_preparation import CompletePreparationCommand
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_commands_pb2 import StartPreparation, CompletePreparation
 
 

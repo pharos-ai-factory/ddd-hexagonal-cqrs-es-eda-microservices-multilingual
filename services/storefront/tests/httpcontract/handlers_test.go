@@ -10,9 +10,11 @@ import (
 
 	menuhttp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/http"
 	menuapp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	orderhttp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/http"
 	orderapp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	order "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -71,12 +73,12 @@ func handlers(operation string) http.Handler {
 	menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{
 		DrinkQueries:   menuapp.DrinkQueries{Read: queries[menu.DrinkState]{drink}},
 		EditionQueries: menuapp.EditionQueries{Read: queries[menu.EditionState]{edition}},
-		CreateDrink:    menuapp.CreateDrinkCommandHandler{Drinks: drinks}, ReviseDrink: menuapp.ReviseDrinkCommandHandler{Drinks: drinks}, PublishDrink: menuapp.PublishDrinkCommandHandler{Drinks: drinks},
-		CreateEdition: menuapp.CreateEditionCommandHandler{Editions: editions}, AddOffer: menuapp.AddOfferCommandHandler{Editions: editions, Drinks: published}, ChangePrice: menuapp.ChangePriceCommandHandler{Editions: editions}, PublishEdition: menuapp.PublishEditionCommandHandler{Editions: editions},
+		CreateDrink:    menucommands.CreateDrinkCommandHandler{Drinks: drinks}, ReviseDrink: menucommands.ReviseDrinkCommandHandler{Drinks: drinks}, PublishDrink: menucommands.PublishDrinkCommandHandler{Drinks: drinks},
+		CreateEdition: menucommands.CreateEditionCommandHandler{Editions: editions}, AddOffer: menucommands.AddOfferCommandHandler{Editions: editions, Drinks: published}, ChangePrice: menucommands.ChangePriceCommandHandler{Editions: editions}, PublishEdition: menucommands.PublishEditionCommandHandler{Editions: editions},
 	})
 	orderhttp.Mount(mux, orderhttp.OrderingHTTPHandlers{
 		OrderingQueries: orderapp.OrderingQueries{Read: queries[order.OrderState]{state}},
-		CreateOrder:     orderapp.CreateOrderCommandHandler{Orders: orders, Menus: menus}, AddLine: orderapp.AddLineCommandHandler{Orders: orders, Menus: menus}, ChangeQuantity: orderapp.ChangeQuantityCommandHandler{Orders: orders}, PlaceOrder: orderapp.PlaceOrderCommandHandler{Orders: orders},
+		CreateOrder:     orderingcommands.CreateOrderCommandHandler{Orders: orders, Menus: menus}, AddLine: orderingcommands.AddLineCommandHandler{Orders: orders, Menus: menus}, ChangeQuantity: orderingcommands.ChangeQuantityCommandHandler{Orders: orders}, PlaceOrder: orderingcommands.PlaceOrderCommandHandler{Orders: orders},
 	})
 	// Composition-owned technical handlers have their own conformance tests.
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { web.JSON(w, 200, map[string]string{"status": "ok"}) })

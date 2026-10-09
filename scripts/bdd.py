@@ -17,7 +17,7 @@ def main():
     REPORTS.mkdir(parents=True, exist_ok=True)
     run("node", "scripts/check_specifications.mjs")
     run(sys.executable, "scripts/go.py", "test", "-race", "-count=1",
-        "./contexts/menu/application", "./contexts/ordering/application",
+        "./contexts/menu/application/...", "./contexts/ordering/application/...",
         env=dict(os.environ, BDD_REPORT_DIR=str(REPORTS)))
     run("uv", "run", "--frozen", "pytest", "-q", "tests/bdd", "--cucumberjson="+str(REPORTS/"operations.json"),
         cwd=ROOT/"services/operations")
