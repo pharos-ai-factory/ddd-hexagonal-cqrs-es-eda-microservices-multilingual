@@ -72,7 +72,7 @@ func TestStoredOrderPriceMustBeExplicit(t *testing.T) {
 			m := a.Metadata{ID: pg.NewID(), AggregateID: id, Name: "ordering.PlaceOrder",
 				ExpectedVersion: a.Expected(1), CorrelationID: pg.NewID(), Input: struct{}{},
 				Consumer: "ordering.test-corrupt-price", SourceEventID: pg.NewID(), SourceHash: "fixture"}
-			handler := app.PlaceOrderHandler{Orders: pg.Command[d.State](db, "order")}
+			handler := app.PlaceOrderCommandHandler{Orders: pg.Command[d.OrderState](db, "order")}
 			outcome, failure := handler.Execute(t.Context(), m, struct{}{})
 			if name == "missing" || name == "null" || name == "different_root" {
 				var violation *core.Violation
@@ -95,7 +95,7 @@ func TestStoredOrderPriceMustBeExplicit(t *testing.T) {
 					t.Error("corrupt authority changed the stored order")
 				}
 				orderEvidence(t, admin, m, 0)
-				if _, err := pg.Query[d.State](db, "order").Get(t.Context(), id); err == nil {
+				if _, err := pg.Query[d.OrderState](db, "order").Get(t.Context(), id); err == nil {
 					t.Error("query accepted corrupt authority")
 				}
 				if t.Failed() {
@@ -124,7 +124,7 @@ func TestStoredOrderPriceMustBeExplicit(t *testing.T) {
 				t.Fatalf("explicit price must permit placement: %+v %v", outcome, failure)
 			}
 			orderEvidence(t, admin, m, 1)
-			loaded, err := pg.Query[d.State](db, "order").Get(t.Context(), id)
+			loaded, err := pg.Query[d.OrderState](db, "order").Get(t.Context(), id)
 			if err != nil {
 				t.Fatal(err)
 			}

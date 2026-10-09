@@ -11,15 +11,16 @@ import (
 	"time"
 )
 
-type CommandStore[S any] struct {
-	db   *Database
+// AggregateCommandStore implements atomic aggregate decisions, receipts, outcomes and outgoing intent.
+type AggregateCommandStore[S any] struct {
+	db   *ContextDatabase
 	kind string
 }
 
-func Command[S any](db *Database, kind string) *CommandStore[S] {
-	return &CommandStore[S]{db: db, kind: kind}
+func Command[S any](db *ContextDatabase, kind string) *AggregateCommandStore[S] {
+	return &AggregateCommandStore[S]{db: db, kind: kind}
 }
-func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func(a.Loaded[S]) (a.Mutation[S], error)) (a.Outcome, error) {
+func (s *AggregateCommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func(a.Loaded[S]) (a.Mutation[S], error)) (a.Outcome, error) {
 	for _, id := range []string{m.ID, m.AggregateID, m.CorrelationID} {
 		if err := d.ValidateID(id); err != nil {
 			return a.Outcome{}, err
@@ -121,7 +122,7 @@ func (s *CommandStore[S]) Execute(ctx context.Context, m a.Metadata, decide func
 }
 
 // persistMutation writes the root and both publication intents on the command's transaction.
-func (s *CommandStore[S]) persistMutation(ctx context.Context, tx pgx.Tx, m a.Metadata, loaded a.Loaded[S], mutation a.Mutation[S], outcome *a.Outcome) error {
+func (s *AggregateCommandStore[S]) persistMutation(ctx context.Context, tx pgx.Tx, m a.Metadata, loaded a.Loaded[S], mutation a.Mutation[S], outcome *a.Outcome) error {
 	if !mutation.Changed {
 		if len(mutation.Publications) > 0 {
 			return fmt.Errorf("a no-op cannot publish new events")
@@ -159,7 +160,7 @@ func (s *CommandStore[S]) persistMutation(ctx context.Context, tx pgx.Tx, m a.Me
 	return nil
 }
 
-func (db *Database) appendEvent(ctx context.Context, tx pgx.Tx, message a.Message) error {
+func (db *ContextDatabase) appendEvent(ctx context.Context, tx pgx.Tx, message a.Message) error {
 	encoded, err := db.encode(message)
 	if err != nil {
 		return err

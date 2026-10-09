@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import type {CommandPort, Loaded, Metadata, QueryPort} from '../../../foundation/application.js';
+import type {AggregateCommandPort, Loaded, Metadata, QueryPort} from '../../../foundation/application.js';
 import type {NotificationState} from '../domain/notification.js';
-import {DeliverNotification} from './commands.js';
+import {DeliverNotificationCommandHandler} from './commands.js';
 
 test('invalid stored notification content is rejected before any provider request', async () => {
   const id = '00000000-0000-4000-8000-000000000001';
@@ -11,17 +11,17 @@ test('invalid stored notification content is rejected before any provider reques
   const queries: QueryPort<NotificationState> = {
     get: async () => loaded, list: async () => [loaded],
   };
-  const commands: CommandPort<NotificationState> = {
+  const commands: AggregateCommandPort<NotificationState> = {
     async execute(m, decide) {
       const result = decide(loaded);
       return {aggregateId: m.target, version: 2, status: result.status};
     },
   };
   let providerRequests = 0;
-  const handler = new DeliverNotification(commands, queries, {
+  const handler = new DeliverNotificationCommandHandler(commands, queries, {
     async deliver() { providerRequests++; return 'accepted'; },
   });
   const metadata: Metadata = {id, target: id, name: 'communication.deliver-notice', correlation: id, input: {}};
-  await assert.rejects(handler.handle(metadata, {notificationId: id}));
+  await assert.rejects(handler.execute(metadata, {notificationId: id}));
   assert.equal(providerRequests, 0, 'Invalid authoritative state must not escape through a provider effect');
 });

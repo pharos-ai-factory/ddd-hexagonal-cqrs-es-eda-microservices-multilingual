@@ -6,12 +6,15 @@ import (
 	"unicode/utf8"
 )
 
+// DrinkState represents the persisted Drink snapshot.
 type DrinkState struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Revision  uint64 `json:"revision"`
 	Published bool   `json:"published"`
 }
+
+// Drink owns the publication lifecycle and revisions of one drink.
 type Drink struct {
 	state DrinkState
 	facts []core.Fact

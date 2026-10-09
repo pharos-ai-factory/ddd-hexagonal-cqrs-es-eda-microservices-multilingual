@@ -66,6 +66,24 @@ def catalogue(service: str | None = None) -> list[dict]:
     return sorted(published, key=lambda item: item["name"])
 
 
+def command_subscriptions(root: Path = ROOT) -> list[dict]:
+    result = []
+    for service, owners in (("operations/src/operations", ("preparation", "collection")),
+                            ("engagement/src", ("loyalty", "communication"))):
+        for owner in owners:
+            entries = json.loads((root/f"services/{service}/contexts/{owner}/adaptors/messaging/subscriptions.json").read_text())
+            if any(not item["consumer"].startswith(owner+".") for item in entries):
+                raise ValueError("Foreign command subscription")
+            result.extend(entries)
+    identities = [entry['consumer'] for entry in result]
+    if len(set(identities)) != len(identities):
+        raise ValueError("Duplicate command subscription")
+    events = {entry['consumer']: entry['name'] for entry in catalogue('topology')}
+    if any(events.get(entry['consumer']) != entry['event'] for entry in result):
+        raise ValueError("Command subscription disagrees with its incoming event")
+    return result
+
+
 if __name__ == "__main__":
     groups = {}
     for kind in (*ENTRYPOINTS, "menu_private", "loyalty_private", "communication_private"):

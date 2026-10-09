@@ -9,24 +9,26 @@ import (
 )
 
 type Handler func(context.Context, RequestEnvelope, proto.Message) (pb.Reply, error)
-type Registry struct {
+
+// RabbitMQRequestRegistry dispatches typed owner RabbitMQ requests to application handlers.
+type RabbitMQRequestRegistry struct {
 	Owner    string
 	handlers map[string]Handler
 }
 
-func New(owner string) *Registry {
+func New(owner string) *RabbitMQRequestRegistry {
 	if _, err := pb.NewReply(owner, ""); err != nil {
 		panic(err)
 	}
-	return &Registry{Owner: owner, handlers: map[string]Handler{}}
+	return &RabbitMQRequestRegistry{Owner: owner, handlers: map[string]Handler{}}
 }
-func (r *Registry) bind(name string, handler Handler) {
+func (r *RabbitMQRequestRegistry) bind(name string, handler Handler) {
 	if r.handlers[name] != nil {
 		panic("duplicate request handler")
 	}
 	r.handlers[name] = handler
 }
-func (r *Registry) Handle(ctx context.Context, request RequestEnvelope) pb.Reply {
+func (r *RabbitMQRequestRegistry) Handle(ctx context.Context, request RequestEnvelope) pb.Reply {
 	name, body, err := Validate(request, r.Owner)
 	reply, _ := pb.NewReply(r.Owner, request.GetRequestId())
 	if err != nil || r.handlers[name] == nil {
@@ -47,7 +49,7 @@ func (r *Registry) Handle(ctx context.Context, request RequestEnvelope) pb.Reply
 	}
 	return reply
 }
-func Command[P proto.Message, I any](r *Registry, name string, convert func(P) I, handle func(context.Context, a.Metadata, I) (a.Outcome, error)) {
+func Command[P proto.Message, I any](r *RabbitMQRequestRegistry, name string, convert func(P) I, handle func(context.Context, a.Metadata, I) (a.Outcome, error)) {
 	r.bind(name, func(ctx context.Context, request RequestEnvelope, body proto.Message) (pb.Reply, error) {
 		value, ok := body.(P)
 		if !ok {
@@ -63,7 +65,7 @@ func Command[P proto.Message, I any](r *Registry, name string, convert func(P) I
 		return OutcomeReply(r.Owner, result), nil
 	})
 }
-func Queries[S any](r *Registry, singular, plural string, list func(context.Context) ([]a.Loaded[S], error), get func(context.Context, string) (a.Loaded[S], error), page func(context.Context, a.PageRequest) (a.Page[S], error), itemReply func(a.Loaded[S]) proto.Message, listReply func([]a.Loaded[S], bool, string) proto.Message) {
+func Queries[S any](r *RabbitMQRequestRegistry, singular, plural string, list func(context.Context) ([]a.Loaded[S], error), get func(context.Context, string) (a.Loaded[S], error), page func(context.Context, a.PageRequest) (a.Page[S], error), itemReply func(a.Loaded[S]) proto.Message, listReply func([]a.Loaded[S], bool, string) proto.Message) {
 	upper := func(s string) string { return string(s[0]-32) + s[1:] }
 	r.bind("get"+upper(singular), func(ctx context.Context, _ RequestEnvelope, body proto.Message) (pb.Reply, error) {
 		input, ok := body.(interface{ GetId() string })

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Replies(ctx context.Context, db *postgres.Database, url, owner string) {
+func Replies(ctx context.Context, db *postgres.ContextDatabase, url, owner string) {
 	for ctx.Err() == nil {
 		publisher, err := broker.Connect(url)
 		if err == nil {

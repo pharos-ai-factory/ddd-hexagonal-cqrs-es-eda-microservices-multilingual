@@ -1,5 +1,47 @@
 # Executed verification
 
+## Dependency injection and durable command reactions, 9 October 2026
+
+Decisions 0010 and 0011 record the framework comparison, explicit composition
+boundaries and command-before-aggregate-mutation convention. Awilix, Dependency
+Injector and Fx resolve the service graphs. Application constructors retain plain
+ports, while context resources have independent ownership and shutdown.
+
+`pnpm verify` passed reproducible generation, architecture checks across 68 Go
+packages, Go race tests/vet, Ruff, strict Mypy, TypeScript compilation, native
+unit tests and all 51 fast Gherkin scenarios. Compiler/AST negative fixtures
+reject aggregate mutation outside command execution, captured method aliases,
+misplaced write-port use and DI imports outside composition. An additional Python
+regression rejects direct private-state access even from a command handler;
+its focused suite and the final architecture check passed. Domain tests and
+projection/rehydration paths retain their explicit scope.
+
+DI tests resolve every Python/TypeScript context provider and validate the Go Fx
+graphs without infrastructure. Fixed command fixtures cover all seven private
+subscriptions and preserve exact Protobuf bytes plus original receipt material.
+The application event-handler tests exercise translation separately from command
+execution. Handwritten files remain below the responsibility limit.
+
+`pnpm test:integration` passed on the final runtime implementation. Both Python
+and TypeScript prove that accepting an event leaves aggregate state unchanged,
+a dispatch-recording failure rolls back acceptance, duplicates preserve the
+original command, conflicting source hashes fail, abandoned command leases recover
+exact bytes, stale lease completion is fenced, four failed executions reach the
+dead queue, and replay/duplicate publication commit one aggregate transition.
+Runtime roles cannot rewrite the saved command bytes. Owner-local version-three
+migrations provide receiving command evidence and mutable dispatch records.
+
+The full suite also passed existing migration/receipt/request-reply tests, all
+31 live HTTP contract operations, all 12 infrastructure Gherkin scenarios,
+realtime and Valkey authority, workflow diagnostics, browser recovery and the
+in-flight session revocation fixture. No environment-dependent checks were
+skipped. Disposable infrastructure was removed after completion.
+
+Logs: `.local/commands-verify-final.log` and
+`.local/commands-integration-verified.log`. Remote CI and load testing were not
+run. The static checks cover the supported typed coding conventions; deliberate
+reflection or bypass still requires review.
+
 ## Contract review follow-up, 8 October 2026
 
 The four review findings are addressed. API and owner transports now use native

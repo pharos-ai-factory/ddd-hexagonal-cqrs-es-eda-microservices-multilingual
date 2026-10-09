@@ -6,6 +6,7 @@ export type AccountState = Readonly<{
 }>;
 export type AccountFact = Readonly<{type: 'RewardEarned'; grant: Grant} | {type: 'StampCredited'; orderId: string}>;
 
+/** Owns collection credits, stamp balance and immutable earned reward grants. */
 export class LoyaltyAccount {
   #state: AccountState;
   #events: AccountFact[] = [];

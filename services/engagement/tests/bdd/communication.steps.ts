@@ -1,13 +1,25 @@
 import assert from 'node:assert/strict';
 import {Given, When, Then} from '@cucumber/cucumber';
-import {PickupNotice, RewardNotice, DeliverNotification} from '../../src/contexts/communication/application/commands.js';
+import {PickupOpenedIntegrationEventHandler, RewardIssuedIntegrationEventHandler} from '../../src/contexts/communication/application/event-handlers.js';
+import {RequestNotificationCommandHandler, DeliverNotificationCommandHandler, type RequestNotificationCommand} from '../../src/contexts/communication/application/commands.js';
+import type {Metadata} from '../../src/foundation/application.js';
 import {customer, metadata, notification, selectedOrder} from './probes.js';
 import type {EngagementWorld as W} from './world.js';
 
+function handoffProbe(w: W) {
+  const commands: {m: Metadata; command: RequestNotificationCommand}[] = [];
+  return {enqueue: async (m: Metadata, command: RequestNotificationCommand) => {
+    commands.push({m, command}); return {aggregateId: m.target, version: 0, status: 'queued'};
+  }, drain: async () => {
+    for (const {m, command} of commands) await new RequestNotificationCommandHandler(w.notices).execute(m, command);
+  }};
+}
 async function request(w: W, code = 'ABC123') {
-  await new PickupNotice(w.notices).handle(metadata(notification), {
+  const queue = handoffProbe(w);
+  await new PickupOpenedIntegrationEventHandler(queue).handle(metadata(notification), {
     pickupId: selectedOrder, orderId: selectedOrder, customerId: customer, collectionCode: code,
   });
+  await queue.drain();
   w.notices.succeeded();
 }
 async function deliver(w: W) {
@@ -15,14 +27,16 @@ async function deliver(w: W) {
   w.commandsBeforeDelivery = w.notices.calls;
   w.deliveryError = undefined;
   try {
-    await new DeliverNotification(w.notices, w.notices, w.provider).handle(metadata(notification), {notificationId: notification});
+    await new DeliverNotificationCommandHandler(w.notices, w.notices, w.provider).execute(metadata(notification), {notificationId: notification});
   } catch (error) { w.deliveryError = error; }
 }
 When('Communication handles an opened pickup with code {string}', function(this: W, code: string) { return request(this, code); });
 When('Communication handles a reward valid until {string}', async function(this: W, expiresAt: string) {
-  await new RewardNotice(this.notices).handle(metadata(notification), {
+  const queue = handoffProbe(this);
+  await new RewardIssuedIntegrationEventHandler(queue).handle(metadata(notification), {
     rewardId: selectedOrder, customerId: customer, benefit: 'one free drink', expiresAt,
   });
+  await queue.drain();
   this.notices.succeeded();
 });
 Then('the requested notification tells the customer {string}', function(this: W, body: string) {

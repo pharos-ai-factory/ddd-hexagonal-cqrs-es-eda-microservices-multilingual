@@ -1,12 +1,11 @@
-import type {CommandPort, DeliveryPort, Metadata, QueryPort} from '../../../foundation/application.js';
+import type {AggregateCommandPort, DeliveryPort, Metadata, QueryPort} from '../../../foundation/application.js';
 import {Rejection} from '../../../foundation/domain.js';
-import type {PickupOpened, RewardIssued} from '../../../contracts/events.js';
-import type {NotificationRequested} from './events.js';
 import {Notification, type NotificationState} from '../domain/notification.js';
 
-export class RequestNotification {
-  constructor(private notifications: CommandPort<NotificationState>) {}
-  execute(m: Metadata, command: {recipient: string; subject: string; body: string}) {
+/** Creates one notification and records its private delivery-requested fact atomically. */
+export class RequestNotificationCommandHandler {
+  constructor(private notifications: AggregateCommandPort<NotificationState>) {}
+  execute(m: Metadata, command: RequestNotificationCommand) {
     return this.notifications.execute({...m, input: command}, loaded => {
       if (loaded) {
         const state = new Notification(loaded.state).snapshot();
@@ -18,25 +17,12 @@ export class RequestNotification {
     });
   }
 }
-export class PickupNotice {
-  constructor(private notifications: CommandPort<NotificationState>) {}
-  handle(m: Metadata, event: PickupOpened) {
-    return new RequestNotification(this.notifications).execute(m, {recipient: event.customerId,
-      subject: 'Your drinks are ready', body: 'Collect your order using code ' + event.collectionCode});
-  }
-}
-export class RewardNotice {
-  constructor(private notifications: CommandPort<NotificationState>) {}
-  handle(m: Metadata, event: RewardIssued) {
-    return new RequestNotification(this.notifications).execute(m, {recipient: event.customerId,
-      subject: 'You earned a reward', body: event.benefit + '; valid until ' + event.expiresAt});
-  }
-}
-export class DeliverNotification {
-  constructor(private commands: CommandPort<NotificationState>, private queries: QueryPort<NotificationState>,
+/** Performs idempotent provider delivery and records the result through one aggregate command. */
+export class DeliverNotificationCommandHandler {
+  constructor(private commands: AggregateCommandPort<NotificationState>, private queries: QueryPort<NotificationState>,
     private provider: DeliveryPort) {}
-  async handle(m: Metadata, event: NotificationRequested) {
-    const loaded = await this.queries.get(event.notificationId);
+  async execute(m: Metadata, command: DeliverNotificationCommand) {
+    const loaded = await this.queries.get(command.notificationId);
     if (!loaded) throw new Error('Requested notification is missing');
     const snapshot = new Notification(loaded.state).snapshot();
     // Provider I/O happens before the aggregate transaction and honours a stable key.
@@ -50,3 +36,7 @@ export class DeliverNotification {
     });
   }
 }
+
+/** Owner-local notification content, prepared before the durable hand-off. */
+export type RequestNotificationCommand = {recipient: string; subject: string; body: string};
+export type DeliverNotificationCommand = {notificationId: string};

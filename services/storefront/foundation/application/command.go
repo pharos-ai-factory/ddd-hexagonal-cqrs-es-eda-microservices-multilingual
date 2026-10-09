@@ -22,6 +22,7 @@ type Publication struct {
 	Payload    any
 }
 
+// Metadata identifies a command attempt and preserves source receipt material.
 type Metadata struct {
 	ID              string
 	AggregateID     string
@@ -36,6 +37,7 @@ type Metadata struct {
 	SourceHash    string
 }
 
+// Outcome records a committed aggregate revision or typed business rejection.
 type Outcome struct {
 	AggregateID string            `json:"aggregateId"`
 	Version     uint64            `json:"version"`
@@ -56,12 +58,14 @@ func (e *ApplicationError) Rejection() domain.Violation {
 	return domain.Violation{Code: e.Code, Message: e.Message}
 }
 
+// Loaded carries restored state and its persisted aggregate revision.
 type Loaded[S any] struct {
 	Exists  bool   `json:"exists"`
 	Version uint64 `json:"version"`
 	State   S      `json:"state"`
 }
 
+// Mutation describes one aggregate change and the events to persist atomically.
 type Mutation[S any] struct {
 	State        S
 	Changed      bool
@@ -69,9 +73,9 @@ type Mutation[S any] struct {
 	Publications []Publication
 }
 
-// CommandPort is permanently bound to one context and aggregate kind.
+// AggregateCommandPort is permanently bound to one context and aggregate kind.
 // It exposes neither a database transaction nor a second repository.
-type CommandPort[S any] interface {
+type AggregateCommandPort[S any] interface {
 	Execute(context.Context, Metadata, func(Loaded[S]) (Mutation[S], error)) (Outcome, error)
 }
 

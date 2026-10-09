@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Dispatch carries immutable event bytes and a fenced outbox lease.
 type Dispatch struct {
 	EventID    string
 	Name       string
@@ -15,7 +16,7 @@ type Dispatch struct {
 	Generation int64
 }
 
-func (db *Database) Claim(ctx context.Context, lease time.Duration) (Dispatch, bool, error) {
+func (db *ContextDatabase) Claim(ctx context.Context, lease time.Duration) (Dispatch, bool, error) {
 	token := NewID()
 	var d Dispatch
 	err := db.pool.QueryRow(ctx, `WITH candidate AS (
@@ -31,15 +32,15 @@ func (db *Database) Claim(ctx context.Context, lease time.Duration) (Dispatch, b
 	d.Token = token
 	return d, err == nil, err
 }
-func (db *Database) Complete(ctx context.Context, d Dispatch) (bool, error) {
+func (db *ContextDatabase) Complete(ctx context.Context, d Dispatch) (bool, error) {
 	tag, err := db.pool.Exec(ctx, `UPDATE cafe.dispatches SET completed_at=clock_timestamp(),lease_until=NULL,lease_token=NULL,last_error=NULL WHERE event_id=$1 AND lease_token=$2 AND generation=$3 AND lease_until>clock_timestamp()`, d.EventID, d.Token, d.Generation)
 	return err == nil && tag.RowsAffected() == 1, err
 }
-func (db *Database) Retry(ctx context.Context, d Dispatch, reason string) (bool, error) {
+func (db *ContextDatabase) Retry(ctx context.Context, d Dispatch, reason string) (bool, error) {
 	tag, err := db.pool.Exec(ctx, `UPDATE cafe.dispatches SET available_at=clock_timestamp()+interval '1 second',lease_until=NULL,lease_token=NULL,last_error=$4 WHERE event_id=$1 AND lease_token=$2 AND generation=$3 AND lease_until>clock_timestamp()`, d.EventID, d.Token, d.Generation, reason)
 	return err == nil && tag.RowsAffected() == 1, err
 }
-func (db *Database) Pending(ctx context.Context) (int, error) {
+func (db *ContextDatabase) Pending(ctx context.Context) (int, error) {
 	var count int
 	err := db.pool.QueryRow(ctx, `SELECT count(*) FROM cafe.dispatches WHERE completed_at IS NULL`).Scan(&count)
 	return count, err

@@ -2,18 +2,21 @@ package postgres
 
 import "context"
 
+// Backlog reports pending work, failures and oldest pending age.
 type Backlog struct {
 	Pending          int64   `json:"pending"`
 	OldestAgeSeconds float64 `json:"oldestAgeSeconds"`
 	Failed           int64   `json:"failed"`
 }
+
+// Diagnostics reports owned backlog and worker recovery evidence.
 type Diagnostics struct {
 	Outbox   Backlog `json:"outbox"`
 	Realtime Backlog `json:"realtime"`
 }
 
-func (db *Database) Owner() string { return db.owner }
-func (db *Database) Diagnostics(ctx context.Context) (Diagnostics, error) {
+func (db *ContextDatabase) Owner() string { return db.owner }
+func (db *ContextDatabase) Diagnostics(ctx context.Context) (Diagnostics, error) {
 	var result Diagnostics
 	for index, tables := range [][2]string{{"dispatches", "outbox_events"}, {"realtime_dispatches", "realtime_publications"}} {
 		backlog := &result.Outbox

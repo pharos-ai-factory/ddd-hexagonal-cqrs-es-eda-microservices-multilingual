@@ -1,4 +1,4 @@
-import type {Database} from './postgres.js';
+import type {PostgresContextDatabase} from './postgres.js';
 
 type Failure = {at: string; class: string; event: string | undefined; correlation: string | undefined};
 type Worker = {owner: string; name: string; failures: number; deadLetterTransfers: number; lastFailure: Failure};
@@ -15,12 +15,13 @@ export function failure(owner: string, name: string, error: unknown, event?: str
   console.warn(JSON.stringify({message: 'workflow failure', owner, worker: name, ...lastFailure, deadLetterTransfer: dead}));
 }
 export function processWorkers() { return Object.fromEntries(workers); }
-export async function diagnostics(databases: Record<string, Database>) {
+export async function diagnostics(databases: Record<string, PostgresContextDatabase>) {
   const states: Record<string, unknown> = {};
   for (const [owner, db] of Object.entries(databases)) {
     const state: Record<string, unknown> = {};
     for (const [name, dispatch, source] of [['outbox', 'dispatches', 'outbox_events'],
-      ['realtime', 'realtime_dispatches', 'realtime_publications']]) {
+      ['realtime', 'realtime_dispatches', 'realtime_publications'],
+      ['commands', 'internal_command_dispatches', 'internal_commands']]) {
       try {
         const client = await db.pool.connect();
         try {

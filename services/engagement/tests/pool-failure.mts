@@ -1,12 +1,12 @@
 import {once} from 'node:events';
 import {setTimeout} from 'node:timers/promises';
-import {Database} from '../src/adaptors/postgres.js';
+import {PostgresContextDatabase} from '../src/adaptors/postgres.js';
 
 // Observe the real pool in a separate process, without allowing a fatal error
 // to terminate the test runner or print connection credentials.
 process.on('uncaughtException', () => process.exit(86));
 const deadline = globalThis.setTimeout(() => process.exit(87), 10000);
-const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
+const db = new PostgresContextDatabase('loyalty', process.env.LOYALTY_DATABASE_URL!);
 try {
   await db.verify();
   const {rows: [row]} = await db.pool.query('SELECT pg_backend_pid() AS pid');

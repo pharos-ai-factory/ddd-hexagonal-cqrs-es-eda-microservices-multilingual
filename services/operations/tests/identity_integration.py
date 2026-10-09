@@ -4,8 +4,8 @@ import pytest
 from psycopg import Connection, connect
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
-from operations.adaptors.postgres import Commands, Database, Queries, Row
-from operations.contexts.collection.application import CollectOrder
+from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresContextDatabase, PostgresAggregateQueries, Row
+from operations.contexts.collection.application import CollectOrderCommandHandler
 from operations.contexts.collection.domain import Pickup, PickupSnapshot
 from operations.foundation.application import Change, Metadata
 from operations.foundation.domain import CorruptState
@@ -16,7 +16,7 @@ from tests.persistence_integration import present
 @pytest.mark.parametrize("matching_identity", [True, False], ids=["matching", "different_valid_uuid"])
 def test_pickup_identity_must_match_its_storage_key(matching_identity: bool) -> None:
     assert os.environ["CAFE_DISPOSABLE_PROJECT"].startswith("cafe-reference-test-")
-    database = Database("collection", os.environ["COLLECTION_DATABASE_URL"])
+    database = PostgresContextDatabase("collection", os.environ["COLLECTION_DATABASE_URL"])
     identity, source = new_id(), new_id()
     state: PickupSnapshot = {"id": identity if matching_identity else new_id(),
         "orderId": new_id(), "customerId": new_id(), "code": "ABC123", "status": "ready"}
@@ -30,8 +30,8 @@ def test_pickup_identity_must_match_its_storage_key(matching_identity: bool) -> 
             admin.execute("SELECT set_config('cafe.command_target',%s,true)", ("pickup:"+identity,))
             admin.execute("INSERT INTO cafe.aggregates(kind,id,version,state) VALUES('pickup',%s,1,%s)",
                           (identity, Jsonb(state)))
-        commands = Commands[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
-        handler = CollectOrder(commands)
+        commands = PostgresAggregateCommandStore[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
+        handler = CollectOrderCommandHandler(commands)
         if not matching_identity:
             with pytest.raises(CorruptState):
                 handler.execute(metadata, {"code": "ABC123"})
@@ -40,7 +40,7 @@ def test_pickup_identity_must_match_its_storage_key(matching_identity: bool) -> 
             assert stored == {"version": 1, "state": state}
             evidence(admin, identity, source, 0)
             with pytest.raises(CorruptState):
-                Queries(database, "pickup", lambda value: Pickup.restore(value).snapshot()).get(identity)
+                PostgresAggregateQueries(database, "pickup", lambda value: Pickup.restore(value).snapshot()).get(identity)
             with admin.transaction():
                 admin.execute("SET LOCAL session_replication_role='replica'")
                 admin.execute("UPDATE cafe.aggregates SET state=%s WHERE kind='pickup' AND id=%s",
@@ -60,7 +60,7 @@ def test_pickup_identity_must_match_its_storage_key(matching_identity: bool) -> 
 
 def test_proposed_pickup_identity_cannot_change_the_command_target() -> None:
     assert os.environ["CAFE_DISPOSABLE_PROJECT"].startswith("cafe-reference-test-")
-    database = Database("collection", os.environ["COLLECTION_DATABASE_URL"])
+    database = PostgresContextDatabase("collection", os.environ["COLLECTION_DATABASE_URL"])
     identity, source = new_id(), new_id()
     state: PickupSnapshot = {"id": new_id(), "orderId": new_id(), "customerId": new_id(),
                             "code": "ABC123", "status": "ready"}
@@ -69,7 +69,7 @@ def test_proposed_pickup_identity_cannot_change_the_command_target() -> None:
     admin: Connection[Row] = connect(os.environ["DATABASE_ADMIN_URL"], dbname="cafe_collection",
                                      row_factory=dict_row, autocommit=True)
     try:
-        commands = Commands[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
+        commands = PostgresAggregateCommandStore[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
         with pytest.raises(CorruptState):
             commands.execute(metadata, lambda _: Change(state, "ready", True))
         assert admin.execute("SELECT id FROM cafe.aggregates WHERE id=%s", (identity,)).fetchone() is None

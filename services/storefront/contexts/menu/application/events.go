@@ -7,11 +7,12 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
-type ProjectDrinkHandler struct {
+// DrinkDirectoryProjectionHandler updates the consumer-owned projection without aggregate mutation.
+type DrinkDirectoryProjectionHandler struct {
 	Directory a.ProjectionPort[DrinkPublished]
 }
 
-func (h ProjectDrinkHandler) Handle(ctx context.Context, m a.Metadata, event DrinkPublished) (a.Outcome, error) {
+func (h DrinkDirectoryProjectionHandler) Handle(ctx context.Context, m a.Metadata, event DrinkPublished) (a.Outcome, error) {
 	key := fmt.Sprintf("%s/%d", event.DrinkID, event.Revision)
 	return a.Outcome{}, h.Directory.Record(ctx, m, key, event.Revision, event)
 }

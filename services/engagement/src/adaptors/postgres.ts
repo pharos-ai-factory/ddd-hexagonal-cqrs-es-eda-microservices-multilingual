@@ -1,6 +1,6 @@
 import {Pool, type PoolClient} from 'pg';
 import {createHash} from 'node:crypto';
-import {VersionConflictApplicationError, type Change, type CommandPort, type Loaded, type Metadata, type Outcome, type QueryPort} from '../foundation/application.js';
+import {VersionConflictApplicationError, type Change, type AggregateCommandPort, type Loaded, type Metadata, type Outcome, type QueryPort} from '../foundation/application.js';
 import type {Page, PageRequest} from '../foundation/pagination.js';
 import {identifier, Rejection} from '../foundation/domain.js';
 import {encode, realtime} from './codec.js';
@@ -15,7 +15,8 @@ function canonical(value: unknown): unknown {
     Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, canonical(item)]));
   return value;
 }
-export class Database {
+/** Owns one context pool and verifies its database identity, grants and migration ledger. */
+export class PostgresContextDatabase {
   readonly pool: Pool;
   constructor(readonly owner: string, url: string) {
     this.pool = new Pool({connectionString: url, max: 6, connectionTimeoutMillis: 3000});
@@ -43,8 +44,9 @@ export class Database {
     await this.pool.query('SELECT id FROM cafe.realtime_publications LIMIT 0');
   }
 }
-export class Commands<S> implements CommandPort<S> {
-  constructor(private db: Database, private kind: string, private restore: (value: unknown) => S) {}
+/** Commits one aggregate, command outcome, receipts and outgoing event/realtime intent atomically. */
+export class PostgresAggregateCommandStore<S> implements AggregateCommandPort<S> {
+  constructor(private db: PostgresContextDatabase, private kind: string, private restore: (value: unknown) => S) {}
   async execute(m: Metadata, decide: (loaded: Loaded<S> | undefined) => Change<S>): Promise<Outcome> {
     [m.id, m.target, m.correlation].forEach(identifier);
     const digest = createHash('sha256').update(JSON.stringify(canonical({expected: m.expected ?? null, input: m.input}))).digest('hex');
@@ -129,8 +131,9 @@ async function incoming(client: PoolClient, m: Metadata, target: string, outcome
   if (m.consumer) await client.query(`INSERT INTO cafe.consumer_receipts(consumer,event_id,fingerprint,target,outcome)
     VALUES($1,$2,$3,$4,$5)`, [m.consumer, m.sourceId, m.sourceHash, target, outcome]);
 }
-export class Queries<S> implements QueryPort<S> {
-  constructor(private db: Database, private kind: string, private restore: (value: unknown) => S) {}
+/** Restores validated snapshots through the read port without exposing database objects. */
+export class PostgresAggregateQueries<S> implements QueryPort<S> {
+  constructor(private db: PostgresContextDatabase, private kind: string, private restore: (value: unknown) => S) {}
   private loaded(row: {id: string; version: number; state: unknown}): Loaded<S> {
     const state = this.restore(row.state);
     checkRootIdentity(state, row.id);

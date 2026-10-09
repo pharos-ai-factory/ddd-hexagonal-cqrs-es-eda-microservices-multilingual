@@ -12,6 +12,7 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/application"
 )
 
+// Config contains the settings and injected ports for this HTTP boundary.
 type Config struct {
 	Diagnostics                           func(context.Context) (any, error)
 	Sessions                              a.Sessions

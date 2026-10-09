@@ -4,11 +4,13 @@ from typing import TypedDict
 
 
 class RejectionDetail(TypedDict):
+    """Serialises an expected business rejection without infrastructure exception details."""
     code: str
     message: str
 
 
 class Rejection(Exception):
+    """Represents an expected business refusal whose stable code and message can be recorded."""
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code

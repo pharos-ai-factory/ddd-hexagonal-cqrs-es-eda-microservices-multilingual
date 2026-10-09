@@ -20,7 +20,7 @@ type menuWorld struct {
 }
 
 func (w *menuWorld) publishDrink() error {
-	_, err := (app.PublishDrinkHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), struct{}{})
+	_, err := (app.PublishDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), struct{}{})
 	if err != nil {
 		return err
 	}
@@ -32,16 +32,16 @@ func (w *menuWorld) publishDrink() error {
 	return nil
 }
 func (w *menuWorld) add(code string, minor int64) error {
-	_, err := (app.AddOfferHandler{Editions: &w.editions, Drinks: &w.directory}).Execute(context.Background(), s.Metadata(s.Edition),
-		app.AddOffer{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
+	_, err := (app.AddOfferCommandHandler{Editions: &w.editions, Drinks: &w.directory}).Execute(context.Background(), s.Metadata(s.Edition),
+		app.AddOfferCommand{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
 	return err
 }
 func (w *menuWorld) publish() error {
-	_, err := (app.PublishEditionHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), struct{}{})
+	_, err := (app.PublishEditionCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), struct{}{})
 	return err
 }
 func (w *menuWorld) price(code string, minor int64) error {
-	_, err := (app.ChangePriceHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), app.ChangePrice{Code: code, Minor: minor})
+	_, err := (app.ChangePriceCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), app.ChangePriceCommand{Code: code, Minor: minor})
 	return err
 }
 func (w *menuWorld) offer() (d.OfferState, error) {
@@ -61,7 +61,7 @@ func TestMenuFeatures(t *testing.T) {
 				return ctx, nil
 			})
 			sc.Step(`^a published drink named "([^"]*)"$`, func(name string) error {
-				_, err := (app.CreateDrinkHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), app.CreateDrink{Name: name})
+				_, err := (app.CreateDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), app.CreateDrinkCommand{Name: name})
 				if err != nil {
 					return err
 				}
@@ -71,7 +71,7 @@ func TestMenuFeatures(t *testing.T) {
 				return w.publishDrink()
 			})
 			sc.Step(`^a draft menu edition in "([^"]*)"$`, func(currency string) error {
-				_, err := (app.CreateEditionHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), app.CreateEdition{Currency: currency})
+				_, err := (app.CreateEditionCommandHandler{Editions: &w.editions}).Execute(context.Background(), s.Metadata(s.Edition), app.CreateEditionCommand{Currency: currency})
 				if err != nil {
 					return err
 				}
@@ -124,7 +124,7 @@ func TestMenuFeatures(t *testing.T) {
 				return nil
 			})
 			sc.Step(`^the drink is renamed to "([^"]*)" and published again$`, func(name string) error {
-				_, err := (app.ReviseDrinkHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), app.CreateDrink{Name: name})
+				_, err := (app.ReviseDrinkCommandHandler{Drinks: &w.drinks}).Execute(context.Background(), s.Metadata(s.Drink), app.ReviseDrinkCommand{Name: name})
 				if err != nil {
 					return err
 				}

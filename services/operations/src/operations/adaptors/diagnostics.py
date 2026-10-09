@@ -5,10 +5,11 @@ import json
 import logging
 from threading import Lock
 from typing import TypedDict
-from operations.adaptors.postgres import Database
+from operations.adaptors.postgres import PostgresContextDatabase
 
 
 class Failure(TypedDict):
+    """Stores redacted delivery failure evidence without exception messages or credentials."""
     at: str
     error_class: str
     event: str
@@ -16,6 +17,7 @@ class Failure(TypedDict):
 
 
 class Worker(TypedDict):
+    """Reports process-local delivery failures and confirmed dead-letter transfers."""
     owner: str
     name: str
     failures: int
@@ -43,7 +45,7 @@ def process_workers() -> dict[str, Worker]:
         return dict(_workers)
 
 
-def diagnostics(databases: Mapping[str, Database]) -> dict[str, object]:
+def diagnostics(databases: Mapping[str, PostgresContextDatabase]) -> dict[str, object]:
     states: dict[str, object] = {}
     for owner, database in databases.items():
         state: dict[str, object] = {}
@@ -51,7 +53,8 @@ def diagnostics(databases: Mapping[str, Database]) -> dict[str, object]:
             with database.pool.connection(timeout=3) as connection, connection.transaction():
                 connection.execute("SET LOCAL statement_timeout='3s'")
                 for name, dispatch, source in (("outbox", "dispatches", "outbox_events"),
-                                                ("realtime", "realtime_dispatches", "realtime_publications")):
+                                                ("realtime", "realtime_dispatches", "realtime_publications"),
+                                                ("commands", "internal_command_dispatches", "internal_commands")):
                     row = connection.execute(f"""SELECT count(*) AS pending,
                         COALESCE(EXTRACT(EPOCH FROM clock_timestamp()-min(o.created_at)),0)::float8 AS "oldestAgeSeconds",
                         count(*) FILTER (WHERE d.last_error IS NOT NULL) AS failed

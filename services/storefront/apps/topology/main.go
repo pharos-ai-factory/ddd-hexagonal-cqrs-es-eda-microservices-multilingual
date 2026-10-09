@@ -26,12 +26,13 @@ func main() {
 		Name       string
 		Consumer   string
 		Visibility string
+		Command    bool
 	}
 	if err = json.Unmarshal(data, &events); err != nil {
 		log.Fatal(err)
 	}
 	for _, event := range events {
-		bindings = append(bindings, broker.Binding{Consumer: event.Consumer, Event: event.Name, Visibility: event.Visibility, Context: strings.SplitN(event.Consumer, ".", 2)[0]})
+		bindings = append(bindings, broker.Binding{Consumer: event.Consumer, Event: event.Name, Visibility: event.Visibility, Command: event.Command, Context: strings.SplitN(event.Consumer, ".", 2)[0]})
 	}
 	url, err := config.Secret("BROKER_ADMIN_URL")
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
+// DrinkQueries reads drink snapshots through the injected query port.
 type DrinkQueries struct {
 	Read a.PagedQueryPort[d.DrinkState]
 }
@@ -17,6 +18,7 @@ func (h DrinkQueries) List(ctx context.Context) ([]a.Loaded[d.DrinkState], error
 	return h.Read.List(ctx)
 }
 
+// EditionQueries reads edition snapshots through the injected query port.
 type EditionQueries struct {
 	Read a.PagedQueryPort[d.EditionState]
 }

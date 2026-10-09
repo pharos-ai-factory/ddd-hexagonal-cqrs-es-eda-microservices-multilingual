@@ -5,6 +5,7 @@ from operations.foundation.domain import CorruptState, DomainError, Rejection, i
 
 
 class PickupAlreadyCollectedDomainError(DomainError):
+    """Identifies the aggregate rule preventing a second collection."""
     def __init__(self) -> None:
         super().__init__("pickup_already_collected", "This pickup has already been collected")
 
@@ -12,6 +13,7 @@ type PickupStatus = Literal["ready", "collected"]
 
 
 class PickupSnapshot(TypedDict):
+    """Represents the persisted pickup state validated by aggregate restoration."""
     id: str
     orderId: str
     customerId: str
@@ -21,6 +23,7 @@ class PickupSnapshot(TypedDict):
 
 @dataclass(frozen=True)
 class PickupOpened:
+    """Private fact raised when a Pickup becomes available for collection."""
     name: ClassVar[str] = "PickupOpened"
     pickup_id: str
     order_id: str
@@ -30,6 +33,7 @@ class PickupOpened:
 
 @dataclass(frozen=True)
 class OrderCollected:
+    """Private fact raised when a Pickup records its single collection."""
     name: ClassVar[str] = "OrderCollected"
     order_id: str
     customer_id: str
@@ -40,6 +44,7 @@ type PickupFact = PickupOpened | OrderCollected
 
 @dataclass(frozen=True)
 class CollectionCode:
+    """Validates the owner collection credential as a value object."""
     value: str
 
     def __post_init__(self) -> None:
@@ -49,6 +54,7 @@ class CollectionCode:
 
 @dataclass(frozen=True)
 class PickupState:
+    """Stores private pickup lifecycle state controlled by the Pickup aggregate."""
     id: str
     order_id: str
     customer_id: str
@@ -57,6 +63,7 @@ class PickupState:
 
 
 class Pickup:
+    """Owns collection code validation and the single collection transition for an order."""
     def __init__(self, state: PickupState) -> None:
         for value in (state.id, state.order_id, state.customer_id):
             identifier(value)

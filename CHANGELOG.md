@@ -4,6 +4,19 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Adopt Awilix, Python Dependency Injector and Go Fx with explicit context
+  bindings, framework-free application constructors and owned resource cleanup.
+  Record comparisons and trade-offs in decisions 0010 and 0011.
+- Route event-triggered aggregate changes through named commands: atomically
+  persist receiving evidence and exact private Protobuf command bytes, then use
+  durable RabbitMQ command queues with confirmed publication, bounded retries,
+  dead letters, replay and fenced outbox recovery.
+- Name and document command handlers, event handlers, projection handlers and
+  infrastructure classes explicitly. Preserve published wire and receipt identities.
+- Add compiler/AST mutation-boundary regressions, DI graph tests and real
+  hand-off rollback, duplicate, lease, retry and replay checks in Python/TypeScript.
+  Generate topology and replay destinations from owner subscription declarations.
+
 - Dispatch through native context request/reply envelopes, allowing independent
   payload names and field numbers. Generate API mappings from compiler descriptors
   so legal Protobuf formatting preserves required inputs.

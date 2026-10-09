@@ -43,6 +43,7 @@ type Fact struct {
 	Data any
 }
 
+// Quantity validates a positive item count as an immutable value object.
 type Quantity struct{ value int }
 
 func NewQuantity(value int) (Quantity, error) {

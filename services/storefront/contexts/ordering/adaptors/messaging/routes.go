@@ -6,26 +6,27 @@ import (
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/integrations/requests"
 )
 
-type Handlers struct {
+// OrderingRequestHandlers groups the explicitly typed handlers mounted by this transport adaptor.
+type OrderingRequestHandlers struct {
 	Queries        app.OrderingQueries
-	CreateOrder    app.CreateOrderHandler
-	AddLine        app.AddLineHandler
-	ChangeQuantity app.ChangeQuantityHandler
-	PlaceOrder     app.PlaceOrderHandler
+	CreateOrder    app.CreateOrderCommandHandler
+	AddLine        app.AddLineCommandHandler
+	ChangeQuantity app.ChangeQuantityCommandHandler
+	PlaceOrder     app.PlaceOrderCommandHandler
 }
 
-func Bind(h Handlers) *rpc.Registry {
+func Bind(h OrderingRequestHandlers) *rpc.RabbitMQRequestRegistry {
 	r := rpc.New("ordering")
-	rpc.Command(r, "createOrder", func(p *pb.CreateOrder) app.CreateOrder {
-		return app.CreateOrder{CustomerID: p.GetCustomerId(), EditionID: p.GetEditionId()}
+	rpc.Command(r, "createOrder", func(p *pb.CreateOrder) app.CreateOrderCommand {
+		return app.CreateOrderCommand{CustomerID: p.GetCustomerId(), EditionID: p.GetEditionId()}
 	}, h.CreateOrder.Execute)
-	rpc.Command(r, "addLine", func(p *pb.AddLine) app.AddLine {
-		return app.AddLine{LineID: p.GetLineId(), EditionID: p.GetEditionId(), OfferCode: p.GetOfferCode(), Quantity: int(p.GetQuantity())}
+	rpc.Command(r, "addLine", func(p *pb.AddLine) app.AddLineCommand {
+		return app.AddLineCommand{LineID: p.GetLineId(), EditionID: p.GetEditionId(), OfferCode: p.GetOfferCode(), Quantity: int(p.GetQuantity())}
 	}, h.AddLine.Execute)
-	rpc.Command(r, "changeQuantity", func(p *pb.ChangeQuantity) app.ChangeQuantity {
-		return app.ChangeQuantity{LineID: p.GetLineId(), Quantity: int(p.GetQuantity())}
+	rpc.Command(r, "changeQuantity", func(p *pb.ChangeQuantity) app.ChangeQuantityCommand {
+		return app.ChangeQuantityCommand{LineID: p.GetLineId(), Quantity: int(p.GetQuantity())}
 	}, h.ChangeQuantity.Execute)
-	rpc.Command(r, "placeOrder", func(p *pb.PlaceOrder) struct{} { return struct{}{} }, h.PlaceOrder.Execute)
+	rpc.Command(r, "placeOrder", func(p *pb.PlaceOrder) app.PlaceOrderCommand { return app.PlaceOrderCommand{} }, h.PlaceOrder.Execute)
 	rpc.Queries(r, "order", "orders", h.Queries.List, h.Queries.Get, h.Queries.Page, orderReply, ordersReply)
 	return r
 }

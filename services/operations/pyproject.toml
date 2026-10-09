@@ -8,6 +8,7 @@ dependencies = [
   "psycopg[binary,pool]==3.3.6",
   "pika==1.4.4",
   "protobuf==7.36.2",
+  "dependency-injector==4.49.1",
 ]
 
 [dependency-groups]

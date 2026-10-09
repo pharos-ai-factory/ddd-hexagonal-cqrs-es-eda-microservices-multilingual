@@ -10,6 +10,11 @@
       "version": 2,
       "file": "0002_command_replies.sql",
       "checksum": "63df86517d77b71184ffb943d3ca094fa10976dc9413df92b4e3b13e8502d857"
+    },
+    {
+      "version": 3,
+      "file": "0003_internal_commands.sql",
+      "checksum": "48d0cf768e0f434d25ce4ff6cc6fb5830827dee1adc29d73f37fedbee6ea6ae3"
     }
   ]
 }

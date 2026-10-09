@@ -6,17 +6,18 @@ import (
 	"net/http"
 )
 
-type Handlers struct {
+// OrderingHTTPHandlers groups the explicitly typed handlers mounted by this transport adaptor.
+type OrderingHTTPHandlers struct {
 	OrderingQueries app.OrderingQueries
-	CreateOrder     app.CreateOrderHandler
-	AddLine         app.AddLineHandler
-	ChangeQuantity  app.ChangeQuantityHandler
-	PlaceOrder      app.PlaceOrderHandler
+	CreateOrder     app.CreateOrderCommandHandler
+	AddLine         app.AddLineCommandHandler
+	ChangeQuantity  app.ChangeQuantityCommandHandler
+	PlaceOrder      app.PlaceOrderCommandHandler
 }
 
 func Mount(mux interface {
 	HandleFunc(string, func(http.ResponseWriter, *http.Request))
-}, h Handlers) {
+}, h OrderingHTTPHandlers) {
 	mux.HandleFunc("GET /v1/ordering/orders", web.PagedList(h.OrderingQueries.List, h.OrderingQueries.Page))
 	mux.HandleFunc("GET /v1/ordering/orders/{id}", web.Get(h.OrderingQueries.Get))
 	mux.HandleFunc("POST /v1/ordering/orders/{id}", web.Command("ordering.CreateOrder", h.CreateOrder.Execute))

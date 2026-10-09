@@ -328,9 +328,16 @@ flowchart LR
 ```
 
 The diagram describes business relationships, not synchronous calls.
-PlaceOrder commits an Order and its outgoing event; AcceptOrder runs later in
-Preparation with its own transaction and receipt. Likewise, RewardEarned crosses
-the durable delivery boundary even though both aggregates belong to Loyalty.
+PlaceOrder commits an Order and its outgoing event. Preparation's event handler
+records an AcceptOrder command in its outbox, and a dedicated RabbitMQ command
+consumer later executes it with its own transaction and receipt. RewardEarned
+uses the same durable hand-off between the two Loyalty aggregates.
+
+[Decision 0010](docs/decisions/0010-dependency-injection-frameworks.md) compares
+Awilix, Dependency Injector and Fx with their alternatives and records the DI
+conventions. [Decision 0011](docs/decisions/0011-durable-commands-before-aggregate-mutations.md)
+explains the command-before-mutation rule, failure ownership and the cost of the
+additional queue stage.
 
 A workshop event is a modelling concept, not automatically a Protobuf message
 or an event-sourcing record. Decide which facts need private domain delivery,

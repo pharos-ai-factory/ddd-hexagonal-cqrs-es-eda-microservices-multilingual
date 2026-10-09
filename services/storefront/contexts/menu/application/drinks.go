@@ -7,12 +7,17 @@ import (
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
 
-type CreateDrink struct {
+// CreateDrinkCommand expresses the owner CreateDrink use case independently of transport.
+type CreateDrinkCommand struct {
 	Name string `json:"name"`
 }
-type CreateDrinkHandler struct{ Drinks a.CommandPort[d.DrinkState] }
 
-func (h CreateDrinkHandler) Execute(ctx context.Context, m a.Metadata, c CreateDrink) (a.Outcome, error) {
+// CreateDrinkCommandHandler applies CreateDrink through one aggregate command transaction.
+type CreateDrinkCommandHandler struct {
+	Drinks a.AggregateCommandPort[d.DrinkState]
+}
+
+func (h CreateDrinkCommandHandler) Execute(ctx context.Context, m a.Metadata, c CreateDrinkCommand) (a.Outcome, error) {
 	return h.Drinks.Execute(ctx, m, func(s a.Loaded[d.DrinkState]) (a.Mutation[d.DrinkState], error) {
 		if s.Exists {
 			return a.Mutation[d.DrinkState]{}, core.Reject("already_exists", "The drink already exists")
@@ -25,9 +30,12 @@ func (h CreateDrinkHandler) Execute(ctx context.Context, m a.Metadata, c CreateD
 	})
 }
 
-type PublishDrinkHandler struct{ Drinks a.CommandPort[d.DrinkState] }
+// PublishDrinkCommandHandler applies PublishDrink through one aggregate command transaction.
+type PublishDrinkCommandHandler struct {
+	Drinks a.AggregateCommandPort[d.DrinkState]
+}
 
-func (h PublishDrinkHandler) Execute(ctx context.Context, m a.Metadata, _ struct{}) (a.Outcome, error) {
+func (h PublishDrinkCommandHandler) Execute(ctx context.Context, m a.Metadata, _ PublishDrinkCommand) (a.Outcome, error) {
 	return h.Drinks.Execute(ctx, m, func(s a.Loaded[d.DrinkState]) (a.Mutation[d.DrinkState], error) {
 		if !s.Exists {
 			return a.Mutation[d.DrinkState]{}, core.Reject("not_found", "The drink does not exist")
@@ -50,9 +58,12 @@ func (h PublishDrinkHandler) Execute(ctx context.Context, m a.Metadata, _ struct
 	})
 }
 
-type ReviseDrinkHandler struct{ Drinks a.CommandPort[d.DrinkState] }
+// ReviseDrinkCommandHandler applies ReviseDrink through one aggregate command transaction.
+type ReviseDrinkCommandHandler struct {
+	Drinks a.AggregateCommandPort[d.DrinkState]
+}
 
-func (h ReviseDrinkHandler) Execute(ctx context.Context, m a.Metadata, c CreateDrink) (a.Outcome, error) {
+func (h ReviseDrinkCommandHandler) Execute(ctx context.Context, m a.Metadata, c ReviseDrinkCommand) (a.Outcome, error) {
 	return h.Drinks.Execute(ctx, m, func(s a.Loaded[d.DrinkState]) (a.Mutation[d.DrinkState], error) {
 		if !s.Exists {
 			return a.Mutation[d.DrinkState]{}, core.Reject("not_found", "The drink does not exist")
@@ -70,4 +81,12 @@ func (h ReviseDrinkHandler) Execute(ctx context.Context, m a.Metadata, c CreateD
 		}
 		return a.Mutation[d.DrinkState]{State: drink.Snapshot(), Changed: len(drink.Events()) > 0, Status: status}, nil
 	})
+}
+
+// PublishDrinkCommand expresses the owner use case independently of its transport.
+type PublishDrinkCommand struct{}
+
+// ReviseDrinkCommand expresses the owner use case independently of its transport.
+type ReviseDrinkCommand struct {
+	Name string `json:"name"`
 }

@@ -45,3 +45,9 @@ for (const owner of ['shared', 'loyalty', 'communication']) {
   interfaces.push('}');
 }
 await writeFile('services/engagement/src/adaptors/generated/request-types.ts', interfaces.join('\n')+'\n');
+
+for (const owner of ['loyalty', 'communication']) {
+  const base = `services/engagement/src/contexts/${owner}/adaptors/messaging`;
+  const schema = new protobuf.Root().loadSync(`${base}/internal_commands.proto`).resolveAll();
+  await writeFile(`${base}/generated/internal_commands.json`, JSON.stringify(schema.toJSON(), null, 2)+'\n');
+}

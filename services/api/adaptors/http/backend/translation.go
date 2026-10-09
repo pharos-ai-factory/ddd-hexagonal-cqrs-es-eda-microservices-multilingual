@@ -17,6 +17,7 @@ import (
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1"
 )
 
+// requestError carries a transport-safe failure through HTTP request translation.
 type requestError struct {
 	code   string
 	status int

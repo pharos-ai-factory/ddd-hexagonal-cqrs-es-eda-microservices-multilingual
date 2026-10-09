@@ -1,10 +1,12 @@
 {
   "loyalty": {
     "1": "9bf61e1d8d50bbe47e86db97163c90576837df2c9aaaaddf41a2ddb5fab0fc51",
-    "2": "63df86517d77b71184ffb943d3ca094fa10976dc9413df92b4e3b13e8502d857"
+    "2": "63df86517d77b71184ffb943d3ca094fa10976dc9413df92b4e3b13e8502d857",
+    "3": "48d0cf768e0f434d25ce4ff6cc6fb5830827dee1adc29d73f37fedbee6ea6ae3"
   },
   "communication": {
     "1": "6e5ea1526723e7b92d977aee03ea902ab0f8127c3c9a99728ff462e00b2fbaf6",
-    "2": "2ffab95c0a33339f5ca757f27bb5ad98e23e2bed33a6ebe548e8b6cfd006b45b"
+    "2": "2ffab95c0a33339f5ca757f27bb5ad98e23e2bed33a6ebe548e8b6cfd006b45b",
+    "3": "b8fdecde11b1a4c5bb7c60c97fb297a0479009c831840630e7f7d7218471fced"
   }
 }

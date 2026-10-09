@@ -7,13 +7,16 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
-type Queries[S any] struct {
-	db   *Database
+// AggregateQueries reads and restores one aggregate kind through the query port.
+type AggregateQueries[S any] struct {
+	db   *ContextDatabase
 	kind string
 }
 
-func Query[S any](db *Database, kind string) *Queries[S] { return &Queries[S]{db: db, kind: kind} }
-func (q *Queries[S]) Get(ctx context.Context, id string) (a.Loaded[S], error) {
+func Query[S any](db *ContextDatabase, kind string) *AggregateQueries[S] {
+	return &AggregateQueries[S]{db: db, kind: kind}
+}
+func (q *AggregateQueries[S]) Get(ctx context.Context, id string) (a.Loaded[S], error) {
 	var result a.Loaded[S]
 	var data []byte
 	err := q.db.pool.QueryRow(ctx, `SELECT version,state FROM cafe.aggregates WHERE kind=$1 AND id=$2`, q.kind, id).Scan(&result.Version, &data)
@@ -30,11 +33,11 @@ func (q *Queries[S]) Get(ctx context.Context, id string) (a.Loaded[S], error) {
 	}
 	return result, err
 }
-func (q *Queries[S]) List(ctx context.Context) ([]a.Loaded[S], error) {
+func (q *AggregateQueries[S]) List(ctx context.Context) ([]a.Loaded[S], error) {
 	result, _, err := q.read(ctx, nil)
 	return result, err
 }
-func (q *Queries[S]) Page(ctx context.Context, request a.PageRequest) (a.Page[S], error) {
+func (q *AggregateQueries[S]) Page(ctx context.Context, request a.PageRequest) (a.Page[S], error) {
 	if request.Limit < 1 || request.Limit > 100 {
 		return a.Page[S]{}, errors.New("invalid page size")
 	}
@@ -46,7 +49,7 @@ func (q *Queries[S]) Page(ctx context.Context, request a.PageRequest) (a.Page[S]
 	}
 	return page, err
 }
-func (q *Queries[S]) read(ctx context.Context, request *a.PageRequest) ([]a.Loaded[S], []string, error) {
+func (q *AggregateQueries[S]) read(ctx context.Context, request *a.PageRequest) ([]a.Loaded[S], []string, error) {
 	sql := `SELECT id,version,state FROM cafe.aggregates WHERE kind=$1`
 	args := []any{q.kind}
 	if request != nil {

@@ -1,0 +1,17 @@
+// Owner-private durable command format. Published integration contracts remain separate.
+syntax = "proto3";
+package cafe.internal.preparation;
+message CommandEnvelope {
+  string id = 1;
+  string consumer = 2;
+  string source_event_id = 3;
+  string source_hash = 4;
+  string target = 5;
+  string correlation_id = 6;
+  // Original receipt material preserves deduplication across the hand-off.
+  bytes receipt_material = 7;
+  oneof command {
+    AcceptOrderCommand accept_order = 10;
+  }
+}
+message AcceptOrderCommand { string order_id = 1; string customer_id = 2; string instructions = 3; }

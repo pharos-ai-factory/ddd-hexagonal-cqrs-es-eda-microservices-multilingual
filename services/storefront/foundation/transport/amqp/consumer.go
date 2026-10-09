@@ -15,6 +15,8 @@ import (
 )
 
 type Handler func(context.Context, a.Metadata, a.Message) error
+
+// Subscription binds a validated delivery to an owner application callback.
 type Subscription struct {
 	Binding Binding
 	Handle  Handler

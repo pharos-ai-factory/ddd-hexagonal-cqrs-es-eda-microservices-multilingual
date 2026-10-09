@@ -19,7 +19,7 @@ func Wait(ctx context.Context, delay time.Duration) bool {
 		return true
 	}
 }
-func Relay(ctx context.Context, db *postgres.Database, url string, decode a.Decoder) {
+func Relay(ctx context.Context, db *postgres.ContextDatabase, url string, decode a.Decoder) {
 	for ctx.Err() == nil {
 		publisher, err := broker.Connect(url)
 		if err != nil {

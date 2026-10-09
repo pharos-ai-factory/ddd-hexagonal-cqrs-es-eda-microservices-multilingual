@@ -10,14 +10,15 @@ import (
 
 const Exchange = "cafe.events"
 
-type Publisher struct {
+// ConfirmedPublisher publishes persistent mandatory messages and waits for broker confirmation.
+type ConfirmedPublisher struct {
 	conn    *rabbit.Connection
 	channel *rabbit.Channel
 	returns <-chan rabbit.Return
 	lock    sync.Mutex
 }
 
-func Connect(url string) (*Publisher, error) {
+func Connect(url string) (*ConfirmedPublisher, error) {
 	conn, err := rabbit.Dial(url)
 	if err != nil {
 		return nil, err
@@ -31,13 +32,13 @@ func Connect(url string) (*Publisher, error) {
 		conn.Close()
 		return nil, err
 	}
-	return &Publisher{conn: conn, channel: channel, returns: channel.NotifyReturn(make(chan rabbit.Return, 1))}, nil
+	return &ConfirmedPublisher{conn: conn, channel: channel, returns: channel.NotifyReturn(make(chan rabbit.Return, 1))}, nil
 }
-func (p *Publisher) Close() { _ = p.conn.Close() }
-func (p *Publisher) Publish(ctx context.Context, m a.Message, body []byte) error {
+func (p *ConfirmedPublisher) Close() { _ = p.conn.Close() }
+func (p *ConfirmedPublisher) Publish(ctx context.Context, m a.Message, body []byte) error {
 	return p.send(ctx, Exchange, string(m.Visibility)+"."+m.Name, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Type: m.Name, AppId: m.Context, CorrelationId: m.CorrelationID, Body: body, Headers: rabbit.Table{"contract-version": int32(m.ContractVersion)}})
 }
-func (p *Publisher) send(ctx context.Context, exchange, key string, message rabbit.Publishing) error {
+func (p *ConfirmedPublisher) send(ctx context.Context, exchange, key string, message rabbit.Publishing) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	confirmation, err := p.channel.PublishWithDeferredConfirmWithContext(ctx, exchange, key, true, false, message)

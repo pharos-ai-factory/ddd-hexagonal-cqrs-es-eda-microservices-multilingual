@@ -10,7 +10,7 @@ import (
 )
 
 func TestCompositionHTTPConformsToOpenAPI(t *testing.T) {
-	service := Service{Mux: contract.NewMux("storefront", map[string]bool{}), Databases: map[string]*postgres.Database{}}
+	service := StorefrontRuntime{Mux: contract.NewMux("storefront", map[string]bool{}), Databases: map[string]*postgres.ContextDatabase{}}
 	service.mountHTTP()
 	for _, path := range []string{"/healthz", "/diagnostics"} {
 		r := httptest.NewRequest("GET", path, nil)

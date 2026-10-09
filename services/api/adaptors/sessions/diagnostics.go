@@ -8,11 +8,14 @@ import (
 	"time"
 )
 
+// Failure records redacted operational failure evidence.
 type Failure struct {
 	At        time.Time `json:"at"`
 	Operation string    `json:"operation"`
 	Class     string    `json:"class"`
 }
+
+// Diagnostics reports owned backlog and worker recovery evidence.
 type Diagnostics struct {
 	PendingRevocations                int64    `json:"pendingRevocations"`
 	ExpiredSessionsAwaitingRevocation int64    `json:"expiredSessionsAwaitingRevocation"`
@@ -20,7 +23,7 @@ type Diagnostics struct {
 	LastFailure                       *Failure `json:"lastFailure,omitempty"`
 }
 
-func (s *Store) record(operation string, err error) {
+func (s *ValkeySessionStore) record(operation string, err error) {
 	if err == nil {
 		return
 	}
@@ -31,7 +34,7 @@ func (s *Store) record(operation string, err error) {
 	s.diagnosticsMu.Unlock()
 	slog.Warn("session worker failure", "worker", operation, "error_class", failure.Class)
 }
-func (s *Store) Diagnostics(ctx context.Context) (Diagnostics, error) {
+func (s *ValkeySessionStore) Diagnostics(ctx context.Context) (Diagnostics, error) {
 	s.diagnosticsMu.Lock()
 	result := Diagnostics{Failures: s.failures, LastFailure: s.lastFailure}
 	s.diagnosticsMu.Unlock()
@@ -50,7 +53,7 @@ func (s *Store) Diagnostics(ctx context.Context) (Diagnostics, error) {
 }
 
 // Keep the pending evidence when completion fails; a later worker will retry.
-func (s *Store) complete(ctx context.Context, work, fence string) {
+func (s *ValkeySessionStore) complete(ctx context.Context, work, fence string) {
 	_, err := s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.SRem(ctx, prefix+"disconnects", work)
 		pipe.Del(ctx, fence)

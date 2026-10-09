@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {Pool} from 'pg';
-import {Database, Commands, Queries} from './postgres.js';
+import {PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries} from './postgres.js';
 import {restoreAccount} from './restore.js';
 import type {AccountState} from '../contexts/loyalty/domain/account.js';
 import type {Metadata, Outcome} from '../foundation/application.js';
@@ -16,11 +16,11 @@ for (const receipt of ['command', 'consumer'] as const) {
       const url = new URL(process.env.DATABASE_ADMIN_URL!);
       url.pathname = '/cafe_loyalty';
       const admin = new Pool({connectionString: url.toString()});
-      const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
+      const db = new PostgresContextDatabase('loyalty', process.env.LOYALTY_DATABASE_URL!);
       try {
         await db.verify();
-        const commands = new Commands<AccountState>(db, 'account', restoreAccount);
-        const queries = new Queries<AccountState>(db, 'account', restoreAccount);
+        const commands = new PostgresAggregateCommandStore<AccountState>(db, 'account', restoreAccount);
+        const queries = new PostgresAggregateQueries<AccountState>(db, 'account', restoreAccount);
         const id = randomUUID();
         const state: AccountState = {id, collections: 0, grantsEarned: 0, stampBalance: 0};
         const m: Metadata = {id: randomUUID(), target: id, name: 'test.open', correlation: randomUUID(),
@@ -72,11 +72,11 @@ test('stored and proposed account identities must match the locked root', async 
   const url = new URL(process.env.DATABASE_ADMIN_URL!);
   url.pathname = '/cafe_loyalty';
   const admin = new Pool({connectionString: url.toString()});
-  const db = new Database('loyalty', process.env.LOYALTY_DATABASE_URL!);
+  const db = new PostgresContextDatabase('loyalty', process.env.LOYALTY_DATABASE_URL!);
   try {
     await db.verify();
-    const commands = new Commands<AccountState>(db, 'account', restoreAccount);
-    const queries = new Queries<AccountState>(db, 'account', restoreAccount);
+    const commands = new PostgresAggregateCommandStore<AccountState>(db, 'account', restoreAccount);
+    const queries = new PostgresAggregateQueries<AccountState>(db, 'account', restoreAccount);
     const id = randomUUID(), other = randomUUID();
     const state: AccountState = {id, collections: 0, grantsEarned: 0, stampBalance: 0};
     const m: Metadata = {id: randomUUID(), target: id, name: 'test.identity', correlation: randomUUID(),

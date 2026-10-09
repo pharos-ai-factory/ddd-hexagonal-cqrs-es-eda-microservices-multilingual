@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import type {Change, CommandPort, Loaded, Metadata, Outcome, Publication, QueryPort} from '../../src/foundation/application.js';
+import type {Change, AggregateCommandPort, Loaded, Metadata, Outcome, Publication, QueryPort} from '../../src/foundation/application.js';
 import {Rejection} from '../../src/foundation/domain.js';
 
 // A decision probe calls the real handler. It deliberately does not implement
 // durable receipts, transactions or delivery; the integration lane proves those.
-export class CommandProbe<S> implements CommandPort<S>, QueryPort<S> {
+export class CommandProbe<S> implements AggregateCommandPort<S>, QueryPort<S> {
   loaded: Loaded<S> | undefined;
   before: Loaded<S> | undefined;
   publications: Publication[] = [];

@@ -10,6 +10,7 @@ function validateContent(id: string, recipient: string, subject: string, body: s
     throw new Rejection('invalid_notification', 'Notification content is missing or too large');
   }
 }
+/** Owns requested content and the recorded result of idempotent provider delivery. */
 export class Notification {
   #state: NotificationState;
   constructor(state: NotificationState) {

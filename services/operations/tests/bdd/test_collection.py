@@ -3,10 +3,10 @@ import pytest
 
 from pytest_bdd import given, when, then, parsers, scenarios
 
-from operations.contexts.collection.application import OpenPickup, CollectOrder
+from operations.contexts.collection.application import OpenPickupCommand, DrinksReadyIntegrationEventHandler, OpenPickupCommandHandler, CollectOrderCommandHandler
 from operations.contexts.collection.domain import PickupSnapshot
 from operations.contracts.events import DrinksReady
-from operations.foundation.application import Metadata
+from operations.foundation.application import Metadata, Outcome
 from operations.foundation.identity import derived_id
 from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe
 
@@ -27,7 +27,13 @@ def ready(probe: CollectionProbe) -> None:
 
 @when("Collection handles the ready drinks")
 def open_pickup(probe: CollectionProbe, metadata: Metadata) -> None:
-    OpenPickup(probe, derived_id).handle(metadata, probe.incoming())
+    commands: list[OpenPickupCommand] = []
+    class QueueProbe:
+        def enqueue(self, incoming: Metadata, command: OpenPickupCommand) -> Outcome:
+            commands.append(command)
+            return Outcome(aggregateId=incoming.target, version=0, status="queued")
+    DrinksReadyIntegrationEventHandler(QueueProbe()).handle(metadata, probe.incoming())
+    OpenPickupCommandHandler(probe, derived_id).execute(metadata, commands[0])
 
 
 @given("the pickup has been opened")
@@ -38,7 +44,7 @@ def opened(probe: CollectionProbe, metadata: Metadata) -> None:
 
 @when("the customer presents the correct collection code")
 def collect(probe: CollectionProbe, metadata: Metadata) -> None:
-    CollectOrder(probe).execute(metadata, {"code": probe.current()["code"]})
+    CollectOrderCommandHandler(probe).execute(metadata, {"code": probe.current()["code"]})
 
 
 @given("the pickup has been collected")
@@ -51,7 +57,7 @@ def collected(probe: CollectionProbe, metadata: Metadata) -> None:
 @when("the customer presents the wrong collection code")
 def wrong_code(probe: CollectionProbe, metadata: Metadata) -> None:
     assert probe.current()["code"] != "WRONG1"
-    CollectOrder(probe).execute(metadata, {"code": "WRONG1"})
+    CollectOrderCommandHandler(probe).execute(metadata, {"code": "WRONG1"})
 
 
 @then("the pickup is ready with a six-character collection code")

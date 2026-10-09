@@ -19,6 +19,7 @@ type Requests interface {
 	Call(context.Context, pb.Request) (pb.Reply, error)
 }
 
+// Config contains the settings and injected ports for this HTTP boundary.
 type Config struct {
 	Sessions a.Sessions
 	CLIKey   string

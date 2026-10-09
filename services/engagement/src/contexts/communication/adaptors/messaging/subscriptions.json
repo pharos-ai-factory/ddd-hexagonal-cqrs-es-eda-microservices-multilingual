@@ -1,0 +1,17 @@
+[
+  {
+    "consumer": "communication.pickup-notice",
+    "event": "collection.pickup-opened",
+    "command": "requestNotification"
+  },
+  {
+    "consumer": "communication.reward-notice",
+    "event": "loyalty.reward-issued",
+    "command": "requestNotification"
+  },
+  {
+    "consumer": "communication.deliver-notice",
+    "event": "communication.notification-requested",
+    "command": "deliverNotification"
+  }
+]

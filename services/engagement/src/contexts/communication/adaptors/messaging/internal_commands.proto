@@ -1,0 +1,19 @@
+// Owner-private durable command format. Published integration contracts remain separate.
+syntax = "proto3";
+package cafe.internal.communication;
+message CommandEnvelope {
+  string id = 1;
+  string consumer = 2;
+  string source_event_id = 3;
+  string source_hash = 4;
+  string target = 5;
+  string correlation_id = 6;
+  // Original receipt material preserves deduplication across the hand-off.
+  bytes receipt_material = 7;
+  oneof command {
+    RequestNotificationCommand request_notification = 10;
+    DeliverNotificationCommand deliver_notification = 11;
+  }
+}
+message RequestNotificationCommand { string recipient = 1; string subject = 2; string body = 3; }
+message DeliverNotificationCommand { string notification_id = 1; }

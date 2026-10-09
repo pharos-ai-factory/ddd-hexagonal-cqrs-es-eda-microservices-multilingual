@@ -6,6 +6,7 @@ type TicketStatus = Literal["queued", "preparing", "ready"]
 
 
 class TicketSnapshot(TypedDict):
+    """Represents a persisted PreparationTicket snapshot validated during restoration."""
     id: str
     orderId: str
     customerId: str
@@ -15,6 +16,7 @@ class TicketSnapshot(TypedDict):
 
 @dataclass(frozen=True)
 class TicketState:
+    """Stores the private state restored and changed by a PreparationTicket."""
     id: str
     order_id: str
     customer_id: str
@@ -24,12 +26,14 @@ class TicketState:
 
 @dataclass(frozen=True)
 class PreparationStarted:
+    """Records the private domain fact that preparation began for a ticket."""
     name: ClassVar[str] = "PreparationStarted"
     state: TicketState
 
 
 @dataclass(frozen=True)
 class DrinksReady:
+    """Private fact raised when this context completes a preparation ticket."""
     name: ClassVar[str] = "DrinksReady"
     order_id: str
     customer_id: str
@@ -39,6 +43,7 @@ type TicketFact = PreparationStarted | DrinksReady
 
 
 class PreparationTicket:
+    """Owns preparation lifecycle transitions and the immutable accepted order instructions."""
     def __init__(self, state: TicketState) -> None:
         for value in (state.id, state.order_id, state.customer_id):
             identifier(value)

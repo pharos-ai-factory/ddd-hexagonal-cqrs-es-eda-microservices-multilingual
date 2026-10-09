@@ -5,9 +5,9 @@ import (
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
 )
 
-func OrderCommands(db *store.Database) *store.CommandStore[d.State] {
-	return store.Command[d.State](db, "order")
+func OrderCommands(db *store.ContextDatabase) *store.AggregateCommandStore[d.OrderState] {
+	return store.Command[d.OrderState](db, "order")
 }
-func OrderQueries(db *store.Database) *store.Queries[d.State] {
-	return store.Query[d.State](db, "order")
+func OrderQueries(db *store.ContextDatabase) *store.AggregateQueries[d.OrderState] {
+	return store.Query[d.OrderState](db, "order")
 }

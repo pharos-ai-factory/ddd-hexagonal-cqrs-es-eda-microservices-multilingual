@@ -128,6 +128,6 @@ func ServeRequests(ctx context.Context, url, owner, kind string, handle RequestH
 	}
 }
 
-func (p *Publisher) PublishReply(ctx context.Context, owner, id string, body []byte) error {
+func (p *ConfirmedPublisher) PublishReply(ctx context.Context, owner, id string, body []byte) error {
 	return p.send(ctx, RepliesExchange, "reply."+owner, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: id, CorrelationId: id, Type: "reply", AppId: owner, Body: body})
 }

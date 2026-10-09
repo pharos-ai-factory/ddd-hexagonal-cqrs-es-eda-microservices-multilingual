@@ -20,7 +20,8 @@ import (
 const prefix = "cafe:auth:"
 const Lifetime = time.Hour
 
-type Store struct {
+// ValkeySessionStore implements durable sessions and revocation work in Valkey.
+type ValkeySessionStore struct {
 	diagnosticsMu sync.Mutex
 	failures      uint64
 	lastFailure   *Failure
@@ -29,18 +30,18 @@ type Store struct {
 	http          *http.Client
 }
 
-func Open(ctx context.Context, address, password, centrifugoURL, centrifugoKey string) (*Store, error) {
+func Open(ctx context.Context, address, password, centrifugoURL, centrifugoKey string) (*ValkeySessionStore, error) {
 	client := redis.NewClient(&redis.Options{Addr: address, Username: "sessions", Password: password,
 		DialTimeout: 3 * time.Second, ReadTimeout: 3 * time.Second, WriteTimeout: 3 * time.Second})
 	if err := client.Ping(ctx).Err(); err != nil {
 		client.Close()
 		return nil, err
 	}
-	return &Store{client: client, url: centrifugoURL, key: centrifugoKey, http: &http.Client{Timeout: 5 * time.Second}}, nil
+	return &ValkeySessionStore{client: client, url: centrifugoURL, key: centrifugoKey, http: &http.Client{Timeout: 5 * time.Second}}, nil
 }
-func (s *Store) Close()          { _ = s.client.Close() }
-func digest(token string) string { return fmt.Sprintf("%x", sha256.Sum256([]byte(token))) }
-func (s *Store) Create(ctx context.Context) (string, error) {
+func (s *ValkeySessionStore) Close() { _ = s.client.Close() }
+func digest(token string) string     { return fmt.Sprintf("%x", sha256.Sum256([]byte(token))) }
+func (s *ValkeySessionStore) Create(ctx context.Context) (string, error) {
 	var bytes [32]byte
 	if _, err := rand.Read(bytes[:]); err != nil {
 		return "", err
@@ -55,7 +56,7 @@ func (s *Store) Create(ctx context.Context) (string, error) {
 	})
 	return token, err
 }
-func (s *Store) Authenticate(ctx context.Context, token string) (a.Principal, bool, error) {
+func (s *ValkeySessionStore) Authenticate(ctx context.Context, token string) (a.Principal, bool, error) {
 	if len(token) != 43 {
 		return a.Principal{}, false, nil
 	}
@@ -72,7 +73,7 @@ func (s *Store) Authenticate(ctx context.Context, token string) (a.Principal, bo
 	}
 	return principal, len(a.AuthorisedChannels(principal)) > 0, nil
 }
-func (s *Store) Revoke(ctx context.Context, token string) error {
+func (s *ValkeySessionStore) Revoke(ctx context.Context, token string) error {
 	_, authenticated, err := s.Authenticate(ctx, token)
 	if err != nil || !authenticated {
 		return err
@@ -87,7 +88,7 @@ func (s *Store) Revoke(ctx context.Context, token string) error {
 	})
 	return err
 }
-func (s *Store) Run(ctx context.Context) {
+func (s *ValkeySessionStore) Run(ctx context.Context) {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -141,7 +142,7 @@ func (s *Store) Run(ctx context.Context) {
 		}
 	}
 }
-func (s *Store) disconnect(ctx context.Context, actor string) error {
+func (s *ValkeySessionStore) disconnect(ctx context.Context, actor string) error {
 	body, _ := json.Marshal(map[string]string{"user": actor})
 	req, err := http.NewRequestWithContext(ctx, "POST", s.url+"/api/disconnect", bytes.NewReader(body))
 	if err != nil {

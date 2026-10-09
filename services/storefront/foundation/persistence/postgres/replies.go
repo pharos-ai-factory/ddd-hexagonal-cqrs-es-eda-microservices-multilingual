@@ -14,6 +14,8 @@ type ReplyIntent struct {
 	Encode    func(a.Outcome) ([]byte, error)
 	Committed bool
 }
+
+// replyKey scopes reply persistence metadata to the receiving transaction context.
 type replyKey struct{}
 
 func WithReply(ctx context.Context, reply *ReplyIntent) context.Context {

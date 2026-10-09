@@ -10,14 +10,15 @@ import (
 	"time"
 )
 
+// pending tracks a request awaiting its correlated transport reply.
 type pending struct {
 	owner string
 	reply chan pb.Reply
 }
 
-// Client owns the development API's exclusive reply consumers. Concurrent
+// RabbitMQRequestClient owns the development API's exclusive reply consumers. Concurrent
 // requests are matched by transport identity; command identity stays independent.
-type Client struct {
+type RabbitMQRequestClient struct {
 	mu         sync.Mutex
 	publishing chan struct{}
 	channel    *rabbit.Channel
@@ -25,10 +26,10 @@ type Client struct {
 	waiting    map[string]pending
 }
 
-func NewClient() *Client {
-	return &Client{waiting: map[string]pending{}, publishing: make(chan struct{}, 1)}
+func NewClient() *RabbitMQRequestClient {
+	return &RabbitMQRequestClient{waiting: map[string]pending{}, publishing: make(chan struct{}, 1)}
 }
-func (c *Client) Call(ctx context.Context, request pb.Request) (pb.Reply, error) {
+func (c *RabbitMQRequestClient) Call(ctx context.Context, request pb.Request) (pb.Reply, error) {
 	if _, _, err := Validate(request, request.GetContext()); err != nil {
 		return nil, err
 	}
@@ -97,7 +98,7 @@ func (c *Client) Call(ctx context.Context, request pb.Request) (pb.Reply, error)
 		return nil, ctx.Err()
 	}
 }
-func (c *Client) receive(owner string, delivery rabbit.Delivery) {
+func (c *RabbitMQRequestClient) receive(owner string, delivery rabbit.Delivery) {
 	reply, err := pb.NewReply(owner, "")
 	if err != nil {
 		_ = delivery.Ack(false)
@@ -118,7 +119,7 @@ func (c *Client) receive(owner string, delivery rabbit.Delivery) {
 	// Late or duplicate replies have no pending caller and can be discarded.
 	_ = delivery.Ack(false)
 }
-func (c *Client) Run(ctx context.Context, url string, owners []string) {
+func (c *RabbitMQRequestClient) Run(ctx context.Context, url string, owners []string) {
 	for ctx.Err() == nil {
 		_ = c.connected(ctx, url, owners)
 		select {
@@ -128,7 +129,7 @@ func (c *Client) Run(ctx context.Context, url string, owners []string) {
 		}
 	}
 }
-func (c *Client) connected(ctx context.Context, url string, owners []string) error {
+func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owners []string) error {
 	conn, err := rabbit.DialConfig(url, rabbit.Config{Dial: rabbit.DefaultDial(5 * time.Second)})
 	if err != nil {
 		return err

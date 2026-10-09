@@ -27,7 +27,8 @@ def check_root_identity(state: Mapping[str, object], target: str) -> None:
         raise CorruptState("Snapshot identity differs from its storage key")
 
 
-class Database:
+class PostgresContextDatabase:
+    """Owns one context pool and verifies its database identity, grants and migration ledger."""
     def __init__(self, owner: str, url: str) -> None:
         self.owner = owner
         self.pool: ConnectionPool[Connection[Row]] = ConnectionPool(url, min_size=1, max_size=4, open=True,
@@ -58,8 +59,9 @@ class Database:
             raise
 
 
-class Commands[S: Mapping[str, object]]:
-    def __init__(self, database: Database, kind: str, restore: Callable[[object], S]) -> None:
+class PostgresAggregateCommandStore[S: Mapping[str, object]]:
+    """Commits one aggregate, command outcome, receipts and outgoing event/realtime intent atomically."""
+    def __init__(self, database: PostgresContextDatabase, kind: str, restore: Callable[[object], S]) -> None:
         self.database, self.kind = database, kind
         self.restore = restore
 
@@ -148,8 +150,9 @@ class Commands[S: Mapping[str, object]]:
                 VALUES(%s,%s,%s,%s,%s)""", (m.consumer, m.source_id, m.source_hash, target, Jsonb(outcome)))
 
 
-class Queries[S: Mapping[str, object]]:
-    def __init__(self, database: Database, kind: str, restore: Callable[[object], S]) -> None:
+class PostgresAggregateQueries[S: Mapping[str, object]]:
+    """Restores validated snapshots through the read port without exposing database objects."""
+    def __init__(self, database: PostgresContextDatabase, kind: str, restore: Callable[[object], S]) -> None:
         self.database, self.kind = database, kind
         self.restore = restore
 

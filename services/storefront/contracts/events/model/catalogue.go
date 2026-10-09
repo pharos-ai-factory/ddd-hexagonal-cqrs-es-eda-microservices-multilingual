@@ -2,6 +2,7 @@ package model
 
 import "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 
+// Definition describes a published event and its owner, aggregate kind and consumers.
 type Definition struct {
 	Name          string
 	Owner         string

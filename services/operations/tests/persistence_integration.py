@@ -3,12 +3,12 @@ from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor
 import os
 import pytest
-from operations.adaptors.postgres import Database, Commands, Queries, Row
+from operations.adaptors.postgres import PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries, Row
 from operations.adaptors.delivery import claim, finish
 from operations.foundation.application import Change, Metadata, Outcome, Publication
 from operations.foundation.domain import record
 from operations.foundation.identity import new_id
-from operations.contexts.collection.application import CollectOrder
+from operations.contexts.collection.application import CollectOrderCommandHandler
 from operations.contexts.collection.domain import Pickup, PickupSnapshot
 from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
 
@@ -19,10 +19,10 @@ def present(row: Row | None) -> Row:
 
 
 def test_atomic_receipts_realtime_rollback_concurrency_and_fencing() -> None:
-    database = Database("preparation", os.environ["PREPARATION_DATABASE_URL"])
+    database = PostgresContextDatabase("preparation", os.environ["PREPARATION_DATABASE_URL"])
     def restore(value: object) -> TicketSnapshot:
         return PreparationTicket.restore(value).snapshot()
-    commands, queries = Commands(database, "ticket", restore), Queries(database, "ticket", restore)
+    commands, queries = PostgresAggregateCommandStore(database, "ticket", restore), PostgresAggregateQueries(database, "ticket", restore)
     identity = new_id()
     metadata = Metadata(new_id(), identity, "test.accept", new_id(), expected=0, input={"order": identity})
     state: TicketSnapshot = {"id": identity, "orderId": identity, "customerId": new_id(),
@@ -75,11 +75,11 @@ def test_atomic_receipts_realtime_rollback_concurrency_and_fencing() -> None:
 
 
 def test_corrupt_pickup_does_not_commit_a_command_or_consumer_rejection() -> None:
-    database = Database("collection", os.environ["COLLECTION_DATABASE_URL"])
+    database = PostgresContextDatabase("collection", os.environ["COLLECTION_DATABASE_URL"])
     try:
         # Deliberately bypass domain restoration only to seed and repair corrupt storage.
-        fixtures = Commands(database, "pickup", record)
-        commands = Commands[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
+        fixtures = PostgresAggregateCommandStore(database, "pickup", record)
+        commands = PostgresAggregateCommandStore[PickupSnapshot](database, "pickup", lambda value: Pickup.restore(value).snapshot())
         identity = new_id()
         state: dict[str, object] = {"id": identity, "orderId": new_id(), "customerId": new_id(),
                  "code": "broken", "status": "ready"}
@@ -88,7 +88,7 @@ def test_corrupt_pickup_does_not_commit_a_command_or_consumer_rejection() -> Non
         metadata = Metadata(new_id(), identity, "collection.CollectOrder", new_id(), input={"code": "ABC123"},
                             consumer="test.corrupt-pickup", source_id=new_id(), source_hash="fixture")
         with pytest.raises(ValueError):
-            CollectOrder(commands).execute(metadata, {"code": "ABC123"})
+            CollectOrderCommandHandler(commands).execute(metadata, {"code": "ABC123"})
         with database.pool.connection() as connection:
             assert present(connection.execute("SELECT count(*) AS n FROM cafe.command_receipts WHERE command_id=%s",
                                       (metadata.id,)).fetchone())["n"] == 0
@@ -97,17 +97,17 @@ def test_corrupt_pickup_does_not_commit_a_command_or_consumer_rejection() -> Non
         repaired = {**state, "code": "ABC123"}
         fixtures.execute(Metadata(new_id(), identity, "test.repair", new_id(), expected=1),
                          lambda _: Change(repaired, "ready"))
-        assert CollectOrder(commands).execute(metadata, {"code": "ABC123"})["status"] == "collected"
+        assert CollectOrderCommandHandler(commands).execute(metadata, {"code": "ABC123"})["status"] == "collected"
     finally:
         database.pool.close()
 
 
 def test_queries_traverse_more_than_one_page_and_retain_unpaginated_reads() -> None:
     from operations.foundation.pagination import PageRequest
-    database = Database("preparation", os.environ["PREPARATION_DATABASE_URL"])
+    database = PostgresContextDatabase("preparation", os.environ["PREPARATION_DATABASE_URL"])
     def restore(value: object) -> TicketSnapshot:
         return PreparationTicket.restore(value).snapshot()
-    commands, queries = Commands(database, "ticket", restore), Queries(database, "ticket", restore)
+    commands, queries = PostgresAggregateCommandStore(database, "ticket", restore), PostgresAggregateQueries(database, "ticket", restore)
     try:
         for _ in range(105):
             identity = new_id()
@@ -135,11 +135,11 @@ def test_queries_traverse_more_than_one_page_and_retain_unpaginated_reads() -> N
 def test_reply_bytes_commit_with_root_and_retry_recovers_saved_outcome() -> None:
     from operations.adaptors.replies import ReplyIntent, current, claim_reply
     from operations.adaptors.requests import outcome_reply
-    database = Database("preparation", os.environ["PREPARATION_DATABASE_URL"])
+    database = PostgresContextDatabase("preparation", os.environ["PREPARATION_DATABASE_URL"])
     def restore(value: object) -> TicketSnapshot:
         return PreparationTicket.restore(value).snapshot()
-    commands = Commands(database, "ticket", restore)
-    queries = Queries(database, "ticket", restore)
+    commands = PostgresAggregateCommandStore(database, "ticket", restore)
+    queries = PostgresAggregateQueries(database, "ticket", restore)
     identity = new_id()
     metadata = Metadata(new_id(), identity, "test.reply", new_id(), expected=0)
     state: TicketSnapshot = {"id": identity, "orderId": identity, "customerId": identity,

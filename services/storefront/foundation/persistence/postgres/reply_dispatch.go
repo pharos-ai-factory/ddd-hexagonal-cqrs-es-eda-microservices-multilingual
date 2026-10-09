@@ -7,12 +7,13 @@ import (
 	"time"
 )
 
+// ReplyDispatch carries exact reply bytes and a fenced publication lease.
 type ReplyDispatch struct {
 	Dispatch
 	Expired bool
 }
 
-func (db *Database) ClaimReply(ctx context.Context) (ReplyDispatch, bool, error) {
+func (db *ContextDatabase) ClaimReply(ctx context.Context) (ReplyDispatch, bool, error) {
 	token := NewID()
 	var row ReplyDispatch
 	err := db.pool.QueryRow(ctx, `WITH candidate AS (
@@ -28,7 +29,7 @@ func (db *Database) ClaimReply(ctx context.Context) (ReplyDispatch, bool, error)
 	}
 	return row, err == nil, err
 }
-func (db *Database) FinishReply(ctx context.Context, row ReplyDispatch, reason string) error {
+func (db *ContextDatabase) FinishReply(ctx context.Context, row ReplyDispatch, reason string) error {
 	_, err := db.pool.Exec(ctx, `UPDATE cafe.command_reply_dispatches SET lease_token=NULL,lease_until=NULL,
  available_at=clock_timestamp()+interval '1 second',last_error=NULLIF($4,''),
  completed_at=CASE WHEN $4='' OR $4='expired' THEN clock_timestamp() ELSE NULL END

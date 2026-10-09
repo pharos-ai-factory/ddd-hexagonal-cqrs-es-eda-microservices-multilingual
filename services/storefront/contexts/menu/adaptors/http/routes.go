@@ -6,21 +6,22 @@ import (
 	"net/http"
 )
 
-type Handlers struct {
+// MenuHTTPHandlers groups the explicitly typed handlers mounted by this transport adaptor.
+type MenuHTTPHandlers struct {
 	DrinkQueries   app.DrinkQueries
-	CreateDrink    app.CreateDrinkHandler
-	PublishDrink   app.PublishDrinkHandler
-	ReviseDrink    app.ReviseDrinkHandler
+	CreateDrink    app.CreateDrinkCommandHandler
+	PublishDrink   app.PublishDrinkCommandHandler
+	ReviseDrink    app.ReviseDrinkCommandHandler
 	EditionQueries app.EditionQueries
-	CreateEdition  app.CreateEditionHandler
-	AddOffer       app.AddOfferHandler
-	ChangePrice    app.ChangePriceHandler
-	PublishEdition app.PublishEditionHandler
+	CreateEdition  app.CreateEditionCommandHandler
+	AddOffer       app.AddOfferCommandHandler
+	ChangePrice    app.ChangePriceCommandHandler
+	PublishEdition app.PublishEditionCommandHandler
 }
 
 func Mount(mux interface {
 	HandleFunc(string, func(http.ResponseWriter, *http.Request))
-}, h Handlers) {
+}, h MenuHTTPHandlers) {
 	mux.HandleFunc("GET /v1/menu/drinks", web.PagedList(h.DrinkQueries.List, h.DrinkQueries.Page))
 	mux.HandleFunc("GET /v1/menu/drinks/{id}", web.Get(h.DrinkQueries.Get))
 	mux.HandleFunc("POST /v1/menu/drinks/{id}", web.Command("menu.CreateDrink", h.CreateDrink.Execute))

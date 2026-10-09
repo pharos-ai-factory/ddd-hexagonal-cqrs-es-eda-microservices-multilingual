@@ -53,7 +53,8 @@ export function decodeRequest(body: Buffer, owner: string): Request {
   } else throw new Error('Unknown request kind');
   return request;
 }
-export class Registry {
+/** Maps owner RPC requests to typed application handlers and manages durable replies. */
+export class RabbitMQRequestRegistry {
   private readonly handlers = new Map<string, Handler>();
   constructor(readonly owner: string) {}
   command<I extends object>(name: string, parse: (value: unknown) => I,

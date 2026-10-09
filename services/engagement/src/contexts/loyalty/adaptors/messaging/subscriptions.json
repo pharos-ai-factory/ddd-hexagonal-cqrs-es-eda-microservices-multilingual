@@ -1,0 +1,12 @@
+[
+  {
+    "consumer": "loyalty.credit-collection",
+    "event": "collection.order-collected",
+    "command": "creditCollection"
+  },
+  {
+    "consumer": "loyalty.issue-reward",
+    "event": "loyalty.reward-earned",
+    "command": "issueReward"
+  }
+]

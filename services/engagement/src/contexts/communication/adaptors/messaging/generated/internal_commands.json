@@ -1,0 +1,95 @@
+{
+  "nested": {
+    "cafe": {
+      "nested": {
+        "internal": {
+          "nested": {
+            "communication": {
+              "nested": {
+                "CommandEnvelope": {
+                  "oneofs": {
+                    "command": {
+                      "oneof": [
+                        "requestNotification",
+                        "deliverNotification"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "consumer": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "sourceEventId": {
+                      "type": "string",
+                      "id": 3,
+                      "protoName": "source_event_id"
+                    },
+                    "sourceHash": {
+                      "type": "string",
+                      "id": 4,
+                      "protoName": "source_hash"
+                    },
+                    "target": {
+                      "type": "string",
+                      "id": 5
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "id": 6,
+                      "protoName": "correlation_id"
+                    },
+                    "receiptMaterial": {
+                      "type": "bytes",
+                      "id": 7,
+                      "protoName": "receipt_material"
+                    },
+                    "requestNotification": {
+                      "type": "RequestNotificationCommand",
+                      "id": 10,
+                      "protoName": "request_notification"
+                    },
+                    "deliverNotification": {
+                      "type": "DeliverNotificationCommand",
+                      "id": 11,
+                      "protoName": "deliver_notification"
+                    }
+                  }
+                },
+                "RequestNotificationCommand": {
+                  "fields": {
+                    "recipient": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "subject": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "body": {
+                      "type": "string",
+                      "id": 3
+                    }
+                  }
+                },
+                "DeliverNotificationCommand": {
+                  "fields": {
+                    "notificationId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "notification_id"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

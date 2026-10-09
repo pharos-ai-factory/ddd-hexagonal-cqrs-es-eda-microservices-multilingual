@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (db *Database) appendRealtime(ctx context.Context, tx pgx.Tx, kind, aggregateID string, revision uint64, state []byte) error {
+func (db *ContextDatabase) appendRealtime(ctx context.Context, tx pgx.Tx, kind, aggregateID string, revision uint64, state []byte) error {
 	id := NewID()
 	body, err := db.realtime(id, db.owner, kind, aggregateID, revision, state)
 	if err != nil {
@@ -21,13 +21,14 @@ func (db *Database) appendRealtime(ctx context.Context, tx pgx.Tx, kind, aggrega
 	return err
 }
 
+// RealtimeDispatch carries exact browser publication bytes and its fenced lease.
 type RealtimeDispatch struct {
 	ID, Channel, Token string
 	Body               []byte
 	Generation         int64
 }
 
-func (db *Database) ClaimRealtime(ctx context.Context) (RealtimeDispatch, bool, error) {
+func (db *ContextDatabase) ClaimRealtime(ctx context.Context) (RealtimeDispatch, bool, error) {
 	d := RealtimeDispatch{Token: NewID()}
 	err := db.pool.QueryRow(ctx, `WITH candidate AS (
 		SELECT event_id FROM cafe.realtime_dispatches WHERE completed_at IS NULL AND available_at<=clock_timestamp()
@@ -43,7 +44,7 @@ func (db *Database) ClaimRealtime(ctx context.Context) (RealtimeDispatch, bool, 
 	}
 	return d, err == nil, err
 }
-func (db *Database) FinishRealtime(ctx context.Context, d RealtimeDispatch, failure error) error {
+func (db *ContextDatabase) FinishRealtime(ctx context.Context, d RealtimeDispatch, failure error) error {
 	var reason any
 	if failure != nil {
 		reason = failure.Error()

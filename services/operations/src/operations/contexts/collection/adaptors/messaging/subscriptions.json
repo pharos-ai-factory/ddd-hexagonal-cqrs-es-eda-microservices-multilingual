@@ -1,0 +1,7 @@
+[
+  {
+    "consumer": "collection.open-pickup",
+    "event": "preparation.drinks-ready",
+    "command": "openPickup"
+  }
+]

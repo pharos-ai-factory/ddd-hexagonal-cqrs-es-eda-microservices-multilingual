@@ -9,11 +9,12 @@ from operations.foundation.application import Outcome
 from operations.foundation.identity import new_id
 if TYPE_CHECKING:
     from psycopg import Connection
-    from operations.adaptors.postgres import Database, Row
+    from operations.adaptors.postgres import PostgresContextDatabase, Row
 
 
 @dataclass
 class ReplyIntent:
+    """Tracks the exact response to commit alongside the receiving command transaction."""
     identity: str
     encode: Callable[[Outcome], bytes]
     persisted: bool = False
@@ -39,7 +40,7 @@ def append(connection: "Connection[Row]", outcome: Outcome) -> Outcome:
     return outcome
 
 
-def claim_reply(database: "Database", token: str) -> "Row | None":
+def claim_reply(database: "PostgresContextDatabase", token: str) -> "Row | None":
     with database.pool.connection() as connection:
         return connection.execute("""WITH candidate AS (
             SELECT event_id FROM cafe.command_reply_dispatches WHERE completed_at IS NULL
@@ -53,7 +54,7 @@ def claim_reply(database: "Database", token: str) -> "Row | None":
             FROM claimed c JOIN cafe.command_replies o ON o.id=c.event_id""", (token,)).fetchone()
 
 
-def relay(database: "Database", url: str, stop: Event) -> None:
+def relay(database: "PostgresContextDatabase", url: str, stop: Event) -> None:
     from operations.adaptors.delivery import broker_connection, binary
     from operations.adaptors.diagnostics import failure
     while not stop.is_set():

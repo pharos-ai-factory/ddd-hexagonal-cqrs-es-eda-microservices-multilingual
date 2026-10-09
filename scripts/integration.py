@@ -40,16 +40,18 @@ def execute(env_file, keep=False):
         check("Python PostgreSQL/RabbitMQ", ["uv", "run", "--project", "services/operations", "pytest", "-q",
                         "services/operations/tests/persistence_integration.py",
                         "services/operations/tests/delivery_integration.py",
-                        "services/operations/tests/identity_integration.py"], test_environment(values))
+                        "services/operations/tests/identity_integration.py",
+                        "services/operations/tests/internal_commands_integration.py"], test_environment(values))
         check("TypeScript PostgreSQL/RabbitMQ", ["pnpm", "--filter", "@cafe/engagement", "exec", "tsx", "--test",
                         "src/adaptors/postgres.integration.ts", "src/adaptors/broker.integration.ts",
-                        "src/adaptors/corrupt-receipts.integration.ts"], test_environment(values))
+                        "src/adaptors/corrupt-receipts.integration.ts", "src/adaptors/internal-commands.integration.ts"], test_environment(values))
         # Component fixtures deliberately contain partial roots. The journey
         # starts from empty business tables in this disposable project only.
         for owner in ("menu", "ordering", "preparation", "collection", "loyalty", "communication"):
             compose(env_file, "exec", "-T", "postgres", "psql", "-U", "postgres", "-d", "cafe_"+owner,
                     "-v", "ON_ERROR_STOP=1", "-c",
-                    "TRUNCATE cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections,cafe.command_replies CASCADE",
+                    "TRUNCATE cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections,cafe.command_replies"+
+                    (",cafe.internal_commands" if owner in ("preparation", "collection", "loyalty", "communication") else "")+" CASCADE",
                     stdout=subprocess.DEVNULL)
         compose(env_file, "start", "storefront", "operations", "engagement")
         wait_ready(values)

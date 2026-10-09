@@ -12,6 +12,7 @@ const OperatorID = "00000000-0000-4000-8000-000000000001"
 // The revocation worker waits beyond this window before its final disconnect.
 const ConnectLifetime = time.Second
 
+// Principal identifies the authenticated operator and its authorised access policy.
 type Principal struct {
 	Subject string `json:"subject"`
 	Name    string `json:"name"`

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check service ownership and inward dependencies in all implementation languages."""
 import ast
-from contract_sources import sources, catalogue
+from contract_sources import sources, catalogue, command_subscriptions
 from migration_catalogue import metadata, OUTPUTS
 from hashlib import sha256
 import json
@@ -62,8 +62,15 @@ for folder in ('services/storefront/contracts/requests/generated', 'services/api
         GENERATED.add(folder+'/cafe/requests/v1/'+name)
 GENERATED.add('services/storefront/contexts/menu/adaptors/messaging/generated/menu_private.pb.go')
 GENERATED.add('services/storefront/apps/topology/generated.json')
+GENERATED.add('services/storefront/apps/replay/generated.json')
 for owner in ('loyalty', 'communication'):
     GENERATED.add(f'services/engagement/src/contexts/{owner}/adaptors/messaging/generated/private_messages.json')
+
+for owner in ('preparation', 'collection'):
+    for suffix in ('py', 'pyi'):
+        GENERATED.add(f'services/operations/src/operations/adaptors/generated/cafe/internal/{owner}/internal_commands_pb2.{suffix}')
+for owner in ('loyalty', 'communication'):
+    GENERATED.add(f'services/engagement/src/contexts/{owner}/adaptors/messaging/generated/internal_commands.json')
 
 
 def import_violation(package, imported):
@@ -79,6 +86,8 @@ def import_violation(package, imported):
             target = '/'.join(target.split('/')[2:])
     else:
         service = 'storefront'
+    if imported.startswith(('go.uber.org/fx', 'go.uber.org/dig')) and not path.startswith('apps/'):
+        return 'DI framework outside composition'
     if path.startswith('contexts/'):
         owner, ring = path.split('/')[1:3]
         if internal and target.startswith('contexts/') and target.split('/')[1] != owner:
@@ -110,6 +119,8 @@ def core_violation(path, target):
     parts = path.split('/')
     if 'foundation' in parts and '/contexts/' in '/'+target:
         return 'business dependency in technical foundation'
+    if target.startswith(('awilix', 'dependency_injector')) and 'apps' not in parts:
+        return 'DI framework outside composition'
     if 'contexts' not in parts:
         return None
     offset = parts.index('contexts')
@@ -121,7 +132,7 @@ def core_violation(path, target):
             return 'outward core dependency'
         if ring == 'domain' and any(p in target.split('/') for p in ('application', 'contracts')):
             return 'outward domain dependency'
-        if target.startswith(('node:', 'pg', 'amqplib', 'protobuf', 'react', 'next', 'fastapi', 'pika', 'psycopg', 'requests', 'http', 'socket', 'os')):
+        if target.startswith(('node:', 'pg', 'amqplib', 'protobuf', 'react', 'next', 'fastapi', 'pika', 'psycopg', 'requests', 'http', 'socket', 'os', 'awilix', 'dependency_injector')):
             return 'infrastructure in core'
     return None
 
@@ -241,11 +252,13 @@ def check():
     for name in ('events', 'realtime', 'requests'):
         if any(not path.exists() for path in sources(name).values()):
             errors.append('missing published specification: '+name)
-    if json.loads((ROOT/'services/storefront/apps/topology/generated.json').read_text()) != catalogue('topology'):
+    if json.loads((ROOT/'services/storefront/apps/topology/generated.json').read_text()) != [{**entry, 'command': entry['consumer'] in {item['consumer'] for item in command_subscriptions()}} for entry in catalogue('topology')]:
         errors.append('deployment topology metadata drift')
     compose = (ROOT/'devops/compose.yaml').read_text()
     if re.search(r'APP_ENV:\s*(production|staging)', compose):
         errors.append('non-development runtime composition')
+    from command_boundaries import check as check_commands
+    errors.extend(check_commands())
     if errors:
         raise SystemExit('\n'.join(errors))
     print(f'Architecture verified across {len(packages)} Go packages, Python, TypeScript and Next.js')

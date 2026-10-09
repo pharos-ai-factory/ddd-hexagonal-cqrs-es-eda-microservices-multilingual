@@ -23,18 +23,18 @@ import (
 )
 
 type projectionWorld struct {
-	db          *pg.Database
+	db          *pg.ContextDatabase
 	evidence    *pgxpool.Pool
-	menus       *pg.Projection[model.MenuPublished]
+	menus       *pg.ProjectionStore[model.MenuPublished]
 	m           a.Metadata
-	input       app.CreateOrder
+	input       app.CreateOrderCommand
 	first, last a.Outcome
-	original    a.Loaded[d.State]
+	original    a.Loaded[d.OrderState]
 }
 
 func (w *projectionWorld) request() error {
 	w.m.Input = w.input
-	result, err := (app.CreateOrderHandler{Orders: pg.Command[d.State](w.db, "order"), Menus: w.menus}).Execute(context.Background(), w.m, w.input)
+	result, err := (app.CreateOrderCommandHandler{Orders: pg.Command[d.OrderState](w.db, "order"), Menus: w.menus}).Execute(context.Background(), w.m, w.input)
 	w.last = result
 	return err
 }
@@ -44,7 +44,7 @@ func (w *projectionWorld) arrive() error {
 		Offers: []model.Offer{{Code: "C1", DrinkID: pg.NewID(), DrinkRevision: 1, Name: "Coffee", Minor: 300, Currency: "EUR"}}})
 }
 func (w *projectionWorld) noOrder() error {
-	state, err := pg.Query[d.State](w.db, "order").Get(context.Background(), w.m.AggregateID)
+	state, err := pg.Query[d.OrderState](w.db, "order").Get(context.Background(), w.m.AggregateID)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 				zero := uint64(0)
 				*w = projectionWorld{db: db, evidence: evidence, menus: pg.Project[model.MenuPublished](db, "menu-directory"),
 					m:     a.Metadata{ID: pg.NewID(), AggregateID: pg.NewID(), Name: "create-order", CorrelationID: pg.NewID(), ExpectedVersion: &zero},
-					input: app.CreateOrder{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
+					input: app.CreateOrderCommand{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
 				return ctx, nil
 			})
 			sc.Step(`^a published menu has not reached Ordering$`, func() error {
@@ -121,7 +121,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 				}
 				w.first = w.last
 				var err error
-				w.original, err = pg.Query[d.State](db, "order").Get(ctx, w.m.AggregateID)
+				w.original, err = pg.Query[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
 				return err
 			})
 			sc.Step(`^the decision is recorded as "([^"]*)" without creating an order$`, func(code string) error {
@@ -154,7 +154,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 				if w.last.Rejection != nil || w.last.Version != 1 {
 					return fmt.Errorf("new attempt failed: %+v", w.last)
 				}
-				order, err := pg.Query[d.State](db, "order").Get(ctx, w.m.AggregateID)
+				order, err := pg.Query[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
 				if err != nil {
 					return err
 				}
@@ -172,7 +172,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 			})
 			sc.Step(`^the new input is rejected as "([^"]*)"$`, w.rejected)
 			sc.Step(`^the original order and its publication remain unchanged$`, func() error {
-				order, err := pg.Query[d.State](db, "order").Get(ctx, w.m.AggregateID)
+				order, err := pg.Query[d.OrderState](db, "order").Get(ctx, w.m.AggregateID)
 				if err != nil {
 					return err
 				}

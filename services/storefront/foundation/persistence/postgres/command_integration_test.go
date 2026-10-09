@@ -18,7 +18,7 @@ type counter struct {
 	Value int `json:"value"`
 }
 
-func fixtureDB(t *testing.T) *Database {
+func fixtureDB(t *testing.T) *ContextDatabase {
 	t.Helper()
 	raw := os.Getenv("ORDERING_DATABASE_URL")
 	if raw == "" {

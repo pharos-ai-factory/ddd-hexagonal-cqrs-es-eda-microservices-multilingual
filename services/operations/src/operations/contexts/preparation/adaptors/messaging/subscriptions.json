@@ -1,0 +1,7 @@
+[
+  {
+    "consumer": "preparation.accept-order",
+    "event": "ordering.order-placed",
+    "command": "acceptOrder"
+  }
+]

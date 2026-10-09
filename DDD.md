@@ -89,3 +89,13 @@ the owning snapshot type; domain facts use immutable context-owned dataclasses.
 Static types do not validate external JSON or stored state. Boundary decoders
 must still reject malformed input and classify corrupt authority as a retryable
 state failure, preserving the distinction from a business rejection.
+
+## Command entry points
+
+Every aggregate business transition, including creation, begins in an owner
+`CommandHandler.Execute`/`execute` method with a named command DTO. The aggregate
+owns invariants. Event handlers use a durable command port for aggregate reactions;
+private events between roots follow the same rule. Projection updates and
+rehydration remain separate operations. This is the reference's explicit convention;
+DDD also permits transactionally safe event-handling use cases. Decision 0011
+records why this repository accepts the extra durable hand-off.

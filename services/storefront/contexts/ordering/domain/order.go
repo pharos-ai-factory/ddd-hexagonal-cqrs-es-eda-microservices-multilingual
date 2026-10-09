@@ -4,11 +4,14 @@ import (
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
 
+// Selection identifies the published offer snapshot selected for an order line.
 type Selection struct {
 	OfferCode string `json:"offerCode"`
 	Name      string `json:"name"`
 	Minor     int64  `json:"minor"`
 }
+
+// LineState represents the persisted Line snapshot.
 type LineState struct {
 	ID        string    `json:"id"`
 	Selection Selection `json:"selection"`
@@ -45,7 +48,8 @@ func (l OrderLine) Snapshot() LineState {
 	return LineState{ID: l.id, Selection: l.selection, Quantity: l.quantity.Value()}
 }
 
-type State struct {
+// OrderState represents the persisted Order snapshot.
+type OrderState struct {
 	ID         string      `json:"id"`
 	CustomerID string      `json:"customerId"`
 	EditionID  string      `json:"editionId"`
@@ -53,8 +57,10 @@ type State struct {
 	Status     string      `json:"status"`
 	Lines      []LineState `json:"lines"`
 }
+
+// Order owns order lines, their immediate invariants and placement.
 type Order struct {
-	state State
+	state OrderState
 	lines []OrderLine
 	facts []core.Fact
 }
@@ -68,9 +74,9 @@ func New(id, customer, edition, currency string) (*Order, error) {
 	if _, err := core.NewMoney(0, currency); err != nil {
 		return nil, err
 	}
-	return &Order{state: State{ID: id, CustomerID: customer, EditionID: edition, Currency: currency, Status: "draft", Lines: []LineState{}}}, nil
+	return &Order{state: OrderState{ID: id, CustomerID: customer, EditionID: edition, Currency: currency, Status: "draft", Lines: []LineState{}}}, nil
 }
-func Restore(state State) (*Order, error) {
+func Restore(state OrderState) (*Order, error) {
 	order, err := New(state.ID, state.CustomerID, state.EditionID, state.Currency)
 	if err != nil {
 		return nil, core.Corrupt(err.Error())
@@ -158,7 +164,7 @@ func (o *Order) total() int {
 	}
 	return total
 }
-func (o *Order) Snapshot() State {
+func (o *Order) Snapshot() OrderState {
 	s := o.state
 	s.Lines = make([]LineState, 0, len(o.lines))
 	for _, line := range o.lines {

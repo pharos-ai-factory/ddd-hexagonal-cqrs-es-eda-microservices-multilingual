@@ -9,6 +9,7 @@ import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/http/internal/security"
 )
 
+// Config contains the settings and injected ports for this HTTP boundary.
 type Config struct {
 	CLIKey      string
 	Diagnostics func(context.Context) (any, error)

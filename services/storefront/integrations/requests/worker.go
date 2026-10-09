@@ -14,11 +14,11 @@ import (
 	"time"
 )
 
-func (r *Registry) Run(ctx context.Context, url string) {
+func (r *RabbitMQRequestRegistry) Run(ctx context.Context, url string) {
 	go r.runKind(ctx, url, "command")
 	r.runKind(ctx, url, "query")
 }
-func (r *Registry) runKind(ctx context.Context, url, kind string) {
+func (r *RabbitMQRequestRegistry) runKind(ctx context.Context, url, kind string) {
 	for ctx.Err() == nil {
 		err := broker.ServeRequests(ctx, url, r.Owner, kind, func(ctx context.Context, id string, data []byte) ([]byte, error) {
 			var request RequestEnvelope

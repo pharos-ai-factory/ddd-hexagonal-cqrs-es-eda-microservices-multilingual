@@ -1,0 +1,107 @@
+{
+  "nested": {
+    "cafe": {
+      "nested": {
+        "internal": {
+          "nested": {
+            "loyalty": {
+              "nested": {
+                "CommandEnvelope": {
+                  "oneofs": {
+                    "command": {
+                      "oneof": [
+                        "creditCollection",
+                        "issueReward"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "consumer": {
+                      "type": "string",
+                      "id": 2
+                    },
+                    "sourceEventId": {
+                      "type": "string",
+                      "id": 3,
+                      "protoName": "source_event_id"
+                    },
+                    "sourceHash": {
+                      "type": "string",
+                      "id": 4,
+                      "protoName": "source_hash"
+                    },
+                    "target": {
+                      "type": "string",
+                      "id": 5
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "id": 6,
+                      "protoName": "correlation_id"
+                    },
+                    "receiptMaterial": {
+                      "type": "bytes",
+                      "id": 7,
+                      "protoName": "receipt_material"
+                    },
+                    "creditCollection": {
+                      "type": "CreditCollectionCommand",
+                      "id": 10,
+                      "protoName": "credit_collection"
+                    },
+                    "issueReward": {
+                      "type": "IssueRewardCommand",
+                      "id": 11,
+                      "protoName": "issue_reward"
+                    }
+                  }
+                },
+                "CreditCollectionCommand": {
+                  "fields": {
+                    "orderId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "order_id"
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "customer_id"
+                    }
+                  }
+                },
+                "IssueRewardCommand": {
+                  "fields": {
+                    "grantId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "grant_id"
+                    },
+                    "accountId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "account_id"
+                    },
+                    "benefit": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "validDays": {
+                      "type": "int32",
+                      "id": 4,
+                      "protoName": "valid_days"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

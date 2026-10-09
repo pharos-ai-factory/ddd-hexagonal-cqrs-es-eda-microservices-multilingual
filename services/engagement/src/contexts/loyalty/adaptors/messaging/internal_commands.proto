@@ -1,0 +1,19 @@
+// Owner-private durable command format. Published integration contracts remain separate.
+syntax = "proto3";
+package cafe.internal.loyalty;
+message CommandEnvelope {
+  string id = 1;
+  string consumer = 2;
+  string source_event_id = 3;
+  string source_hash = 4;
+  string target = 5;
+  string correlation_id = 6;
+  // Original receipt material preserves deduplication across the hand-off.
+  bytes receipt_material = 7;
+  oneof command {
+    CreditCollectionCommand credit_collection = 10;
+    IssueRewardCommand issue_reward = 11;
+  }
+}
+message CreditCollectionCommand { string order_id = 1; string customer_id = 2; }
+message IssueRewardCommand { string grant_id = 1; string account_id = 2; string benefit = 3; int32 valid_days = 4; }

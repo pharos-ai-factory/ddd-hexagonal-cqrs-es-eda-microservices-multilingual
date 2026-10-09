@@ -9,15 +9,16 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
-type Projection[S any] struct {
-	db   *Database
+// ProjectionStore owns a consumer-local read projection and its delivery receipts.
+type ProjectionStore[S any] struct {
+	db   *ContextDatabase
 	name string
 }
 
-func Project[S any](db *Database, name string) *Projection[S] {
-	return &Projection[S]{db: db, name: name}
+func Project[S any](db *ContextDatabase, name string) *ProjectionStore[S] {
+	return &ProjectionStore[S]{db: db, name: name}
 }
-func (p *Projection[S]) Find(ctx context.Context, key string) (S, bool, error) {
+func (p *ProjectionStore[S]) Find(ctx context.Context, key string) (S, bool, error) {
 	var result S
 	var data []byte
 	err := p.db.pool.QueryRow(ctx, `SELECT state FROM cafe.projections WHERE name=$1 AND key=$2`, p.name, key).Scan(&data)
@@ -30,7 +31,7 @@ func (p *Projection[S]) Find(ctx context.Context, key string) (S, bool, error) {
 	err = decodeStored(data, &result)
 	return result, err == nil, err
 }
-func (p *Projection[S]) Record(ctx context.Context, m a.Metadata, key string, revision uint64, state S) error {
+func (p *ProjectionStore[S]) Record(ctx context.Context, m a.Metadata, key string, revision uint64, state S) error {
 	tx, err := begin(ctx, p.db.pool)
 	if err != nil {
 		return err

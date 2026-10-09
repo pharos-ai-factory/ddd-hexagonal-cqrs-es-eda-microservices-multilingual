@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import protobuf from 'protobufjs';
 import schema from './generated/requests.json' with {type: 'json'};
-import {decodeRequest, Registry, requiredInputs} from './requests.js';
+import {decodeRequest, RabbitMQRequestRegistry, requiredInputs} from './requests.js';
 import type {Metadata} from '../foundation/application.js';
 const root = protobuf.Root.fromJSON(schema), requestType = root.lookupType('cafe.loyalty.requests.v1.Request'), replyType = root.lookupType('cafe.loyalty.requests.v1.Reply');
 const id = '11111111-1111-4111-8111-111111111111';
@@ -11,7 +11,7 @@ const wire = {contractVersion: 1, requestId: id, context: 'loyalty', command: {
   metadata: {commandId: id, aggregateId: id, expectedVersion: 0, correlationId: id}, redeemReward: {orderId: id},
 }};
 test('wire command becomes a plain application command with explicit zero version', async () => {
-  const registry = new Registry('loyalty');
+  const registry = new RabbitMQRequestRegistry('loyalty');
   let captured: Metadata | undefined;
   registry.command('redeemReward', (value: unknown) => {
     assert.deepEqual(value, {orderId: id}); return {orderId: id};
@@ -28,7 +28,7 @@ test('foreign context, missing command fields and missing expected version fail 
   assert.throws(() => decodeRequest(encode({...wire, command: {...wire.command, metadata: {...wire.command.metadata, expectedVersion: undefined}}}), 'loyalty'));
 });
 test('owner query pagination and an absent next identity remain explicit', async () => {
-  const registry = new Registry('communication');
+  const registry = new RabbitMQRequestRegistry('communication');
   registry.queries('notification', 'notifications', {
     get: async () => undefined, list: async () => [], page: async request => {
       assert.deepEqual(request, {limit: 1, after: id}); return {items: []};

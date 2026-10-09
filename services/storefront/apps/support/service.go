@@ -18,24 +18,25 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
+	"sync"
 	"time"
 )
 
-type Service struct {
+// StorefrontRuntime owns Storefront context resources and joins delivery workers before disposal.
+type StorefrontRuntime struct {
 	Context        context.Context
 	Mux            *contract.Mux
-	Databases      map[string]*postgres.Database
+	Databases      map[string]*postgres.ContextDatabase
 	RequestWorkers map[string]func(context.Context, string)
 	URLs           map[string]string
 	subscriptions  []broker.Subscription
 	cancel         context.CancelFunc
+	workers        sync.WaitGroup
 	apiKey         string
 }
 
-func Open(contexts ...string) (*Service, error) {
+func Open(contexts ...string) (*StorefrontRuntime, error) {
 	environment := os.Getenv("APP_ENV")
 	if environment != "development" && environment != "local" {
 		return nil, fmt.Errorf("this reference only runs in local or development environments")
@@ -47,8 +48,8 @@ func Open(contexts ...string) (*Service, error) {
 	if len(apiKey) < 32 {
 		return nil, fmt.Errorf("a development API key of at least 32 characters is required")
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	service := &Service{Context: ctx, Mux: contract.NewMux("storefront", nil), Databases: map[string]*postgres.Database{}, URLs: map[string]string{}, RequestWorkers: map[string]func(context.Context, string){}, cancel: cancel, apiKey: apiKey}
+	ctx, cancel := context.WithCancel(context.Background())
+	service := &StorefrontRuntime{Context: ctx, Mux: contract.NewMux("storefront", nil), Databases: map[string]*postgres.ContextDatabase{}, URLs: map[string]string{}, RequestWorkers: map[string]func(context.Context, string){}, cancel: cancel, apiKey: apiKey}
 	for _, owner := range contexts {
 		databaseURL, err := config.Secret(strings.ToUpper(owner) + "_DATABASE_URL")
 		if err != nil {
@@ -75,7 +76,7 @@ func Open(contexts ...string) (*Service, error) {
 	service.mountHTTP()
 	return service, nil
 }
-func (s *Service) mountHTTP() {
+func (s *StorefrontRuntime) mountHTTP() {
 	s.Mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { web.JSON(w, 200, map[string]string{"status": "ok"}) })
 	s.Mux.HandleFunc("GET /diagnostics", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
@@ -95,14 +96,17 @@ func (s *Service) mountHTTP() {
 	})
 }
 
-func (s *Service) Close() {
+// Stop requests worker and HTTP shutdown; Run joins workers before closing resources.
+func (s *StorefrontRuntime) Stop() { s.cancel() }
+
+func (s *StorefrontRuntime) Close() {
 	s.cancel()
 	for _, db := range s.Databases {
 		db.Close()
 	}
 }
-func (s *Service) Run() error {
-	defer s.Close()
+func (s *StorefrontRuntime) Run() error {
+	defer func() { s.cancel(); s.workers.Wait(); s.Close() }()
 	gatewayURL, err := config.Secret("REALTIME_GATEWAY_URL")
 	if err != nil {
 		return err
@@ -112,15 +116,15 @@ func (s *Service) Run() error {
 		if err != nil {
 			return err
 		}
-		go workers.Relay(s.Context, db, s.URLs[owner], codec.Decode)
-		go workers.Replies(s.Context, db, s.URLs[owner], owner)
-		go workers.Realtime(s.Context, db, gatewayURL, realtimeKey)
+		s.start(func() { workers.Relay(s.Context, db, s.URLs[owner], codec.Decode) })
+		s.start(func() { workers.Replies(s.Context, db, s.URLs[owner], owner) })
+		s.start(func() { workers.Realtime(s.Context, db, gatewayURL, realtimeKey) })
 	}
 	for owner, run := range s.RequestWorkers {
 		if s.Databases[owner] == nil {
 			return fmt.Errorf("request worker bound outside its owner")
 		}
-		go run(s.Context, s.URLs[owner])
+		s.start(func() { run(s.Context, s.URLs[owner]) })
 	}
 	paused := "," + os.Getenv("PAUSED_CONSUMERS") + ","
 	for _, sub := range s.subscriptions {
@@ -128,7 +132,9 @@ func (s *Service) Run() error {
 			slog.Info("consumer intentionally paused", "consumer", sub.Binding.Consumer)
 			continue
 		}
-		go workers.Consumer(s.Context, s.URLs[sub.Binding.Context], sub, codec.Decode, postgres.DerivedID)
+		s.start(func() {
+			workers.Consumer(s.Context, s.URLs[sub.Binding.Context], sub, codec.Decode, postgres.DerivedID)
+		})
 	}
 	address := os.Getenv("LISTEN_ADDR")
 	if address == "" {
@@ -148,7 +154,7 @@ func (s *Service) Run() error {
 	}
 	return err
 }
-func Subscribe[P any](s *Service, consumer string, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
+func Subscribe[P any](s *StorefrontRuntime, consumer string, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
 	var definition model.Definition
 	found := false
 	for _, d := range model.Catalogue {
@@ -169,13 +175,13 @@ func Subscribe[P any](s *Service, consumer string, target func(P) string, handle
 
 // SubscribePrivate binds owner-internal delivery explicitly in the composition;
 // it does not add that message to the published integration catalogue.
-func SubscribePrivate[P any](s *Service, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
+func SubscribePrivate[P any](s *StorefrontRuntime, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
 	if binding.Visibility != string(a.Private) || !strings.HasPrefix(binding.Event, binding.Context+".") {
 		panic("invalid private owner binding")
 	}
 	bindSubscription(s, binding, target, handle)
 }
-func bindSubscription[P any](s *Service, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
+func bindSubscription[P any](s *StorefrontRuntime, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
 	if s.Databases[binding.Context] == nil || strings.SplitN(binding.Consumer, ".", 2)[0] != binding.Context {
 		panic("consumer bound outside its context")
 	}
@@ -195,7 +201,7 @@ func bindSubscription[P any](s *Service, binding broker.Binding, target func(P) 
 		return nil
 	}})
 }
-func Main(build func() (*Service, error)) {
+func Main(build func() (*StorefrontRuntime, error)) {
 	s, err := build()
 	if err == nil {
 		err = s.Run()
@@ -204,4 +210,9 @@ func Main(build func() (*Service, error)) {
 		slog.Error("service stopped", "error", err)
 		os.Exit(1)
 	}
+}
+
+func (s *StorefrontRuntime) start(run func()) {
+	s.workers.Add(1)
+	go func() { defer s.workers.Done(); run() }()
 }

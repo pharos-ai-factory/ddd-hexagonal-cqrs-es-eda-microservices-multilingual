@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func Realtime(ctx context.Context, db *postgres.Database, url, key string) {
+func Realtime(ctx context.Context, db *postgres.ContextDatabase, url, key string) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	for ctx.Err() == nil {
 		dispatch, found, err := db.ClaimRealtime(ctx)

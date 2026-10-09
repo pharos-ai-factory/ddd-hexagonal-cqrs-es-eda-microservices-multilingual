@@ -6,6 +6,7 @@ import (
 	"slices"
 )
 
+// OfferState represents the persisted Offer snapshot.
 type OfferState struct {
 	Code          string `json:"code"`
 	DrinkID       string `json:"drinkId"`
@@ -36,12 +37,15 @@ func NewOffer(code string, drink DrinkState, minor int64, currency string) (Menu
 func (o MenuOffer) Equal(other MenuOffer) bool { return o == other }
 func (o MenuOffer) Snapshot() OfferState       { return o.value }
 
+// EditionState represents the persisted Edition snapshot.
 type EditionState struct {
 	ID       string       `json:"id"`
 	Currency string       `json:"currency"`
 	Status   string       `json:"status"`
 	Offers   []OfferState `json:"offers"`
 }
+
+// MenuEdition owns offers, prices and immutable publication revisions for a menu.
 type MenuEdition struct {
 	state EditionState
 	facts []core.Fact

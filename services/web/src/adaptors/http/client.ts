@@ -1,5 +1,6 @@
 import {routes, type Operation, type Input, type Success, type CommandOperation, type CommandBody, type CommandParameters, type Intersection} from '../generated/http';
 
+/** Signals that the HTTP session requires authentication before a retained command can be retried. */
 export class SessionEnded extends Error {
   constructor() { super('Session ended'); }
 }

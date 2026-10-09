@@ -37,6 +37,7 @@ def page_request(query: QueryParams, resource: str) -> PageRequest | None:
 
 
 class PageResponse[S](TypedDict):
+    """Exposes a query page and opaque continuation cursor at the HTTP boundary."""
     items: list[Loaded[S]]
     nextCursor: str | None
 

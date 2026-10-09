@@ -1,36 +1,57 @@
 from typing import TypedDict
 from operations.contexts.preparation.domain import PreparationTicket, TicketState, TicketSnapshot, DrinksReady
 from operations.contracts import events
-from operations.foundation.application import Change, CommandPort, Metadata, Outcome, Publication
+from operations.foundation.application import Change, AggregateCommandPort, DurableCommandPort, Metadata, Outcome, Publication
 from operations.foundation.domain import Rejection
 
 
 class StartPreparationCommand(TypedDict):
+    """Requests the queued-to-preparing transition for the targeted ticket."""
     pass
 
 
 class CompletePreparationCommand(TypedDict):
+    """Requests completion of the targeted preparation ticket."""
     pass
 
 
-class AcceptOrder:
-    def __init__(self, tickets: CommandPort[TicketSnapshot]) -> None:
-        self.tickets = tickets
+class AcceptOrderCommand(TypedDict):
+    """Owner instruction to create a preparation ticket with immutable instructions."""
+    orderId: str
+    customerId: str
+    instructions: str
+
+
+class OrderPlacedIntegrationEventHandler:
+    """Translate a published order into a durable Preparation command."""
+    def __init__(self, commands: DurableCommandPort[AcceptOrderCommand]) -> None:
+        self.commands = commands
 
     def handle(self, metadata: Metadata, event: events.OrderPlaced) -> Outcome:
+        return self.commands.enqueue(metadata, AcceptOrderCommand(orderId=event["orderId"],
+            customerId=event["customerId"],
+            instructions="; ".join(f'{line["quantity"]} × {line["name"]}' for line in event["lines"])))
+
+
+class AcceptOrderCommandHandler:
+    """Create one PreparationTicket; redelivery preserves the existing ticket."""
+    def __init__(self, tickets: AggregateCommandPort[TicketSnapshot]) -> None:
+        self.tickets = tickets
+
+    def execute(self, metadata: Metadata, command: AcceptOrderCommand) -> Outcome:
         def decide(state: TicketSnapshot | None) -> Change[TicketSnapshot]:
             if state is not None:
                 restored = PreparationTicket.restore(state).snapshot()
                 return Change(restored, restored["status"], changed=False)
-            instructions = "; ".join(f'{line["quantity"]} × {line["name"]}' for line in event["lines"])
             ticket = PreparationTicket(TicketState(
-                metadata.target, event["orderId"], event["customerId"], instructions))
+                metadata.target, command["orderId"], command["customerId"], command["instructions"]))
             return Change(ticket.snapshot(), "queued")
         return self.tickets.execute(metadata, decide)
 
 
-class StartPreparation:
-    def __init__(self, tickets: CommandPort[TicketSnapshot]) -> None:
+class StartPreparationCommandHandler:
+    """Loads one ticket and applies its start rule within a command transaction."""
+    def __init__(self, tickets: AggregateCommandPort[TicketSnapshot]) -> None:
         self.tickets = tickets
 
     def execute(self, metadata: Metadata, command: StartPreparationCommand) -> Outcome:
@@ -43,8 +64,9 @@ class StartPreparation:
         return self.tickets.execute(metadata, decide)
 
 
-class CompletePreparation:
-    def __init__(self, tickets: CommandPort[TicketSnapshot]) -> None:
+class CompletePreparationCommandHandler:
+    """Completes one ticket and records the outgoing preparation fact atomically."""
+    def __init__(self, tickets: AggregateCommandPort[TicketSnapshot]) -> None:
         self.tickets = tickets
 
     def execute(self, metadata: Metadata, command: CompletePreparationCommand) -> Outcome:

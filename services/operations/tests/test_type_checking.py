@@ -3,14 +3,14 @@ from pathlib import Path
 from mypy import api
 
 IMPORTS = """\
-from operations.contexts.collection.application import CollectOrder
+from operations.contexts.collection.application import CollectOrderCommandHandler
 from operations.contexts.collection.domain import PickupSnapshot
 from operations.contexts.preparation.domain import TicketSnapshot
 from operations.contracts.events import DrinksReady
-from operations.foundation.application import CommandPort, Metadata
+from operations.foundation.application import AggregateCommandPort, Metadata
 
-def caller(pickups: CommandPort[PickupSnapshot], tickets: CommandPort[TicketSnapshot], metadata: Metadata) -> None:
-    collect = CollectOrder(pickups)
+def caller(pickups: AggregateCommandPort[PickupSnapshot], tickets: AggregateCommandPort[TicketSnapshot], metadata: Metadata) -> None:
+    collect = CollectOrderCommandHandler(pickups)
     collect.execute(metadata, {"code": "ABC123"})
     ready: DrinksReady = {"orderId": metadata.target, "customerId": metadata.target}
 """
@@ -27,7 +27,7 @@ def test_type_gate_rejects_wrong_commands_events_states_and_ports(tmp_path: Path
     mistakes = [
         '    collect.execute(metadata, {"code": 123})',
         '    collect.execute(metadata, {})',
-        '    CollectOrder(tickets)',
+        '    CollectOrderCommandHandler(tickets)',
         '    missing_order: DrinksReady = {"customerId": metadata.target}',
         '    wrong_status: PickupSnapshot = {"id": metadata.target, "orderId": metadata.target, '
         '"customerId": metadata.target, "code": "ABC123", "status": "queued"}',

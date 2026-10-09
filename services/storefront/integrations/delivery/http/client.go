@@ -11,16 +11,17 @@ import (
 	"time"
 )
 
-type Client struct {
+// HTTPNotificationDeliveryClient implements the outbound request port for this named adaptor package.
+type HTTPNotificationDeliveryClient struct {
 	URL  string
 	Key  string
 	HTTP *http.Client
 }
 
-func New(url, key string) *Client {
-	return &Client{URL: url, Key: key, HTTP: &http.Client{Timeout: 5 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}
+func New(url, key string) *HTTPNotificationDeliveryClient {
+	return &HTTPNotificationDeliveryClient{URL: url, Key: key, HTTP: &http.Client{Timeout: 5 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}
 }
-func (c *Client) Deliver(ctx context.Context, delivery a.Delivery) (string, error) {
+func (c *HTTPNotificationDeliveryClient) Deliver(ctx context.Context, delivery a.Delivery) (string, error) {
 	body, err := json.Marshal(delivery)
 	if err != nil {
 		return "", err

@@ -64,7 +64,8 @@ def validate(request: Request, owner: str) -> tuple[str, Message]:
     return name, body
 
 
-class Registry:
+class RabbitMQRequestRegistry:
+    """Maps owner RPC requests to typed application handlers and manages durable replies."""
     def __init__(self, owner: str) -> None:
         self.owner = owner
         self.handlers: dict[str, Callable[[Request, Message], Reply]] = {}

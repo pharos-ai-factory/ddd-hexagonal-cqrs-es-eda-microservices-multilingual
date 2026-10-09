@@ -1,7 +1,7 @@
 """Native transport translation checks; delivery claims use real RabbitMQ."""
 import pytest
 from operations.contexts.collection.adaptors.messaging import requests as collection_wire
-from operations.adaptors.requests import Registry, validate
+from operations.adaptors.requests import RabbitMQRequestRegistry, validate
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Request
 from operations.foundation.application import Metadata, Outcome
 from operations.contexts.collection.application import CollectOrderCommand
@@ -25,7 +25,7 @@ def test_wire_command_maps_to_plain_input_and_preserves_zero_version() -> None:
         assert value == {"code": "1234"}
         captured.append(metadata)
         return Outcome(aggregateId=ID, version=1, status="collected")
-    registry = Registry("collection")
+    registry = RabbitMQRequestRegistry("collection")
     registry.command("collectOrder", collection_wire.collect, execute)
     reply = registry.handle(Request.FromString(command().SerializeToString()))
     assert captured[0].expected == 0

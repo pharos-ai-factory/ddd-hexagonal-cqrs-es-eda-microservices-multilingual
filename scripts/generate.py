@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate transport bindings for all runtimes from the shared wire schemas."""
 from http_contracts import generate as generate_http_contracts
-from contract_sources import PRIVATE, catalogue, sources as contract_sources
+from contract_sources import PRIVATE, catalogue, command_subscriptions, sources as contract_sources
 from generate_requests import generate_requests
 import tempfile
 import os
@@ -54,6 +54,18 @@ for contract in ("events", "realtime", "menu_private"):
         subprocess.run([*arguments, *definitions], cwd=ROOT, check=True)
 for service in ("storefront", "api", "operations"):
     generate_requests(service, ROOT, plugin, standard_protos)
+# Internal commands are implementation resources owned by their receiving context.
+for owner in ("preparation", "collection"):
+    source = ROOT/f"services/operations/src/operations/contexts/{owner}/adaptors/messaging"
+    with tempfile.TemporaryDirectory() as directory:
+        stage = Path(directory)
+        logical = f"cafe/internal/{owner}/internal_commands.proto"
+        target = stage/logical
+        target.parent.mkdir(parents=True)
+        shutil.copyfile(source/"internal_commands.proto", target)
+        subprocess.run(["uv", "run", "--no-project", "--with", "grpcio-tools==1.84.0", "python", "-m",
+                        "grpc_tools.protoc", f"-I{stage}", f"--python_out={python_out}", f"--pyi_out={python_out}",
+                        logical], check=True)
 # Imported generated modules resolve inside Operations' own installed package.
 for path in (python_out/"cafe").rglob("*"):
     if path.suffix in {".py", ".pyi"}:
@@ -63,7 +75,10 @@ for path in (python_out/"cafe").rglob("*"):
 (python_out/"catalogue.json").write_text(json.dumps(catalogue("operations"), indent=2)+"\n")
 engagement_out = ROOT/"services/engagement/src/adaptors/generated"
 (engagement_out/"catalogue.json").write_text(json.dumps(catalogue("engagement"), indent=2)+"\n")
-(ROOT/"services/storefront/apps/topology/generated.json").write_text(json.dumps(catalogue("topology"), indent=2)+"\n")
+command_consumers = {item["consumer"] for item in command_subscriptions()}
+topology = [{**entry, "command": entry["consumer"] in command_consumers} for entry in catalogue("topology")]
+(ROOT/"services/storefront/apps/topology/generated.json").write_text(json.dumps(topology, indent=2)+"\n")
+shutil.copyfile(ROOT/"services/storefront/apps/topology/generated.json", ROOT/"services/storefront/apps/replay/generated.json")
 shutil.copyfile(ROOT/"contracts/loyalty/messaging/integration_events/v1/fixtures/reward-issued.v1.hex",
                 ROOT/"services/storefront/contracts/events/fixtures/reward-issued.v1.hex")
 shutil.copyfile(ROOT/"devops/postgres/bootstrap/0002_realtime.sql",

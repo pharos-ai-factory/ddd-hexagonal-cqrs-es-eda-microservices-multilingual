@@ -7,7 +7,7 @@ from hashlib import sha256
 import json
 import os
 from threading import Event
-from typing import NotRequired, TypedDict
+from typing import Literal, NotRequired, TypedDict
 import urllib.request
 import pika
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
@@ -15,13 +15,14 @@ from pika.spec import Basic
 from operations.adaptors.codec import decode
 from operations.adaptors.diagnostics import failure
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
-from operations.adaptors.postgres import Database
+from operations.adaptors.postgres import PostgresContextDatabase
 from operations.foundation.application import Metadata, Outcome
 from operations.foundation.domain import Rejection, identifier, integer, text
 from operations.foundation.identity import derived_id, new_id
 
 
-class Dispatch(TypedDict):
+class OutboxDispatch(TypedDict):
+    """Carries immutable publication bytes and the fenced lease used to complete one dispatch."""
     id: str
     token: str
     generation: int
@@ -35,9 +36,9 @@ def binary(value: object) -> bytes:
     return bytes(value)
 
 
-def claim(database: Database, realtime: bool = False) -> Dispatch | None:
-    dispatch = "realtime_dispatches" if realtime else "dispatches"
-    source = "realtime_publications" if realtime else "outbox_events"
+def claim(database: PostgresContextDatabase, realtime: bool | Literal["commands"] = False) -> OutboxDispatch | None:
+    dispatch = "internal_command_dispatches" if realtime == "commands" else "realtime_dispatches" if realtime else "dispatches"
+    source = "internal_commands" if realtime == "commands" else "realtime_publications" if realtime else "outbox_events"
     token = new_id()
     with database.pool.connection() as connection:
         row = connection.execute(f"""WITH candidate AS (
@@ -51,15 +52,15 @@ def claim(database: Database, realtime: bool = False) -> Dispatch | None:
         ) SELECT o.*,c.generation FROM claimed c JOIN cafe.{source} o ON o.id=c.event_id""", (token,)).fetchone()
     if not row:
         return None
-    result = Dispatch(id=identifier(str(row["id"])), token=token,
+    result = OutboxDispatch(id=identifier(str(row["id"])), token=token,
                       generation=integer(row["generation"]), body=binary(row["body"]))
-    if realtime:
+    if realtime is True:
         result["channel"] = text(row["channel"])
     return result
 
 
-def finish(database: Database, row: Dispatch, realtime: bool = False, error: str | None = None) -> None:
-    table = "realtime_dispatches" if realtime else "dispatches"
+def finish(database: PostgresContextDatabase, row: OutboxDispatch, realtime: bool | Literal["commands"] = False, error: str | None = None) -> None:
+    table = "internal_command_dispatches" if realtime == "commands" else "realtime_dispatches" if realtime else "dispatches"
     with database.pool.connection() as connection:
         connection.execute(f"""UPDATE cafe.{table} SET lease_token=NULL,lease_until=NULL,
             available_at=clock_timestamp()+interval '1 second',
@@ -76,35 +77,42 @@ def broker_connection(url: str) -> BlockingConnection:
     return pika.BlockingConnection(parameters)
 
 
-def relay(database: Database, broker_url: str, stop: Event) -> None:
+def relay(database: PostgresContextDatabase, broker_url: str, stop: Event,
+          command_header: Callable[[bytes], tuple[str, str, str]] | None = None) -> None:
     while not stop.is_set():
         try:
             with broker_connection(broker_url) as connection:
                 channel = connection.channel()
                 channel.confirm_delivery()
                 while not stop.is_set():
-                    row = claim(database)
+                    row = claim(database, "commands" if command_header else False)
                     if not row:
                         # Pika accepts fractional seconds; types-pika incorrectly declares int.
                         connection.process_data_events(time_limit=0.1)  # type: ignore[arg-type]
                         continue
                     try:
-                        event, _ = decode(bytes(row["body"]))
-                        channel.basic_publish("cafe.events", event.visibility+"."+event.name, bytes(row["body"]),
+                        if command_header:
+                            identity, name, correlation = command_header(row["body"])
+                            exchange, route, owner = "ref."+database.owner+".delivery", "ref."+name, database.owner
+                        else:
+                            event, _ = decode(row["body"])
+                            identity, name, correlation = event.id, event.name, event.correlation_id
+                            exchange, route, owner = "cafe.events", event.visibility+"."+event.name, event.context
+                        channel.basic_publish(exchange, route, row["body"],
                             properties=pika.BasicProperties(content_type="application/x-protobuf", delivery_mode=2,
-                                message_id=event.id, type=event.name, app_id=event.context,
-                                correlation_id=event.correlation_id, headers={"contract-version": 1}), mandatory=True)
-                        finish(database, row)
+                                message_id=identity, type=name, app_id=owner,
+                                correlation_id=correlation, headers={"contract-version": 1}), mandatory=True)
+                        finish(database, row, "commands" if command_header else False)
                     except Exception as error:
                         failure(database.owner, "outbox.publish", error, row["id"])
-                        finish(database, row, error=type(error).__name__)
+                        finish(database, row, "commands" if command_header else False, error=type(error).__name__)
                         raise
         except Exception as error:
             failure(database.owner, "outbox.reconnect", error)
             stop.wait(1)
 
 
-def realtime_relay(database: Database, stop: Event) -> None:
+def realtime_relay(database: PostgresContextDatabase, stop: Event) -> None:
     while not stop.is_set():
         row = None
         try:
@@ -133,18 +141,20 @@ def realtime_relay(database: Database, stop: Event) -> None:
 
 
 @dataclass(frozen=True)
-class Subscription[P]:
+class EventSubscription[P]:
+    """Binds a stable owner consumer identity to decoding, target selection and application handling."""
     owner: str
     consumer: str
     event: str
     parse: Callable[[WireEvent], P]
     target: Callable[[P], str]
     handle: Callable[[Metadata, P], Outcome]
+    command_decoder: Callable[[bytes], tuple[Metadata, P]] | None = None
 
 
-def consume[P](url: str, subscription: Subscription[P], stop: Event) -> None:
+def consume[P](url: str, subscription: EventSubscription[P], stop: Event) -> None:
     sub = subscription
-    queue = "ref."+sub.consumer
+    queue = "ref."+sub.consumer+(".command" if sub.command_decoder else "")
     while not stop.is_set():
         try:
             with broker_connection(url) as connection:
@@ -164,19 +174,28 @@ def consume[P](url: str, subscription: Subscription[P], stop: Event) -> None:
                     try:
                         if not valid_attempt:
                             raise ValueError("Invalid retry counter")
-                        event, wire_payload = decode(body)
-                        event_id, correlation = event.id, event.correlation_id
-                        if (event.name != sub.event or (event.visibility == "domain" and event.context != sub.owner)
-                            or properties.content_type != "application/x-protobuf" or properties.delivery_mode != 2
-                            or properties.message_id != event.id or properties.type != event.name
-                            or properties.app_id != event.context or properties.correlation_id != event.correlation_id
-                            or (properties.headers or {}).get("contract-version") != 1):
-                            raise ValueError("AMQP metadata disagrees with the event")
-                        payload = sub.parse(event)
+                        if sub.command_decoder:
+                            metadata, payload = sub.command_decoder(body)
+                            if (properties.content_type != "application/x-protobuf" or properties.delivery_mode != 2
+                                or properties.message_id != metadata.id or properties.type != sub.consumer+".command"
+                                or properties.app_id != sub.owner or properties.correlation_id != metadata.correlation
+                                or (properties.headers or {}).get("contract-version") != 1):
+                                raise ValueError("Invalid command properties")
+                            event_id, correlation = metadata.id, metadata.correlation
+                        else:
+                            event, wire_payload = decode(body)
+                            event_id, correlation = event.id, event.correlation_id
+                            if (event.name != sub.event or (event.visibility == "domain" and event.context != sub.owner)
+                                or properties.content_type != "application/x-protobuf" or properties.delivery_mode != 2
+                                or properties.message_id != event.id or properties.type != event.name
+                                or properties.app_id != event.context or properties.correlation_id != event.correlation_id
+                                or (properties.headers or {}).get("contract-version") != 1):
+                                raise ValueError("AMQP metadata disagrees with the event")
+                            payload = sub.parse(event)
+                            metadata = Metadata(id=derived_id(sub.consumer, event.id), target=sub.target(payload), name=sub.consumer,
+                                correlation=event.correlation_id, input=wire_payload, causation=event.id, consumer=sub.consumer,
+                                source_id=event.id, source_hash=sha256(body).hexdigest())
                         validation = False
-                        metadata = Metadata(id=derived_id(sub.consumer, event.id), target=sub.target(payload), name=sub.consumer,
-                            correlation=event.correlation_id, input=wire_payload, causation=event.id, consumer=sub.consumer,
-                            source_id=event.id, source_hash=sha256(body).hexdigest())
                         outcome = sub.handle(metadata, payload)
                         if "rejection" in outcome:
                             raise Rejection(**outcome["rejection"])

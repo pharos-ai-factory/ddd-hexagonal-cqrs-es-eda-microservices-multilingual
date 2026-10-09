@@ -1,7 +1,7 @@
 import {failure, errorClass} from './diagnostics.js';
 import amqp, {type ConfirmChannel, type Options} from 'amqplib';
 import {createHash} from 'node:crypto';
-import type {Database} from './postgres.js';
+import type {PostgresContextDatabase} from './postgres.js';
 import {decode, type WireEvent} from './codec.js';
 import {claim, finish, pause} from './dispatch.js';
 import {derivedId} from '../foundation/identity.js';
@@ -23,7 +23,7 @@ export async function confirmed(channel: ConfirmChannel, exchange: string, key: 
     if (returned) throw new Error('Mandatory publication was returned');
   } finally { if (timeout) clearTimeout(timeout); channel.removeListener('return', onReturn); }
 }
-export async function relay(db: Database, url: string, signal: AbortSignal) {
+export async function relay(db: PostgresContextDatabase, url: string, signal: AbortSignal, commandHeader?: (body: Buffer) => {id: string; name: string; context: string; correlationId: string}) {
   while (!signal.aborted) {
     let connection: Awaited<ReturnType<typeof amqp.connect>> | undefined;
     try {
@@ -32,34 +32,38 @@ export async function relay(db: Database, url: string, signal: AbortSignal) {
       const channel = await connection.createConfirmChannel();
       channel.on('error', error => failure(db.owner, 'outbox.channel', error));
       while (!signal.aborted) {
-        const row = await claim(db);
+        const row = await claim(db, commandHeader ? 'commands' : false);
         if (!row) { await pause(signal); continue; }
         try {
-          const event = decode(row.body);
-          await confirmed(channel, 'cafe.events', event.visibility+'.'+event.name, row.body, {
+          const event = commandHeader ? commandHeader(row.body) : decode(row.body);
+          await confirmed(channel, commandHeader ? 'ref.'+db.owner+'.delivery' : 'cafe.events',
+            commandHeader ? 'ref.'+event.name : (event as WireEvent).visibility+'.'+event.name, row.body, {
             contentType: 'application/x-protobuf', messageId: event.id, type: event.name,
             appId: event.context, correlationId: event.correlationId,
             headers: {'contract-version': {'!': 'int32', value: 1}}});
-          await finish(db, row);
+          await finish(db, row, commandHeader ? 'commands' : false);
         } catch (error) {
           failure(db.owner, 'outbox.publish', error, row.id);
-          await finish(db, row, false, errorClass(error)); throw error;
+          await finish(db, row, commandHeader ? 'commands' : false, errorClass(error)); throw error;
         }
       }
     } catch (error) { failure(db.owner, 'outbox.reconnect', error); await pause(signal, 1000); }
     finally { await connection?.close().catch(() => {}); }
   }
 }
-export type Subscription = {
+export type EventSubscription = {
   owner: string; consumer: string; event: string; target(payload: object): string;
   handle(metadata: Metadata, payload: object): Promise<Outcome>;
+  decodeCommand?: (body: Buffer) => {metadata: Metadata; payload: object};
 };
 function validProperties(properties: Options.Publish, event: WireEvent) {
   return properties.contentType === 'application/x-protobuf' && properties.deliveryMode === 2 &&
     properties.messageId === event.id && properties.type === event.name && properties.appId === event.context &&
     properties.correlationId === event.correlationId && properties.headers?.['contract-version'] === 1;
 }
-export async function consume(url: string, sub: Subscription, signal: AbortSignal) {
+export async function consume(url: string, sub: EventSubscription, signal: AbortSignal) {
+  const queue = 'ref.'+sub.consumer+(sub.decodeCommand ? '.command' : '');
+  const inFlight = new Set<Promise<void>>();
   while (!signal.aborted) {
     let connection: Awaited<ReturnType<typeof amqp.connect>> | undefined;
     try {
@@ -72,9 +76,9 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
       const abort = () => { void current.close().catch(() => {}); };
       signal.addEventListener('abort', abort, {once: true});
       await channel.prefetch(1);
-      await channel.consume('ref.'+sub.consumer, message => {
+      await channel.consume(queue, message => {
         if (!message) { void current.close().catch(() => {}); return; }
-        void (async () => {
+        const work = (async () => {
           let validating = true;
           let decoded: WireEvent | undefined;
           const incomingHeaders = message.properties.headers ?? {};
@@ -83,15 +87,25 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
           const attempt = validAttempt ? counter : 0;
           try {
             if (!validAttempt) throw new Error('Invalid retry counter');
-            const event = decode(message.content);
-            decoded = event;
-            if (event.name !== sub.event || (event.visibility === 'domain' && event.context !== sub.owner) ||
-              !validProperties(message.properties, event)) throw new Error('Invalid delivery metadata');
+            let m: Metadata, payload: object;
+            if (sub.decodeCommand) {
+              ({metadata: m, payload} = sub.decodeCommand(message.content));
+              const p = message.properties;
+              if (p.contentType !== 'application/x-protobuf' || p.deliveryMode !== 2 || p.messageId !== m.id ||
+                p.type !== sub.consumer+'.command' || p.appId !== sub.owner || p.correlationId !== m.correlation ||
+                p.headers?.['contract-version'] !== 1) throw new Error('Invalid command properties');
+            } else {
+              const event = decode(message.content);
+              decoded = event;
+              if (event.name !== sub.event || (event.visibility === 'domain' && event.context !== sub.owner) ||
+                !validProperties(message.properties, event)) throw new Error('Invalid delivery metadata');
+              payload = event.payload;
+              m = {id: derivedId(sub.consumer, event.id), target: sub.target(payload),
+                name: sub.consumer, correlation: event.correlationId, causation: event.id, input: event.payload,
+                consumer: sub.consumer, sourceId: event.id, sourceHash: createHash('sha256').update(message.content).digest('hex')};
+            }
             validating = false;
-            const m: Metadata = {id: derivedId(sub.consumer, event.id), target: sub.target(event.payload),
-              name: sub.consumer, correlation: event.correlationId, causation: event.id, input: event.payload,
-              consumer: sub.consumer, sourceId: event.id, sourceHash: createHash('sha256').update(message.content).digest('hex')};
-            const outcome = await sub.handle(m, event.payload);
+            const outcome = await sub.handle(m, payload);
             if (outcome.rejection) throw new Rejection(outcome.rejection.code, outcome.rejection.message);
           } catch (error) {
             const headers = {...message.properties.headers};
@@ -99,16 +113,18 @@ export async function consume(url: string, sub: Subscription, signal: AbortSigna
             const suffix = validating || error instanceof Rejection || attempt >= 3 ? '.dead' : '.retry';
             headers['ref-attempt'] = {'!': 'int32', value: attempt + 1};
             headers['ref-failure'] = errorClass(error);
-            await confirmed(channel, 'ref.'+sub.owner+'.delivery', 'ref.'+sub.consumer+suffix, message.content,
+            await confirmed(channel, 'ref.'+sub.owner+'.delivery', queue+suffix, message.content,
               {...message.properties, headers});
             failure(sub.owner, sub.consumer, error, decoded?.id, decoded?.correlationId, suffix === '.dead');
           }
           channel.ack(message);
         })().catch(error => { failure(sub.owner, sub.consumer+'.transfer', error); void current.close().catch(() => {}); });
+        inFlight.add(work);
+        void work.finally(() => inFlight.delete(work));
       }, {noAck: false});
       await closed;
       signal.removeEventListener('abort', abort);
     } catch (error) { failure(sub.owner, sub.consumer+'.reconnect', error); await pause(signal, 1000); }
-    finally { await connection?.close().catch(() => {}); }
+    finally { await Promise.allSettled(inFlight); await connection?.close().catch(() => {}); }
   }
 }

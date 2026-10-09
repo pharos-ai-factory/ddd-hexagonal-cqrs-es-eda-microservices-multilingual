@@ -2,7 +2,7 @@ import {AsyncLocalStorage} from 'node:async_hooks';
 import amqp from 'amqplib';
 import type {PoolClient} from 'pg';
 import type {Outcome} from '../foundation/application.js';
-import type {Database} from './postgres.js';
+import type {PostgresContextDatabase} from './postgres.js';
 import {newId} from '../foundation/identity.js';
 import {confirmed} from './broker.js';
 import {failure} from './diagnostics.js';
@@ -25,7 +25,7 @@ export async function commitOutcome(client: PoolClient, outcome: Outcome): Promi
   return outcome;
 }
 
-export async function claimReply(db: Database) {
+export async function claimReply(db: PostgresContextDatabase) {
   const token = newId();
   const {rows: [row]} = await db.pool.query<{id: string; body: Buffer; generation: number; expired: boolean}>(`WITH candidate AS (
     SELECT event_id FROM cafe.command_reply_dispatches WHERE completed_at IS NULL AND available_at<=clock_timestamp()
@@ -37,7 +37,7 @@ export async function claimReply(db: Database) {
     FROM claimed c JOIN cafe.command_replies o ON o.id=c.event_id`, [token]);
   return row ? {...row, token} : undefined;
 }
-export async function replyRelay(db: Database, url: string, signal: AbortSignal) {
+export async function replyRelay(db: PostgresContextDatabase, url: string, signal: AbortSignal) {
   while (!signal.aborted) {
     let connection: Awaited<ReturnType<typeof amqp.connect>> | undefined;
     try {

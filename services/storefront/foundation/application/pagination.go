@@ -7,6 +7,8 @@ type PageRequest struct {
 	Limit int
 	After string
 }
+
+// Page contains a bounded set of restored snapshots and a continuation identity.
 type Page[S any] struct {
 	Items  []Loaded[S]
 	NextID string

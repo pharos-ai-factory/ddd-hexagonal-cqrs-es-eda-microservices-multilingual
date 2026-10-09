@@ -18,6 +18,7 @@ import (
 
 const MaxRequestBytes = 1024 * 1024
 
+// Config contains the settings and injected ports for this HTTP boundary.
 type Config struct {
 	UpstreamURL, UpstreamKey, SessionKey string
 	PublisherKeys                        map[string]string

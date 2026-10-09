@@ -22,7 +22,7 @@ func TestPriceCommandRequiresAnExplicitNonNullAmount(t *testing.T) {
 						Name: "Coffee", Minor: 350, Currency: "EUR"}}},
 			}}
 			mux := http.NewServeMux()
-			menuhttp.Mount(mux, menuhttp.Handlers{ChangePrice: app.ChangePriceHandler{Editions: &editions}})
+			menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{ChangePrice: app.ChangePriceCommandHandler{Editions: &editions}})
 			request := httptest.NewRequest("POST", "/v1/menu/editions/"+s.Edition+"/prices", strings.NewReader(body))
 			request.Header.Set("Idempotency-Key", s.Customer)
 			request.Header.Set("If-Match", "1")
@@ -52,7 +52,7 @@ func TestAddOfferRequiresAnExplicitNonNullAmount(t *testing.T) {
 				s.Drink + "/1": {DrinkID: s.Drink, Name: "Coffee", Revision: 1},
 			}}
 			mux := http.NewServeMux()
-			menuhttp.Mount(mux, menuhttp.Handlers{AddOffer: app.AddOfferHandler{Editions: &editions, Drinks: &drinks}})
+			menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{AddOffer: app.AddOfferCommandHandler{Editions: &editions, Drinks: &drinks}})
 			body := `{"code":"C1","drinkId":"` + s.Drink + `","drinkRevision":1` + amount + `}`
 			request := httptest.NewRequest("POST", "/v1/menu/editions/"+s.Edition+"/offers", strings.NewReader(body))
 			request.Header.Set("Idempotency-Key", s.Customer)

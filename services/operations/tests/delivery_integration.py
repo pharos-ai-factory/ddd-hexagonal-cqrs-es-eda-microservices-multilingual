@@ -9,7 +9,7 @@ import time
 import pika
 import pytest
 from operations.adaptors.codec import drinks_ready, order_placed
-from operations.adaptors.delivery import Subscription, binary, broker_connection, consume
+from operations.adaptors.delivery import EventSubscription, binary, broker_connection, consume
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.foundation.identity import derived_id, new_id
 from operations.contracts.events import DrinksReady, OrderPlaced
@@ -49,7 +49,7 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
             handled.set()
             return {"aggregateId": metadata.target, "version": 1, "status": "ready"}
 
-        subscription = Subscription[DrinksReady]("collection", consumer, valid.name, drinks_ready,
+        subscription = EventSubscription[DrinksReady]("collection", consumer, valid.name, drinks_ready,
                                                 lambda event: event["orderId"], handle)
         worker = Thread(target=partial(consume, os.environ["COLLECTION_BROKER_URL"], subscription, stop), daemon=True)
         worker.start()
@@ -96,7 +96,7 @@ def test_typed_order_delivery_preserves_original_receipt_material() -> None:
         received.set_result((metadata, payload))
         return {"aggregateId": metadata.target, "version": 1, "status": "queued"}
 
-    subscription = Subscription[OrderPlaced]("preparation", consumer, event.name, order_placed,
+    subscription = EventSubscription[OrderPlaced]("preparation", consumer, event.name, order_placed,
         lambda payload: derived_id("ticket", payload["orderId"]), handle)
     worker = Thread(target=partial(consume, os.environ["PREPARATION_BROKER_URL"], subscription, stop), daemon=True)
     with broker_connection(os.environ["BROKER_ADMIN_URL"]) as connection:

@@ -19,14 +19,15 @@ var schemaSQL []byte
 //go:embed migrations/0002_realtime.sql
 var realtimeSchemaSQL []byte
 
-type Database struct {
+// ContextDatabase owns a context PostgreSQL pool and its verified persistence codecs.
+type ContextDatabase struct {
 	pool     *pgxpool.Pool
 	owner    string
 	encode   a.Encoder
 	realtime a.RealtimeEncoder
 }
 
-func Open(ctx context.Context, url, owner string, encode a.Encoder) (*Database, error) {
+func Open(ctx context.Context, url, owner string, encode a.Encoder) (*ContextDatabase, error) {
 	config, err := pgxpool.ParseConfig(url)
 	if err != nil {
 		return nil, err
@@ -57,10 +58,10 @@ func Open(ctx context.Context, url, owner string, encode a.Encoder) (*Database, 
 		pool.Close()
 		return nil, err
 	}
-	return &Database{pool: pool, owner: owner, encode: encode}, nil
+	return &ContextDatabase{pool: pool, owner: owner, encode: encode}, nil
 }
-func (db *Database) Close() { db.pool.Close() }
-func (db *Database) EnableRealtime(ctx context.Context, encoder a.RealtimeEncoder) error {
+func (db *ContextDatabase) Close() { db.pool.Close() }
+func (db *ContextDatabase) EnableRealtime(ctx context.Context, encoder a.RealtimeEncoder) error {
 	var checksum string
 	if err := db.pool.QueryRow(ctx, `SELECT checksum FROM cafe.schema_migrations WHERE version=2`).Scan(&checksum); err != nil || checksum != fmt.Sprintf("%x", sha256.Sum256(realtimeSchemaSQL)) {
 		return fmt.Errorf("realtime schema is not at version 2")

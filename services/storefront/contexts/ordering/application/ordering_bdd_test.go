@@ -14,22 +14,22 @@ import (
 )
 
 type orderWorld struct {
-	orders s.CommandProbe[d.State]
+	orders s.CommandProbe[d.OrderState]
 	menus  s.ProjectionProbe[model.MenuPublished]
 }
 
 func (w *orderWorld) add(id, edition, code string, quantity int) error {
-	_, err := (app.AddLineHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
-		app.AddLine{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
+	_, err := (app.AddLineCommandHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
+		app.AddLineCommand{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) quantity(quantity int) error {
-	_, err := (app.ChangeQuantityHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order),
-		app.ChangeQuantity{LineID: s.FirstLine, Quantity: quantity})
+	_, err := (app.ChangeQuantityCommandHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order),
+		app.ChangeQuantityCommand{LineID: s.FirstLine, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) place() error {
-	_, err := (app.PlaceOrderHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order), struct{}{})
+	_, err := (app.PlaceOrderCommandHandler{Orders: &w.orders}).Execute(context.Background(), s.Metadata(s.Order), struct{}{})
 	return err
 }
 func TestOrderingFeatures(t *testing.T) {
@@ -46,8 +46,8 @@ func TestOrderingFeatures(t *testing.T) {
 					{Code: "C1", DrinkID: s.Drink, DrinkRevision: 1, Name: name, Minor: minor, Currency: "EUR"}}}
 			})
 			sc.Step(`^a customer has a draft order for that edition$`, func() error {
-				_, err := (app.CreateOrderHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
-					app.CreateOrder{CustomerID: s.Customer, EditionID: s.Edition})
+				_, err := (app.CreateOrderCommandHandler{Orders: &w.orders, Menus: &w.menus}).Execute(context.Background(), s.Metadata(s.Order),
+					app.CreateOrderCommand{CustomerID: s.Customer, EditionID: s.Edition})
 				if err != nil {
 					return err
 				}

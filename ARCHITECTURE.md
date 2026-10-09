@@ -202,3 +202,21 @@ the HTTP adaptor. Verification rejects generated drift and incompatible feature
 usage. Command replies use owner-local immutable storage and fenced confirmed
 publishers; their thirty-second lifetime bounds retries. Exact reply bytes commit
 atomically with the receiving outcome. See decision 0009 and the contract guides.
+
+## Explicit composition and durable commands
+
+[Decision 0010](docs/decisions/0010-dependency-injection-frameworks.md) records the
+framework comparison and selection: Go Fx, Python Dependency Injector and
+TypeScript Awilix. Frameworks and concrete resource bindings live in `apps/`.
+Application handlers receive plain ports. Context containers own separate pools
+and credentials; workers stop before resource disposal.
+
+[Decision 0011](docs/decisions/0011-durable-commands-before-aggregate-mutations.md)
+requires named commands for aggregate business transitions. Event handlers map
+facts to durable owner commands. Their receiving transaction records exact private
+Protobuf command bytes and a dispatch intent; RabbitMQ command consumers own
+execution, retries and replay. Projection handlers retain their read-model role.
+`CommandHandler`, `IntegrationEventHandler`, `DomainEventHandler` and
+`ProjectionHandler` suffixes identify application responsibilities. Domain roots
+retain their business names. Transport and persistence classes identify their
+concrete adaptor role; Go package-qualified types supply that infrastructure scope.

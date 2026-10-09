@@ -1,6 +1,7 @@
 import {CorruptState, DomainError, identifier, Rejection} from '../../../foundation/domain.js';
 import type {Grant} from './account.js';
 
+/** Identifies refusal to redeem a reward outside its valid lifecycle. */
 export class RewardUnavailableDomainError extends DomainError {
   constructor() { super('reward_unavailable', 'The reward is no longer available'); }
 }
@@ -9,6 +10,7 @@ export type RewardState = Readonly<{
   id: string; grantId: string; customerId: string; benefit: string;
   status: 'issued' | 'redeemed' | 'expired'; expiresAt: string; redeemedFor?: string;
 }>;
+/** Owns issuance, expiry and redemption of one earned reward. */
 export class Reward {
   #state: RewardState;
   constructor(state: RewardState) {

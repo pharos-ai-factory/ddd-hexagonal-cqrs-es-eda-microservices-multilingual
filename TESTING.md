@@ -131,3 +131,13 @@ cover required annotations and explicit zero input values. PostgreSQL integratio
 checks cover command reply encoding rollback, recovered receipt outcomes and
 immutable exact response bytes. Every owner language abandons and reclaims a
 real reply lease before reply expiry; the Go lane also fences stale publishers.
+
+Command-boundary regression checks use TypeScript compiler symbols, Go AST/type
+information and Python AST capability/alias analysis. Negative fixtures exercise
+mutation from event handlers and captured methods. DI graph tests resolve every
+context provider or validate the Fx graph without infrastructure. Private command
+codec tests preserve source receipt material with fixed values. The infrastructure
+lane additionally verifies receiving-record rollback, immutable exact bytes, fenced
+command dispatch recovery, bounded command retries and replay without a second
+aggregate transition. Run `pnpm verify` and `pnpm test:integration` together for a
+complete hand-off; static analysis assumes the supported typed coding conventions.

@@ -14,6 +14,7 @@ type DeliveryPort interface {
 	Deliver(context.Context, Delivery) (string, error)
 }
 
+// Delivery is an idempotent notification request to an external provider port.
 type Delivery struct {
 	ID        string `json:"id"`
 	Recipient string `json:"recipient"`

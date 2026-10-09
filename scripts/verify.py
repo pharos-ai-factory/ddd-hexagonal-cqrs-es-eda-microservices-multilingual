@@ -16,6 +16,8 @@ def run(*args, cwd=ROOT, env=None):
 
 run(sys.executable, 'scripts/check_contracts.py')
 run(sys.executable, 'scripts/check_architecture.py')
+run('node', 'scripts/check_command_boundaries.mjs')
+run('node', '--test', 'scripts/check_command_boundaries.test.mjs')
 run('node', 'scripts/check_specifications.mjs')
 run('node', '--test', 'scripts/check_specifications.test.mjs')
 run(sys.executable, '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_*.py')

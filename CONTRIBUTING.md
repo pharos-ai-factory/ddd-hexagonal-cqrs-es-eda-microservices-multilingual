@@ -109,3 +109,14 @@ They are compiler-owned and explicitly classified. Go/Python and generated
 TypeScript interfaces carry generated-file headers; descriptor JSON is identified
 by its `generated/` directory. A domain service receives only its own request
 packages. Generate all service clients with `pnpm generate:contracts`.
+
+For a new event-driven aggregate change, add the owner command DTO and
+`CommandHandler`, map the fact in an `IntegrationEventHandler` or
+`DomainEventHandler`, and register its durable subscription in the context
+composition. Keep the stable subscription identifier in its typed definition and
+`adaptors/messaging/subscriptions.json`. Add the private Protobuf command under
+that same owner, regenerate with `pnpm generate:contracts`, and exercise duplicate
+acceptance plus command execution. Resolve all new providers in the composition
+test. `pnpm verify` rejects aggregate mutation outside command execution and DI
+imports outside composition. Published class-name changes must never silently
+rename stored command identities, queues or wire fields.

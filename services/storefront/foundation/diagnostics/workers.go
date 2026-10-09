@@ -8,12 +8,15 @@ import (
 	"time"
 )
 
+// Failure records redacted operational failure evidence.
 type Failure struct {
 	At          time.Time `json:"at"`
 	Class       string    `json:"class"`
 	Event       string    `json:"event,omitempty"`
 	Correlation string    `json:"correlation,omitempty"`
 }
+
+// Worker records process-local delivery counters and last failure.
 type Worker struct {
 	Owner               string  `json:"owner"`
 	Name                string  `json:"name"`

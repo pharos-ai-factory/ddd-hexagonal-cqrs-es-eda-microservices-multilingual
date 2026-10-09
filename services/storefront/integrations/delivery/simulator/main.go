@@ -20,6 +20,7 @@ import (
 	"time"
 )
 
+// Accepted records the simulator effect for a stable provider idempotency key.
 type Accepted struct {
 	Receipt     string     `json:"receipt"`
 	Fingerprint string     `json:"fingerprint"`

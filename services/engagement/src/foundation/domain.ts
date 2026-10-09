@@ -1,11 +1,14 @@
+/** Represents an expected business refusal whose stable code and message can be recorded. */
 export class Rejection extends Error {
   constructor(readonly code: string, message: string) { super(message); }
   outcome() { return {code: this.code, message: this.message}; }
 }
 
 // Contexts define named subclasses for rules callers need to identify.
+/** Base type for named aggregate invariant rejections. */
 export abstract class DomainError extends Rejection {}
 
+/** Signals invalid authoritative state so the receiving transaction rolls back. */
 export class CorruptState extends Error {
   override name = 'CorruptState';
 }

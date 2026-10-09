@@ -1,5 +1,6 @@
 import type {DeliveryPort} from '../foundation/application.js';
-export class HttpDelivery implements DeliveryPort {
+/** Calls the delivery provider using the notification identity as its idempotency key. */
+export class HttpNotificationDelivery implements DeliveryPort {
   constructor(private url: string, private key: string) {}
   async deliver(message: {id: string; recipient: string; subject: string; body: string}): Promise<string> {
     const {id, recipient, subject, body} = message;

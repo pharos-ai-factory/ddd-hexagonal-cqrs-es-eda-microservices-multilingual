@@ -49,10 +49,10 @@ func handlers(operation string) http.Handler {
 	drink := menu.DrinkState{ID: id, Name: "Coffee", Revision: 1}
 	offer := menu.OfferState{Code: "C1", DrinkID: other, DrinkRevision: 1, Name: "Coffee", Minor: 0, Currency: "EUR"}
 	edition := menu.EditionState{ID: id, Currency: "EUR", Status: "draft", Offers: []menu.OfferState{offer}}
-	state := order.State{ID: id, CustomerID: other, EditionID: other, Currency: "EUR", Status: "draft", Lines: []order.LineState{{ID: other, Selection: order.Selection{OfferCode: "C1", Name: "Coffee", Minor: 0}, Quantity: 1}}}
+	state := order.OrderState{ID: id, CustomerID: other, EditionID: other, Currency: "EUR", Status: "draft", Lines: []order.LineState{{ID: other, Selection: order.Selection{OfferCode: "C1", Name: "Coffee", Minor: 0}, Quantity: 1}}}
 	drinks := &probe.CommandProbe[menu.DrinkState]{Loaded: a.Loaded[menu.DrinkState]{Exists: true, Version: 1, State: drink}}
 	editions := &probe.CommandProbe[menu.EditionState]{Loaded: a.Loaded[menu.EditionState]{Exists: true, Version: 1, State: edition}}
-	orders := &probe.CommandProbe[order.State]{Loaded: a.Loaded[order.State]{Exists: true, Version: 1, State: state}}
+	orders := &probe.CommandProbe[order.OrderState]{Loaded: a.Loaded[order.OrderState]{Exists: true, Version: 1, State: state}}
 	switch operation {
 	case "createDrink":
 		drinks.Loaded.Exists = false
@@ -68,15 +68,15 @@ func handlers(operation string) http.Handler {
 	published := &probe.ProjectionProbe[menuapp.DrinkPublished]{Values: map[string]menuapp.DrinkPublished{other + "/1": {DrinkID: other, Name: "Coffee", Revision: 1}}}
 	menus := &probe.ProjectionProbe[model.MenuPublished]{Values: map[string]model.MenuPublished{other: {EditionID: other, Currency: "EUR", Offers: []model.Offer{{Code: "C1", DrinkID: other, DrinkRevision: 1, Name: "Coffee", Minor: 0, Currency: "EUR"}}}}}
 	mux := contract.NewMux("storefront", nil)
-	menuhttp.Mount(mux, menuhttp.Handlers{
+	menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{
 		DrinkQueries:   menuapp.DrinkQueries{Read: queries[menu.DrinkState]{drink}},
 		EditionQueries: menuapp.EditionQueries{Read: queries[menu.EditionState]{edition}},
-		CreateDrink:    menuapp.CreateDrinkHandler{Drinks: drinks}, ReviseDrink: menuapp.ReviseDrinkHandler{Drinks: drinks}, PublishDrink: menuapp.PublishDrinkHandler{Drinks: drinks},
-		CreateEdition: menuapp.CreateEditionHandler{Editions: editions}, AddOffer: menuapp.AddOfferHandler{Editions: editions, Drinks: published}, ChangePrice: menuapp.ChangePriceHandler{Editions: editions}, PublishEdition: menuapp.PublishEditionHandler{Editions: editions},
+		CreateDrink:    menuapp.CreateDrinkCommandHandler{Drinks: drinks}, ReviseDrink: menuapp.ReviseDrinkCommandHandler{Drinks: drinks}, PublishDrink: menuapp.PublishDrinkCommandHandler{Drinks: drinks},
+		CreateEdition: menuapp.CreateEditionCommandHandler{Editions: editions}, AddOffer: menuapp.AddOfferCommandHandler{Editions: editions, Drinks: published}, ChangePrice: menuapp.ChangePriceCommandHandler{Editions: editions}, PublishEdition: menuapp.PublishEditionCommandHandler{Editions: editions},
 	})
-	orderhttp.Mount(mux, orderhttp.Handlers{
-		OrderingQueries: orderapp.OrderingQueries{Read: queries[order.State]{state}},
-		CreateOrder:     orderapp.CreateOrderHandler{Orders: orders, Menus: menus}, AddLine: orderapp.AddLineHandler{Orders: orders, Menus: menus}, ChangeQuantity: orderapp.ChangeQuantityHandler{Orders: orders}, PlaceOrder: orderapp.PlaceOrderHandler{Orders: orders},
+	orderhttp.Mount(mux, orderhttp.OrderingHTTPHandlers{
+		OrderingQueries: orderapp.OrderingQueries{Read: queries[order.OrderState]{state}},
+		CreateOrder:     orderapp.CreateOrderCommandHandler{Orders: orders, Menus: menus}, AddLine: orderapp.AddLineCommandHandler{Orders: orders, Menus: menus}, ChangeQuantity: orderapp.ChangeQuantityCommandHandler{Orders: orders}, PlaceOrder: orderapp.PlaceOrderCommandHandler{Orders: orders},
 	})
 	// Composition-owned technical handlers have their own conformance tests.
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { web.JSON(w, 200, map[string]string{"status": "ok"}) })
