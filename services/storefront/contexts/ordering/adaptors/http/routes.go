@@ -1,7 +1,7 @@
 package http
 
 import (
-	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/queries"
 	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/http"
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 // OrderingHTTPHandlers groups the explicitly typed handlers mounted by this transport adaptor.
 type OrderingHTTPHandlers struct {
-	OrderingQueries app.OrderingQueries
+	OrderingQueries endpoints.OrderQueryEndpoints
 	CreateOrder     orderingcommands.CreateOrderCommandHandler
 	AddLine         orderingcommands.AddLineCommandHandler
 	ChangeQuantity  orderingcommands.ChangeQuantityCommandHandler

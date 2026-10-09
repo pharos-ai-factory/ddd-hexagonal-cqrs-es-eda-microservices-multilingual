@@ -4,8 +4,8 @@ from mypy import api
 
 IMPORTS = """\
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
-from operations.contexts.collection.domain import PickupSnapshot
-from operations.contexts.preparation.domain import TicketSnapshot
+from operations.contexts.collection.domain.pickup import PickupSnapshot
+from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.contracts.events import DrinksReady
 from operations.foundation.application import AggregateCommandPort, Metadata
 

@@ -8,6 +8,3 @@ import (
 func OrderCommands(db *store.ContextDatabase) *store.AggregateCommandStore[d.OrderState] {
 	return store.Command[d.OrderState](db, "order")
 }
-func OrderQueries(db *store.ContextDatabase) *store.AggregateQueries[d.OrderState] {
-	return store.Query[d.OrderState](db, "order")
-}

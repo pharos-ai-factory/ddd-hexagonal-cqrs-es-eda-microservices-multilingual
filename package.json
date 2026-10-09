@@ -43,6 +43,7 @@
     "workflow:inspect": "python3 scripts/inspect_workflow.py",
     "scaffold": "python3 scripts/scaffold.py",
     "format": "python3 scripts/format.py",
-    "format:check": "python3 scripts/format.py --check"
+    "format:check": "python3 scripts/format.py --check",
+    "context": "python3 scripts/context_catalogue.py"
   }
 }

@@ -4,9 +4,9 @@ import pytest
 from pytest_bdd import given, when, then, parsers, scenarios
 
 from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand, OpenPickupCommandHandler
-from operations.contexts.collection.application.event_handlers import DrinksReadyIntegrationEventHandler
+from operations.contexts.collection.application.event_handlers.drinks_ready import DrinksReadyIntegrationEventHandler
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
-from operations.contexts.collection.domain import PickupSnapshot
+from operations.contexts.collection.domain.pickup import PickupSnapshot
 from operations.contracts.events import DrinksReady
 from operations.foundation.application import Metadata, Outcome
 from operations.foundation.identity import derived_id

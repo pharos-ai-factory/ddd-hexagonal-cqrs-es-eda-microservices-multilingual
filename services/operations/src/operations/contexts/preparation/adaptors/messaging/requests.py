@@ -1,7 +1,7 @@
 """Explicit mapping between preparation wire contracts and application types."""
 from google.protobuf.message import Message
 from operations.foundation.application import Loaded
-from operations.contexts.preparation.domain import TicketSnapshot
+from operations.contexts.preparation.application.read_models.ticket import TicketView
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_replies_pb2 import Ticket, LoadedTicket, Tickets
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_requests_pb2 import Reply
 from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommand
@@ -21,12 +21,12 @@ def complete(value: Message) -> CompletePreparationCommand:
     return CompletePreparationCommand()
 
 
-def item(loaded: Loaded[TicketSnapshot]) -> LoadedTicket:
+def item(loaded: Loaded[TicketView]) -> LoadedTicket:
     s = loaded["state"]
     return LoadedTicket(exists=loaded["exists"], version=loaded["version"], state=Ticket(id=s["id"], order_id=s["orderId"], customer_id=s["customerId"], instructions=s["instructions"], status=s["status"]))
 
 
-def listing(items: list[Loaded[TicketSnapshot]], paged: bool, next_id: str | None) -> Reply:
+def listing(items: list[Loaded[TicketView]], paged: bool, next_id: str | None) -> Reply:
     result = Tickets(items=[item(value) for value in items], paged=paged)
     if next_id is not None:
         result.next_id = next_id

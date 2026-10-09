@@ -93,6 +93,19 @@ starting if necessary.
 See [the developer workflow](docs/developer-workflow.md) for focused tests, automatic
 service rebuilds, debugger profiles, scaffolding and workflow inspection.
 
+## Find a business capability
+
+Run `pnpm context` to list the owners or `pnpm context ordering` for its live
+use-case index and focused test command. Each context README maps its commands,
+queries, aggregate behaviour, adaptors, contracts and tests:
+
+- [Menu](services/storefront/contexts/menu/README.md) and
+  [Ordering](services/storefront/contexts/ordering/README.md).
+- [Preparation](services/operations/src/operations/contexts/preparation/README.md) and
+  [Collection](services/operations/src/operations/contexts/collection/README.md).
+- [Loyalty](services/engagement/src/contexts/loyalty/README.md) and
+  [Communication](services/engagement/src/contexts/communication/README.md).
+
 ## Follow the story
 
 ```mermaid
@@ -350,7 +363,9 @@ refine it when new requirements reveal gaps.
 
 ## Read the reference
 
-Start with [the walkthrough](docs/walkthrough.md), then:
+Start with [the walkthrough](docs/walkthrough.md), then use
+[the decision index](docs/decisions/README.md) and
+[the developer workflow](docs/developer-workflow.md) to apply the current rules:
 
 - [Architecture](ARCHITECTURE.md), [tactical DDD](DDD.md) and
   [browser subscriptions](CLIENT-SUBSCRIPTIONS.md).

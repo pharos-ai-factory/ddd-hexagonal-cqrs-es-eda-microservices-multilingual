@@ -1,5 +1,54 @@
 # Executed verification
 
+## Working guidance, 9 October 2026
+
+Agent and contributor guidance now applies decisions 0010–0014 consistently.
+The decision index identifies later refinements; extension recipes cover named
+commands/queries, durable subscriptions, DI, contract generation and browser tasks.
+Transaction diagrams and query terminology match the implemented boundaries.
+The documentation follow-up adds no runtime behaviour.
+
+`pnpm verify` passed all five applications, generated/historical contract checks,
+architecture and negative fixtures, Go race/vet, strict Python/TypeScript checks
+and all 51 fast Gherkin scenarios. `pnpm test:integration` passed persistence and
+broker recovery, all 31 live OpenAPI operations, all 12 infrastructure scenarios,
+both browser scenarios and the separate in-flight session-revocation fixture.
+No required environment-dependent checks were skipped; disposable resources were
+removed. Remote CI and load tests were not run.
+
+All 229 local link targets across the 24 changed Markdown files resolve.
+`git diff --check` passed. Logs: `.local/docs-guidance-verify.log` and
+`.local/docs-guidance-integration.log`.
+
+## Context navigation and query layout, 9 October 2026
+
+Decision 0014 adds 16 named query/handler pairs, application read models and
+reader ports across all six contexts. Restoration and private command decoding
+live in owning adaptors. Domain modules and event reactions have business-named
+files. Browser features follow user tasks; recovery infrastructure remains shared.
+The context catalogue, READMEs and role-aware scaffolds provide checked navigation.
+
+`pnpm verify` passed generated/historical contract checks, architecture across
+79 Go packages, compiler/AST negative fixtures, both Go race/vet lanes, strict
+Python/TypeScript checks and all 51 fast Gherkin scenarios. Read-boundary tests
+cover absent resources, revisions, continuation identities, corrupt snapshots,
+view isolation and storage failures. Aggregate file moves preserve their original
+source bytes. Public schemas and durable identities are unchanged.
+
+`pnpm test:integration` passed all persistence/broker lanes, all 31 live OpenAPI
+operations, all 12 infrastructure scenarios, provider/request recovery, readiness,
+workflow inspection, both browser scenarios and in-flight session revocation.
+No required environment-dependent checks were skipped. Disposable containers,
+networks and volumes were removed.
+
+Focused Preparation and Collection lanes passed (12 and 17 tests). Query and
+subscription scaffolds were written and inspected for all three languages;
+scaffold regression tests and catalogue checks passed after final tooling edits.
+Remote CI and load tests were not run.
+
+Logs: `.local/screaming-final-verify.log`, `.local/screaming-final-integration.log`
+and `.local/screaming-final-architecture.log`.
+
 ## Command module layout, 9 October 2026
 
 Decision 0013 organises all 21 command/handler pairs under their six owning

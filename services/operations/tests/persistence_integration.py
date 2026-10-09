@@ -9,8 +9,8 @@ from operations.foundation.application import Change, Metadata, Outcome, Publica
 from operations.foundation.domain import record
 from operations.foundation.identity import new_id
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
-from operations.contexts.collection.domain import Pickup, PickupSnapshot
-from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
+from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
+from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketSnapshot
 
 
 def present(row: Row | None) -> Row:

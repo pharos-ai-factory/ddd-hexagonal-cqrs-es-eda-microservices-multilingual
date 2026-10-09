@@ -3,6 +3,11 @@ package httpcontract_test
 import (
 	"context"
 	"encoding/json"
+	menuendpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/queries"
+	menuqueries "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/queries"
+	menuviews "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/readmodels"
+	orderendpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/queries"
+	orderviews "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/readmodels"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,8 +18,8 @@ import (
 	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	orderhttp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/http"
-	orderapp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
 	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
+	orderapp "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/queries"
 	order "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -52,6 +57,10 @@ func handlers(operation string) http.Handler {
 	offer := menu.OfferState{Code: "C1", DrinkID: other, DrinkRevision: 1, Name: "Coffee", Minor: 0, Currency: "EUR"}
 	edition := menu.EditionState{ID: id, Currency: "EUR", Status: "draft", Offers: []menu.OfferState{offer}}
 	state := order.OrderState{ID: id, CustomerID: other, EditionID: other, Currency: "EUR", Status: "draft", Lines: []order.LineState{{ID: other, Selection: order.Selection{OfferCode: "C1", Name: "Coffee", Minor: 0}, Quantity: 1}}}
+	drinkRead := queries[menuviews.DrinkView]{menuviews.DrinkView{ID: id, Name: "Coffee", Revision: 1}}
+	editionRead := queries[menuviews.EditionView]{menuviews.EditionView{ID: id, Currency: "EUR", Status: "draft", Offers: []menuviews.OfferView{{Code: "C1", DrinkID: other, DrinkRevision: 1, Name: "Coffee", Minor: 0, Currency: "EUR"}}}}
+	orderRead := queries[orderviews.OrderView]{orderviews.OrderView{ID: id, CustomerID: other, EditionID: other, Currency: "EUR", Status: "draft", Lines: []orderviews.LineView{{ID: other, Selection: orderviews.SelectionView{OfferCode: "C1", Name: "Coffee", Minor: 0}, Quantity: 1}}}}
+
 	drinks := &probe.CommandProbe[menu.DrinkState]{Loaded: a.Loaded[menu.DrinkState]{Exists: true, Version: 1, State: drink}}
 	editions := &probe.CommandProbe[menu.EditionState]{Loaded: a.Loaded[menu.EditionState]{Exists: true, Version: 1, State: edition}}
 	orders := &probe.CommandProbe[order.OrderState]{Loaded: a.Loaded[order.OrderState]{Exists: true, Version: 1, State: state}}
@@ -71,13 +80,13 @@ func handlers(operation string) http.Handler {
 	menus := &probe.ProjectionProbe[model.MenuPublished]{Values: map[string]model.MenuPublished{other: {EditionID: other, Currency: "EUR", Offers: []model.Offer{{Code: "C1", DrinkID: other, DrinkRevision: 1, Name: "Coffee", Minor: 0, Currency: "EUR"}}}}}
 	mux := contract.NewMux("storefront", nil)
 	menuhttp.Mount(mux, menuhttp.MenuHTTPHandlers{
-		DrinkQueries:   menuapp.DrinkQueries{Read: queries[menu.DrinkState]{drink}},
-		EditionQueries: menuapp.EditionQueries{Read: queries[menu.EditionState]{edition}},
+		DrinkQueries:   menuendpoints.DrinkQueryEndpoints{GetHandler: menuqueries.GetDrinkQueryHandler{Read: drinkRead}, ListHandler: menuqueries.ListDrinksQueryHandler{Read: drinkRead}},
+		EditionQueries: menuendpoints.EditionQueryEndpoints{GetHandler: menuqueries.GetEditionQueryHandler{Read: editionRead}, ListHandler: menuqueries.ListEditionsQueryHandler{Read: editionRead}},
 		CreateDrink:    menucommands.CreateDrinkCommandHandler{Drinks: drinks}, ReviseDrink: menucommands.ReviseDrinkCommandHandler{Drinks: drinks}, PublishDrink: menucommands.PublishDrinkCommandHandler{Drinks: drinks},
 		CreateEdition: menucommands.CreateEditionCommandHandler{Editions: editions}, AddOffer: menucommands.AddOfferCommandHandler{Editions: editions, Drinks: published}, ChangePrice: menucommands.ChangePriceCommandHandler{Editions: editions}, PublishEdition: menucommands.PublishEditionCommandHandler{Editions: editions},
 	})
 	orderhttp.Mount(mux, orderhttp.OrderingHTTPHandlers{
-		OrderingQueries: orderapp.OrderingQueries{Read: queries[order.OrderState]{state}},
+		OrderingQueries: orderendpoints.OrderQueryEndpoints{GetHandler: orderapp.GetOrderQueryHandler{Read: orderRead}, ListHandler: orderapp.ListOrdersQueryHandler{Read: orderRead}},
 		CreateOrder:     orderingcommands.CreateOrderCommandHandler{Orders: orders, Menus: menus}, AddLine: orderingcommands.AddLineCommandHandler{Orders: orders, Menus: menus}, ChangeQuantity: orderingcommands.ChangeQuantityCommandHandler{Orders: orders}, PlaceOrder: orderingcommands.PlaceOrderCommandHandler{Orders: orders},
 	})
 	// Composition-owned technical handlers have their own conformance tests.

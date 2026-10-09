@@ -6,7 +6,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresContextDatabase, PostgresAggregateQueries, Row
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
-from operations.contexts.collection.domain import Pickup, PickupSnapshot
+from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 from operations.foundation.application import Change, Metadata
 from operations.foundation.domain import CorruptState
 from operations.foundation.identity import new_id

@@ -6,8 +6,10 @@ Commands and recovery queries go through the separate Go API.
 
 ## 1. Start with the invariant
 
-Read `services/storefront/contexts/menu/domain/edition.go` and its test before opening the database
-adaptor.
+Run `pnpm context menu`, then read
+[MenuEdition](../services/storefront/contexts/menu/domain/menu_edition.go) and
+[its tests](../services/storefront/contexts/menu/domain/menu_edition_test.go) before
+opening the database adaptor.
 
 A Drink owns its name and publication revisions. A MenuEdition owns the complete
 set of offers it will publish. Each offer freezes a published Drink revision and
@@ -50,24 +52,42 @@ Repeat PlaceOrder with the exact command key and original expected version. The
 stored outcome returns. Use a new key with that stale version and the command is
 rejected. The demo performs the first of these checks.
 
-## 3. Follow the event across the process boundary
+## 3. Follow a query back to its read model
+
+Use `GET /api/v1/ordering/orders/{id}` and run `pnpm context ordering`.
+The API sends the owner query through RabbitMQ. Ordering's messaging/query
+adaptors construct `GetOrderQuery`; the
+[query handler](../services/storefront/contexts/ordering/application/queries/get_order.go)
+reads through `OrderReader` and returns an application-owned `OrderView`.
+
+The [PostgreSQL reader](../services/storefront/contexts/ordering/adaptors/postgres/order_reader.go)
+validates the stored Order before selecting view fields. It preserves the root
+revision; a missing row remains absent. The wire reply and HTTP response map that
+view to their published shapes. The query acquires no aggregate mutation capability.
+
+Use `ListOrdersQuery` for complete or explicitly paginated reads. The browser
+traverses every page during reconciliation and applies per-root revision guards.
+An older response cannot replace a newer realtime projection.
+
+## 4. Follow the event across the process boundary
 
 The Order outbox contains one immutable `ordering.order-placed` publication.
 The relay claims its mutable dispatch row, publishes the original bytes with
 mandatory routing and waits for broker confirmation.
 
 Python Preparation consumes the event under its own credentials. Its application
-entry point is `services/operations/src/operations/contexts/preparation/application/event_handlers.py`. Its integration-event handler maps the fact into an AcceptOrder command and
+entry point is `services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py`. Its integration-event handler maps the fact into an AcceptOrder command and
 commits the receiving receipt plus exact command bytes before acknowledging the
 event. The command relay publishes those bytes to its dedicated RabbitMQ queue.
 The command consumer creates one PreparationTicket, commits its outcome/receipts,
 and then acknowledges the command.
 
-Preparation completion publishes DrinksReady. Collection opens a Pickup. The
-operator supplies its code to collect the order. OrderCollected then reaches
-Loyalty. Each arrow is a separate transaction and can be temporarily pending.
+Preparation completion publishes DrinksReady. Collection durably requests
+OpenPickup, whose command handler creates a Pickup. The operator supplies its
+code to collect the order. OrderCollected reaches Loyalty, which durably requests
+CreditCollection. Each arrow is a separate transaction and can be temporarily pending.
 
-## 4. Observe a private domain event
+## 5. Observe a private domain event
 
 Run:
 
@@ -81,13 +101,13 @@ exists. It then enables that consumer and observes Reward issuance and
 notification delivery.
 
 Both aggregates live inside Loyalty and the same Engagement service. The private
-RewardEarned message still uses the full PostgreSQL/RabbitMQ path. This is the
+RewardEarned reaction enqueues IssueReward through the full PostgreSQL/RabbitMQ path. This is the
 concrete demonstration of eventual consistency inside a bounded context.
 
 The same lane stops Operations while Storefront places its first order. The
 command succeeds, and preparation converges after Operations restarts.
 
-## 5. Explore the failure evidence
+## 6. Explore the failure evidence
 
 | Test file | Question it answers |
 | --- | --- |
@@ -113,9 +133,11 @@ pnpm events:replay loyalty.issue-reward.command
 `replayed=false` means the queue contained no message. Replay preserves the event
 identity and bytes. Do not delete receipts to make a replay appear new.
 
-## 6. Inspect without changing authority
+## 7. Inspect without changing authority
 
-Use the HTTP query routes in `contracts/shared/http_api/README.md`. The demo's `Client` in
+Start with `pnpm workflow:inspect <command-or-correlation-uuid>` to read acceptance,
+dispatch and completion evidence without consuming messages. Use the HTTP query
+routes in `contracts/shared/http_api/README.md` for business views. The demo's `Client` in
 `scripts/journey.py` loads credentials without embedding them in source.
 
 For an administrative database inspection, this command reads the Loyalty

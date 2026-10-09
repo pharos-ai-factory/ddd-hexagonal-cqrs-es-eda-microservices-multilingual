@@ -92,6 +92,8 @@ def import_violation(package, imported):
         owner, ring = path.split('/')[1:3]
         if internal and target.startswith('contexts/') and target.split('/')[1] != owner:
             return 'foreign context implementation'
+        if ring == 'application' and any(part in path.split('/') for part in ('queries', 'readmodels')) and target == f'contexts/{owner}/domain':
+            return 'query capabilities must use application read models'
         if ring in {'domain', 'application'}:
             allowed = [f'contexts/{owner}/domain', 'foundation/domain']
             if ring == 'application':
@@ -122,11 +124,16 @@ def core_violation(path, target):
     if target.startswith(('awilix', 'dependency_injector')) and 'apps' not in parts:
         return 'DI framework outside composition'
     if 'contexts' not in parts:
+        if ('adaptors' in parts and '/contexts/' in '/'+target and '/generated/' not in '/'+target
+                and not path.endswith(('.integration.ts', '.test.ts'))):
+            return 'shared adaptor imports context implementation'
         return None
     offset = parts.index('contexts')
     owner, ring = parts[offset+1], parts[offset+2].split('.')[0]
     if 'contexts/' in target and target.split('contexts/')[1].split('/')[0] != owner:
         return 'foreign context implementation'
+    if ring == 'application' and any(p in parts for p in ('queries', 'read_models', 'read-models')) and '/domain/' in '/'+target and '/contexts/' in '/'+target:
+        return 'query capabilities must use application read models'
     if ring in {'domain', 'application'}:
         if any(p in target.split('/') for p in ('adaptors', 'apps', 'generated')):
             return 'outward core dependency'
@@ -259,6 +266,8 @@ def check():
         errors.append('non-development runtime composition')
     from command_boundaries import check as check_commands
     errors.extend(check_commands())
+    from context_catalogue import check as check_navigation
+    errors.extend(check_navigation())
     if errors:
         raise SystemExit('\n'.join(errors))
     print(f'Architecture verified across {len(packages)} Go packages, Python, TypeScript and Next.js')

@@ -5,8 +5,8 @@ from collections.abc import Mapping
 from operations.adaptors.internal_commands import InternalCommandCodec
 from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
 import pytest
-from operations.apps.composition.preparation import command_codec
-from operations.apps.composition.collection import command_codec as pickup_codec
+from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec
+from operations.contexts.collection.adaptors.messaging.open_pickup_codec import command_codec as pickup_codec
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
 from operations.foundation.application import Metadata
 from operations.foundation.identity import derived_id

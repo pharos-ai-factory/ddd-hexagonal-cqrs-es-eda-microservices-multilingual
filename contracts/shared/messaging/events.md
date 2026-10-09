@@ -33,7 +33,11 @@ storage compatibility does not establish a published interface.
 
 Private and integration messages retain the same durable delivery mechanism:
 atomic aggregate/receipt/outcome/outbox, publisher confirms, manual acknowledgements,
-bounded retries, dead-letter preservation and explicit replay. Private topics
+bounded retries, dead-letter preservation and explicit replay. Aggregate-changing
+reactions first commit a durable owner command; the command consumer performs the
+root transaction. Projection handlers update only their read data. See
+[the subscription recipe](../../../docs/developer-workflow.md#wire-an-aggregate-changing-subscription).
+Private topics
 remain restricted to owner consumers. The deployment bootstrap gathers internal
 queue metadata independently of the published contract catalogue.
 

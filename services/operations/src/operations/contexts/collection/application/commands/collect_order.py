@@ -1,5 +1,5 @@
 from typing import TypedDict
-from operations.contexts.collection.domain import Pickup, PickupSnapshot, OrderCollected
+from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot, OrderCollected
 from operations.contracts import events
 from operations.foundation.application import ApplicationError, Change, AggregateCommandPort, Metadata, Outcome, Publication
 

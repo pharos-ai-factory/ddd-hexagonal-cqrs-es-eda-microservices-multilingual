@@ -42,7 +42,10 @@ Clients supply an idempotency key and expected version. Repeating the same
 command returns its recorded outcome. Reusing the identity with different
 material input is a conflict. Duplicate/no-op transitions emit no new events.
 
-Queries have separate handlers and read ports. Domain methods have no network,
+Queries have named input/handler pairs, application-owned read models and named
+reader ports. Persistence adaptors validate stored authority and select view
+fields. A query preserves root revisions, missing resources and explicit pagination
+without acquiring mutation capability. Domain methods have no network,
 database, logging, wall-clock or random-number calls; time and identity arrive
 as explicit input.
 
@@ -54,12 +57,17 @@ including reactions inside the same process.
 Examples:
 
 ```text
-PlaceOrder → OrderPlaced → Preparation creates a ticket
-CompletePreparation → DrinksReady → Collection opens a pickup
-CollectOrder → OrderCollected → LoyaltyAccount credits a collection
-RewardEarned (private domain delivery) → Reward is issued
-RewardIssued (published integration delivery) → Notification is requested
+PlaceOrder → OrderPlaced → AcceptOrder → PreparationTicket
+CompletePreparation → DrinksReady → OpenPickup → Pickup
+CollectOrder → OrderCollected → CreditCollection → LoyaltyAccount
+RewardEarned (private domain delivery) → IssueReward → Reward
+RewardIssued (published integration delivery) → RequestNotification → Notification
 ```
+
+Each event-to-command arrow is a durable hand-off. The reaction commits acceptance
+and command bytes, then acknowledges the event. The receiving command consumer
+owns the subsequent aggregate transaction and retries. A projection handler can
+instead update consumer-owned read data without mutating a root.
 
 ## Concurrent decisions
 
@@ -83,9 +91,10 @@ form the translation contract. Write business outcomes in
 Use real infrastructure when the example claims durable retries, duplicate
 business-key protection or concurrency; a decision probe cannot prove those.
 
-Python commands, outcomes, published DTOs and restored snapshots have explicit
-shapes, including literal lifecycle states. Generic command/query ports retain
-the owning snapshot type; domain facts use immutable context-owned dataclasses.
+Python commands, outcomes, published DTOs, read views and restored snapshots have
+explicit shapes, including literal lifecycle states. Command ports retain the
+owning snapshot type; reader ports expose application views. Domain facts use
+immutable context-owned dataclasses.
 Static types do not validate external JSON or stored state. Boundary decoders
 must still reject malformed input and classify corrupt authority as a retryable
 state failure, preserving the distinction from a business rejection.
@@ -99,3 +108,10 @@ private events between roots follow the same rule. Projection updates and
 rehydration remain separate operations. This is the reference's explicit convention;
 DDD also permits transactionally safe event-handling use cases. Decision 0011
 records why this repository accepts the extra durable hand-off.
+
+Each command or query DTO lives beside its handler in one business-named file
+under `application/commands/` or `application/queries/`. Each event reaction has
+its own module. Application handlers never call another command handler, and a
+command handler has at most one direct aggregate-store invocation. Plain constructor
+ports keep these use cases independent of DI, transport and persistence. See
+[decisions 0012–0014](docs/decisions/README.md).

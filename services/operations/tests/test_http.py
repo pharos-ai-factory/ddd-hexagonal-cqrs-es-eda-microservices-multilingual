@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 from starlette.types import Message
 from operations.adaptors.http import mount_command
-from operations.adaptors.inputs import start_preparation
+from operations.contexts.preparation.adaptors.http.inputs import start_preparation
 from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommand
 from operations.foundation.application import Metadata, Outcome
 

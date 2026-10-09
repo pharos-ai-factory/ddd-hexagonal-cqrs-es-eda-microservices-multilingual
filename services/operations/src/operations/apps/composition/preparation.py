@@ -1,38 +1,21 @@
 """Preparation's explicit providers and typed subscription declaration."""
-from enum import StrEnum
+from operations.contexts.preparation.adaptors.persistence.tickets import restore, PostgresTicketReader
+from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec
+from operations.contexts.preparation.adaptors.query_endpoints import TicketQueryEndpoints
+from operations.contexts.preparation.application.queries.get_ticket import GetTicketQueryHandler
+from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 from dependency_injector import containers, providers
-from operations.apps.incoming_events import ORDER_PLACED
-from operations.adaptors.postgres import PostgresAggregateCommandStore, PostgresAggregateQueries
-from operations.adaptors.internal_commands import InternalCommandCodec, PostgresDurableCommandOutbox
-from operations.adaptors.generated.cafe.internal.preparation.internal_commands_pb2 import CommandEnvelope
+from operations.contexts.preparation.adaptors.messaging.incoming_event import ORDER_PLACED
+from operations.adaptors.postgres import PostgresAggregateCommandStore
+from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand, AcceptOrderCommandHandler
 from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommandHandler
 from operations.contexts.preparation.application.commands.complete_preparation import CompletePreparationCommandHandler
-from operations.contexts.preparation.application.event_handlers import OrderPlacedIntegrationEventHandler
-from operations.contexts.preparation.domain import PreparationTicket, TicketSnapshot
-from operations.foundation.domain import identifier, record, text
+from operations.contexts.preparation.application.event_handlers.order_placed import OrderPlacedIntegrationEventHandler
+from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.foundation.identity import derived_id
 from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
-
-
-class PreparationSubscription(StrEnum):
-    """Stable subscription identity shared by receipt, queue and replay."""
-    ACCEPT_ORDER = "preparation.accept-order"
-
-
-def restore(value: object) -> TicketSnapshot:
-    return PreparationTicket.restore(value).snapshot()
-
-
-def accept_command(value: object) -> AcceptOrderCommand:
-    data = record(value)
-    return AcceptOrderCommand(orderId=identifier(data["orderId"]), customerId=identifier(data["customerId"]),
-                              instructions=text(data["instructions"]))
-
-
-def command_codec() -> InternalCommandCodec[AcceptOrderCommand]:
-    return InternalCommandCodec("preparation", PreparationSubscription.ACCEPT_ORDER, "accept_order", CommandEnvelope, accept_command)
 
 
 class PreparationContainer(containers.DeclarativeContainer):
@@ -40,7 +23,10 @@ class PreparationContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
     database = providers.Resource(context_database, "preparation", config.database_url)
     tickets = providers.Singleton(PostgresAggregateCommandStore[TicketSnapshot], database, "ticket", restore)
-    queries = providers.Singleton(PostgresAggregateQueries[TicketSnapshot], database, "ticket", restore)
+    reader = providers.Singleton(PostgresTicketReader, database)
+    get_ticket = providers.Singleton(GetTicketQueryHandler, reader)
+    list_tickets = providers.Singleton(ListTicketsQueryHandler, reader)
+    queries = providers.Singleton(TicketQueryEndpoints, get_ticket, list_tickets)
     codec = providers.Singleton(command_codec)
     outbox = providers.Singleton(PostgresDurableCommandOutbox[AcceptOrderCommand], database, codec)
     accepted = providers.Singleton(OrderPlacedIntegrationEventHandler, outbox)
@@ -53,10 +39,3 @@ def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, 
     definitions = subscription_definitions("preparation")
     return complete_subscriptions("preparation", definitions, command_subscription(container.codec(), definitions, ORDER_PLACED,
         lambda event: derived_id("ticket", event["orderId"]), container.accepted().handle, container.accept().execute))
-
-
-def command_header(body: bytes) -> tuple[str, str, str]:
-    envelope = CommandEnvelope.FromString(body)
-    if envelope.consumer != PreparationSubscription.ACCEPT_ORDER:
-        raise ValueError("Foreign command destination")
-    return identifier(envelope.id), envelope.consumer+".command", identifier(envelope.correlation_id)

@@ -16,11 +16,12 @@ test('require one command and its handler per command module', () => {
 });
 
 const base = productionProgram();
-const fixture = path.resolve('services/engagement/src/contexts/loyalty/application/boundary-fixture.ts');
-function check(body) {
-  const source = `import {LoyaltyAccount as Account} from '../domain/account.js';
+function check(body, location = 'application') {
+  const fixture = path.resolve('services/engagement/src/contexts/loyalty/'+location+'/boundary-fixture.ts');
+  let source = `import {LoyaltyAccount as Account} from '../domain/loyalty-account.js';
 import type {AggregateCommandPort, Metadata} from '../../../foundation/application.js';
-import type {AccountState} from '../domain/account.js';\n${body}`;
+import type {AccountState} from '../domain/loyalty-account.js';\n${body}`;
+  if (location !== 'application') source = source.replaceAll("'../domain/", "'../../domain/").replaceAll("'../../../foundation/", "'../../../../foundation/");
   const host = ts.createCompilerHost(base.getCompilerOptions()), original = host.getSourceFile.bind(host);
   host.getSourceFile = (name, language, onError, create) => name === fixture
     ? ts.createSourceFile(name, source, language, true) : original(name, language, onError, create);
@@ -53,4 +54,21 @@ test('reject synchronous handler chaining and repeated store execution', () => {
       for (const id of [1,2]) store.execute(m, () => {throw Error()}); } }`,
     `class CreditCommandHandler { execute(store: AggregateCommandPort<AccountState>) { const run = store.execute; } }`,
   ]) assert.ok(check(body).length, body);
+});
+
+test('queries and event reactions remain separate discoverable use cases', () => {
+  const check = (source, folder) => commandLayout(ts.createSourceFile(`contexts/loyalty/application/${folder}/fixture.ts`, source, ts.ScriptTarget.Latest, true));
+  const pair = 'type GetAccountQuery = {}; class GetAccountQueryHandler {}';
+  assert.deepEqual(check(pair, 'queries'), []);
+  assert.ok(check(pair, 'commands').length);
+  assert.ok(check(pair+' type ListAccountsQuery = {}; class ListAccountsQueryHandler {}', 'queries').length);
+  assert.ok(check('class FirstIntegrationEventHandler {} class SecondIntegrationEventHandler {}', 'event-handlers').length);
+  assert.deepEqual(check('class OrderCollectedIntegrationEventHandler {}', 'event-handlers'), []);
+});
+
+test('persistence can restore aggregate snapshots but cannot change aggregate behaviour', () => {
+  const restore = 'const read = (state: AccountState) => new Account(state).snapshot();';
+  assert.deepEqual(check(restore, 'adaptors/persistence'), []);
+  assert.ok(check('const write = (account: Account) => account.credit("order", "grant");', 'adaptors/persistence').length);
+  assert.ok(check(restore).length);
 });

@@ -166,30 +166,42 @@ func applicationPackage(name string) bool {
 }
 
 func commandLayout(file *ast.File, packagePath string) bool {
-	var commands, handlers []string
+	var names []string
 	for _, declaration := range file.Decls {
 		group, ok := declaration.(*ast.GenDecl)
 		if !ok {
 			continue
 		}
 		for _, spec := range group.Specs {
-			named, ok := spec.(*ast.TypeSpec)
-			if !ok {
-				continue
-			}
-			name := named.Name.Name
-			if strings.HasSuffix(name, "CommandHandler") {
-				handlers = append(handlers, name)
-			} else if strings.HasSuffix(name, "Command") {
-				commands = append(commands, name)
+			if named, ok := spec.(*ast.TypeSpec); ok {
+				names = append(names, named.Name.Name)
 			}
 		}
 	}
-	if len(commands)+len(handlers) == 0 {
-		return true
+	for _, role := range []struct{ name, folder string }{{"Command", "commands"}, {"Query", "queries"}} {
+		var inputs, handlers []string
+		for _, name := range names {
+			if strings.HasSuffix(name, role.name) {
+				inputs = append(inputs, name)
+			}
+			if strings.HasSuffix(name, role.name+"Handler") {
+				handlers = append(handlers, name)
+			}
+		}
+		if len(inputs)+len(handlers) == 0 {
+			continue
+		}
+		if !(strings.HasSuffix(packagePath, "/application/"+role.folder) && len(inputs) == 1 && len(handlers) == 1 && handlers[0] == inputs[0]+"Handler") {
+			return false
+		}
 	}
-	return strings.HasSuffix(packagePath, "/application/commands") && len(commands) == 1 &&
-		len(handlers) == 1 && handlers[0] == commands[0]+"Handler"
+	reactions := 0
+	for _, name := range names {
+		if strings.HasSuffix(name, "EventHandler") || strings.HasSuffix(name, "ProjectionHandler") {
+			reactions++
+		}
+	}
+	return reactions == 0 || (reactions == 1 && (strings.HasSuffix(packagePath, "/application/projections") || strings.HasSuffix(packagePath, "/application/eventhandlers")))
 }
 
 func TestProductionCommandBoundaries(t *testing.T) {
@@ -240,7 +252,7 @@ func TestProductionCommandBoundaries(t *testing.T) {
 		for _, file := range files {
 			application := applicationPackage(p.ImportPath)
 			if application && !commandLayout(file, p.ImportPath) {
-				t.Errorf("%s: keep one command and its handler together in application/commands", fileset.Position(file.Pos()))
+				t.Errorf("%s: keep one DTO/handler pair or event reaction per application module", fileset.Position(file.Pos()))
 			}
 			for _, pos := range violations(file, info, application) {
 				t.Errorf("%s: aggregate mutation capability outside CommandHandler.Execute", fileset.Position(pos))
@@ -256,6 +268,11 @@ func TestCommandPackageLayout(t *testing.T) {
 	}{
 		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", true},
 		{"fixture/contexts/ordering/application/commands", "type OrderNotFoundApplicationError struct{}", true},
+		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", true},
+		{"fixture/contexts/ordering/application", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", false},
+		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}; type ListOrdersQuery struct{}; type ListOrdersQueryHandler struct{}", false},
+		{"fixture/contexts/ordering/application/projections", "type MenuDirectoryProjectionHandler struct{}", true},
+		{"fixture/contexts/ordering/application/projections", "type MenuDirectoryProjectionHandler struct{}; type OtherProjectionHandler struct{}", false},
 		{"fixture/contexts/ordering/application", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", false},
 		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}", false},
 		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}; type AddLineCommand struct{}; type AddLineCommandHandler struct{}", false},

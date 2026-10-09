@@ -24,7 +24,7 @@ class ArchitectureTests(unittest.TestCase):
         self.assertIsNotNone(import_violation(MODULE+"/services/api/application",
                                              MODULE+"/services/storefront/contexts/menu/domain"))
     def test_python_domain_cannot_import_framework(self):
-        self.assertIsNotNone(core_violation("services/operations/src/operations/contexts/preparation/domain.py", "fastapi"))
+        self.assertIsNotNone(core_violation("services/operations/src/operations/contexts/preparation/domain/preparation_ticket.py", "fastapi"))
     def test_typescript_application_cannot_import_pg_or_another_context(self):
         path = "services/engagement/src/contexts/loyalty/application/commands.ts"
         self.assertIsNotNone(core_violation(path, "pg"))
@@ -38,10 +38,10 @@ class ArchitectureTests(unittest.TestCase):
         self.assertIsNone(core_violation(path, "contracts/events/catalogue.json"))
         self.assertIsNone(core_violation(path, "tests/acceptance/client.js"))
     def test_python_relative_imports_cannot_escape_their_context(self):
-        path = check_architecture.ROOT/"services/operations/src/operations/contexts/preparation/domain.py"
+        path = check_architecture.ROOT/"services/operations/src/operations/contexts/preparation/domain/preparation_ticket.py"
         read_text = Path.read_text
-        for source in ("from ..collection.domain import Pickup", "from ..collection import domain",
-                       "from .. import collection"):
+        for source in ("from ...collection.domain import Pickup", "from ...collection import domain",
+                       "from ... import collection"):
             with self.subTest(source=source):
                 def source_text(candidate, *args, **kwargs):
                     return source if candidate == path else read_text(candidate, *args, **kwargs)
@@ -60,7 +60,7 @@ class ArchitectureTests(unittest.TestCase):
                     self.assertIsNone(core_violation(relative, target))
 
     def test_frontend_raw_http_calls_fail_enforcement(self):
-        path = check_architecture.ROOT/"services/web/src/features/realtime/useCafe.ts"
+        path = check_architecture.ROOT/"services/web/src/shared/realtime/useCafe.ts"
         read_text = Path.read_text
         def source_text(candidate, *args, **kwargs):
             return "export const bypass = () => fetch('/api/v1/menu/drinks');" if candidate == path else read_text(candidate, *args, **kwargs)

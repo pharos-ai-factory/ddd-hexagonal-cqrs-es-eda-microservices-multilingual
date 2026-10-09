@@ -33,7 +33,7 @@ class FrontendContractsTests(unittest.TestCase):
                 schema['required'] = [new if name == old else name for name in schema['required']]
                 result = self.compile(changed)
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
-                self.assertIn('src/features/', result.stdout)
+                self.assertIn('src/features/menu/MenuPanel.tsx' if component.endswith('DrinkCommand') else 'src/shared/realtime/httpProjection.ts', result.stdout)
 
     def test_optional_input_addition_keeps_existing_frontend_compatible(self):
         document = bundle(SOURCE/DOCUMENTS['api'])
@@ -52,7 +52,7 @@ class FrontendContractsTests(unittest.TestCase):
                     'in': location, 'name': 'requiredReason', 'required': True, 'schema': {'type': 'string'}})
                 result = self.compile(changed)
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
-                self.assertIn('src/features/', result.stdout)
+                self.assertIn('src/shared/commands/useCommand.ts' if method == 'post' else 'src/shared/realtime/httpProjection.ts', result.stdout)
 
     def test_required_query_object_cannot_be_omitted(self):
         document = bundle(SOURCE/DOCUMENTS['api'])

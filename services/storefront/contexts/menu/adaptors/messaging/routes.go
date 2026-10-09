@@ -1,7 +1,7 @@
 package messaging
 
 import (
-	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/queries"
 	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/integrations/requests"
@@ -9,11 +9,11 @@ import (
 
 // MenuRequestHandlers groups the explicitly typed handlers mounted by this transport adaptor.
 type MenuRequestHandlers struct {
-	DrinkQueries   app.DrinkQueries
+	DrinkQueries   endpoints.DrinkQueryEndpoints
 	CreateDrink    menucommands.CreateDrinkCommandHandler
 	PublishDrink   menucommands.PublishDrinkCommandHandler
 	ReviseDrink    menucommands.ReviseDrinkCommandHandler
-	EditionQueries app.EditionQueries
+	EditionQueries endpoints.EditionQueryEndpoints
 	CreateEdition  menucommands.CreateEditionCommandHandler
 	AddOffer       menucommands.AddOfferCommandHandler
 	ChangePrice    menucommands.ChangePriceCommandHandler

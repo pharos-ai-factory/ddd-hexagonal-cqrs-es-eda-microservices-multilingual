@@ -192,8 +192,9 @@ Each resource below supports `GET <resource>` and `GET <resource>/{id}`:
   `/v1/communication/notifications`.
 
 An item is `{"exists":true,"version":3,"state":{...}}`; a list is an array of
-items. `state` is the JSON snapshot declared in each context's domain package.
-Queries never advance an aggregate.
+items. The OpenAPI schema defines the public `state` shape. Owner query handlers
+return application-owned read models; persistence adaptors validate stored authority
+and map those fields. Queries never advance an aggregate.
 
 Without pagination parameters, lists return their complete array in aggregate-ID
 order. Queries opt into pagination separately from the ordinary query port:

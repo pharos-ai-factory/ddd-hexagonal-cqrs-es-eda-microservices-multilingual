@@ -1,12 +1,14 @@
 'use client';
 import {useCallback, useEffect, useState} from 'react';
-import {useCafe} from '../features/realtime/useCafe';
+import {useCafe} from '../shared/realtime/useCafe';
 import {request} from '../adaptors/http/client';
-import {useCommand} from '../features/commands/useCommand';
-import {MenuPanel} from '../features/cafe/MenuPanel';
-import {OrderingPanel} from '../features/cafe/OrderingPanel';
-import {OperationsPanel} from '../features/cafe/OperationsPanel';
-import {EngagementPanel} from '../features/cafe/EngagementPanel';
+import {useCommand} from '../shared/commands/useCommand';
+import {MenuPanel} from '../features/menu/MenuPanel';
+import {OrderingPanel} from '../features/ordering/OrderingPanel';
+import {PreparationPanel} from '../features/preparation/PreparationPanel';
+import {CollectionPanel} from '../features/collection/CollectionPanel';
+import {RewardsPanel} from '../features/rewards/RewardsPanel';
+import {NotificationsPanel} from '../features/notifications/NotificationsPanel';
 
 export default function Cafe() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -63,9 +65,15 @@ export default function Cafe() {
     <div className="workspace">
       <MenuPanel snapshot={snapshot} send={command.send} disabled={disabled}/>
       <OrderingPanel snapshot={snapshot} customer={customer} send={command.send} disabled={disabled}/>
-      <OperationsPanel snapshot={snapshot} send={command.send} disabled={disabled}/>
+      <section className="panel preparation"><div className="section-title"><span>03 / OPERATIONS</span><h2>Behind the counter</h2></div>
+        <PreparationPanel snapshot={snapshot} send={command.send} disabled={disabled}/>
+        <CollectionPanel snapshot={snapshot} send={command.send} disabled={disabled}/>
+      </section>
     </div>
-    <EngagementPanel snapshot={snapshot} customer={customer} send={command.send} disabled={disabled}/>
+    <section className="engagement">
+      <RewardsPanel snapshot={snapshot} customer={customer} send={command.send} disabled={disabled}/>
+      <NotificationsPanel snapshot={snapshot} customer={customer}/>
+    </section>
     <footer>Development café · Authoritative state stays with its owning context · Live delivery via Centrifugo</footer>
   </main>;
 }

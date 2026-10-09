@@ -28,12 +28,9 @@ export function decodeRequest(body: Buffer, owner: string): Request {
   const id = identifier(wire.requestId);
   const [kind, outer] = selected(wire), [name, payload] = selected(outer);
   const envelope = root.lookupType('cafe.'+owner+'.requests.v1.'+(kind === 'command' ? 'Command' : 'Query'));
+  // The generated owner envelope defines the complete set of permitted operations.
   const field = envelope.fields[name];
-  const owned: Record<string, string[]> = {
-    loyalty: ['redeemReward', 'listAccounts', 'getAccount', 'listRewards', 'getReward'],
-    communication: ['listNotifications', 'getNotification'],
-  };
-  if (!field || !owned[owner]?.includes(name)) throw new Error('Foreign context request');
+  if (!field) throw new Error('Foreign context request');
   const request: Request = {kind, id, owner, name, body: payload};
   if (kind === 'command') {
     const metadata = record(outer.metadata);

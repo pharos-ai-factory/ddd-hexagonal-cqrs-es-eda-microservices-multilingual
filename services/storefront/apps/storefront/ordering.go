@@ -5,8 +5,11 @@ import (
 	web "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/http"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
 	pg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/postgres"
-	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application"
+	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/queries"
 	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingprojections "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/projections"
+	q "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/queries"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -19,8 +22,8 @@ func orderingModule() fx.Option {
 		func(s *support.StorefrontRuntime) a.AggregateCommandPort[d.OrderState] {
 			return pg.OrderCommands(s.Databases["ordering"])
 		},
-		func(s *support.StorefrontRuntime) a.PagedQueryPort[d.OrderState] {
-			return pg.OrderQueries(s.Databases["ordering"])
+		func(s *support.StorefrontRuntime) ports.OrderReader {
+			return pg.OrderReader(s.Databases["ordering"])
 		},
 		func(s *support.StorefrontRuntime) a.ProjectionPort[model.MenuPublished] {
 			return store.Project[model.MenuPublished](s.Databases["ordering"], "published-menus")
@@ -37,7 +40,11 @@ func orderingModule() fx.Option {
 		func(port a.AggregateCommandPort[d.OrderState]) orderingcommands.PlaceOrderCommandHandler {
 			return orderingcommands.PlaceOrderCommandHandler{Orders: port}
 		},
-		func(read a.PagedQueryPort[d.OrderState]) app.OrderingQueries { return app.OrderingQueries{Read: read} },
+		func(read ports.OrderReader) q.GetOrderQueryHandler { return q.GetOrderQueryHandler{Read: read} },
+		func(read ports.OrderReader) q.ListOrdersQueryHandler { return q.ListOrdersQueryHandler{Read: read} },
+		func(get q.GetOrderQueryHandler, list q.ListOrdersQueryHandler) endpoints.OrderQueryEndpoints {
+			return endpoints.OrderQueryEndpoints{GetHandler: get, ListHandler: list}
+		},
 		orderingHTTPHandlers,
 	), fx.Invoke(mountOrdering))
 }
@@ -45,7 +52,7 @@ func orderingModule() fx.Option {
 // OrderingHandlerDependencies declares the complete HTTP/request handler graph.
 type OrderingHandlerDependencies struct {
 	fx.In
-	Queries        app.OrderingQueries
+	Queries        endpoints.OrderQueryEndpoints
 	CreateOrder    orderingcommands.CreateOrderCommandHandler
 	AddLine        orderingcommands.AddLineCommandHandler
 	ChangeQuantity orderingcommands.ChangeQuantityCommandHandler
@@ -63,7 +70,7 @@ func orderingHTTPHandlers(p OrderingHandlerDependencies) web.OrderingHTTPHandler
 func mountOrdering(s *support.StorefrontRuntime, h web.OrderingHTTPHandlers, directory a.ProjectionPort[model.MenuPublished]) {
 	web.Mount(s.Mux, h)
 	s.RequestWorkers["ordering"] = rpc.Bind(rpc.OrderingRequestHandlers{Queries: h.OrderingQueries, CreateOrder: h.CreateOrder, AddLine: h.AddLine, ChangeQuantity: h.ChangeQuantity, PlaceOrder: h.PlaceOrder}).Run
-	support.Subscribe(s, string(MenuDirectorySubscription), func(p model.MenuPublished) string { return p.EditionID }, app.MenuDirectoryProjectionHandler{Directory: directory}.Handle)
+	support.Subscribe(s, string(MenuDirectorySubscription), func(p model.MenuPublished) string { return p.EditionID }, orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle)
 }
 
 // OrderingSubscription identifies owner projection delivery.

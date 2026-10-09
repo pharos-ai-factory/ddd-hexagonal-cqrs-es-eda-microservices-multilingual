@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from typing import TypedDict
-from operations.contexts.collection.domain import Pickup, PickupSnapshot, PickupOpened
+from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot, PickupOpened
 from operations.contracts import events
 from operations.foundation.application import Change, AggregateCommandPort, Metadata, Outcome, Publication
 

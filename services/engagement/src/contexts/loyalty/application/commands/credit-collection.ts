@@ -1,5 +1,5 @@
 import {type AggregateCommandPort, type IdentityFactory, type Metadata, type Publication} from '../../../../foundation/application.js';
-import {LoyaltyAccount, type AccountState} from '../../domain/account.js';
+import {LoyaltyAccount, type AccountState} from '../../domain/loyalty-account.js';
 
 /** Owner-local intent, independent of the Collection event envelope. */
 export type CreditCollectionCommand = {orderId: string; customerId: string};

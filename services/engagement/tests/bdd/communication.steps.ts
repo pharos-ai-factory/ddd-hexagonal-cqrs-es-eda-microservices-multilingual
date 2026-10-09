@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {Given, When, Then} from '@cucumber/cucumber';
-import {PickupOpenedIntegrationEventHandler, RewardIssuedIntegrationEventHandler} from '../../src/contexts/communication/application/event-handlers.js';
+import {PickupOpenedIntegrationEventHandler} from '../../src/contexts/communication/application/event-handlers/pickup-opened.js';
+import {RewardIssuedIntegrationEventHandler} from '../../src/contexts/communication/application/event-handlers/reward-issued.js';
 import {RequestNotificationCommandHandler, type RequestNotificationCommand} from '../../src/contexts/communication/application/commands/request-notification.js';
 import {DeliverNotificationCommandHandler} from '../../src/contexts/communication/application/commands/deliver-notification.js';
 import type {Metadata} from '../../src/foundation/application.js';

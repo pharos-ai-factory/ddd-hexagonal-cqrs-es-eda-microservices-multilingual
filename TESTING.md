@@ -19,6 +19,41 @@ individual scenario selection and reports under `.local/bdd/`.
 The dry run binds workflow steps without executing them and is not evidence
 that the live workflows passed.
 
+## Choose the right feedback loop
+
+| Check | Command | What failure means |
+| --- | --- | --- |
+| One context's native tests and scenarios | `pnpm test:focused <service> --context <context>` | Owned behaviour or its bindings failed; this lane omits full architecture/type/infrastructure checks |
+| Every service's native tests | `pnpm test:unit` | A native test failed; standalone Engagement Gherkin scenarios are covered by `pnpm test:bdd`/`pnpm verify` |
+| Imports, Python use-case rules, navigation and file size | `pnpm check:architecture` | Ownership, an inward dependency, Python mutation/layout, context navigation or responsibility limit was violated |
+| TypeScript mutation and use-case layout | `node scripts/check_command_boundaries.mjs` | A compiler-resolved aggregate/store capability or command/query/reaction layout was violated |
+| Go mutation and use-case layout | `python3 scripts/go.py test ./tests/architecture` | A typed Go capability or application package/file layout was violated |
+| Generated HTTP outputs | `pnpm check:http` | Embedded bundles, frontend types or API mappings differ from OpenAPI sources |
+| All generated outputs | `pnpm check:contracts` | A generated file changed, disappeared or needs adding |
+| Historical public/private compatibility | `pnpm check:compatibility --against <commit>` | A published interface or accepted stored-message fixture is incompatible with that revision |
+| Complete deterministic gate | `pnpm verify` | At least one generation, compatibility, architecture, type, native or fast-scenario check failed |
+| Real infrastructure and browser | `pnpm test:integration` | A real authority, transaction, delivery, workflow or browser boundary failed |
+
+Run commands from the repository root unless a service directory is specified.
+The Go wrapper defaults to Storefront; `CAFE_GO_PROJECT=services/api` selects the
+API module. For focused type checks, use `uv run --frozen mypy` inside
+`services/operations`, or `pnpm --filter @cafe/engagement type-check` and
+`pnpm --filter @cafe/web type-check` at the root.
+
+Python focused discovery includes `tests/contexts/<context>/` recursively and
+`tests/bdd/test_<context>.py`. Go discovers nested packages and their Gherkin
+bindings; TypeScript discovers adjacent native tests and runs its tagged context
+scenarios. Service-wide transport/infrastructure tests remain outside the focused
+context lane. Check new tests land in the appropriate discovered tree.
+
+The three architecture commands above provide focused feedback. `pnpm verify`
+runs all three and their negative fixtures. A generated-drift pass proves freshness;
+historical compatibility separately checks existing consumers and queued work.
+Both full hand-off gates are required, and their observed results belong in
+[executed verification](docs/verification.md).
+
+## Real infrastructure evidence
+
 `pnpm test:integration` provisions a disposable Compose project with random ports
 and separate credentials. It builds all applications, including the Next.js
 static export served by the ingress, and runs:
@@ -87,8 +122,12 @@ consumer's committed published projection using its runtime read credentials.
 The browser's menu update alone does not prove RabbitMQ delivery has completed.
 This bounded infrastructure observation adds no browser business requests.
 Chromium runs in the pinned Playwright Docker image, including its system
-libraries; the wrapper handles rootless Docker ownership. Linux host networking
-is currently required for this lane.
+libraries; the wrapper handles rootless Docker ownership. It runs with Docker
+`--network host`, so the host must support that networking mode. CI runs on Linux;
+local Docker Desktop results are recorded in `docs/verification.md`. The isolated
+session-revocation fixture also uses the platform-specific addressing described above.
+
+## Test design and source evolution
 
 Use fixed identities and supplied timestamps in unit tests. Real infrastructure
 proves transaction and delivery claims; in-memory doubles only prove application
@@ -120,7 +159,6 @@ Executed local results and remaining limits are recorded in `docs/verification.m
 Remote CI, cluster availability, load tests, actual email, deployment and independent
 human UAT must be reported separately; this repository has no release lane.
 
-
 `pnpm check:contracts` fails for changed, missing and newly generated bindings.
 `pnpm verify` includes this gate and frontend OpenAPI mutation tests: renaming a
 required request or response field must break real feature compilation, while
@@ -147,10 +185,18 @@ Command layout checks require one DTO/handler pair per file in each context's
 missing handler and the previous flat layout. Go checks include nested
 application packages; native scenario runners discover the relocated tests.
 
-Focused native tests use `pnpm test:focused <service> --context <context>`; omit
-the context for service-wide tests. `pnpm test:unit` runs native tests across all
-services without generation/type/architecture gates. Full verification includes
+Omit the context from a focused command for service-wide native tests.
+Full verification includes
 historical OpenAPI/Protobuf comparison and negative fixtures for handler chaining,
 repeated store calls, subscription completeness and lifecycle failure cleanup.
 Infrastructure verification also stops a service to test readiness and inspects
 a completed workflow without consuming its messages. See decision 0012.
+
+Query layout checks require one input/handler pair under `application/queries/`.
+Reaction checks require one event or projection handler per role module. Context
+navigation checks compare the catalogue with source ownership and resolve README
+links. Negative fixtures cover grouped queries, misplaced reactions, shared
+adaptors importing business implementations and queries importing domain types.
+Read-boundary tests preserve missing rows, revisions and continuations and reject
+corrupt stored state. Python focused discovery recursively includes the owner's
+`tests/contexts/<context>/` tree and its Gherkin binding.

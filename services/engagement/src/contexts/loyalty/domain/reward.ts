@@ -1,5 +1,5 @@
 import {CorruptState, DomainError, identifier, Rejection} from '../../../foundation/domain.js';
-import type {Grant} from './account.js';
+import type {Grant} from './loyalty-account.js';
 
 /** Identifies refusal to redeem a reward outside its valid lifecycle. */
 export class RewardUnavailableDomainError extends DomainError {

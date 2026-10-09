@@ -23,11 +23,18 @@ questions help identify where a pattern would address a concrete problem.
 | Context-owned migration history | Evolve each database independently and reject mismatched runtime ownership or checksums |
 | Restricted realtime gateway | Give publishers authority over their own channel and session workers only disconnection authority |
 | Protected developer secret files | Use individual provider credentials with scopes and spending controls outside generated configuration |
+| Named command/query pairs and checked context navigation | Make business use cases discoverable through a stable source layout and live index |
+| Application read models and named reader ports | Let queries evolve independently from aggregate storage while retaining validated authority |
+| Durable event-to-command acceptance | Make command execution/retry ownership explicit after the receiving event is acknowledged |
+| Explicit DI at composition roots | Inject plain ports, validate the graph and dispose owned resources after workers drain |
+| Historical contract/fixture checks | Preserve public consumers and queued private work as code evolves |
 | Architecture checker with negative fixtures | Turn enforceable architectural decisions into build failures |
 
 ## Transfer the rules with their evidence
 
-Read each affected context's current authority and accepted architectural decisions.
+Start with `pnpm context <name>` and the context README. Read the affected
+[accepted decisions](decisions/README.md), particularly 0010–0014 for the current
+composition and use-case conventions.
 Name the immediate invariant and the allowed pending state before changing a
 transaction. Introduce the command/receipt/outbox boundary with rollback,
 concurrency and crash-window tests in the same change.
@@ -56,3 +63,10 @@ context would benefit from event sourcing.
 Keep contributor guides, architectural decisions and executable checks consistent
 when an improvement is adopted. Explain the changed rule and bring the relevant
 transaction, delivery and recovery evidence into the receiving system.
+
+The command-before-mutation convention is a deliberate reference choice. DDD can
+support direct event-handling transactions; this implementation accepts the extra
+queue and database transaction for discoverable intent and explicit failure
+ownership. Carry that trade-off into a receiving project, alongside its tests.
+Likewise, evaluate the chosen DI frameworks against that project's lifecycle and
+team needs while preserving plain application constructors.

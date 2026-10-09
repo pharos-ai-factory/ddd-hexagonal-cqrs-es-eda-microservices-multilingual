@@ -84,8 +84,9 @@ failures produce a technical unavailable reply and allow an explicit retry.
 
 Commands retain the supplied command ID, aggregate ID, expected version and
 workflow correlation ID. Transport request IDs change on retries and match replies;
-they never become command deduplication keys. Query handlers use their existing
-read ports. Pagination sends an owner identity cursor; the API translates that
+they never become command deduplication keys. Query adaptors construct named
+application query DTOs; their handlers use application-owned read models and
+named reader ports. Pagination sends an owner identity cursor; the API translates that
 into the resource-bound opaque HTTP cursor.
 
 The API waits up to twelve seconds. A timeout or lost connection returns HTTP

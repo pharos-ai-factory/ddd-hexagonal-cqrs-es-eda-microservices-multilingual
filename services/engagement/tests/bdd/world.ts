@@ -1,6 +1,6 @@
 import {setWorldConstructor, World} from '@cucumber/cucumber';
 import type {Publication} from '../../src/foundation/application.js';
-import type {AccountState} from '../../src/contexts/loyalty/domain/account.js';
+import type {AccountState} from '../../src/contexts/loyalty/domain/loyalty-account.js';
 import type {RewardState} from '../../src/contexts/loyalty/domain/reward.js';
 import type {NotificationState} from '../../src/contexts/communication/domain/notification.js';
 import {CommandProbe} from './probes.js';

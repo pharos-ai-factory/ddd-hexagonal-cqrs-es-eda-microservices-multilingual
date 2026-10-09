@@ -41,3 +41,24 @@ class DeveloperTests(unittest.TestCase):
         _, typescript = render('command', 'loyalty', 'CancelReward')
         self.assertIn("'../../../../foundation/application.js'", typescript['commands/cancel-reward.ts'])
         self.assertIn('commands/cancel-reward.test.ts', typescript)
+
+    def test_python_focused_lane_discovers_all_owned_tests(self):
+        with patch('developer.run') as run:
+            run_tests('operations', 'preparation')
+            self.assertIn('tests/contexts/preparation', run.call_args.args[0])
+            self.assertIn('tests/bdd/test_preparation.py', run.call_args.args[0])
+            self.assertNotIn('tests/test_domain.py', run.call_args.args[0])
+
+    def test_query_and_subscription_starters_follow_the_owner_layout(self):
+        for context, folder, suffix in [('ordering', 'eventhandlers', 'go'),
+                                        ('preparation', 'event_handlers', 'py'),
+                                        ('loyalty', 'event-handlers', 'ts')]:
+            _, files = render('query', context, 'FindResource')
+            self.assertTrue(any(path.startswith('queries/') for path in files))
+            self.assertTrue(any(path.startswith('ports/') for path in files))
+            self.assertTrue(any(path.startswith(('readmodels/', 'read_models/', 'read-models/')) for path in files))
+            source = next(text for path, text in files.items() if path.startswith('queries/') and 'test' not in path)
+            self.assertIn('FindResourceQueryHandler', source)
+            self.assertIn('FindResourceQuery', source)
+            _, files = render('subscription', context, 'ResourcePublished')
+            self.assertTrue(any(path.startswith(folder+'/') and path.endswith('.'+suffix) for path in files))

@@ -27,7 +27,7 @@ services/storefront/{apps,contexts,foundation,contracts,integrations}/  Go modul
 services/operations/src/operations/{apps,contexts,foundation,contracts,adaptors}/ Python
 services/engagement/src/{apps,contexts,foundation,adaptors,contracts}/ TypeScript
 services/api/{apps,application,adaptors}/                             Go module
-services/web/src/{app,features,adaptors}/                             Next.js
+services/web/src/{app,features,shared,adaptors}/                      Next.js
 contracts/<context>/{messaging,realtime,http_api}/  published specifications
 specifications/{menu,ordering,...,workflows}/  executable Gherkin behaviour
 tests/acceptance/                             cross-service wire/API bindings
@@ -36,15 +36,20 @@ scripts/                                     gates and executable journeys
 docs/                                        accepted decisions and exercises
 ```
 
-Go and TypeScript unit tests sit beside their subjects. Python tests and
-TypeScript Gherkin bindings live under their service's `tests` directory.
+Go and TypeScript unit tests sit beside their subjects. Python context tests mirror
+the source under `tests/contexts/<context>/`; Python and TypeScript Gherkin bindings
+live under their service's `tests` directory.
 Go Gherkin bindings sit beside the owning application handlers.
 Generated contracts stay in transport/adaptor rings.
-Each context has an `application/commands/` package or directory with one command
-DTO and its matching handler per business-action file. Go/Python filenames use
-snake_case; TypeScript uses kebab-case. Callers import those packages/modules
-directly. Shared application values stay separate from command execution.
-See [decision 0013](docs/decisions/0013-command-module-layout.md).
+Each context has `application/commands/` and `application/queries/`, with one
+named DTO and its matching handler per business use-case file. Go/Python filenames
+use snake_case; TypeScript uses kebab-case. Callers import those packages/modules
+directly. Event reactions and projection handlers have separate business-named
+files. Read models and named reader ports belong to the application; decoding,
+restoration and view mapping belong to context adaptors. Shared infrastructure
+contains technical behaviour. See decisions
+[0013](docs/decisions/0013-command-module-layout.md) and
+[0014](docs/decisions/0014-context-navigation-and-query-layout.md).
 Published Protobuf payload sources identify their context and interface category.
 Context folders contain `messaging/{commands,queries,integration_events}`,
 `realtime` and `http_api`. Private domain facts are plain application/domain types;
@@ -59,8 +64,9 @@ The shared Gherkin catalogue has native service runners and a separate live
 workflow runner. Test decision probes make no transaction or delivery claims;
 real infrastructure proves those boundaries. See decision 0003 and `TESTING.md`.
 
-Operations uses explicit `TypedDict` commands, published DTOs, outcomes and
-snapshots, with generic ports bound to each aggregate's snapshot type. Domain
+Operations uses explicit `TypedDict` commands, published DTOs, outcomes, snapshots
+and read views. Command ports retain the owning snapshot type; named readers
+expose application-owned views. Domain
 facts are immutable dataclasses owned by their context. HTTP, Protobuf and
 PostgreSQL adaptors validate external values before exposing typed application
 values. The consumer retains the original wire payload for receipt fingerprints.
@@ -119,10 +125,18 @@ from browser ingress. `/healthz` reports liveness separately from workflow progr
 
 ## Transaction rule
 
-One command or event-handling transaction changes at most one aggregate,
-together with its receipt, recorded outcome and outgoing events. Application
-ports expose one aggregate operation and never expose a SQL transaction or an
-arbitrary collection of repositories.
+Every runtime aggregate business transition starts in a named owner command
+handler. Its `Execute`/`execute` method makes at most one direct aggregate-store
+call and changes at most one root inside the decision callback. That transaction
+also commits receipts, the recorded outcome and outgoing event/realtime intent.
+API command processing includes exact reply bytes. Application ports expose one
+aggregate operation and never expose a SQL transaction or an arbitrary collection
+of repositories.
+
+Application handlers never invoke another command handler. An event reaction
+persists an owner command through `DurableCommandPort`; a separate command consumer
+executes it. Projection updates, rehydration, domain tests and migrations retain
+their distinct roles. Decisions 0011 and 0012 define this stricter convention.
 
 If an invariant requires two pieces of business state to change immediately,
 they belong inside one consistency boundary. Extract unrelated lifecycles
@@ -134,14 +148,22 @@ durable workflow hand-off.
 
 ## One delivery mechanism
 
-Delivered domain and integration events follow the same pipeline:
+Delivered domain and integration events share the delivery infrastructure.
+An aggregate-changing reaction follows two receiving stages:
 
 ```text
-aggregate + receipt + outcome + immutable event outbox
-                    → PostgreSQL commit
-leased dispatch → persistent mandatory RabbitMQ publication → publisher confirm
-consumer → one aggregate + receipt + outgoing events → PostgreSQL commit → ACK
+producer command → aggregate + receipts + outcome + event/realtime intent → commit
+event outbox → persistent mandatory RabbitMQ publication → publisher confirm
+event reaction → acceptance + exact owner command bytes + dispatch → commit → event ACK
+command outbox → persistent mandatory RabbitMQ publication → publisher confirm
+command consumer → one aggregate + receipts + outcome + publications → commit → command ACK
 ```
+
+The receiving outbox makes acceptance durable before command execution. Failure
+before acceptance commits remains the event consumer's retry responsibility. After
+acceptance, the command's dispatch and consumer own recovery. Command execution
+failure cannot erase the already persisted intent. Projection consumers commit
+their projection and receipt before ACK without introducing an aggregate command.
 
 Domain facts are plain types. Applications map them to owner-private delivery values or published integration
 events. Public interfaces have versioned Protobuf representations. Internal
@@ -160,8 +182,12 @@ does not establish business completion.
 
 ## Reads and external effects
 
-Query handlers return DTOs without changing aggregates. Consumer-owned projections
-contain only published facts. Published menus remain immutable and orderable in
+Each query has a named input, handler, reader port and application-owned read model.
+HTTP/RabbitMQ query adaptors construct that input. Persistence readers validate
+stored aggregate authority and select its read fields; query handlers and read
+models stay independent of aggregate implementations. The current readers use
+stored snapshots; specialised read tables can implement the same ports later.
+Consumer-owned projections contain only published facts. Published menus remain immutable and orderable in
 this example; introducing withdrawal would require an explicit owner protocol.
 
 List queries can return complete arrays or explicitly opt into keyset pagination.
@@ -214,7 +240,8 @@ atomically with the receiving outcome. See decision 0009 and the contract guides
 framework comparison and selection: Go Fx, Python Dependency Injector and
 TypeScript Awilix. Frameworks and concrete resource bindings live in `apps/`.
 Application handlers receive plain ports. Context containers own separate pools
-and credentials; workers stop before resource disposal.
+and credentials. Provider-graph tests resolve every binding; workers stop and
+drain before resource disposal, including after partial startup failure.
 
 [Decision 0011](docs/decisions/0011-durable-commands-before-aggregate-mutations.md)
 requires named commands for aggregate business transitions. Event handlers map
@@ -231,3 +258,14 @@ command entry-point enforcement, partial-startup cleanup and exhaustive typed
 subscription registration. `pnpm dev:status` checks authority connections and
 actual broker consumers; `dev:up` waits on it. Historical compatibility is checked
 against an accepted revision independently from generated-file drift.
+
+## Finding a business capability
+
+Each context has a source-root README. `pnpm context <name>` lists its current
+commands, queries and reactions, plus contracts, specifications and its focused
+test command. `docs/contexts.json` records the six owners and their browser features.
+Application queries have named inputs, handlers, read models and reader ports;
+context adaptors restore stored authority and map transport arguments. Individual
+event reactions and domain aggregates have business-named files. Browser features
+follow user tasks, with reusable delivery/recovery code in `shared/`.
+See [decision 0014](docs/decisions/0014-context-navigation-and-query-layout.md).

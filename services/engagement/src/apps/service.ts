@@ -3,7 +3,7 @@ import type {Server} from 'node:http';
 import {composeLoyalty} from './composition/loyalty.js';
 import {composeCommunication} from './composition/communication.js';
 import {diagnostics} from '../adaptors/diagnostics.js';
-import {redeemInput} from '../adaptors/inputs.js';
+import {redeemInput} from '../contexts/loyalty/adaptors/http/inputs.js';
 import {relay, consume} from '../adaptors/broker.js';
 import {realtimeRelay} from '../adaptors/dispatch.js';
 import {server} from '../adaptors/http.js';

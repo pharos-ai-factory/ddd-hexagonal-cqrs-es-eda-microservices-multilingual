@@ -8,7 +8,7 @@ READ_METHODS = {'restore', 'snapshot', 'events'}
 
 def aggregate_methods(root=ROOT):
     result = {}
-    for path in (root/'services/operations/src/operations/contexts').glob('*/domain.py'):
+    for path in (root/'services/operations/src/operations/contexts').glob('*/domain/*.py'):
         for node in ast.parse(path.read_text()).body:
             if isinstance(node, ast.ClassDef):
                 methods = {item.name for item in node.body if isinstance(item, ast.FunctionDef)}
@@ -28,7 +28,7 @@ def violations(source, aggregates, path='contexts/example/application.py'):
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             for item in node.names:
-                if item.name in aggregates and (node.module or '').endswith('.domain'):
+                if item.name in aggregates and '.domain' in (node.module or ''):
                     symbols[item.asname or item.name] = item.name
                 if item.name in {'AggregateCommandPort', 'PostgresAggregateCommandStore'}:
                     ports.add(item.asname or item.name)
@@ -38,7 +38,7 @@ def violations(source, aggregates, path='contexts/example/application.py'):
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for item in node.names:
-                if item.name.endswith('.domain'):
+                if '.domain' in item.name:
                     for name in aggregates:
                         symbols[(item.asname or item.name)+'.'+name] = name
         if isinstance(node, ast.ImportFrom):
@@ -146,7 +146,7 @@ def check(root=ROOT):
     errors = []
     aggregates = aggregate_methods(root)
     for path in (root/'services/operations/src/operations').rglob('*.py'):
-        if 'generated' in path.parts or 'foundation' in path.parts or path.name == 'domain.py':
+        if 'generated' in path.parts or 'foundation' in path.parts or 'domain' in path.parts:
             continue
         errors.extend(violations(path.read_text(), aggregates, path.relative_to(root).as_posix()))
         if 'application' in path.parts or path.name == 'application.py':
@@ -157,11 +157,16 @@ def check(root=ROOT):
 def layout_violations(source, path):
     """Keep each command DTO and its handler in one discoverable use-case module."""
     names = [node.name for node in ast.parse(source).body if isinstance(node, ast.ClassDef)]
-    commands = [name for name in names if name.endswith('Command')]
-    handlers = [name for name in names if name.endswith('CommandHandler')]
-    if not commands and not handlers:
-        return []
-    if (Path(path).parent.as_posix().endswith('/application/commands') and len(commands) == 1
-            and handlers == [commands[0]+'Handler']):
-        return []
-    return [f'{path}: keep one command and its handler together in application/commands']
+    errors = []
+    for role, folder in (('Command', 'commands'), ('Query', 'queries')):
+        inputs = [name for name in names if name.endswith(role)]
+        handlers = [name for name in names if name.endswith(role+'Handler')]
+        if not inputs and not handlers:
+            continue
+        if not (Path(path).parent.as_posix().endswith('/application/'+folder)
+                and len(inputs) == 1 and handlers == [inputs[0]+'Handler']):
+            errors.append(f'{path}: keep one {role.lower()} and its handler together in application/{folder}')
+    reactions = [name for name in names if name.endswith(('EventHandler', 'ProjectionHandler'))]
+    if reactions and (len(reactions) != 1 or Path(path).parent.name not in ('event_handlers', 'projections')):
+        errors.append(f'{path}: keep each event reaction in its own event_handlers or projections module')
+    return errors

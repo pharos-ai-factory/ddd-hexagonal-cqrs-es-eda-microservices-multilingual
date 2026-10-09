@@ -122,3 +122,22 @@ Go API tests cover authentication, origin checks, channel authority and
 HTTP-to-Protobuf request translation. The broker reply-loss fixture verifies
 recovery of committed commands with their original identities. Each runtime's PostgreSQL lane proves atomic realtime
 intent and lease fencing. `pnpm test:integration` includes the real browser lane.
+
+## Working on the browser
+
+Feature folders under `services/web/src/features/` follow user tasks: menu,
+ordering, preparation, collection, rewards and notifications. The page composes
+these views; business invariants remain in their owning services.
+
+Use `adaptors/http/client` and its generated operation/request/response types for
+HTTP. Change the owning OpenAPI source and regenerate before adjusting a caller.
+Keep command persistence/retry in `shared/commands/`, projection validation and
+reconciliation in `shared/realtime/`, and common formatting in `shared/ui/`.
+The shared projection catalogue coordinates the eight resource kinds for the one
+server-authorised café session.
+
+A feature change must retain the saved uncertain command, subscription barrier,
+per-root revision guard and explicit reconnect behaviour. Update the browser
+projection contract separately when its public shape changes. Native frontend
+tests check mapping/reconciliation; the full integration lane verifies independent
+windows, uncertain-command recovery and in-flight session revocation.

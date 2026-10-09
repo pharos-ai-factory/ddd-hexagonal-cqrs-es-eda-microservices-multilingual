@@ -8,7 +8,7 @@ type PageRequest struct {
 	After string
 }
 
-// Page contains a bounded set of restored snapshots and a continuation identity.
+// Page contains a bounded set of versioned read values and a continuation identity.
 type Page[S any] struct {
 	Items  []Loaded[S]
 	NextID string

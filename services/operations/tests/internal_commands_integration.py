@@ -7,7 +7,8 @@ import os
 from urllib.parse import urlsplit, urlunsplit
 import psycopg
 import pytest
-from operations.apps.composition.preparation import command_codec, command_header, restore
+from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec, command_header
+from operations.contexts.preparation.adaptors.persistence.tickets import restore
 from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
 from operations.adaptors.delivery import EventSubscription, binary, broker_connection, claim, consume, finish, relay
 from operations.adaptors.postgres import PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries

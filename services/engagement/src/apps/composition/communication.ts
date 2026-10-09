@@ -1,46 +1,31 @@
+import {notificationQueryEndpoints} from '../../contexts/communication/adaptors/notification-query-endpoints.js';
+import {ListNotificationsQueryHandler} from '../../contexts/communication/application/queries/list-notifications.js';
+import {GetNotificationQueryHandler} from '../../contexts/communication/application/queries/get-notification.js';
+import {restoreNotification, PostgresNotificationReader} from '../../contexts/communication/adaptors/persistence/notifications.js';
+import {noticeCodec, deliveryCodec, CommunicationSubscription} from '../../contexts/communication/adaptors/messaging/command-codecs.js';
 import type {AggregateCommandPort, DeliveryPort} from '../../foundation/application.js';
 import type {PagedQueryPort} from '../../foundation/pagination.js';
 import {asFunction, createContainer} from 'awilix';
 import {PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries} from '../../adaptors/postgres.js';
-import {restoreNotification} from '../../adaptors/restore.js';
 import {InternalCommandCodec, PostgresDurableCommandOutbox, commandPublication} from '../../adaptors/internal-commands.js';
 import {HttpNotificationDelivery} from '../../adaptors/provider.js';
 import {secret} from '../../foundation/secrets.js';
 import {derivedId} from '../../foundation/identity.js';
-import {identifier} from '../../foundation/domain.js';
 import {RequestNotificationCommandHandler, type RequestNotificationCommand} from '../../contexts/communication/application/commands/request-notification.js';
 import {DeliverNotificationCommandHandler, type DeliverNotificationCommand} from '../../contexts/communication/application/commands/deliver-notification.js';
-import {PickupOpenedIntegrationEventHandler, RewardIssuedIntegrationEventHandler,
-  NotificationRequestedDomainEventHandler} from '../../contexts/communication/application/event-handlers.js';
+import {PickupOpenedIntegrationEventHandler} from '../../contexts/communication/application/event-handlers/pickup-opened.js';
+import {RewardIssuedIntegrationEventHandler} from '../../contexts/communication/application/event-handlers/reward-issued.js';
+import {NotificationRequestedDomainEventHandler} from '../../contexts/communication/application/event-handlers/notification-requested.js';
 import schema from '../../contexts/communication/adaptors/messaging/generated/internal_commands.json' with {type: 'json'};
 import definitions from '../../contexts/communication/adaptors/messaging/subscriptions.json' with {type: 'json'};
 import {commandSubscription, completeSubscriptions} from '../runtime.js';
 
-/** Stable owner-local subscriptions; each installs a separate command queue. */
-export enum CommunicationSubscription {
-  PickupNotice = 'communication.pickup-notice', RewardNotice = 'communication.reward-notice',
-  DeliverNotice = 'communication.deliver-notice',
-}
-function fields(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Command object required');
-  return value as Record<string, unknown>;
-}
-function noticeCodec(consumer: CommunicationSubscription) {
-  return new InternalCommandCodec('communication', consumer, 'requestNotification', schema, (value): RequestNotificationCommand => {
-    const p = fields(value);
-    if (typeof p.recipient !== 'string' || typeof p.subject !== 'string' || typeof p.body !== 'string') throw new Error('Invalid notification');
-    return {recipient: p.recipient, subject: p.subject, body: p.body};
-  });
-}
-function deliveryCodec() {
-  return new InternalCommandCodec('communication', CommunicationSubscription.DeliverNotice, 'deliverNotification', schema,
-    (value): DeliverNotificationCommand => ({notificationId: identifier(String(fields(value).notificationId))}));
-}
-
 /** Typed provider bindings for the Communication context. */
 export type CommunicationDependencies = {
     database: PostgresContextDatabase; notices: AggregateCommandPort<ReturnType<typeof restoreNotification>>;
-    queries: PagedQueryPort<ReturnType<typeof restoreNotification>>; provider: DeliveryPort;
+    notificationReader: PostgresNotificationReader;
+    getNotification: GetNotificationQueryHandler; listNotifications: ListNotificationsQueryHandler;
+    queries: ReturnType<typeof notificationQueryEndpoints>; provider: DeliveryPort; deliveryReads: PagedQueryPort<ReturnType<typeof restoreNotification>>;
     request: RequestNotificationCommandHandler; deliver: DeliverNotificationCommandHandler;
     pickupCodec: InternalCommandCodec<RequestNotificationCommand>; rewardCodec: InternalCommandCodec<RequestNotificationCommand>;
     deliveryCodec: InternalCommandCodec<DeliverNotificationCommand>;
@@ -53,10 +38,14 @@ export function createCommunicationContainer(databaseURL: string, deliveryURL: s
   container.register({
     database: asFunction(() => new PostgresContextDatabase('communication', databaseURL)).singleton().disposer(db => db.pool.end()),
     notices: asFunction((c: CommunicationDependencies) => new PostgresAggregateCommandStore(c.database, 'notification', restoreNotification)).singleton(),
-    queries: asFunction((c: CommunicationDependencies) => new PostgresAggregateQueries(c.database, 'notification', restoreNotification)).singleton(),
+    notificationReader: asFunction((c: CommunicationDependencies) => new PostgresNotificationReader(c.database)).singleton(),
+    getNotification: asFunction((c: CommunicationDependencies) => new GetNotificationQueryHandler(c.notificationReader)).singleton(),
+    listNotifications: asFunction((c: CommunicationDependencies) => new ListNotificationsQueryHandler(c.notificationReader)).singleton(),
+    queries: asFunction((c: CommunicationDependencies) => notificationQueryEndpoints(c.getNotification, c.listNotifications)).singleton(),
+    deliveryReads: asFunction((c: CommunicationDependencies) => new PostgresAggregateQueries(c.database, 'notification', restoreNotification)).singleton(),
     provider: asFunction(() => new HttpNotificationDelivery(deliveryURL, deliveryKey)).singleton(),
     request: asFunction((c: CommunicationDependencies) => new RequestNotificationCommandHandler(c.notices)).singleton(),
-    deliver: asFunction((c: CommunicationDependencies) => new DeliverNotificationCommandHandler(c.notices, c.queries, c.provider)).singleton(),
+    deliver: asFunction((c: CommunicationDependencies) => new DeliverNotificationCommandHandler(c.notices, c.deliveryReads, c.provider)).singleton(),
     pickupCodec: asFunction(() => noticeCodec(CommunicationSubscription.PickupNotice)).singleton(),
     rewardCodec: asFunction(() => noticeCodec(CommunicationSubscription.RewardNotice)).singleton(),
     deliveryCodec: asFunction(deliveryCodec).singleton(),

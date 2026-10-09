@@ -24,7 +24,7 @@ class Outcome(TypedDict):
 
 
 class Loaded[S](TypedDict):
-    """Carries a restored aggregate snapshot and its persisted revision through a read port."""
+    """Carries an application read value or restored snapshot with its persisted revision."""
     exists: Literal[True]
     version: int
     state: S

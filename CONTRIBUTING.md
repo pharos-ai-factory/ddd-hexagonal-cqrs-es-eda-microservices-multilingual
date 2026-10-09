@@ -1,131 +1,160 @@
 # Contributing
 
-Use British English. Read `AGENTS.md`, `ARCHITECTURE.md`, `DDD.md` and `TESTING.md`
-before changing the model or infrastructure.
+Use British English. Start with [AGENTS.md](AGENTS.md), the
+[architecture](ARCHITECTURE.md), [domain rules](DDD.md),
+[browser contract](CLIENT-SUBSCRIPTIONS.md) and [testing guide](TESTING.md).
+The [decision index](docs/decisions/README.md) maps the accepted rules and their
+refinements. The [developer workflow](docs/developer-workflow.md) gives commands,
+source examples and extension recipes.
 
-## Change one responsibility
+## Plan the change around its owner
 
-Identify the owning context, aggregate and command or query first. Explain the
-immediate invariant. An aggregate child has no independent write repository.
-A cross-aggregate reaction requires a recorded asynchronous hand-off, including
-when both aggregates run in the same process.
+1. Run `pnpm context <name>` and open that context's README.
+2. Name the business behaviour, immediate invariant and owning aggregate. Identify
+   any subsequent workflow step that may remain pending.
+3. Choose the application role: command, query, event reaction or projection.
+4. Check which published contracts, private queued formats and persistence data
+   the change affects. Preserve their identities and compatibility.
+5. Add or revise the executable example and select the focused tests before wiring
+   the change into the service.
 
-Composition roots select implementations and bind handlers. Notification content,
-event interpretation and projection policy belong in the owning application
-package. Domain packages contain neither transport contracts nor provider calls.
+Keep each context inside its owning service. Domain/application code depends on
+plain types and application ports. Contexts communicate through published facts
+or owner interfaces; each has its own database and credentials. The Go API and
+Next.js translate and present business operations; domain policy stays with its owner.
 
-Run:
+## Put each responsibility where developers expect it
+
+Paths in this table are relative to the owning context.
+
+| Responsibility | Location and rule |
+| --- | --- |
+| Aggregate and its invariants | `domain/<business-name>`; children have no independent repositories |
+| Command | `application/commands/<action>`; one named DTO and matching `CommandHandler` together |
+| Query | `application/queries/<question>`; one named DTO and matching `QueryHandler` together |
+| Reader capability | `application/ports/`; use a named reader interface/protocol |
+| Read representation | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript) |
+| Event reaction | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript) |
+| Projection update | Go's current reactions live in `application/projections/` |
+| HTTP/Protobuf input mapping | `adaptors/http/` and `adaptors/messaging/` |
+| Stored-state restoration and view mapping | `adaptors/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript) |
+| DI bindings and worker/resource lifetime | Owning service's `apps/` composition module |
+
+Use snake_case filenames in Go/Python and kebab-case in TypeScript. Import the
+specific use-case package/module directly. Python package initialisers contain
+documentation. Shared errors and event DTOs can have separate files; a new use
+case starts as one file until it needs several supporting modules.
+
+Name handlers by their role: `CommandHandler`, `QueryHandler`,
+`IntegrationEventHandler`, `DomainEventHandler` or `ProjectionHandler`.
+Aggregates retain business names. Document class/struct responsibilities and
+important invariants with Go comments, Python docstrings or JSDoc. Concrete
+adaptor names, or their Go package names, identify the implementation technology.
+Keep handwritten source and documentation below 450 lines; record and explicitly
+classify any justified exception in [the responsibility review](docs/large-file-review.md).
+
+## Preserve execution and failure boundaries
+
+A runtime aggregate business change starts in its named command handler. Make
+at most one direct aggregate-store call in `Execute`/`execute`, with domain
+mutation inside its decision callback. Commit one root, receipts, outcome and
+outgoing event/realtime intent atomically. API commands also commit exact reply
+bytes. Domain tests can exercise aggregate behaviour directly; rehydration,
+projection updates and migrations have separate responsibilities.
+
+Application handlers never invoke another command handler. An event reaction
+maps a fact to an owner command and calls `DurableCommandPort`. Its receiving
+transaction records acceptance, exact private Protobuf command bytes and dispatch
+intent before ACK. The command queue then owns execution, bounded retries and
+replay. This applies between roots in one context as well as across contexts.
+Go's current subscriptions update projections; a new aggregate-changing Go
+reaction requires the explicit durable-command port/adaptor and paired consumers.
+
+Queries use application-owned read models and named reader ports. Persistence
+adaptors restore and validate stored authority before mapping it into a view.
+Preserve absent-resource behaviour, revisions and continuation identities. An
+unpaginated list remains complete; pagination is explicit.
+
+Keep typed expected business rejections separate from retryable infrastructure
+and corrupt-state failures. An identical command retry recovers its recorded
+outcome. A new business attempt needs a new command ID. Preserve original receipt
+material, expected versions and stable subscription/business identities;
+correlation IDs only group workflow evidence.
+
+## Compose plain handlers through DI
+
+Use **Fx** in Go, **Dependency Injector** in Python and **Awilix** in TypeScript
+services. Keep framework imports, registrations and container resolution under
+`apps/`. Inject ordinary application ports into handlers; adaptors and composition
+own PostgreSQL/RabbitMQ details. Resolve and test the full graph before workers
+start, drain workers before closing pools, and test partial-startup cleanup.
+
+Use the shared subscription helper to bind an event reaction and its private
+command consumer. Keep typed subscription identifiers, codecs and the owner's
+`adaptors/messaging/subscriptions.json` aligned. Validate the complete manifest
+so missing, duplicate and mismatched registrations fail startup. Stable queue and
+receipt identities survive class or file renames.
+
+## Evolve sources, then generate and check
+
+| Change | Source of truth | Required follow-through |
+| --- | --- | --- |
+| HTTP operation | `contracts/<context>/http_api/` | Update explicit API/owner mappings and frontend calls; run `pnpm generate:http` |
+| Published command/query/event | `contracts/<context>/messaging/{commands,queries,integration_events}/` and owner envelopes in `messaging/v1/` | Update boundary decoders/mappings and run `pnpm generate:contracts` |
+| Browser projection | `contracts/<context>/realtime/` | Update atomic publication and browser mapping; run `pnpm generate:contracts` |
+| Private queued command/event | Owning context's `adaptors/messaging/` | Preserve stored-byte compatibility, codec tests and historical fixtures; run `pnpm generate:contracts` |
+| Database evolution | Owning persistence adaptor's migration manifest and SQL | Append a checksummed migration and run `pnpm generate:contracts`; use administrative migration tooling |
+
+Service/technical OpenAPI sources live under `contracts/services/<service>/http_api/`;
+shared HTTP components live under `contracts/shared/http_api/`. Private domain
+facts have no published contract version. RabbitMQ delivery alone does not make
+them a public contract. Database bootstrap lives under `devops/postgres/bootstrap/`.
+
+Commit the generated outputs and review their diffs. Edit their sources rather
+than generated files. Required Protobuf scalars have explicit presence and the
+`required_input` annotation; optional additions stay optional and zero remains a
+valid supplied value. Generated types stay in adaptors; the API-to-owner transport
+is RabbitMQ, with anti-corruption mapping at both ends. Frontend HTTP calls use
+the generated operation client.
+
+`pnpm check:contracts` rejects changed, missing and newly generated outputs.
+`pnpm check:compatibility --against <commit>` separately compares historical
+interfaces and private fixtures. Breaking public changes need a version transition.
+See [the contract guide](contracts/README.md) for sources and generated locations.
+
+Runtime credentials only verify database identity, schema versions and checksums.
+They never run migrations. Preserve the frozen bootstrap SQL and existing migration
+history. `pnpm dev:up` applies pending migrations through administrative tooling.
+
+## Test, document and hand off
+
+Put Go/TypeScript tests beside their subjects. Mirror Python context tests under
+`tests/contexts/<context>/`; retain native Gherkin bindings under the service test
+tree. Business-rule changes need named examples in `specifications/<context>/`
+and their native bindings. Use deterministic values in unit tests; prove delivery,
+receipts, concurrency and crash recovery with real infrastructure.
+
+Run focused tests during editing, then both hand-off gates:
 
 ```sh
+pnpm test:focused <service> --context <context>
 pnpm verify
 pnpm test:integration
 ```
 
-When changing a business rule, add or revise a named example in
-`specifications/<context>` and its native step binding. Start with
-`pnpm test:bdd` for fast feedback; use the infrastructure lane for delivery,
-receipt or concurrency claims. Follow the [Gherkin guide](specifications/README.md)
-for scenario IDs and boundary selection.
+`pnpm verify` covers all five applications, generation/compatibility, architectural
+negative fixtures, DI graphs, type checks and fast scenarios. `pnpm test:integration`
+provisions and removes a disposable PostgreSQL/RabbitMQ/Centrifugo/Valkey/browser
+stack. Report actual results and any unavailable lane in
+[executed verification](docs/verification.md). A fast pass does not establish
+transaction or delivery correctness.
 
-The first command checks all five applications, including both Go modules,
-Python and TypeScript. Python uses pinned Mypy in strict mode for all handwritten
-source and tests, including Gherkin bindings and infrastructure fixtures.
-Run `uv run --frozen mypy` inside `services/operations` for focused feedback.
-Preserve typed command/event/snapshot boundaries; narrow external values through
-runtime decoders instead of casting them into trusted application types.
-The second command creates and removes an isolated Docker project
-and includes PostgreSQL, RabbitMQ, Centrifugo, Valkey and Chromium evidence. Report any omitted lane explicitly.
+When an architectural rule changes, update its accepted decision, contributor
+and agent guidance, executable examples and regression checks together. Update
+context navigation when ownership or entry points change. Record notable changes
+under `Unreleased` in [CHANGELOG.md](CHANGELOG.md).
 
-Use conventional commits such as `feat(loyalty): add reward cancellation` or
-`fix(amqp): preserve delivery identity during replay`. Pull requests should
-describe the triggering behaviour, the final rule and the relevant evidence.
-Record notable changes under `Unreleased` in [the changelog](CHANGELOG.md).
-Do not include generated secrets, `.local`, `.tools` or executable build outputs.
-
-## Contracts and persistence
-
-Generated Go/Python Protobuf bindings, Python `.pyi` declarations and TypeScript
-schema descriptors are committed. To regenerate them, install `uv` and
-run `pnpm generate:contracts`; the compiler and Go plugin versions are pinned in
-`scripts/generate.py`. Normal builds do not require the generator.
-
-Review schema and fixture changes as public contract changes. See
-`contracts/shared/messaging/events.md` for compatibility rules. Regeneration must produce
-no unexpected change before merging. `pnpm check:contracts` regenerates in an
-isolated directory and fails on changed, missing and newly generated outputs.
-
-Find published payloads under `contracts/<context>/messaging/` or
-`contracts/<context>/realtime/`. Keep public package names and field numbers
-stable. Private facts and internal message formats belong to the owning service.
-Bootstrap SQL lives in `devops/postgres/bootstrap/`. See decision 0008.
-
-API-to-context commands and queries start with `contracts/<context>/messaging/`. Update the
-API boundary translation and owner adaptor together; keep generated messages out
-of application/domain packages. Preserve command IDs, expected versions and plain
-receipt material. A transport request ID matches its reply intent; command receipts use the stable
-command ID. Annotate required scalar inputs explicitly and keep future optional
-inputs optional. See decisions 0007 and 0009.
-
-HTTP changes start with the OpenAPI sources in `contracts/<context>/http_api/`. Regenerate
-service-local bundles with `pnpm generate:http` or `pnpm generate:contracts`.
-Find business paths and schemas under `<context>/http_api/`, technical
-paths under `services/<service>/http_api/`, and generic HTTP components under
-`shared/http_api/`. The [contract guide](contracts/README.md) maps common changes to sources.
-Update the relevant handler conformance examples; the Go compositions require
-complete method/path coverage and the integration gate validates live owner DTOs.
-The generator also rebuilds frontend operation/request/response types and typed
-API wire mappings. Update explicit field mappings when public and wire names
-diverge. Feature HTTP calls use the generated operation client; `pnpm verify`
-checks compilation after incompatible OpenAPI request and response mutations.
-
-Database bootstrap runs as an administrator; applications only check schema
-version and checksum. Never add startup migrations or schema ownership to runtime
-credentials. The initial schema describes a fresh reference installation.
-Once it is shared, preserve it and add a reviewed migration instead of silently
-changing the checksum beneath existing data.
-
-## Architecture checks
-
-`scripts/check_architecture.py` rejects outward imports, foreign-context
-implementation imports, business dependencies in `foundation`, context imports
-outside a service's ownership and implicit domain clocks. Its policy has negative
-fixtures in `scripts/test_architecture.py`.
-
-All handwritten source and documentation files must stay below 450 lines. Before
-introducing an exception, record the responsibility review and explicitly teach
-the checker how to recognise it. Generated bindings, schema descriptors and dependency lockfiles have explicit
-reviewed exceptions; their generators own their structure.
-
-Keep these guides and the relevant accepted decision in the same change when a
-rule changes intentionally. Do not add staging, production or image-release
-workflows to this development reference.
-
-
-Request bindings live in `services/api/adaptors/messaging/generated/`,
-`services/storefront/contracts/requests/generated/`,
-`services/operations/src/operations/adaptors/generated/cafe/requests/` and
-`services/engagement/src/adaptors/generated/{requests.json,request-types.ts}`.
-They are compiler-owned and explicitly classified. Go/Python and generated
-TypeScript interfaces carry generated-file headers; descriptor JSON is identified
-by its `generated/` directory. A domain service receives only its own request
-packages. Generate all service clients with `pnpm generate:contracts`.
-
-For a new event-driven aggregate change, add the owner command DTO and
-`CommandHandler` together in `application/commands/<action>`, one pair per file.
-Use snake_case filenames in Go/Python and kebab-case in TypeScript. Import the
-owning command package or module directly; see decision 0013.
-Map the fact in an `IntegrationEventHandler` or
-`DomainEventHandler`, and register its durable subscription in the context
-composition. Keep the stable subscription identifier in its typed definition and
-`adaptors/messaging/subscriptions.json`. Add the private Protobuf command under
-that same owner, regenerate with `pnpm generate:contracts`, and exercise duplicate
-acceptance plus command execution. Resolve all new providers in the composition
-test. `pnpm verify` rejects aggregate mutation outside command execution and DI
-imports outside composition. Published class-name changes must never silently
-rename stored command identities, queues or wire fields.
-
-Use [the developer workflow](docs/developer-workflow.md) for adding a use case in
-each language. `pnpm test:focused <service> --context <context>` gives local
-feedback; `pnpm verify` also compares historical contracts. Application handlers
-cannot invoke another command handler or execute an aggregate store twice.
-Subscription declarations must be exhaustive at composition. See decision 0012.
+Use conventional commits such as `feat(loyalty): add reward cancellation`.
+Describe the triggering behaviour, final rule and evidence in the PR. Keep secrets,
+`.local`, `.tools` and build outputs out of commits. This reference supports
+local/development compositions only; release workflows are outside its scope.

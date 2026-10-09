@@ -9,8 +9,9 @@ import subprocess
 import sys
 from dev import ROOT, PORTS, load
 
-CONTEXTS = {'storefront': ('menu', 'ordering'), 'operations': ('preparation', 'collection'),
-            'engagement': ('loyalty', 'communication'), 'api': (), 'web': ()}
+from context_catalogue import services
+
+CONTEXTS = services()
 
 
 def run(args, cwd=ROOT, env=None):
@@ -25,7 +26,7 @@ def test(service, context=None):
         run([sys.executable, 'scripts/go.py', 'test', '-count=1', './contexts/'+context+'/...' if context else './...'],
             env=dict(os.environ, CAFE_GO_PROJECT='services/'+service))
     elif service == 'operations':
-        selected = ['tests/bdd/test_'+context+'.py', 'tests/test_domain.py'] if context else ['tests']
+        selected = ['tests/bdd/test_'+context+'.py', 'tests/contexts/'+context] if context else ['tests']
         run(['uv', 'run', '--frozen', 'pytest', '-q', *selected], cwd=folder)
     else:
         files = sorted(str(p.relative_to(folder)) for p in (folder/('src/contexts/'+context if context else 'src')).rglob('*.test.ts'))

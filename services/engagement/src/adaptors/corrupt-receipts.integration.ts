@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {Pool} from 'pg';
 import {PostgresContextDatabase, PostgresAggregateCommandStore, PostgresAggregateQueries} from './postgres.js';
-import {restoreAccount} from './restore.js';
-import type {AccountState} from '../contexts/loyalty/domain/account.js';
+import {restoreAccount} from '../contexts/loyalty/adaptors/persistence/accounts.js';
+import type {AccountState} from '../contexts/loyalty/domain/loyalty-account.js';
 import type {Metadata, Outcome} from '../foundation/application.js';
 import {CorruptState, Rejection} from '../foundation/domain.js';
 

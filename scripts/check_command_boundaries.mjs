@@ -8,12 +8,19 @@ const readMethods = new Set(['snapshot', 'events']);
 export function commandLayout(file) {
   const names = file.statements.filter(node => ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
     .map(node => node.name?.text ?? '');
-  const commands = names.filter(name => name.endsWith('Command'));
-  const handlers = names.filter(name => name.endsWith('CommandHandler'));
-  if (!commands.length && !handlers.length) return [];
-  if (path.dirname(file.fileName).replaceAll('\\', '/').endsWith('/application/commands') && commands.length === 1 &&
-    handlers.length === 1 && handlers[0] === commands[0]+'Handler') return [];
-  return [`${file.fileName}: keep one command and its handler together in application/commands`];
+  const errors = [];
+  for (const [role, folder] of [['Command', 'commands'], ['Query', 'queries']]) {
+    const inputs = names.filter(name => name.endsWith(role));
+    const handlers = names.filter(name => name.endsWith(role+'Handler'));
+    if (!inputs.length && !handlers.length) continue;
+    if (!(path.dirname(file.fileName).replaceAll('\\', '/').endsWith('/application/'+folder) && inputs.length === 1 &&
+      handlers.length === 1 && handlers[0] === inputs[0]+'Handler'))
+      errors.push(`${file.fileName}: keep one ${role.toLowerCase()} and its handler together in application/${folder}`);
+  }
+  const reactions = names.filter(name => /(?:Event|Projection)Handler$/.test(name));
+  if (reactions.length && (reactions.length !== 1 || !['event-handlers', 'projections'].includes(path.basename(path.dirname(file.fileName)))))
+    errors.push(`${file.fileName}: keep each event reaction in its own event-handlers or projections module`);
+  return errors;
 }
 function enclosing(node, predicate) {
   for (let parent = node.parent; parent; parent = parent.parent) if (predicate(parent)) return parent;
@@ -44,7 +51,7 @@ export function violations(program, selected) {
       let forbidden = false;
       if (ts.isNewExpression(node)) {
         const declarations = symbolAt(node.expression)?.declarations ?? [];
-        const restoring = file.fileName.replaceAll('\\', '/').endsWith('/adaptors/restore.ts');
+        const restoring = /\/contexts\/[^/]+\/adaptors\/persistence\//.test(file.fileName.replaceAll('\\', '/'));
         forbidden = declarations.some(aggregateClass) && !restoring;
       }
       if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {

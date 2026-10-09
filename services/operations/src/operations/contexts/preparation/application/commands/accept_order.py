@@ -1,5 +1,5 @@
 from typing import TypedDict
-from operations.contexts.preparation.domain import PreparationTicket, TicketState, TicketSnapshot
+from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketState, TicketSnapshot
 from operations.foundation.application import Change, AggregateCommandPort, Metadata, Outcome
 
 

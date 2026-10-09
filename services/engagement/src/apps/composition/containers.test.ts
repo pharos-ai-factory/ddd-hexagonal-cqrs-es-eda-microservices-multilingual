@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {asFunction} from 'awilix';
 import {createLoyaltyContainer} from './loyalty.js';
 import {createCommunicationContainer} from './communication.js';
-import {OrderCollectedIntegrationEventHandler} from '../../contexts/loyalty/application/event-handlers.js';
+import {OrderCollectedIntegrationEventHandler} from '../../contexts/loyalty/application/event-handlers/order-collected.js';
 import {CreditCollectionCommandHandler} from '../../contexts/loyalty/application/commands/credit-collection.js';
 
 const url = 'postgresql://unused:unused@127.0.0.1:1/unused';

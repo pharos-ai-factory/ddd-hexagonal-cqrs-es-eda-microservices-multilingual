@@ -1,0 +1,56 @@
+[
+  {
+    "name": "menu",
+    "service": "storefront",
+    "purpose": "Publish drinks and immutable priced menu editions.",
+    "source": "services/storefront/contexts/menu",
+    "features": [
+      "menu"
+    ]
+  },
+  {
+    "name": "ordering",
+    "service": "storefront",
+    "purpose": "Build and place orders from published menus.",
+    "source": "services/storefront/contexts/ordering",
+    "features": [
+      "ordering"
+    ]
+  },
+  {
+    "name": "preparation",
+    "service": "operations",
+    "purpose": "Accept placed orders and prepare their drinks.",
+    "source": "services/operations/src/operations/contexts/preparation",
+    "features": [
+      "preparation"
+    ]
+  },
+  {
+    "name": "collection",
+    "service": "operations",
+    "purpose": "Open pickups and record a single successful handover.",
+    "source": "services/operations/src/operations/contexts/collection",
+    "features": [
+      "collection"
+    ]
+  },
+  {
+    "name": "loyalty",
+    "service": "engagement",
+    "purpose": "Earn grants from collections, issue rewards and record redemption.",
+    "source": "services/engagement/src/contexts/loyalty",
+    "features": [
+      "rewards"
+    ]
+  },
+  {
+    "name": "communication",
+    "service": "engagement",
+    "purpose": "Request customer messages and record provider delivery.",
+    "source": "services/engagement/src/contexts/communication",
+    "features": [
+      "notifications"
+    ]
+  }
+]

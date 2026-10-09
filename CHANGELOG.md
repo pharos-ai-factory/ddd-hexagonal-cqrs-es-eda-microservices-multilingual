@@ -4,6 +4,20 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Consolidate agent/contributor guidance around decisions 0010–0014, with a
+  decision index, concrete extension recipes and a rule-to-check command table.
+  Align transaction diagrams, query terminology, generated-file guidance and
+  browser editing instructions with the current implementation.
+
+- Add 16 named query/handler pairs across all six contexts, with application read
+  models and named reader ports. Move restoration and private command decoding
+  into owning context adaptors; validate Go read state before selecting views.
+- Split event reactions and domain modules by business responsibility. Mirror
+  Python context tests and discover the full owner tree in focused test runs.
+- Group browser features by business task and retain shared recovery infrastructure.
+- Add checked context READMEs, `pnpm context` navigation and query/reaction scaffolds.
+  Extend architectural regression checks for query pairing and adaptor ownership.
+
 - Organise all 21 command/handler pairs under their context's `application/commands/`,
   with one business action per file, direct imports and matching scaffold output.
   Enforce the layout and retain mutation checks across nested Go application packages.

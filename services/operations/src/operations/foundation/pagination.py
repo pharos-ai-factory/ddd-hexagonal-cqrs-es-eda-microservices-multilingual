@@ -12,11 +12,11 @@ class PageRequest:
 
 @dataclass(frozen=True)
 class Page[S]:
-    """Contains one page of restored resources and its optional continuation identity."""
+    """Contains one page of versioned read values and its optional continuation identity."""
     items: list[Loaded[S]]
     next_id: str | None = None
 
 
 class PagedQueryPort[S](QueryPort[S], Protocol):
-    """Extends aggregate reads with an explicit bounded traversal capability."""
+    """Extends application reads with an explicit bounded traversal capability."""
     def page(self, request: PageRequest) -> Page[S]: ...

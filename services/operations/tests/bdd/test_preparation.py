@@ -2,10 +2,10 @@ import pytest
 from pytest_bdd import given, when, then, parsers, scenarios
 
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand, AcceptOrderCommandHandler
-from operations.contexts.preparation.application.event_handlers import OrderPlacedIntegrationEventHandler
+from operations.contexts.preparation.application.event_handlers.order_placed import OrderPlacedIntegrationEventHandler
 from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommandHandler
 from operations.contexts.preparation.application.commands.complete_preparation import CompletePreparationCommandHandler
-from operations.contexts.preparation.domain import TicketSnapshot
+from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.contracts.events import OrderPlaced
 from operations.foundation.application import Metadata, Outcome
 from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe

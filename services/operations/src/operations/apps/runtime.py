@@ -3,6 +3,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from threading import Event
+from operations.adaptors.incoming_event import IncomingEvent
 from operations.adaptors.delivery import EventSubscription, consume
 from operations.adaptors.internal_commands import InternalCommandCodec
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
@@ -27,11 +28,6 @@ class SubscriptionDefinition:
     command: str
 
 
-@dataclass(frozen=True)
-class IncomingEvent[E]:
-    """Bind a wire event name to its validated application payload decoder."""
-    name: str
-    parse: Callable[[WireEvent], E]
 
 
 def command_subscription[E, C: Mapping[str, object]](
