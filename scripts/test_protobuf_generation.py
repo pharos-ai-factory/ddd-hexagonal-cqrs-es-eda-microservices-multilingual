@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from contract_sources import ROOT
 from generate_requests import generate_requests
+from protobuf_tools import ensure_go_plugin
 from http_contracts import bundle, SOURCE, DOCUMENTS
 from typed_http_boundaries import generate, definitions
 
@@ -47,7 +48,7 @@ class ProtobufGenerationTests(unittest.TestCase):
             'cafe.menu.requests.v1.PublishEdition publish_edition = 16;\n cafe.menu.requests.v1.CreateOrder create_order = 17;'))
         standard = subprocess.check_output(['uv', 'run', '--no-project', '--with', 'grpcio-tools==1.84.0',
             'python', '-c', "import grpc_tools; from pathlib import Path; print(Path(grpc_tools.__file__).parent/'_proto')"], text=True).strip()
-        generate_requests('api', self.root, ROOT/'.tools/bin/protoc-gen-go', standard)
+        generate_requests('api', self.root, ensure_go_plugin(ROOT), standard)
         output = self.root/'services/api/adaptors/messaging/generated/cafe/requests/v1'
         self.assertFalse((output/'requests.pb.go').exists())
         for owner in ('menu', 'ordering'):

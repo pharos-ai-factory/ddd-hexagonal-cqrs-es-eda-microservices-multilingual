@@ -40,6 +40,13 @@ The compatibility gate permits only the 17 direct Storefront business operation
 removals recorded by [decision 0016](docs/decisions/0016-owner-messaging-boundary.md).
 Public API operations and owner operational endpoints retain full compatibility checks.
 
+Protobuf generation and its compiler regression tests initialise the pinned
+`protoc-gen-go` version through `scripts/protobuf_tools.py`. A fresh checkout
+needs no pre-existing `.tools/bin` installation. The first run installs the
+compiler; later runs reuse it after checking its version. Installation or version
+validation failures stop generation. Generated-drift checks keep their temporary
+checkout isolated, so standalone tests initialise their own required tools.
+
 Run commands from the repository root unless a service directory is specified.
 The Go wrapper defaults to Storefront; `CAFE_GO_PROJECT=services/api` selects the
 API module. For focused type checks, use `uv run --frozen mypy` inside

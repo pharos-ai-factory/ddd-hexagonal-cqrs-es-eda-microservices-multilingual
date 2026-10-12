@@ -268,6 +268,12 @@ pnpm verify
 pnpm test:integration
 ```
 
+Generation and its native compiler regression tests install the pinned Go
+Protobuf plugin automatically when `.tools/bin/protoc-gen-go` is absent or has
+the wrong version. The first run requires access to the pinned Go module; a
+previous local generation run is unnecessary. The shared setup lives in
+`scripts/protobuf_tools.py` and verifies the installed executable before use.
+
 Generation and compatibility answer different questions: fresh generated files
 can still represent an incompatible interface. The [testing guide](../TESTING.md)
 maps each rule to its check and distinguishes fast policy tests from live evidence.

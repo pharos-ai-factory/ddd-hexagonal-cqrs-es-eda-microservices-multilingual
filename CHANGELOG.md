@@ -4,6 +4,10 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Initialise the pinned Go Protobuf compiler in standalone generation tests as
+  well as contract generation. Fix deterministic CI on fresh checkouts, with
+  regression coverage for missing, outdated and unusable compiler installations.
+
 - Retire direct business HTTP routes in all three owner services. Wire command
   executors and query handlers directly to RabbitMQ; retain health and diagnostics.
   Keep context-owned OpenAPI fragments at the public API boundary. Add native,

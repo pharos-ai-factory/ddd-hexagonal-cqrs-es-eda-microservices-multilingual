@@ -3,8 +3,8 @@
 from http_contracts import generate as generate_http_contracts
 from contract_sources import PRIVATE, catalogue, command_subscriptions, sources as contract_sources
 from generate_requests import generate_requests
+from protobuf_tools import ensure_go_plugin
 import tempfile
-import os
 import json
 import re
 from hashlib import sha256
@@ -13,13 +13,7 @@ from pathlib import Path
 import shutil
 import subprocess
 ROOT = Path(__file__).resolve().parents[1]
-plugin_dir = ROOT/".tools/bin"
-plugin_dir.mkdir(parents=True, exist_ok=True)
-env = dict(os.environ, GOBIN=str(plugin_dir))
-plugin = plugin_dir/"protoc-gen-go"
-version = subprocess.check_output([str(plugin), "--version"], text=True).strip() if plugin.exists() else ""
-if version != "protoc-gen-go v1.36.12":
-    subprocess.run(["python3", "scripts/go.py", "install", "google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12"], cwd=ROOT, env=env, check=True)
+plugin = ensure_go_plugin(ROOT)
 standard_protos = subprocess.check_output(["uv", "run", "--no-project", "--with", "grpcio-tools==1.84.0", "python", "-c",
     "import grpc_tools; from pathlib import Path; print(Path(grpc_tools.__file__).parent/'_proto')"], text=True).strip()
 python_out = ROOT/"services/operations/src/operations/adaptors/generated"

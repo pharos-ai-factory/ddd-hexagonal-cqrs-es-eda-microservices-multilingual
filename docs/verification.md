@@ -1,5 +1,31 @@
 # Executed verification
 
+## Fresh-checkout compiler setup, 12 October 2026
+
+The deterministic job for `fb4453c` failed in
+`test_contexts_can_reuse_payload_tags_and_names`: the test used
+`.tools/bin/protoc-gen-go` without initialising it. The preceding contract drift
+check installed the compiler only in its disposable checkout. The existing local
+compiler cache concealed that prerequisite. A clean export reproduced the failure.
+
+Generation and its compiler regression test now share the version-checked setup
+in `scripts/protobuf_tools.py`. Five focused regressions cover missing, reusable,
+outdated/unusable, failed and incorrectly completed compiler installations.
+The existing three schema generation tests continue to use the real compiler.
+
+`pnpm verify` passed in a fresh temporary Git clone with the working changes and
+frozen workspace dependencies. The clone started without `.tools`; verification
+installed and checked `protoc-gen-go v1.36.12`. All 86 script tests, generated and
+historical contract checks, Go race/vet, Python/TypeScript checks and 51 fast
+Gherkin scenarios passed. Generated contracts remain unchanged.
+
+`pnpm test:integration` passed all required infrastructure checks, 31 live API
+operations, 12 infrastructure Gherkin scenarios, both browser scenarios and
+session revocation. All environment-dependent lanes ran and disposable resources
+were removed. Hosted CI verification awaits committing and pushing the fix.
+
+Logs: `.local/ci-clean-verify.log` and `.local/ci-plugin-integration.log`.
+
 ## Owner HTTP boundary cleanup, 9 October 2026
 
 Retired direct business HTTP routes and JSON decoders across Storefront,
