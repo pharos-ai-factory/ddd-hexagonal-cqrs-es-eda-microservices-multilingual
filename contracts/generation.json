@@ -1,0 +1,138 @@
+{
+  "events": {
+    "storefront": {
+      "produces": [
+        "menu",
+        "ordering"
+      ],
+      "consumes": [
+        "menu"
+      ]
+    },
+    "operations": {
+      "produces": [
+        "preparation",
+        "collection"
+      ],
+      "consumes": [
+        "ordering",
+        "preparation"
+      ]
+    },
+    "engagement": {
+      "produces": [
+        "loyalty"
+      ],
+      "consumes": [
+        "collection",
+        "loyalty"
+      ]
+    }
+  },
+  "requests": {
+    "storefront": {
+      "produces": [
+        "menu",
+        "ordering"
+      ],
+      "consumes": [
+        "menu",
+        "ordering"
+      ]
+    },
+    "operations": {
+      "produces": [
+        "preparation",
+        "collection"
+      ],
+      "consumes": [
+        "preparation",
+        "collection"
+      ]
+    },
+    "engagement": {
+      "produces": [
+        "loyalty",
+        "communication"
+      ],
+      "consumes": [
+        "loyalty",
+        "communication"
+      ]
+    },
+    "api": {
+      "produces": [
+        "menu",
+        "ordering",
+        "preparation",
+        "collection",
+        "loyalty",
+        "communication"
+      ],
+      "consumes": [
+        "menu",
+        "ordering",
+        "preparation",
+        "collection",
+        "loyalty",
+        "communication"
+      ]
+    }
+  },
+  "realtime": {
+    "storefront": {
+      "produces": [
+        "menu",
+        "ordering"
+      ],
+      "consumes": []
+    },
+    "operations": {
+      "produces": [
+        "preparation",
+        "collection"
+      ],
+      "consumes": []
+    },
+    "engagement": {
+      "produces": [
+        "loyalty",
+        "communication"
+      ],
+      "consumes": []
+    },
+    "web": {
+      "produces": [],
+      "consumes": [
+        "menu",
+        "ordering",
+        "preparation",
+        "collection",
+        "loyalty",
+        "communication"
+      ]
+    }
+  },
+  "openapi": {
+    "api": {
+      "produces": [
+        "api",
+        "gateway"
+      ],
+      "consumes": []
+    },
+    "storefront": {
+      "produces": [
+        "storefront",
+        "provider"
+      ],
+      "consumes": []
+    },
+    "web": {
+      "produces": [],
+      "consumes": [
+        "api"
+      ]
+    }
+  }
+}

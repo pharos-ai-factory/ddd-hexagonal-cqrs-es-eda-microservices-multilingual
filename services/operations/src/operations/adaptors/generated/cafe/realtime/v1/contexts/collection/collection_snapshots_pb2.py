@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/realtime/v1/contexts/collection/collection_snapshots.proto\x12\x10\x63\x61\x66\x65.realtime.v1\"Y\n\x06Pickup\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08order_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x03 \x01(\t\x12\x0c\n\x04\x63ode\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\tB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/realtime/v1/contexts/collection/collection_snapshots.proto\x12\x10\x63\x61\x66\x65.realtime.v1\"\x80\x01\n\x06Pickup\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n\x08order_id\x18\x02 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x03 \x01(\tR\ncustomerId\x12\x12\n\x04\x63ode\x18\x04 \x01(\tR\x04\x63ode\x12\x16\n\x06status\x18\x05 \x01(\tR\x06statusB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,6 +32,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.realtime.v1.contexts.c
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\236\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1'
-  _globals['_PICKUP']._serialized_start=85
-  _globals['_PICKUP']._serialized_end=174
+  _globals['_PICKUP']._serialized_start=86
+  _globals['_PICKUP']._serialized_end=214
 # @@protoc_insertion_point(module_scope)

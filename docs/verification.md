@@ -1,5 +1,28 @@
 # Executed verification
 
+## Selective contract generation, 13 October 2026
+
+The generation manifest separates events, request/reply Protobuf, realtime
+Protobuf and OpenAPI. Service outputs follow declared usage and schema imports.
+Web retains all six contexts through the API OpenAPI client and realtime
+Protobuf. Published schemas and wire identities remain unchanged; historical
+RewardIssued Go/Python checks use disposable compatibility outputs.
+
+Both baseline and final `pnpm verify` passed. The final run passed generated
+drift, historical compatibility, architecture/large-file checks, 93 script tests,
+Go race/vet, Python/TypeScript checks and 51 fast Gherkin scenarios. Seven new
+selection tests cover invalid declarations, dependencies, retained envelope
+identities, category boundaries, repeatable generation and stale output removal.
+Compatibility also passed against the starting revision `b1cdc5b`.
+
+`pnpm test:integration` built all five applications and passed PostgreSQL/RabbitMQ
+checks, all 31 live API operations, 12 infrastructure scenarios, both browser
+scenarios and session revocation. All required environment-dependent checks ran;
+disposable resources were removed. No pre-existing failures or regressions were
+observed. Remote CI, load tests, manual UAT and deployment were not run.
+
+Logs: `.local/selective-contract-generation/{baseline,verify,integration,selection,compatibility}.log`.
+
 ## Storefront composition package, 13 October 2026
 
 Storefront's Fx graph, context modules and lifecycle hooks now live under

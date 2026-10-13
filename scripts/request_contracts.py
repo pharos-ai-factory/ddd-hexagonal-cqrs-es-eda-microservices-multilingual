@@ -1,8 +1,7 @@
 """Service ownership and Go interfaces over native context envelopes."""
-from contract_sources import OWNERS
+from contract_selection import owners
 
-OWNED = {'storefront': ('menu', 'ordering'), 'operations': ('preparation', 'collection'),
-         'engagement': ('loyalty', 'communication'), 'api': OWNERS}
+OWNED = {service: owners(service, 'requests') for service in ('storefront', 'operations', 'engagement', 'api')}
 
 
 def envelopes(owners, package_root):

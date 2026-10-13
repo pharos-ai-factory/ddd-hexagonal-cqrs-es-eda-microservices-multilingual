@@ -35,31 +35,3 @@ type OrderPlaced struct {
 	Currency   string `json:"currency"`
 	Lines      []Line `json:"lines"`
 }
-
-// DrinksReady carries the named fact at this module's domain or integration boundary.
-type DrinksReady struct {
-	OrderID    string `json:"orderId"`
-	CustomerID string `json:"customerId"`
-}
-
-// PickupOpened carries the named fact at this module's domain or integration boundary.
-type PickupOpened struct {
-	PickupID       string `json:"pickupId"`
-	OrderID        string `json:"orderId"`
-	CustomerID     string `json:"customerId"`
-	CollectionCode string `json:"collectionCode"`
-}
-
-// OrderCollected carries the named fact at this module's domain or integration boundary.
-type OrderCollected struct {
-	OrderID    string `json:"orderId"`
-	CustomerID string `json:"customerId"`
-}
-
-// RewardIssued carries the named fact at this module's domain or integration boundary.
-type RewardIssued struct {
-	RewardID   string `json:"rewardId"`
-	CustomerID string `json:"customerId"`
-	Benefit    string `json:"benefit"`
-	ExpiresAt  string `json:"expiresAt"`
-}

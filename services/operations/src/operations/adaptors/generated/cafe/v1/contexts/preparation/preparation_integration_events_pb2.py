@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\nAcafe/v1/contexts/preparation/preparation_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"4\n\x0b\x44rinksReady\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x02 \x01(\tB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\nAcafe/v1/contexts/preparation/preparation_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"I\n\x0b\x44rinksReady\x12\x19\n\x08order_id\x18\x01 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x02 \x01(\tR\ncustomerIdB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,5 +33,5 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\217\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1'
   _globals['_DRINKSREADY']._serialized_start=78
-  _globals['_DRINKSREADY']._serialized_end=130
+  _globals['_DRINKSREADY']._serialized_end=151
 # @@protoc_insertion_point(module_scope)

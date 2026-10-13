@@ -15,21 +15,17 @@ from operations.foundation.identity import new_id
 CATALOGUE = {item["name"]: item for item in json.loads(
     (Path(__file__).parent/"generated/catalogue.json").read_text())}
 PAYLOADS = {
-    "menu.edition-published": "menu_published",
     "ordering.order-placed": "order_placed", "preparation.drinks-ready": "drinks_ready",
     "collection.pickup-opened": "pickup_opened", "collection.order-collected": "order_collected",
-    "loyalty.reward-issued": "reward_issued",
 }
 SOURCE_IDENTITIES = {
-    "menu.edition-published": "edition_id",
     "ordering.order-placed": "order_id", "collection.pickup-opened": "pickup_id",
-    "loyalty.reward-issued": "reward_id",
 }
 
 
 def validate(event: Event) -> None:
     definition = CATALOGUE.get(event.name)
-    if not definition or (event.context, event.visibility, event.aggregate_kind) != (
+    if not definition or event.name not in PAYLOADS or (event.context, event.visibility, event.aggregate_kind) != (
         definition["owner"], definition["visibility"], definition["kind"]
     ) or event.contract_version != 1:
         raise ValueError("Unknown event contract or owner")

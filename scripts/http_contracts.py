@@ -5,6 +5,7 @@ import json
 from typed_http_boundaries import OUTPUT as MAPPING_OUTPUT, generate as mapping_generated
 from frontend_contracts import OUTPUT as FRONTEND_OUTPUT, generated as frontend_generated
 from pathlib import Path
+from contract_selection import declarations
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "contracts"
@@ -65,12 +66,24 @@ def bundle(path: Path) -> dict:
 
 
 def generated() -> dict[Path, str]:
+    usage = declarations(ROOT)['openapi']
+    supported = {'api': {'produces': {'api', 'gateway'}, 'consumes': set()},
+                 'storefront': {'produces': {'storefront', 'provider'}, 'consumes': set()},
+                 'web': {'produces': set(), 'consumes': {'api'}}}
+    for service, roles in usage.items():
+        for role, names in roles.items():
+            if set(names) - supported.get(service, {}).get(role, set()):
+                raise ValueError(f'No OpenAPI generation target for {service}.{role}: {names}')
+    produced = {name for roles in usage.values() for name in roles['produces']}
     outputs = {
         ROOT / directory / (name + ".openapi.json"):
         json.dumps(bundle(SOURCE / DOCUMENTS[name]), indent=2, ensure_ascii=False) + "\n"
-        for name, directory in OUTPUTS.items()
+        for name, directory in OUTPUTS.items() if name in produced
     }
-    outputs[ROOT/FRONTEND_OUTPUT] = frontend_generated(bundle(SOURCE/DOCUMENTS["api"]))
+    if 'api' in usage.get('web', {}).get('consumes', []):
+        outputs[ROOT/FRONTEND_OUTPUT] = frontend_generated(bundle(SOURCE/DOCUMENTS["api"]))
+    if 'api' not in produced:
+        return outputs
     mapping = mapping_generated(ROOT, bundle(SOURCE/DOCUMENTS["api"]))
     import subprocess
     gofmt = ROOT/".tools/go/bin/gofmt"
@@ -83,7 +96,16 @@ def generated() -> dict[Path, str]:
 
 
 def generate(check=False):
-    for path, expected in generated().items():
+    expected_outputs = generated()
+    managed = {ROOT/FRONTEND_OUTPUT, ROOT/MAPPING_OUTPUT}
+    for directory in set(OUTPUTS.values()):
+        managed.update((ROOT/directory).glob('*.openapi.json'))
+    for path in managed - expected_outputs.keys():
+        if path.exists():
+            if check:
+                raise ValueError(f'Stale OpenAPI output: {path.relative_to(ROOT)}')
+            path.unlink()
+    for path, expected in expected_outputs.items():
         if check:
             if not path.exists() or path.read_text() != expected:
                 raise ValueError(f"OpenAPI bundle drift: {path.relative_to(ROOT)}; run pnpm generate:http")

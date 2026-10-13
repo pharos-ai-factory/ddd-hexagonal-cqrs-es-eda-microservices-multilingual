@@ -28,18 +28,6 @@ func Encode(message a.Message) ([]byte, error) {
 	case model.OrderPlaced:
 		expected = "ordering.order-placed"
 		event.Payload = &pb.Event_OrderPlaced{OrderPlaced: &pb.OrderPlaced{OrderId: p.OrderID, CustomerId: p.CustomerID, EditionId: p.EditionID, Currency: p.Currency, Lines: encodeLines(p.Lines)}}
-	case model.DrinksReady:
-		expected = "preparation.drinks-ready"
-		event.Payload = &pb.Event_DrinksReady{DrinksReady: &pb.DrinksReady{OrderId: p.OrderID, CustomerId: p.CustomerID}}
-	case model.PickupOpened:
-		expected = "collection.pickup-opened"
-		event.Payload = &pb.Event_PickupOpened{PickupOpened: &pb.PickupOpened{PickupId: p.PickupID, OrderId: p.OrderID, CustomerId: p.CustomerID, CollectionCode: p.CollectionCode}}
-	case model.OrderCollected:
-		expected = "collection.order-collected"
-		event.Payload = &pb.Event_OrderCollected{OrderCollected: &pb.OrderCollected{OrderId: p.OrderID, CustomerId: p.CustomerID}}
-	case model.RewardIssued:
-		expected = "loyalty.reward-issued"
-		event.Payload = &pb.Event_RewardIssued{RewardIssued: &pb.RewardIssued{RewardId: p.RewardID, CustomerId: p.CustomerID, Benefit: p.Benefit, ExpiresAt: p.ExpiresAt}}
 	default:
 		return nil, fmt.Errorf("unknown publication payload %T", message.Payload)
 	}
@@ -83,34 +71,6 @@ func Decode(data []byte) (a.Message, error) {
 		}
 		expected = "ordering.order-placed"
 		message.Payload = model.OrderPlaced{OrderID: p.OrderId, CustomerID: p.CustomerId, EditionID: p.EditionId, Currency: p.Currency, Lines: decodeLines(p.Lines)}
-	case *pb.Event_DrinksReady:
-		p := value.DrinksReady
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "preparation.drinks-ready"
-		message.Payload = model.DrinksReady{OrderID: p.OrderId, CustomerID: p.CustomerId}
-	case *pb.Event_PickupOpened:
-		p := value.PickupOpened
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "collection.pickup-opened"
-		message.Payload = model.PickupOpened{PickupID: p.PickupId, OrderID: p.OrderId, CustomerID: p.CustomerId, CollectionCode: p.CollectionCode}
-	case *pb.Event_OrderCollected:
-		p := value.OrderCollected
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "collection.order-collected"
-		message.Payload = model.OrderCollected{OrderID: p.OrderId, CustomerID: p.CustomerId}
-	case *pb.Event_RewardIssued:
-		p := value.RewardIssued
-		if p == nil {
-			return a.Message{}, fmt.Errorf("missing payload")
-		}
-		expected = "loyalty.reward-issued"
-		message.Payload = model.RewardIssued{RewardID: p.RewardId, CustomerID: p.CustomerId, Benefit: p.Benefit, ExpiresAt: p.ExpiresAt}
 	default:
 		return a.Message{}, fmt.Errorf("missing or unknown payload")
 	}

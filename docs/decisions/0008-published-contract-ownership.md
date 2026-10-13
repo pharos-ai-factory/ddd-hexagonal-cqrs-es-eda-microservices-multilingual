@@ -60,3 +60,14 @@ public decoding. Architecture checks verify catalogue ownership. The complete
 deterministic and infrastructure gates exercise generation, API dispatch,
 outbox recovery, duplicate delivery and context permissions. Executed results
 and environment limits are recorded in [verification](../verification.md).
+
+## Service-specific generation
+
+The [generation manifest](../../contracts/generation.md) records producer/consumer
+requirements separately for events, request/reply Protobuf, realtime Protobuf and
+OpenAPI. Compiler-derived local views of the shared typed envelopes retain only
+declared alternatives and their transitive schema dependencies, preserving each
+retained field identity and reserving omitted alternatives locally. Authoritative
+published schemas and historical wire bytes remain unchanged. Browser generation
+includes the API OpenAPI client and all authorised realtime contexts. Cross-language
+fixtures use dedicated test outputs when a runtime has no corresponding consumer.

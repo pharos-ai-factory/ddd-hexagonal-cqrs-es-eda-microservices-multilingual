@@ -21,7 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Published integration event envelope. Private messages belong to owner adaptors.
 type Event struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -39,10 +38,6 @@ type Event struct {
 	//
 	//	*Event_MenuPublished
 	//	*Event_OrderPlaced
-	//	*Event_DrinksReady
-	//	*Event_PickupOpened
-	//	*Event_OrderCollected
-	//	*Event_RewardIssued
 	Payload       isEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -180,42 +175,6 @@ func (x *Event) GetOrderPlaced() *OrderPlaced {
 	return nil
 }
 
-func (x *Event) GetDrinksReady() *DrinksReady {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_DrinksReady); ok {
-			return x.DrinksReady
-		}
-	}
-	return nil
-}
-
-func (x *Event) GetPickupOpened() *PickupOpened {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_PickupOpened); ok {
-			return x.PickupOpened
-		}
-	}
-	return nil
-}
-
-func (x *Event) GetOrderCollected() *OrderCollected {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_OrderCollected); ok {
-			return x.OrderCollected
-		}
-	}
-	return nil
-}
-
-func (x *Event) GetRewardIssued() *RewardIssued {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_RewardIssued); ok {
-			return x.RewardIssued
-		}
-	}
-	return nil
-}
-
 type isEvent_Payload interface {
 	isEvent_Payload()
 }
@@ -228,39 +187,15 @@ type Event_OrderPlaced struct {
 	OrderPlaced *OrderPlaced `protobuf:"bytes,22,opt,name=order_placed,json=orderPlaced,proto3,oneof"`
 }
 
-type Event_DrinksReady struct {
-	DrinksReady *DrinksReady `protobuf:"bytes,23,opt,name=drinks_ready,json=drinksReady,proto3,oneof"`
-}
-
-type Event_PickupOpened struct {
-	PickupOpened *PickupOpened `protobuf:"bytes,24,opt,name=pickup_opened,json=pickupOpened,proto3,oneof"`
-}
-
-type Event_OrderCollected struct {
-	OrderCollected *OrderCollected `protobuf:"bytes,25,opt,name=order_collected,json=orderCollected,proto3,oneof"`
-}
-
-type Event_RewardIssued struct {
-	RewardIssued *RewardIssued `protobuf:"bytes,27,opt,name=reward_issued,json=rewardIssued,proto3,oneof"`
-}
-
 func (*Event_MenuPublished) isEvent_Payload() {}
 
 func (*Event_OrderPlaced) isEvent_Payload() {}
-
-func (*Event_DrinksReady) isEvent_Payload() {}
-
-func (*Event_PickupOpened) isEvent_Payload() {}
-
-func (*Event_OrderCollected) isEvent_Payload() {}
-
-func (*Event_RewardIssued) isEvent_Payload() {}
 
 var File_cafe_v1_events_proto protoreflect.FileDescriptor
 
 const file_cafe_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"\x14cafe/v1/events.proto\x12\acafe.v1\x1a3cafe/v1/contexts/menu/menu_integration_events.proto\x1a;cafe/v1/contexts/ordering/ordering_integration_events.proto\x1aAcafe/v1/contexts/preparation/preparation_integration_events.proto\x1a?cafe/v1/contexts/collection/collection_integration_events.proto\x1a9cafe/v1/contexts/loyalty/loyalty_integration_events.proto\"\xbe\x06\n" +
+	"\x14cafe/v1/events.proto\x12\acafe.v1\x1a3cafe/v1/contexts/menu/menu_integration_events.proto\x1a;cafe/v1/contexts/ordering/ordering_integration_events.proto\"\x98\x05\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -278,12 +213,8 @@ const file_cafe_v1_events_proto_rawDesc = "" +
 	"\voccurred_at\x18\v \x01(\tR\n" +
 	"occurredAt\x12?\n" +
 	"\x0emenu_published\x18\x15 \x01(\v2\x16.cafe.v1.MenuPublishedH\x00R\rmenuPublished\x129\n" +
-	"\forder_placed\x18\x16 \x01(\v2\x14.cafe.v1.OrderPlacedH\x00R\vorderPlaced\x129\n" +
-	"\fdrinks_ready\x18\x17 \x01(\v2\x14.cafe.v1.DrinksReadyH\x00R\vdrinksReady\x12<\n" +
-	"\rpickup_opened\x18\x18 \x01(\v2\x15.cafe.v1.PickupOpenedH\x00R\fpickupOpened\x12B\n" +
-	"\x0forder_collected\x18\x19 \x01(\v2\x17.cafe.v1.OrderCollectedH\x00R\x0eorderCollected\x12<\n" +
-	"\rreward_issued\x18\x1b \x01(\v2\x15.cafe.v1.RewardIssuedH\x00R\frewardIssuedB\t\n" +
-	"\apayloadJ\x04\b\x14\x10\x15J\x04\b\x1a\x10\x1bJ\x04\b\x1c\x10\x1dR\x0fdrink_publishedR\rreward_earnedR\x16notification_requestedB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
+	"\forder_placed\x18\x16 \x01(\v2\x14.cafe.v1.OrderPlacedH\x00R\vorderPlacedB\t\n" +
+	"\apayloadJ\x04\b\x14\x10\x15J\x04\b\x1a\x10\x1bJ\x04\b\x1c\x10\x1dJ\x04\b\x17\x10\x18J\x04\b\x18\x10\x19J\x04\b\x19\x10\x1aJ\x04\b\x1b\x10\x1cR\x0fdrink_publishedR\rreward_earnedR\x16notification_requestedR\fdrinks_readyR\rpickup_openedR\x0forder_collectedR\rreward_issuedB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
 
 var (
 	file_cafe_v1_events_proto_rawDescOnce sync.Once
@@ -299,26 +230,18 @@ func file_cafe_v1_events_proto_rawDescGZIP() []byte {
 
 var file_cafe_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cafe_v1_events_proto_goTypes = []any{
-	(*Event)(nil),          // 0: cafe.v1.Event
-	(*MenuPublished)(nil),  // 1: cafe.v1.MenuPublished
-	(*OrderPlaced)(nil),    // 2: cafe.v1.OrderPlaced
-	(*DrinksReady)(nil),    // 3: cafe.v1.DrinksReady
-	(*PickupOpened)(nil),   // 4: cafe.v1.PickupOpened
-	(*OrderCollected)(nil), // 5: cafe.v1.OrderCollected
-	(*RewardIssued)(nil),   // 6: cafe.v1.RewardIssued
+	(*Event)(nil),         // 0: cafe.v1.Event
+	(*MenuPublished)(nil), // 1: cafe.v1.MenuPublished
+	(*OrderPlaced)(nil),   // 2: cafe.v1.OrderPlaced
 }
 var file_cafe_v1_events_proto_depIdxs = []int32{
 	1, // 0: cafe.v1.Event.menu_published:type_name -> cafe.v1.MenuPublished
 	2, // 1: cafe.v1.Event.order_placed:type_name -> cafe.v1.OrderPlaced
-	3, // 2: cafe.v1.Event.drinks_ready:type_name -> cafe.v1.DrinksReady
-	4, // 3: cafe.v1.Event.pickup_opened:type_name -> cafe.v1.PickupOpened
-	5, // 4: cafe.v1.Event.order_collected:type_name -> cafe.v1.OrderCollected
-	6, // 5: cafe.v1.Event.reward_issued:type_name -> cafe.v1.RewardIssued
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_cafe_v1_events_proto_init() }
@@ -328,16 +251,9 @@ func file_cafe_v1_events_proto_init() {
 	}
 	file_cafe_v1_contexts_menu_menu_integration_events_proto_init()
 	file_cafe_v1_contexts_ordering_ordering_integration_events_proto_init()
-	file_cafe_v1_contexts_preparation_preparation_integration_events_proto_init()
-	file_cafe_v1_contexts_collection_collection_integration_events_proto_init()
-	file_cafe_v1_contexts_loyalty_loyalty_integration_events_proto_init()
 	file_cafe_v1_events_proto_msgTypes[0].OneofWrappers = []any{
 		(*Event_MenuPublished)(nil),
 		(*Event_OrderPlaced)(nil),
-		(*Event_DrinksReady)(nil),
-		(*Event_PickupOpened)(nil),
-		(*Event_OrderCollected)(nil),
-		(*Event_RewardIssued)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

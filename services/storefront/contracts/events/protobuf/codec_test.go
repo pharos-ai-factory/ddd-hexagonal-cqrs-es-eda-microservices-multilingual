@@ -1,15 +1,11 @@
 package protobuf
 
 import (
-	"bytes"
-	"encoding/hex"
 	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -17,7 +13,7 @@ import (
 )
 
 func fixture() a.Message {
-	return a.Message{ID: "11111111-1111-4111-8111-111111111111", Name: "loyalty.reward-issued", Context: "loyalty", Visibility: a.Public, ContractVersion: 1, AggregateKind: "reward", AggregateID: "22222222-2222-4222-8222-222222222222", AggregateVersion: 3, CorrelationID: "33333333-3333-4333-8333-333333333333", CausationID: "44444444-4444-4444-8444-444444444444", OccurredAt: time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC), Payload: model.RewardIssued{RewardID: "22222222-2222-4222-8222-222222222222", CustomerID: "55555555-5555-4555-8555-555555555555", Benefit: "one free drink", ExpiresAt: "2026-10-03T12:00:00Z"}}
+	return a.Message{ID: "11111111-1111-4111-8111-111111111111", Name: "menu.edition-published", Context: "menu", Visibility: a.Public, ContractVersion: 1, AggregateKind: "edition", AggregateID: "22222222-2222-4222-8222-222222222222", AggregateVersion: 3, CorrelationID: "33333333-3333-4333-8333-333333333333", CausationID: "44444444-4444-4444-8444-444444444444", OccurredAt: time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC), Payload: model.MenuPublished{EditionID: "22222222-2222-4222-8222-222222222222", Currency: "EUR", Offers: []model.Offer{{Code: "TEA", DrinkID: "55555555-5555-4555-8555-555555555555", DrinkRevision: 1, Name: "Tea", Minor: 300, Currency: "EUR"}}}}
 }
 
 func TestDecoderRejectsSemanticallyInvalidWirePayload(t *testing.T) {
@@ -29,7 +25,7 @@ func TestDecoderRejectsSemanticallyInvalidWirePayload(t *testing.T) {
 	if err = proto.Unmarshal(body, &event); err != nil {
 		t.Fatal(err)
 	}
-	event.GetRewardIssued().ExpiresAt = "invalid"
+	event.GetMenuPublished().Offers[0].Minor = -1
 	body, err = proto.Marshal(&event)
 	if err != nil {
 		t.Fatal(err)
@@ -38,27 +34,11 @@ func TestDecoderRejectsSemanticallyInvalidWirePayload(t *testing.T) {
 		t.Fatal("valid Protobuf with invalid business evidence was accepted")
 	}
 }
-func TestGoldenIntegrationContract(t *testing.T) {
+func TestDeclaredIntegrationContractRoundTrip(t *testing.T) {
 	message := fixture()
 	encoded, err := Encode(message)
 	if err != nil {
 		t.Fatal(err)
-	}
-	path := filepath.Join("..", "fixtures", "reward-issued.v1.hex")
-	if os.Getenv("UPDATE_FIXTURES") == "1" {
-		if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			t.Fatal(err)
-		}
-		if err = os.WriteFile(path, []byte(hex.EncodeToString(encoded)+"\n"), 0644); err != nil {
-			t.Fatal(err)
-		}
-	}
-	golden, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(bytes.TrimSpace(golden)) != hex.EncodeToString(encoded) {
-		t.Fatal("wire fixture changed; review the versioned contract")
 	}
 	decoded, err := Decode(encoded)
 	if err != nil {
@@ -85,7 +65,7 @@ func TestClosedContractRejectsWrongScopeAndType(t *testing.T) {
 		t.Fatal("unknown version accepted")
 	}
 	message = fixture()
-	message.Payload = model.OrderCollected{OrderID: message.ID}
+	message.Payload = model.OrderPlaced{OrderID: message.ID}
 	if _, err := Encode(message); err == nil {
 		t.Fatal("payload/name mismatch accepted")
 	}

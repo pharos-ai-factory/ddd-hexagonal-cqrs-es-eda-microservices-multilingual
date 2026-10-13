@@ -56,7 +56,9 @@ Database bootstrap belongs to [devops/postgres/bootstrap](../devops/postgres/boo
 Later context migrations live with their owner's persistence adaptor.
 
 Run `pnpm generate:http` for HTTP changes or `pnpm generate:contracts` for all
-bindings and metadata. The source inventory in `scripts/contract_sources.py`
+bindings and metadata. [Generation declarations](generation.md) select each service’s
+events, request/reply Protobuf, realtime Protobuf and OpenAPI outputs separately.
+The source inventory in `scripts/contract_sources.py`
 maps these owner-facing locations to stable Protobuf import identities. Owner request packages preserve historical field numbers and wire bytes; their
 qualified package names now identify the owning context (decision 0009).
 `pnpm check:contracts` fails on any generated drift, including newly generated files.

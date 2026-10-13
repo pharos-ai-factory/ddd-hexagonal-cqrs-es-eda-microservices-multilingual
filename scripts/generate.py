@@ -1,32 +1,31 @@
 #!/usr/bin/env python3
-"""Generate transport bindings for all runtimes from the shared wire schemas."""
+"""Generate declared transport bindings from context-owned wire schemas."""
 from http_contracts import generate as generate_http_contracts
 from contract_sources import PRIVATE, catalogue, command_subscriptions, sources as contract_sources
 from generate_requests import generate_requests
+from generate_selected import generate_selected, qualify_python_imports
 from protobuf_tools import ensure_go_plugin
+from contract_selection import declarations
 import tempfile
 import json
-import re
 from hashlib import sha256
 from migration_catalogue import generate as generate_migration_metadata
 from pathlib import Path
 import shutil
 import subprocess
 ROOT = Path(__file__).resolve().parents[1]
+declarations(ROOT)
 plugin = ensure_go_plugin(ROOT)
 standard_protos = subprocess.check_output(["uv", "run", "--no-project", "--with", "grpcio-tools==1.84.0", "python", "-c",
     "import grpc_tools; from pathlib import Path; print(Path(grpc_tools.__file__).parent/'_proto')"], text=True).strip()
 python_out = ROOT/"services/operations/src/operations/adaptors/generated"
 python_out.mkdir(parents=True, exist_ok=True)
-for pattern in ("*_pb2.py", "*_pb2.pyi"):
-    for path in (python_out/"cafe").rglob(pattern):
-        path.unlink()
-for contract in ("events", "realtime", "menu_private"):
+generate_selected(plugin)
+for contract in ("menu_private",):
     definitions = contract_sources(contract)
     if len({Path(name).stem for name in definitions}) != len(definitions):
         raise ValueError(f"{contract}: Protobuf filenames must be unique for the shared Go package")
-    private = contract == "menu_private"
-    go_relative = PRIVATE["menu"]+"/generated" if private else f"services/storefront/contracts/{contract}/generated"
+    go_relative = PRIVATE["menu"]+"/generated"
     go_out = ROOT/go_relative
     go_out.mkdir(parents=True, exist_ok=True)
     for path in go_out.rglob("*.pb.go"):
@@ -43,8 +42,6 @@ for contract in ("events", "realtime", "menu_private"):
         arguments = ["uv", "run", "--no-project", "--with", "grpcio-tools==1.84.0", "python", "-m",
                      "grpc_tools.protoc", f"-I{proto_root}", f"-I{standard_protos}",
                      f"--plugin=protoc-gen-go={plugin}", f"--go_out={go_out}", "--go_opt=module="+module]
-        if not private:
-            arguments += [f"--python_out={python_out}", f"--pyi_out={python_out}"]
         subprocess.run([*arguments, *definitions], cwd=ROOT, check=True)
 for service in ("storefront", "api", "operations"):
     generate_requests(service, ROOT, plugin, standard_protos)
@@ -60,12 +57,7 @@ for owner in ("preparation", "collection"):
         subprocess.run(["uv", "run", "--no-project", "--with", "grpcio-tools==1.84.0", "python", "-m",
                         "grpc_tools.protoc", f"-I{stage}", f"--python_out={python_out}", f"--pyi_out={python_out}",
                         logical], check=True)
-# Imported generated modules resolve inside Operations' own installed package.
-for path in (python_out/"cafe").rglob("*"):
-    if path.suffix in {".py", ".pyi"}:
-        content = re.sub(r"(?m)^from (cafe(?:\.[\w]+)*) import ",
-                         r"from operations.adaptors.generated.\1 import ", path.read_text())
-        path.write_text(content)
+qualify_python_imports(python_out)
 (python_out/"catalogue.json").write_text(json.dumps(catalogue("operations"), indent=2)+"\n")
 engagement_out = ROOT/"services/engagement/src/adaptors/generated"
 (engagement_out/"catalogue.json").write_text(json.dumps(catalogue("engagement"), indent=2)+"\n")
@@ -73,8 +65,6 @@ command_consumers = {item["consumer"] for item in command_subscriptions()}
 topology = [{**entry, "command": entry["consumer"] in command_consumers} for entry in catalogue("topology")]
 (ROOT/"services/storefront/apps/topology/generated.json").write_text(json.dumps(topology, indent=2)+"\n")
 shutil.copyfile(ROOT/"services/storefront/apps/topology/generated.json", ROOT/"services/storefront/apps/replay/generated.json")
-shutil.copyfile(ROOT/"contracts/loyalty/messaging/integration_events/v1/fixtures/reward-issued.v1.hex",
-                ROOT/"services/storefront/contracts/events/fixtures/reward-issued.v1.hex")
 shutil.copyfile(ROOT/"devops/postgres/bootstrap/0002_realtime.sql",
                ROOT/"services/storefront/foundation/persistence/postgres/migrations/0002_realtime.sql")
 checksums = {str(version): sha256((ROOT/f"devops/postgres/bootstrap/{name}").read_bytes()).hexdigest()

@@ -21,8 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Browser projections have their own contract, independently of domain delivery.
-// Revision orders one aggregate; Centrifugo epoch/offset orders channel history.
 type Publication struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	EventId         string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
@@ -36,11 +34,6 @@ type Publication struct {
 	//	*Publication_Drink
 	//	*Publication_Edition
 	//	*Publication_Order
-	//	*Publication_Ticket
-	//	*Publication_Pickup
-	//	*Publication_Account
-	//	*Publication_Reward
-	//	*Publication_Notification
 	Snapshot      isPublication_Snapshot `protobuf_oneof:"snapshot"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -152,51 +145,6 @@ func (x *Publication) GetOrder() *Order {
 	return nil
 }
 
-func (x *Publication) GetTicket() *Ticket {
-	if x != nil {
-		if x, ok := x.Snapshot.(*Publication_Ticket); ok {
-			return x.Ticket
-		}
-	}
-	return nil
-}
-
-func (x *Publication) GetPickup() *Pickup {
-	if x != nil {
-		if x, ok := x.Snapshot.(*Publication_Pickup); ok {
-			return x.Pickup
-		}
-	}
-	return nil
-}
-
-func (x *Publication) GetAccount() *Account {
-	if x != nil {
-		if x, ok := x.Snapshot.(*Publication_Account); ok {
-			return x.Account
-		}
-	}
-	return nil
-}
-
-func (x *Publication) GetReward() *Reward {
-	if x != nil {
-		if x, ok := x.Snapshot.(*Publication_Reward); ok {
-			return x.Reward
-		}
-	}
-	return nil
-}
-
-func (x *Publication) GetNotification() *Notification {
-	if x != nil {
-		if x, ok := x.Snapshot.(*Publication_Notification); ok {
-			return x.Notification
-		}
-	}
-	return nil
-}
-
 type isPublication_Snapshot interface {
 	isPublication_Snapshot()
 }
@@ -213,47 +161,17 @@ type Publication_Order struct {
 	Order *Order `protobuf:"bytes,12,opt,name=order,proto3,oneof"`
 }
 
-type Publication_Ticket struct {
-	Ticket *Ticket `protobuf:"bytes,13,opt,name=ticket,proto3,oneof"`
-}
-
-type Publication_Pickup struct {
-	Pickup *Pickup `protobuf:"bytes,14,opt,name=pickup,proto3,oneof"`
-}
-
-type Publication_Account struct {
-	Account *Account `protobuf:"bytes,15,opt,name=account,proto3,oneof"`
-}
-
-type Publication_Reward struct {
-	Reward *Reward `protobuf:"bytes,16,opt,name=reward,proto3,oneof"`
-}
-
-type Publication_Notification struct {
-	Notification *Notification `protobuf:"bytes,17,opt,name=notification,proto3,oneof"`
-}
-
 func (*Publication_Drink) isPublication_Snapshot() {}
 
 func (*Publication_Edition) isPublication_Snapshot() {}
 
 func (*Publication_Order) isPublication_Snapshot() {}
 
-func (*Publication_Ticket) isPublication_Snapshot() {}
-
-func (*Publication_Pickup) isPublication_Snapshot() {}
-
-func (*Publication_Account) isPublication_Snapshot() {}
-
-func (*Publication_Reward) isPublication_Snapshot() {}
-
-func (*Publication_Notification) isPublication_Snapshot() {}
-
 var File_cafe_realtime_v1_realtime_proto protoreflect.FileDescriptor
 
 const file_cafe_realtime_v1_realtime_proto_rawDesc = "" +
 	"\n" +
-	"\x1fcafe/realtime/v1/realtime.proto\x12\x10cafe.realtime.v1\x1a3cafe/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\x1aAcafe/realtime/v1/contexts/preparation/preparation_snapshots.proto\x1a?cafe/realtime/v1/contexts/collection/collection_snapshots.proto\x1a9cafe/realtime/v1/contexts/loyalty/loyalty_snapshots.proto\x1aEcafe/realtime/v1/contexts/communication/communication_snapshots.proto\"\x91\x05\n" +
+	"\x1fcafe/realtime/v1/realtime.proto\x12\x10cafe.realtime.v1\x1a3cafe/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\"\xc5\x03\n" +
 	"\vPublication\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12)\n" +
 	"\x10contract_version\x18\x02 \x01(\rR\x0fcontractVersion\x12\x18\n" +
@@ -264,14 +182,9 @@ const file_cafe_realtime_v1_realtime_proto_rawDesc = "" +
 	"\x05drink\x18\n" +
 	" \x01(\v2\x17.cafe.realtime.v1.DrinkH\x00R\x05drink\x125\n" +
 	"\aedition\x18\v \x01(\v2\x19.cafe.realtime.v1.EditionH\x00R\aedition\x12/\n" +
-	"\x05order\x18\f \x01(\v2\x17.cafe.realtime.v1.OrderH\x00R\x05order\x122\n" +
-	"\x06ticket\x18\r \x01(\v2\x18.cafe.realtime.v1.TicketH\x00R\x06ticket\x122\n" +
-	"\x06pickup\x18\x0e \x01(\v2\x18.cafe.realtime.v1.PickupH\x00R\x06pickup\x125\n" +
-	"\aaccount\x18\x0f \x01(\v2\x19.cafe.realtime.v1.AccountH\x00R\aaccount\x122\n" +
-	"\x06reward\x18\x10 \x01(\v2\x18.cafe.realtime.v1.RewardH\x00R\x06reward\x12D\n" +
-	"\fnotification\x18\x11 \x01(\v2\x1e.cafe.realtime.v1.NotificationH\x00R\fnotificationB\n" +
+	"\x05order\x18\f \x01(\v2\x17.cafe.realtime.v1.OrderH\x00R\x05orderB\n" +
 	"\n" +
-	"\bsnapshotB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3"
+	"\bsnapshotJ\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x06ticketR\x06pickupR\aaccountR\x06rewardR\fnotificationB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3"
 
 var (
 	file_cafe_realtime_v1_realtime_proto_rawDescOnce sync.Once
@@ -287,30 +200,20 @@ func file_cafe_realtime_v1_realtime_proto_rawDescGZIP() []byte {
 
 var file_cafe_realtime_v1_realtime_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cafe_realtime_v1_realtime_proto_goTypes = []any{
-	(*Publication)(nil),  // 0: cafe.realtime.v1.Publication
-	(*Drink)(nil),        // 1: cafe.realtime.v1.Drink
-	(*Edition)(nil),      // 2: cafe.realtime.v1.Edition
-	(*Order)(nil),        // 3: cafe.realtime.v1.Order
-	(*Ticket)(nil),       // 4: cafe.realtime.v1.Ticket
-	(*Pickup)(nil),       // 5: cafe.realtime.v1.Pickup
-	(*Account)(nil),      // 6: cafe.realtime.v1.Account
-	(*Reward)(nil),       // 7: cafe.realtime.v1.Reward
-	(*Notification)(nil), // 8: cafe.realtime.v1.Notification
+	(*Publication)(nil), // 0: cafe.realtime.v1.Publication
+	(*Drink)(nil),       // 1: cafe.realtime.v1.Drink
+	(*Edition)(nil),     // 2: cafe.realtime.v1.Edition
+	(*Order)(nil),       // 3: cafe.realtime.v1.Order
 }
 var file_cafe_realtime_v1_realtime_proto_depIdxs = []int32{
 	1, // 0: cafe.realtime.v1.Publication.drink:type_name -> cafe.realtime.v1.Drink
 	2, // 1: cafe.realtime.v1.Publication.edition:type_name -> cafe.realtime.v1.Edition
 	3, // 2: cafe.realtime.v1.Publication.order:type_name -> cafe.realtime.v1.Order
-	4, // 3: cafe.realtime.v1.Publication.ticket:type_name -> cafe.realtime.v1.Ticket
-	5, // 4: cafe.realtime.v1.Publication.pickup:type_name -> cafe.realtime.v1.Pickup
-	6, // 5: cafe.realtime.v1.Publication.account:type_name -> cafe.realtime.v1.Account
-	7, // 6: cafe.realtime.v1.Publication.reward:type_name -> cafe.realtime.v1.Reward
-	8, // 7: cafe.realtime.v1.Publication.notification:type_name -> cafe.realtime.v1.Notification
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_cafe_realtime_v1_realtime_proto_init() }
@@ -320,19 +223,10 @@ func file_cafe_realtime_v1_realtime_proto_init() {
 	}
 	file_cafe_realtime_v1_contexts_menu_menu_snapshots_proto_init()
 	file_cafe_realtime_v1_contexts_ordering_ordering_snapshots_proto_init()
-	file_cafe_realtime_v1_contexts_preparation_preparation_snapshots_proto_init()
-	file_cafe_realtime_v1_contexts_collection_collection_snapshots_proto_init()
-	file_cafe_realtime_v1_contexts_loyalty_loyalty_snapshots_proto_init()
-	file_cafe_realtime_v1_contexts_communication_communication_snapshots_proto_init()
 	file_cafe_realtime_v1_realtime_proto_msgTypes[0].OneofWrappers = []any{
 		(*Publication_Drink)(nil),
 		(*Publication_Edition)(nil),
 		(*Publication_Order)(nil),
-		(*Publication_Ticket)(nil),
-		(*Publication_Pickup)(nil),
-		(*Publication_Account)(nil),
-		(*Publication_Reward)(nil),
-		(*Publication_Notification)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

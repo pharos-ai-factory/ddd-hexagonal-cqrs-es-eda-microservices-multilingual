@@ -5,7 +5,6 @@ import (
 	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	"regexp"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
@@ -14,7 +13,6 @@ import (
 )
 
 var offerCode = regexp.MustCompile(`^[A-Z][A-Z0-9]{0,7}$`)
-var collectionCode = regexp.MustCompile(`^[A-Z0-9]{6}$`)
 
 // Transport validation protects the application before any handler is invoked.
 // It validates published evidence; it does not reproduce mutable owner policy.
@@ -67,22 +65,6 @@ func validatePayload(m a.Message) error {
 		}
 		if total < 1 || total > 5 {
 			return fmt.Errorf("invalid accepted order quantity")
-		}
-	case model.DrinksReady:
-		ids = []string{p.OrderID, p.CustomerID}
-	case model.PickupOpened:
-		ids = []string{p.PickupID, p.OrderID, p.CustomerID}
-		sourceID = p.PickupID
-		if !collectionCode.MatchString(p.CollectionCode) {
-			return fmt.Errorf("invalid collection code")
-		}
-	case model.OrderCollected:
-		ids = []string{p.OrderID, p.CustomerID}
-	case model.RewardIssued:
-		ids = []string{p.RewardID, p.CustomerID}
-		sourceID = p.RewardID
-		if _, err := time.Parse(time.RFC3339Nano, p.ExpiresAt); err != nil || p.Benefit == "" {
-			return fmt.Errorf("invalid issued reward")
 		}
 	default:
 		return fmt.Errorf("unknown event payload")
