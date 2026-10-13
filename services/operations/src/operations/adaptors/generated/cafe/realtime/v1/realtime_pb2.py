@@ -22,15 +22,11 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from operations.adaptors.generated.cafe.realtime.v1.contexts.menu import menu_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_menu_dot_menu__snapshots__pb2
-from operations.adaptors.generated.cafe.realtime.v1.contexts.ordering import ordering_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_ordering_dot_ordering__snapshots__pb2
 from operations.adaptors.generated.cafe.realtime.v1.contexts.preparation import preparation_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_preparation_dot_preparation__snapshots__pb2
 from operations.adaptors.generated.cafe.realtime.v1.contexts.collection import collection_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_collection_dot_collection__snapshots__pb2
-from operations.adaptors.generated.cafe.realtime.v1.contexts.loyalty import loyalty_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_loyalty_dot_loyalty__snapshots__pb2
-from operations.adaptors.generated.cafe.realtime.v1.contexts.communication import communication_snapshots_pb2 as cafe_dot_realtime_dot_v1_dot_contexts_dot_communication_dot_communication__snapshots__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x63\x61\x66\x65/realtime/v1/realtime.proto\x12\x10\x63\x61\x66\x65.realtime.v1\x1a\x33\x63\x61\x66\x65/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\x1a\x41\x63\x61\x66\x65/realtime/v1/contexts/preparation/preparation_snapshots.proto\x1a?cafe/realtime/v1/contexts/collection/collection_snapshots.proto\x1a\x39\x63\x61\x66\x65/realtime/v1/contexts/loyalty/loyalty_snapshots.proto\x1a\x45\x63\x61\x66\x65/realtime/v1/contexts/communication/communication_snapshots.proto\"\x82\x04\n\x0bPublication\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x18\n\x10\x63ontract_version\x18\x02 \x01(\r\x12\x0f\n\x07\x63ontext\x18\x03 \x01(\t\x12\x16\n\x0e\x61ggregate_kind\x18\x04 \x01(\t\x12\x14\n\x0c\x61ggregate_id\x18\x05 \x01(\t\x12\x10\n\x08revision\x18\x06 \x01(\x04\x12(\n\x05\x64rink\x18\n \x01(\x0b\x32\x17.cafe.realtime.v1.DrinkH\x00\x12,\n\x07\x65\x64ition\x18\x0b \x01(\x0b\x32\x19.cafe.realtime.v1.EditionH\x00\x12(\n\x05order\x18\x0c \x01(\x0b\x32\x17.cafe.realtime.v1.OrderH\x00\x12*\n\x06ticket\x18\r \x01(\x0b\x32\x18.cafe.realtime.v1.TicketH\x00\x12*\n\x06pickup\x18\x0e \x01(\x0b\x32\x18.cafe.realtime.v1.PickupH\x00\x12,\n\x07\x61\x63\x63ount\x18\x0f \x01(\x0b\x32\x19.cafe.realtime.v1.AccountH\x00\x12*\n\x06reward\x18\x10 \x01(\x0b\x32\x18.cafe.realtime.v1.RewardH\x00\x12\x36\n\x0cnotification\x18\x11 \x01(\x0b\x32\x1e.cafe.realtime.v1.NotificationH\x00\x42\n\n\x08snapshotB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x63\x61\x66\x65/realtime/v1/realtime.proto\x12\x10\x63\x61\x66\x65.realtime.v1\x1a\x41\x63\x61\x66\x65/realtime/v1/contexts/preparation/preparation_snapshots.proto\x1a?cafe/realtime/v1/contexts/collection/collection_snapshots.proto\"\xa1\x03\n\x0bPublication\x12\x19\n\x08\x65vent_id\x18\x01 \x01(\tR\x07\x65ventId\x12)\n\x10\x63ontract_version\x18\x02 \x01(\rR\x0f\x63ontractVersion\x12\x18\n\x07\x63ontext\x18\x03 \x01(\tR\x07\x63ontext\x12%\n\x0e\x61ggregate_kind\x18\x04 \x01(\tR\raggregateKind\x12!\n\x0c\x61ggregate_id\x18\x05 \x01(\tR\x0b\x61ggregateId\x12\x1a\n\x08revision\x18\x06 \x01(\x04R\x08revision\x12\x32\n\x06ticket\x18\r \x01(\x0b\x32\x18.cafe.realtime.v1.TicketH\x00R\x06ticket\x12\x32\n\x06pickup\x18\x0e \x01(\x0b\x32\x18.cafe.realtime.v1.PickupH\x00R\x06pickupB\n\n\x08snapshotJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\x04\x08\x0f\x10\x10J\x04\x08\x10\x10\x11J\x04\x08\x11\x10\x12R\x05\x64rinkR\x07\x65\x64itionR\x05orderR\x07\x61\x63\x63ountR\x06rewardR\x0cnotificationB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -38,6 +34,6 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.realtime.v1.realtime_p
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\236\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1'
-  _globals['_PUBLICATION']._serialized_start=430
-  _globals['_PUBLICATION']._serialized_end=944
+  _globals['_PUBLICATION']._serialized_start=186
+  _globals['_PUBLICATION']._serialized_end=603
 # @@protoc_insertion_point(module_scope)

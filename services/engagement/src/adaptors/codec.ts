@@ -15,8 +15,6 @@ const privateTypes: Record<string, protobuf.Type> = {
 };
 const realtimeType = protobuf.Root.fromJSON(realtimeSchema).lookupType('cafe.realtime.v1.Publication');
 const payloadNames: Record<string, string> = {
-  'menu.edition-published': 'menuPublished',
-  'ordering.order-placed': 'orderPlaced', 'preparation.drinks-ready': 'drinksReady',
   'collection.pickup-opened': 'pickupOpened', 'collection.order-collected': 'orderCollected',
   'loyalty.reward-earned': 'rewardEarned', 'loyalty.reward-issued': 'rewardIssued',
   'communication.notification-requested': 'notificationRequested',
@@ -99,6 +97,7 @@ export function encode(owner: string, kind: string, id: string, version: number,
   const {payload, ...envelope} = event;
   const type = event.visibility === 'domain' ? privateTypes[owner] : eventType;
   if (!type) throw new Error('Foreign private message owner');
+  if (!type.fields[payloadNames[event.name]!]) throw new Error('Undeclared event contract');
   const value: Record<string, unknown> = {...envelope, [payloadNames[event.name]!]: payload};
   if (event.visibility === 'domain') { value.formatRevision = value.contractVersion; delete value.contractVersion; }
   const error = type.verify(value);
@@ -106,6 +105,7 @@ export function encode(owner: string, kind: string, id: string, version: number,
   return {event, body: Buffer.from(type.encode(type.create(value)).finish())};
 }
 export function realtime(owner: string, kind: string, id: string, revision: number, state: unknown) {
+  if (!realtimeType.fields[kind]) throw new Error('Undeclared realtime contract');
   const eventId = newId();
   const value = {eventId, contractVersion: 1, context: owner, aggregateKind: kind, aggregateId: id, revision, [kind]: state};
   const error = realtimeType.verify(value);

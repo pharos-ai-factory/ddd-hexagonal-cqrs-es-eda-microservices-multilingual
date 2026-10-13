@@ -7,235 +7,6 @@
             "go_package": "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1"
           },
           "nested": {
-            "Event": {
-              "oneofs": {
-                "payload": {
-                  "oneof": [
-                    "menuPublished",
-                    "orderPlaced",
-                    "drinksReady",
-                    "pickupOpened",
-                    "orderCollected",
-                    "rewardIssued"
-                  ]
-                }
-              },
-              "fields": {
-                "id": {
-                  "type": "string",
-                  "id": 1
-                },
-                "name": {
-                  "type": "string",
-                  "id": 2
-                },
-                "context": {
-                  "type": "string",
-                  "id": 3
-                },
-                "visibility": {
-                  "type": "string",
-                  "id": 4
-                },
-                "contractVersion": {
-                  "type": "uint32",
-                  "id": 5,
-                  "protoName": "contract_version"
-                },
-                "aggregateKind": {
-                  "type": "string",
-                  "id": 6,
-                  "protoName": "aggregate_kind"
-                },
-                "aggregateId": {
-                  "type": "string",
-                  "id": 7,
-                  "protoName": "aggregate_id"
-                },
-                "aggregateVersion": {
-                  "type": "uint64",
-                  "id": 8,
-                  "protoName": "aggregate_version"
-                },
-                "correlationId": {
-                  "type": "string",
-                  "id": 9,
-                  "protoName": "correlation_id"
-                },
-                "causationId": {
-                  "type": "string",
-                  "id": 10,
-                  "protoName": "causation_id"
-                },
-                "occurredAt": {
-                  "type": "string",
-                  "id": 11,
-                  "protoName": "occurred_at"
-                },
-                "menuPublished": {
-                  "type": "MenuPublished",
-                  "id": 21,
-                  "protoName": "menu_published"
-                },
-                "orderPlaced": {
-                  "type": "OrderPlaced",
-                  "id": 22,
-                  "protoName": "order_placed"
-                },
-                "drinksReady": {
-                  "type": "DrinksReady",
-                  "id": 23,
-                  "protoName": "drinks_ready"
-                },
-                "pickupOpened": {
-                  "type": "PickupOpened",
-                  "id": 24,
-                  "protoName": "pickup_opened"
-                },
-                "orderCollected": {
-                  "type": "OrderCollected",
-                  "id": 25,
-                  "protoName": "order_collected"
-                },
-                "rewardIssued": {
-                  "type": "RewardIssued",
-                  "id": 27,
-                  "protoName": "reward_issued"
-                }
-              },
-              "reserved": [
-                [
-                  20,
-                  20
-                ],
-                [
-                  26,
-                  26
-                ],
-                [
-                  28,
-                  28
-                ],
-                "drink_published",
-                "reward_earned",
-                "notification_requested"
-              ]
-            },
-            "Offer": {
-              "fields": {
-                "code": {
-                  "type": "string",
-                  "id": 1
-                },
-                "drinkId": {
-                  "type": "string",
-                  "id": 2,
-                  "protoName": "drink_id"
-                },
-                "drinkRevision": {
-                  "type": "uint64",
-                  "id": 3,
-                  "protoName": "drink_revision"
-                },
-                "name": {
-                  "type": "string",
-                  "id": 4
-                },
-                "minor": {
-                  "type": "int64",
-                  "id": 5
-                },
-                "currency": {
-                  "type": "string",
-                  "id": 6
-                }
-              }
-            },
-            "MenuPublished": {
-              "fields": {
-                "editionId": {
-                  "type": "string",
-                  "id": 1,
-                  "protoName": "edition_id"
-                },
-                "currency": {
-                  "type": "string",
-                  "id": 2
-                },
-                "offers": {
-                  "rule": "repeated",
-                  "type": "Offer",
-                  "id": 3
-                }
-              }
-            },
-            "Line": {
-              "fields": {
-                "id": {
-                  "type": "string",
-                  "id": 1
-                },
-                "offerCode": {
-                  "type": "string",
-                  "id": 2,
-                  "protoName": "offer_code"
-                },
-                "name": {
-                  "type": "string",
-                  "id": 3
-                },
-                "quantity": {
-                  "type": "int32",
-                  "id": 4
-                },
-                "minor": {
-                  "type": "int64",
-                  "id": 5
-                }
-              }
-            },
-            "OrderPlaced": {
-              "fields": {
-                "orderId": {
-                  "type": "string",
-                  "id": 1,
-                  "protoName": "order_id"
-                },
-                "customerId": {
-                  "type": "string",
-                  "id": 2,
-                  "protoName": "customer_id"
-                },
-                "editionId": {
-                  "type": "string",
-                  "id": 3,
-                  "protoName": "edition_id"
-                },
-                "currency": {
-                  "type": "string",
-                  "id": 4
-                },
-                "lines": {
-                  "rule": "repeated",
-                  "type": "Line",
-                  "id": 5
-                }
-              }
-            },
-            "DrinksReady": {
-              "fields": {
-                "orderId": {
-                  "type": "string",
-                  "id": 1,
-                  "protoName": "order_id"
-                },
-                "customerId": {
-                  "type": "string",
-                  "id": 2,
-                  "protoName": "customer_id"
-                }
-              }
-            },
             "PickupOpened": {
               "fields": {
                 "pickupId": {
@@ -296,6 +67,117 @@
                   "protoName": "expires_at"
                 }
               }
+            },
+            "Event": {
+              "oneofs": {
+                "payload": {
+                  "oneof": [
+                    "pickupOpened",
+                    "orderCollected",
+                    "rewardIssued"
+                  ]
+                }
+              },
+              "fields": {
+                "id": {
+                  "type": "string",
+                  "id": 1
+                },
+                "name": {
+                  "type": "string",
+                  "id": 2
+                },
+                "context": {
+                  "type": "string",
+                  "id": 3
+                },
+                "visibility": {
+                  "type": "string",
+                  "id": 4
+                },
+                "contractVersion": {
+                  "type": "uint32",
+                  "id": 5,
+                  "protoName": "contract_version"
+                },
+                "aggregateKind": {
+                  "type": "string",
+                  "id": 6,
+                  "protoName": "aggregate_kind"
+                },
+                "aggregateId": {
+                  "type": "string",
+                  "id": 7,
+                  "protoName": "aggregate_id"
+                },
+                "aggregateVersion": {
+                  "type": "uint64",
+                  "id": 8,
+                  "protoName": "aggregate_version"
+                },
+                "correlationId": {
+                  "type": "string",
+                  "id": 9,
+                  "protoName": "correlation_id"
+                },
+                "causationId": {
+                  "type": "string",
+                  "id": 10,
+                  "protoName": "causation_id"
+                },
+                "occurredAt": {
+                  "type": "string",
+                  "id": 11,
+                  "protoName": "occurred_at"
+                },
+                "pickupOpened": {
+                  "type": ".cafe.v1.PickupOpened",
+                  "id": 24,
+                  "protoName": "pickup_opened"
+                },
+                "orderCollected": {
+                  "type": ".cafe.v1.OrderCollected",
+                  "id": 25,
+                  "protoName": "order_collected"
+                },
+                "rewardIssued": {
+                  "type": ".cafe.v1.RewardIssued",
+                  "id": 27,
+                  "protoName": "reward_issued"
+                }
+              },
+              "reserved": [
+                [
+                  20,
+                  20
+                ],
+                [
+                  26,
+                  26
+                ],
+                [
+                  28,
+                  28
+                ],
+                [
+                  21,
+                  21
+                ],
+                [
+                  22,
+                  22
+                ],
+                [
+                  23,
+                  23
+                ],
+                "drink_published",
+                "reward_earned",
+                "notification_requested",
+                "menu_published",
+                "order_placed",
+                "drinks_ready"
+              ]
             }
           }
         }

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n;cafe/v1/contexts/ordering/ordering_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"U\n\x04Line\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\noffer_code\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x10\n\x08quantity\x18\x04 \x01(\x05\x12\r\n\x05minor\x18\x05 \x01(\x03\"x\n\x0bOrderPlaced\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x02 \x01(\t\x12\x12\n\nedition_id\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x1c\n\x05lines\x18\x05 \x03(\x0b\x32\r.cafe.v1.LineB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n;cafe/v1/contexts/ordering/ordering_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"{\n\x04Line\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n\noffer_code\x18\x02 \x01(\tR\tofferCode\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x1a\n\x08quantity\x18\x04 \x01(\x05R\x08quantity\x12\x14\n\x05minor\x18\x05 \x01(\x03R\x05minor\"\xa9\x01\n\x0bOrderPlaced\x12\x19\n\x08order_id\x18\x01 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x02 \x01(\tR\ncustomerId\x12\x1d\n\nedition_id\x18\x03 \x01(\tR\teditionId\x12\x1a\n\x08\x63urrency\x18\x04 \x01(\tR\x08\x63urrency\x12#\n\x05lines\x18\x05 \x03(\x0b\x32\r.cafe.v1.LineR\x05linesB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,7 +33,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\217\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1'
   _globals['_LINE']._serialized_start=72
-  _globals['_LINE']._serialized_end=157
-  _globals['_ORDERPLACED']._serialized_start=159
-  _globals['_ORDERPLACED']._serialized_end=279
+  _globals['_LINE']._serialized_end=195
+  _globals['_ORDERPLACED']._serialized_start=198
+  _globals['_ORDERPLACED']._serialized_end=367
 # @@protoc_insertion_point(module_scope)

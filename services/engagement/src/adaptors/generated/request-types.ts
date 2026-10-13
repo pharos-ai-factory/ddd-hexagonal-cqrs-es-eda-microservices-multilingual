@@ -26,21 +26,6 @@ export interface RequestError {
 }
 }
 export namespace loyalty {
-export interface RedeemReward {
-  orderId?: string;
-}
-export interface ListAccounts {
-  page?: shared.PageRequest;
-}
-export interface GetAccount {
-  id: string;
-}
-export interface ListRewards {
-  page?: shared.PageRequest;
-}
-export interface GetReward {
-  id: string;
-}
 export interface Grant {
   id: string;
   accountId: string;
@@ -82,6 +67,21 @@ export interface Rewards {
   items: LoadedReward[];
   paged: boolean;
   nextId?: string;
+}
+export interface ListAccounts {
+  page?: shared.PageRequest;
+}
+export interface GetAccount {
+  id: string;
+}
+export interface ListRewards {
+  page?: shared.PageRequest;
+}
+export interface GetReward {
+  id: string;
+}
+export interface RedeemReward {
+  orderId?: string;
 }
 }
 export namespace communication {

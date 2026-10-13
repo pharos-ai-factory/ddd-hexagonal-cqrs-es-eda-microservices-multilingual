@@ -2,6 +2,215 @@
   "nested": {
     "cafe": {
       "nested": {
+        "communication": {
+          "nested": {
+            "requests": {
+              "nested": {
+                "v1": {
+                  "options": {
+                    "go_package": "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/communication;communicationv1"
+                  },
+                  "nested": {
+                    "Request": {
+                      "oneofs": {
+                        "payload": {
+                          "oneof": [
+                            "query"
+                          ]
+                        }
+                      },
+                      "fields": {
+                        "contractVersion": {
+                          "type": "uint32",
+                          "id": 1,
+                          "protoName": "contract_version"
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "id": 2,
+                          "protoName": "request_id"
+                        },
+                        "context": {
+                          "type": "string",
+                          "id": 3
+                        },
+                        "query": {
+                          "type": "Query",
+                          "id": 11
+                        }
+                      }
+                    },
+                    "Query": {
+                      "oneofs": {
+                        "payload": {
+                          "oneof": [
+                            "listNotifications",
+                            "getNotification"
+                          ]
+                        }
+                      },
+                      "fields": {
+                        "listNotifications": {
+                          "type": "cafe.communication.requests.v1.ListNotifications",
+                          "id": 24,
+                          "protoName": "list_notifications"
+                        },
+                        "getNotification": {
+                          "type": "cafe.communication.requests.v1.GetNotification",
+                          "id": 25,
+                          "protoName": "get_notification"
+                        }
+                      }
+                    },
+                    "Reply": {
+                      "oneofs": {
+                        "payload": {
+                          "oneof": [
+                            "outcome",
+                            "error",
+                            "notification",
+                            "notifications"
+                          ]
+                        }
+                      },
+                      "fields": {
+                        "contractVersion": {
+                          "type": "uint32",
+                          "id": 1,
+                          "protoName": "contract_version"
+                        },
+                        "requestId": {
+                          "type": "string",
+                          "id": 2,
+                          "protoName": "request_id"
+                        },
+                        "context": {
+                          "type": "string",
+                          "id": 3
+                        },
+                        "outcome": {
+                          "type": "cafe.requests.v1.Outcome",
+                          "id": 10
+                        },
+                        "error": {
+                          "type": "cafe.requests.v1.RequestError",
+                          "id": 11
+                        },
+                        "notification": {
+                          "type": "cafe.communication.requests.v1.LoadedNotification",
+                          "id": 34
+                        },
+                        "notifications": {
+                          "type": "cafe.communication.requests.v1.Notifications",
+                          "id": 35
+                        }
+                      }
+                    },
+                    "ListNotifications": {
+                      "fields": {
+                        "page": {
+                          "type": "cafe.requests.v1.PageRequest",
+                          "id": 1
+                        }
+                      }
+                    },
+                    "GetNotification": {
+                      "fields": {
+                        "id": {
+                          "type": "string",
+                          "id": 1
+                        }
+                      }
+                    },
+                    "Notification": {
+                      "oneofs": {
+                        "_providerReceipt": {
+                          "oneof": [
+                            "providerReceipt"
+                          ]
+                        }
+                      },
+                      "fields": {
+                        "id": {
+                          "type": "string",
+                          "id": 1
+                        },
+                        "recipient": {
+                          "type": "string",
+                          "id": 2
+                        },
+                        "subject": {
+                          "type": "string",
+                          "id": 3
+                        },
+                        "body": {
+                          "type": "string",
+                          "id": 4
+                        },
+                        "status": {
+                          "type": "string",
+                          "id": 5
+                        },
+                        "providerReceipt": {
+                          "type": "string",
+                          "id": 6,
+                          "protoName": "provider_receipt",
+                          "options": {
+                            "proto3_optional": true
+                          }
+                        }
+                      }
+                    },
+                    "LoadedNotification": {
+                      "fields": {
+                        "exists": {
+                          "type": "bool",
+                          "id": 1
+                        },
+                        "version": {
+                          "type": "uint64",
+                          "id": 2
+                        },
+                        "state": {
+                          "type": "Notification",
+                          "id": 3
+                        }
+                      }
+                    },
+                    "Notifications": {
+                      "oneofs": {
+                        "_nextId": {
+                          "oneof": [
+                            "nextId"
+                          ]
+                        }
+                      },
+                      "fields": {
+                        "items": {
+                          "rule": "repeated",
+                          "type": "LoadedNotification",
+                          "id": 1
+                        },
+                        "paged": {
+                          "type": "bool",
+                          "id": 2
+                        },
+                        "nextId": {
+                          "type": "string",
+                          "id": 3,
+                          "protoName": "next_id",
+                          "options": {
+                            "proto3_optional": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "requests": {
           "nested": {
             "v1": {
@@ -120,118 +329,20 @@
             }
           }
         },
-        "communication": {
+        "loyalty": {
           "nested": {
             "requests": {
               "nested": {
                 "v1": {
                   "options": {
-                    "go_package": "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/communication;communicationv1"
+                    "go_package": "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1"
                   },
                   "nested": {
-                    "ListNotifications": {
-                      "fields": {
-                        "page": {
-                          "type": "cafe.requests.v1.PageRequest",
-                          "id": 1
-                        }
-                      }
-                    },
-                    "GetNotification": {
-                      "fields": {
-                        "id": {
-                          "type": "string",
-                          "id": 1
-                        }
-                      }
-                    },
-                    "Notification": {
-                      "oneofs": {
-                        "_providerReceipt": {
-                          "oneof": [
-                            "providerReceipt"
-                          ]
-                        }
-                      },
-                      "fields": {
-                        "id": {
-                          "type": "string",
-                          "id": 1
-                        },
-                        "recipient": {
-                          "type": "string",
-                          "id": 2
-                        },
-                        "subject": {
-                          "type": "string",
-                          "id": 3
-                        },
-                        "body": {
-                          "type": "string",
-                          "id": 4
-                        },
-                        "status": {
-                          "type": "string",
-                          "id": 5
-                        },
-                        "providerReceipt": {
-                          "type": "string",
-                          "id": 6,
-                          "protoName": "provider_receipt",
-                          "options": {
-                            "proto3_optional": true
-                          }
-                        }
-                      }
-                    },
-                    "LoadedNotification": {
-                      "fields": {
-                        "exists": {
-                          "type": "bool",
-                          "id": 1
-                        },
-                        "version": {
-                          "type": "uint64",
-                          "id": 2
-                        },
-                        "state": {
-                          "type": "Notification",
-                          "id": 3
-                        }
-                      }
-                    },
-                    "Notifications": {
-                      "oneofs": {
-                        "_nextId": {
-                          "oneof": [
-                            "nextId"
-                          ]
-                        }
-                      },
-                      "fields": {
-                        "items": {
-                          "rule": "repeated",
-                          "type": "LoadedNotification",
-                          "id": 1
-                        },
-                        "paged": {
-                          "type": "bool",
-                          "id": 2
-                        },
-                        "nextId": {
-                          "type": "string",
-                          "id": 3,
-                          "protoName": "next_id",
-                          "options": {
-                            "proto3_optional": true
-                          }
-                        }
-                      }
-                    },
                     "Request": {
                       "oneofs": {
                         "payload": {
                           "oneof": [
+                            "command",
                             "query"
                           ]
                         }
@@ -251,9 +362,33 @@
                           "type": "string",
                           "id": 3
                         },
+                        "command": {
+                          "type": "Command",
+                          "id": 10
+                        },
                         "query": {
                           "type": "Query",
                           "id": 11
+                        }
+                      }
+                    },
+                    "Command": {
+                      "oneofs": {
+                        "payload": {
+                          "oneof": [
+                            "redeemReward"
+                          ]
+                        }
+                      },
+                      "fields": {
+                        "metadata": {
+                          "type": "cafe.requests.v1.CommandMetadata",
+                          "id": 1
+                        },
+                        "redeemReward": {
+                          "type": "cafe.loyalty.requests.v1.RedeemReward",
+                          "id": 24,
+                          "protoName": "redeem_reward"
                         }
                       }
                     },
@@ -261,21 +396,33 @@
                       "oneofs": {
                         "payload": {
                           "oneof": [
-                            "listNotifications",
-                            "getNotification"
+                            "listAccounts",
+                            "getAccount",
+                            "listRewards",
+                            "getReward"
                           ]
                         }
                       },
                       "fields": {
-                        "listNotifications": {
-                          "type": "cafe.communication.requests.v1.ListNotifications",
-                          "id": 24,
-                          "protoName": "list_notifications"
+                        "listAccounts": {
+                          "type": "cafe.loyalty.requests.v1.ListAccounts",
+                          "id": 20,
+                          "protoName": "list_accounts"
                         },
-                        "getNotification": {
-                          "type": "cafe.communication.requests.v1.GetNotification",
-                          "id": 25,
-                          "protoName": "get_notification"
+                        "getAccount": {
+                          "type": "cafe.loyalty.requests.v1.GetAccount",
+                          "id": 21,
+                          "protoName": "get_account"
+                        },
+                        "listRewards": {
+                          "type": "cafe.loyalty.requests.v1.ListRewards",
+                          "id": 22,
+                          "protoName": "list_rewards"
+                        },
+                        "getReward": {
+                          "type": "cafe.loyalty.requests.v1.GetReward",
+                          "id": 23,
+                          "protoName": "get_reward"
                         }
                       }
                     },
@@ -285,8 +432,10 @@
                           "oneof": [
                             "outcome",
                             "error",
-                            "notification",
-                            "notifications"
+                            "account",
+                            "accounts",
+                            "reward",
+                            "rewards"
                           ]
                         }
                       },
@@ -313,80 +462,21 @@
                           "type": "cafe.requests.v1.RequestError",
                           "id": 11
                         },
-                        "notification": {
-                          "type": "cafe.communication.requests.v1.LoadedNotification",
-                          "id": 34
+                        "account": {
+                          "type": "cafe.loyalty.requests.v1.LoadedAccount",
+                          "id": 30
                         },
-                        "notifications": {
-                          "type": "cafe.communication.requests.v1.Notifications",
-                          "id": 35
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "loyalty": {
-          "nested": {
-            "requests": {
-              "nested": {
-                "v1": {
-                  "options": {
-                    "go_package": "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1"
-                  },
-                  "nested": {
-                    "RedeemReward": {
-                      "oneofs": {
-                        "_orderId": {
-                          "oneof": [
-                            "orderId"
-                          ]
-                        }
-                      },
-                      "fields": {
-                        "orderId": {
-                          "type": "string",
-                          "id": 1,
-                          "protoName": "order_id",
-                          "options": {
-                            "(cafe.requests.v1.required_input)": true,
-                            "proto3_optional": true
-                          }
-                        }
-                      }
-                    },
-                    "ListAccounts": {
-                      "fields": {
-                        "page": {
-                          "type": "cafe.requests.v1.PageRequest",
-                          "id": 1
-                        }
-                      }
-                    },
-                    "GetAccount": {
-                      "fields": {
-                        "id": {
-                          "type": "string",
-                          "id": 1
-                        }
-                      }
-                    },
-                    "ListRewards": {
-                      "fields": {
-                        "page": {
-                          "type": "cafe.requests.v1.PageRequest",
-                          "id": 1
-                        }
-                      }
-                    },
-                    "GetReward": {
-                      "fields": {
-                        "id": {
-                          "type": "string",
-                          "id": 1
+                        "accounts": {
+                          "type": "cafe.loyalty.requests.v1.Accounts",
+                          "id": 31
+                        },
+                        "reward": {
+                          "type": "cafe.loyalty.requests.v1.LoadedReward",
+                          "id": 32
+                        },
+                        "rewards": {
+                          "type": "cafe.loyalty.requests.v1.Rewards",
+                          "id": 33
                         }
                       }
                     },
@@ -573,145 +663,55 @@
                         }
                       }
                     },
-                    "Request": {
-                      "oneofs": {
-                        "payload": {
-                          "oneof": [
-                            "command",
-                            "query"
-                          ]
-                        }
-                      },
+                    "ListAccounts": {
                       "fields": {
-                        "contractVersion": {
-                          "type": "uint32",
-                          "id": 1,
-                          "protoName": "contract_version"
-                        },
-                        "requestId": {
-                          "type": "string",
-                          "id": 2,
-                          "protoName": "request_id"
-                        },
-                        "context": {
-                          "type": "string",
-                          "id": 3
-                        },
-                        "command": {
-                          "type": "Command",
-                          "id": 10
-                        },
-                        "query": {
-                          "type": "Query",
-                          "id": 11
-                        }
-                      }
-                    },
-                    "Command": {
-                      "oneofs": {
-                        "payload": {
-                          "oneof": [
-                            "redeemReward"
-                          ]
-                        }
-                      },
-                      "fields": {
-                        "metadata": {
-                          "type": "cafe.requests.v1.CommandMetadata",
+                        "page": {
+                          "type": "cafe.requests.v1.PageRequest",
                           "id": 1
-                        },
-                        "redeemReward": {
-                          "type": "cafe.loyalty.requests.v1.RedeemReward",
-                          "id": 24,
-                          "protoName": "redeem_reward"
                         }
                       }
                     },
-                    "Query": {
+                    "GetAccount": {
+                      "fields": {
+                        "id": {
+                          "type": "string",
+                          "id": 1
+                        }
+                      }
+                    },
+                    "ListRewards": {
+                      "fields": {
+                        "page": {
+                          "type": "cafe.requests.v1.PageRequest",
+                          "id": 1
+                        }
+                      }
+                    },
+                    "GetReward": {
+                      "fields": {
+                        "id": {
+                          "type": "string",
+                          "id": 1
+                        }
+                      }
+                    },
+                    "RedeemReward": {
                       "oneofs": {
-                        "payload": {
+                        "_orderId": {
                           "oneof": [
-                            "listAccounts",
-                            "getAccount",
-                            "listRewards",
-                            "getReward"
+                            "orderId"
                           ]
                         }
                       },
                       "fields": {
-                        "listAccounts": {
-                          "type": "cafe.loyalty.requests.v1.ListAccounts",
-                          "id": 20,
-                          "protoName": "list_accounts"
-                        },
-                        "getAccount": {
-                          "type": "cafe.loyalty.requests.v1.GetAccount",
-                          "id": 21,
-                          "protoName": "get_account"
-                        },
-                        "listRewards": {
-                          "type": "cafe.loyalty.requests.v1.ListRewards",
-                          "id": 22,
-                          "protoName": "list_rewards"
-                        },
-                        "getReward": {
-                          "type": "cafe.loyalty.requests.v1.GetReward",
-                          "id": 23,
-                          "protoName": "get_reward"
-                        }
-                      }
-                    },
-                    "Reply": {
-                      "oneofs": {
-                        "payload": {
-                          "oneof": [
-                            "outcome",
-                            "error",
-                            "account",
-                            "accounts",
-                            "reward",
-                            "rewards"
-                          ]
-                        }
-                      },
-                      "fields": {
-                        "contractVersion": {
-                          "type": "uint32",
+                        "orderId": {
+                          "type": "string",
                           "id": 1,
-                          "protoName": "contract_version"
-                        },
-                        "requestId": {
-                          "type": "string",
-                          "id": 2,
-                          "protoName": "request_id"
-                        },
-                        "context": {
-                          "type": "string",
-                          "id": 3
-                        },
-                        "outcome": {
-                          "type": "cafe.requests.v1.Outcome",
-                          "id": 10
-                        },
-                        "error": {
-                          "type": "cafe.requests.v1.RequestError",
-                          "id": 11
-                        },
-                        "account": {
-                          "type": "cafe.loyalty.requests.v1.LoadedAccount",
-                          "id": 30
-                        },
-                        "accounts": {
-                          "type": "cafe.loyalty.requests.v1.Accounts",
-                          "id": 31
-                        },
-                        "reward": {
-                          "type": "cafe.loyalty.requests.v1.LoadedReward",
-                          "id": 32
-                        },
-                        "rewards": {
-                          "type": "cafe.loyalty.requests.v1.Rewards",
-                          "id": 33
+                          "protoName": "order_id",
+                          "options": {
+                            "(cafe.requests.v1.required_input)": true,
+                            "proto3_optional": true
+                          }
                         }
                       }
                     }
