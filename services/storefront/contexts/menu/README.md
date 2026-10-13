@@ -19,7 +19,7 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Persistence mapping](adaptors/postgres)
 - [Published contracts](../../../../contracts/menu)
 - [Executable specifications](../../../../specifications/menu)
-- [Dependency composition](../../apps/storefront/menu.go)
+- [Dependency composition](../../apps/storefront/di/menu.go)
 - [Context tests](.)
 
 ## Follow a use case

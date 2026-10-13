@@ -1,4 +1,4 @@
-package main
+package di
 
 import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/apps/support"

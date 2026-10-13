@@ -24,7 +24,7 @@ Use a nearby implementation as the starting point:
 | Query and handler | [GetOrder](../services/storefront/contexts/ordering/application/queries/get_order.go) | [GetTicket](../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py) | [GetAccount](../services/engagement/src/contexts/loyalty/application/queries/get-account.ts) |
 | Event/projection reaction | [MenuPublished projection](../services/storefront/contexts/ordering/application/projections/menu_published.go) | [OrderPlaced reaction](../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py) | [RewardEarned reaction](../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts) |
 | Read persistence mapping | [Order read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go) | [Ticket read repository](../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) | [Account read repository](../services/engagement/src/contexts/loyalty/adaptors/persistence/account-read-repository.ts) |
-| DI composition | [Ordering Fx module](../services/storefront/apps/storefront/ordering.go) | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py) | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts) |
+| DI composition | [Ordering Fx module](../services/storefront/apps/storefront/di/ordering.go) | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py) | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts) |
 
 ## The edit/test loop
 
@@ -108,7 +108,7 @@ field numbers or silently register unfinished policy.
    Use `package commands`; follow `change_quantity.go` for the load, mutate and save flow.
 2. Implement and test the root behaviour in `domain/order.go`. Use `OrderWriteRepository` to load the root, call its method and save it.
    The aggregate records facts; the owner publication mapper selects outgoing messages.
-3. Register the handler in `apps/storefront/ordering.go`, receiving
+3. Register the handler in `apps/storefront/di/ordering.go`, receiving
    the invocation-scoped `OrderWriteRepository` through `command.Bind`.
    Register the returned executor with the owner RabbitMQ adaptor.
 4. For an API operation, update Ordering's OpenAPI and Protobuf request sources,

@@ -1,5 +1,20 @@
 # Executed verification
 
+## Storefront composition package, 13 October 2026
+
+Storefront's Fx graph, context modules and lifecycle hooks now live under
+`apps/storefront/di`. The existing graph test exercises the exported `di.Module()`;
+context bindings and worker lifecycle behaviour are preserved.
+
+`pnpm verify` passed all five applications, generated/historical contract checks,
+86 script tests, architecture, Go race/vet, Python/TypeScript checks and 51 fast
+Gherkin scenarios. `pnpm test:integration` passed PostgreSQL/RabbitMQ checks,
+31 live API operations, 12 infrastructure scenarios, both browser scenarios and
+session revocation. All required environment-dependent checks ran, and disposable
+resources were removed. Remote CI and load tests were not run.
+
+Logs: `.local/storefront-di-verify.log` and `.local/storefront-di-integration.log`.
+
 ## Fresh-checkout compiler setup, 12 October 2026
 
 The deterministic job for `fb4453c` failed in

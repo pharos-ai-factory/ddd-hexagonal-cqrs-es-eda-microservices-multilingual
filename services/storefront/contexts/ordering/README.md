@@ -18,7 +18,7 @@ An order owns its lines and enforces the five-drink limit.
 - [Persistence mapping](adaptors/postgres)
 - [Published contracts](../../../../contracts/ordering)
 - [Executable specifications](../../../../specifications/ordering)
-- [Dependency composition](../../apps/storefront/ordering.go)
+- [Dependency composition](../../apps/storefront/di/ordering.go)
 - [Context tests](.)
 
 ## Follow a use case

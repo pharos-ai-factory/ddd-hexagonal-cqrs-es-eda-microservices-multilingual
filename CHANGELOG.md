@@ -4,6 +4,9 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Group Storefront's Fx composition, context modules and lifecycle hooks under
+  `apps/storefront/di`, with a small executable entry point.
+
 - Initialise the pinned Go Protobuf compiler in standalone generation tests as
   well as contract generation. Fix deterministic CI on fresh checkouts, with
   regression coverage for missing, outdated and unusable compiler installations.
