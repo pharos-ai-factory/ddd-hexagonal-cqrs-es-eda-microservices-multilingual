@@ -1,0 +1,371 @@
+{
+  "request_owners": [
+    "menu",
+    "ordering",
+    "preparation",
+    "collection",
+    "loyalty",
+    "communication"
+  ],
+  "queues": {
+    "menu": [
+      "ref.menu.commands",
+      "ref.menu.commands.dead",
+      "ref.menu.drink-directory",
+      "ref.menu.drink-directory.dead",
+      "ref.menu.drink-directory.retry",
+      "ref.menu.publish-edition-published",
+      "ref.menu.publish-edition-published.dead",
+      "ref.menu.publish-edition-published.retry",
+      "ref.menu.queries",
+      "ref.menu.queries.dead"
+    ],
+    "ordering": [
+      "ref.ordering.commands",
+      "ref.ordering.commands.dead",
+      "ref.ordering.menu-directory",
+      "ref.ordering.menu-directory.dead",
+      "ref.ordering.menu-directory.retry",
+      "ref.ordering.publish-order-placed",
+      "ref.ordering.publish-order-placed.dead",
+      "ref.ordering.publish-order-placed.retry",
+      "ref.ordering.queries",
+      "ref.ordering.queries.dead"
+    ],
+    "preparation": [
+      "ref.preparation.accept-order",
+      "ref.preparation.accept-order.command",
+      "ref.preparation.accept-order.command.dead",
+      "ref.preparation.accept-order.command.retry",
+      "ref.preparation.accept-order.dead",
+      "ref.preparation.accept-order.retry",
+      "ref.preparation.commands",
+      "ref.preparation.commands.dead",
+      "ref.preparation.publish-drinks-ready",
+      "ref.preparation.publish-drinks-ready.dead",
+      "ref.preparation.publish-drinks-ready.retry",
+      "ref.preparation.queries",
+      "ref.preparation.queries.dead"
+    ],
+    "collection": [
+      "ref.collection.commands",
+      "ref.collection.commands.dead",
+      "ref.collection.open-pickup",
+      "ref.collection.open-pickup.command",
+      "ref.collection.open-pickup.command.dead",
+      "ref.collection.open-pickup.command.retry",
+      "ref.collection.open-pickup.dead",
+      "ref.collection.open-pickup.retry",
+      "ref.collection.publish-order-collected",
+      "ref.collection.publish-order-collected.dead",
+      "ref.collection.publish-order-collected.retry",
+      "ref.collection.publish-pickup-opened",
+      "ref.collection.publish-pickup-opened.dead",
+      "ref.collection.publish-pickup-opened.retry",
+      "ref.collection.queries",
+      "ref.collection.queries.dead"
+    ],
+    "loyalty": [
+      "ref.loyalty.commands",
+      "ref.loyalty.commands.dead",
+      "ref.loyalty.credit-collection",
+      "ref.loyalty.credit-collection.command",
+      "ref.loyalty.credit-collection.command.dead",
+      "ref.loyalty.credit-collection.command.retry",
+      "ref.loyalty.credit-collection.dead",
+      "ref.loyalty.credit-collection.retry",
+      "ref.loyalty.issue-reward",
+      "ref.loyalty.issue-reward.command",
+      "ref.loyalty.issue-reward.command.dead",
+      "ref.loyalty.issue-reward.command.retry",
+      "ref.loyalty.issue-reward.dead",
+      "ref.loyalty.issue-reward.retry",
+      "ref.loyalty.publish-reward-issued",
+      "ref.loyalty.publish-reward-issued.dead",
+      "ref.loyalty.publish-reward-issued.retry",
+      "ref.loyalty.queries",
+      "ref.loyalty.queries.dead"
+    ],
+    "communication": [
+      "ref.communication.commands",
+      "ref.communication.commands.dead",
+      "ref.communication.deliver-notice",
+      "ref.communication.deliver-notice.command",
+      "ref.communication.deliver-notice.command.dead",
+      "ref.communication.deliver-notice.command.retry",
+      "ref.communication.deliver-notice.dead",
+      "ref.communication.deliver-notice.retry",
+      "ref.communication.pickup-notice",
+      "ref.communication.pickup-notice.command",
+      "ref.communication.pickup-notice.command.dead",
+      "ref.communication.pickup-notice.command.retry",
+      "ref.communication.pickup-notice.dead",
+      "ref.communication.pickup-notice.retry",
+      "ref.communication.queries",
+      "ref.communication.queries.dead",
+      "ref.communication.reward-notice",
+      "ref.communication.reward-notice.command",
+      "ref.communication.reward-notice.command.dead",
+      "ref.communication.reward-notice.command.retry",
+      "ref.communication.reward-notice.dead",
+      "ref.communication.reward-notice.retry"
+    ],
+    "api": [
+      "ref.api.collection.replies",
+      "ref.api.communication.replies",
+      "ref.api.loyalty.replies",
+      "ref.api.menu.replies",
+      "ref.api.ordering.replies",
+      "ref.api.preparation.replies"
+    ]
+  },
+  "exchanges": [
+    "cafe.events",
+    "cafe.replies",
+    "cafe.requests",
+    "ref.collection.delivery",
+    "ref.communication.delivery",
+    "ref.loyalty.delivery",
+    "ref.menu.delivery",
+    "ref.ordering.delivery",
+    "ref.preparation.delivery"
+  ],
+  "dead_letter_sources": [
+    "ref.collection.commands",
+    "ref.collection.open-pickup.command.retry",
+    "ref.collection.open-pickup.retry",
+    "ref.collection.publish-order-collected.retry",
+    "ref.collection.publish-pickup-opened.retry",
+    "ref.collection.queries",
+    "ref.communication.commands",
+    "ref.communication.deliver-notice.command.retry",
+    "ref.communication.deliver-notice.retry",
+    "ref.communication.pickup-notice.command.retry",
+    "ref.communication.pickup-notice.retry",
+    "ref.communication.queries",
+    "ref.communication.reward-notice.command.retry",
+    "ref.communication.reward-notice.retry",
+    "ref.loyalty.commands",
+    "ref.loyalty.credit-collection.command.retry",
+    "ref.loyalty.credit-collection.retry",
+    "ref.loyalty.issue-reward.command.retry",
+    "ref.loyalty.issue-reward.retry",
+    "ref.loyalty.publish-reward-issued.retry",
+    "ref.loyalty.queries",
+    "ref.menu.commands",
+    "ref.menu.drink-directory.retry",
+    "ref.menu.publish-edition-published.retry",
+    "ref.menu.queries",
+    "ref.ordering.commands",
+    "ref.ordering.menu-directory.retry",
+    "ref.ordering.publish-order-placed.retry",
+    "ref.ordering.queries",
+    "ref.preparation.accept-order.command.retry",
+    "ref.preparation.accept-order.retry",
+    "ref.preparation.commands",
+    "ref.preparation.publish-drinks-ready.retry",
+    "ref.preparation.queries"
+  ],
+  "users": {
+    "cafe_menu": {
+      "password_key": "MENU_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.events|cafe\\.replies|ref\\.menu\\.delivery)$",
+        "read": "^(ref\\.menu\\.commands|ref\\.menu\\.commands\\.dead|ref\\.menu\\.drink\\-directory|ref\\.menu\\.drink\\-directory\\.dead|ref\\.menu\\.drink\\-directory\\.retry|ref\\.menu\\.publish\\-edition\\-published|ref\\.menu\\.publish\\-edition\\-published\\.dead|ref\\.menu\\.publish\\-edition\\-published\\.retry|ref\\.menu\\.queries|ref\\.menu\\.queries\\.dead)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^(domain|integration)\\.menu\\..+$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^(reply\\.menu)$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_ordering": {
+      "password_key": "ORDERING_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.events|cafe\\.replies|ref\\.ordering\\.delivery)$",
+        "read": "^(ref\\.ordering\\.commands|ref\\.ordering\\.commands\\.dead|ref\\.ordering\\.menu\\-directory|ref\\.ordering\\.menu\\-directory\\.dead|ref\\.ordering\\.menu\\-directory\\.retry|ref\\.ordering\\.publish\\-order\\-placed|ref\\.ordering\\.publish\\-order\\-placed\\.dead|ref\\.ordering\\.publish\\-order\\-placed\\.retry|ref\\.ordering\\.queries|ref\\.ordering\\.queries\\.dead)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^(domain|integration)\\.ordering\\..+$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^(reply\\.ordering)$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_preparation": {
+      "password_key": "PREPARATION_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.events|cafe\\.replies|ref\\.preparation\\.delivery)$",
+        "read": "^(ref\\.preparation\\.accept\\-order|ref\\.preparation\\.accept\\-order\\.command|ref\\.preparation\\.accept\\-order\\.command\\.dead|ref\\.preparation\\.accept\\-order\\.command\\.retry|ref\\.preparation\\.accept\\-order\\.dead|ref\\.preparation\\.accept\\-order\\.retry|ref\\.preparation\\.commands|ref\\.preparation\\.commands\\.dead|ref\\.preparation\\.publish\\-drinks\\-ready|ref\\.preparation\\.publish\\-drinks\\-ready\\.dead|ref\\.preparation\\.publish\\-drinks\\-ready\\.retry|ref\\.preparation\\.queries|ref\\.preparation\\.queries\\.dead)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^(domain|integration)\\.preparation\\..+$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^(reply\\.preparation)$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_collection": {
+      "password_key": "COLLECTION_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.events|cafe\\.replies|ref\\.collection\\.delivery)$",
+        "read": "^(ref\\.collection\\.commands|ref\\.collection\\.commands\\.dead|ref\\.collection\\.open\\-pickup|ref\\.collection\\.open\\-pickup\\.command|ref\\.collection\\.open\\-pickup\\.command\\.dead|ref\\.collection\\.open\\-pickup\\.command\\.retry|ref\\.collection\\.open\\-pickup\\.dead|ref\\.collection\\.open\\-pickup\\.retry|ref\\.collection\\.publish\\-order\\-collected|ref\\.collection\\.publish\\-order\\-collected\\.dead|ref\\.collection\\.publish\\-order\\-collected\\.retry|ref\\.collection\\.publish\\-pickup\\-opened|ref\\.collection\\.publish\\-pickup\\-opened\\.dead|ref\\.collection\\.publish\\-pickup\\-opened\\.retry|ref\\.collection\\.queries|ref\\.collection\\.queries\\.dead)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^(domain|integration)\\.collection\\..+$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^(reply\\.collection)$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_loyalty": {
+      "password_key": "LOYALTY_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.events|cafe\\.replies|ref\\.loyalty\\.delivery)$",
+        "read": "^(ref\\.loyalty\\.commands|ref\\.loyalty\\.commands\\.dead|ref\\.loyalty\\.credit\\-collection|ref\\.loyalty\\.credit\\-collection\\.command|ref\\.loyalty\\.credit\\-collection\\.command\\.dead|ref\\.loyalty\\.credit\\-collection\\.command\\.retry|ref\\.loyalty\\.credit\\-collection\\.dead|ref\\.loyalty\\.credit\\-collection\\.retry|ref\\.loyalty\\.issue\\-reward|ref\\.loyalty\\.issue\\-reward\\.command|ref\\.loyalty\\.issue\\-reward\\.command\\.dead|ref\\.loyalty\\.issue\\-reward\\.command\\.retry|ref\\.loyalty\\.issue\\-reward\\.dead|ref\\.loyalty\\.issue\\-reward\\.retry|ref\\.loyalty\\.publish\\-reward\\-issued|ref\\.loyalty\\.publish\\-reward\\-issued\\.dead|ref\\.loyalty\\.publish\\-reward\\-issued\\.retry|ref\\.loyalty\\.queries|ref\\.loyalty\\.queries\\.dead)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^(domain|integration)\\.loyalty\\..+$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^(reply\\.loyalty)$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_communication": {
+      "password_key": "COMMUNICATION_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.events|cafe\\.replies|ref\\.communication\\.delivery)$",
+        "read": "^(ref\\.communication\\.commands|ref\\.communication\\.commands\\.dead|ref\\.communication\\.deliver\\-notice|ref\\.communication\\.deliver\\-notice\\.command|ref\\.communication\\.deliver\\-notice\\.command\\.dead|ref\\.communication\\.deliver\\-notice\\.command\\.retry|ref\\.communication\\.deliver\\-notice\\.dead|ref\\.communication\\.deliver\\-notice\\.retry|ref\\.communication\\.pickup\\-notice|ref\\.communication\\.pickup\\-notice\\.command|ref\\.communication\\.pickup\\-notice\\.command\\.dead|ref\\.communication\\.pickup\\-notice\\.command\\.retry|ref\\.communication\\.pickup\\-notice\\.dead|ref\\.communication\\.pickup\\-notice\\.retry|ref\\.communication\\.queries|ref\\.communication\\.queries\\.dead|ref\\.communication\\.reward\\-notice|ref\\.communication\\.reward\\-notice\\.command|ref\\.communication\\.reward\\-notice\\.command\\.dead|ref\\.communication\\.reward\\-notice\\.command\\.retry|ref\\.communication\\.reward\\-notice\\.dead|ref\\.communication\\.reward\\-notice\\.retry)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^(domain|integration)\\.communication\\..+$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^(reply\\.communication)$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_api": {
+      "password_key": "API_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^$",
+        "write": "^(cafe\\.requests)$",
+        "read": "^(ref\\.api\\.collection\\.replies|ref\\.api\\.communication\\.replies|ref\\.api\\.loyalty\\.replies|ref\\.api\\.menu\\.replies|ref\\.api\\.ordering\\.replies|ref\\.api\\.preparation\\.replies)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^(request\\.collection\\.command|request\\.collection\\.query|request\\.communication\\.command|request\\.communication\\.query|request\\.loyalty\\.command|request\\.loyalty\\.query|request\\.menu\\.command|request\\.menu\\.query|request\\.ordering\\.command|request\\.ordering\\.query|request\\.preparation\\.command|request\\.preparation\\.query)$",
+          "read": "^$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^$",
+          "read": "^$"
+        }
+      ]
+    },
+    "cafe_topology": {
+      "password_key": "TOPOLOGY_BROKER_PASSWORD",
+      "permissions": {
+        "configure": "^(cafe\\.events|cafe\\.replies|cafe\\.requests|ref\\.api\\.collection\\.replies|ref\\.api\\.communication\\.replies|ref\\.api\\.loyalty\\.replies|ref\\.api\\.menu\\.replies|ref\\.api\\.ordering\\.replies|ref\\.api\\.preparation\\.replies|ref\\.collection\\.commands|ref\\.collection\\.commands\\.dead|ref\\.collection\\.delivery|ref\\.collection\\.open\\-pickup|ref\\.collection\\.open\\-pickup\\.command|ref\\.collection\\.open\\-pickup\\.command\\.dead|ref\\.collection\\.open\\-pickup\\.command\\.retry|ref\\.collection\\.open\\-pickup\\.dead|ref\\.collection\\.open\\-pickup\\.retry|ref\\.collection\\.publish\\-order\\-collected|ref\\.collection\\.publish\\-order\\-collected\\.dead|ref\\.collection\\.publish\\-order\\-collected\\.retry|ref\\.collection\\.publish\\-pickup\\-opened|ref\\.collection\\.publish\\-pickup\\-opened\\.dead|ref\\.collection\\.publish\\-pickup\\-opened\\.retry|ref\\.collection\\.queries|ref\\.collection\\.queries\\.dead|ref\\.communication\\.commands|ref\\.communication\\.commands\\.dead|ref\\.communication\\.deliver\\-notice|ref\\.communication\\.deliver\\-notice\\.command|ref\\.communication\\.deliver\\-notice\\.command\\.dead|ref\\.communication\\.deliver\\-notice\\.command\\.retry|ref\\.communication\\.deliver\\-notice\\.dead|ref\\.communication\\.deliver\\-notice\\.retry|ref\\.communication\\.delivery|ref\\.communication\\.pickup\\-notice|ref\\.communication\\.pickup\\-notice\\.command|ref\\.communication\\.pickup\\-notice\\.command\\.dead|ref\\.communication\\.pickup\\-notice\\.command\\.retry|ref\\.communication\\.pickup\\-notice\\.dead|ref\\.communication\\.pickup\\-notice\\.retry|ref\\.communication\\.queries|ref\\.communication\\.queries\\.dead|ref\\.communication\\.reward\\-notice|ref\\.communication\\.reward\\-notice\\.command|ref\\.communication\\.reward\\-notice\\.command\\.dead|ref\\.communication\\.reward\\-notice\\.command\\.retry|ref\\.communication\\.reward\\-notice\\.dead|ref\\.communication\\.reward\\-notice\\.retry|ref\\.loyalty\\.commands|ref\\.loyalty\\.commands\\.dead|ref\\.loyalty\\.credit\\-collection|ref\\.loyalty\\.credit\\-collection\\.command|ref\\.loyalty\\.credit\\-collection\\.command\\.dead|ref\\.loyalty\\.credit\\-collection\\.command\\.retry|ref\\.loyalty\\.credit\\-collection\\.dead|ref\\.loyalty\\.credit\\-collection\\.retry|ref\\.loyalty\\.delivery|ref\\.loyalty\\.issue\\-reward|ref\\.loyalty\\.issue\\-reward\\.command|ref\\.loyalty\\.issue\\-reward\\.command\\.dead|ref\\.loyalty\\.issue\\-reward\\.command\\.retry|ref\\.loyalty\\.issue\\-reward\\.dead|ref\\.loyalty\\.issue\\-reward\\.retry|ref\\.loyalty\\.publish\\-reward\\-issued|ref\\.loyalty\\.publish\\-reward\\-issued\\.dead|ref\\.loyalty\\.publish\\-reward\\-issued\\.retry|ref\\.loyalty\\.queries|ref\\.loyalty\\.queries\\.dead|ref\\.menu\\.commands|ref\\.menu\\.commands\\.dead|ref\\.menu\\.delivery|ref\\.menu\\.drink\\-directory|ref\\.menu\\.drink\\-directory\\.dead|ref\\.menu\\.drink\\-directory\\.retry|ref\\.menu\\.publish\\-edition\\-published|ref\\.menu\\.publish\\-edition\\-published\\.dead|ref\\.menu\\.publish\\-edition\\-published\\.retry|ref\\.menu\\.queries|ref\\.menu\\.queries\\.dead|ref\\.ordering\\.commands|ref\\.ordering\\.commands\\.dead|ref\\.ordering\\.delivery|ref\\.ordering\\.menu\\-directory|ref\\.ordering\\.menu\\-directory\\.dead|ref\\.ordering\\.menu\\-directory\\.retry|ref\\.ordering\\.publish\\-order\\-placed|ref\\.ordering\\.publish\\-order\\-placed\\.dead|ref\\.ordering\\.publish\\-order\\-placed\\.retry|ref\\.ordering\\.queries|ref\\.ordering\\.queries\\.dead|ref\\.preparation\\.accept\\-order|ref\\.preparation\\.accept\\-order\\.command|ref\\.preparation\\.accept\\-order\\.command\\.dead|ref\\.preparation\\.accept\\-order\\.command\\.retry|ref\\.preparation\\.accept\\-order\\.dead|ref\\.preparation\\.accept\\-order\\.retry|ref\\.preparation\\.commands|ref\\.preparation\\.commands\\.dead|ref\\.preparation\\.delivery|ref\\.preparation\\.publish\\-drinks\\-ready|ref\\.preparation\\.publish\\-drinks\\-ready\\.dead|ref\\.preparation\\.publish\\-drinks\\-ready\\.retry|ref\\.preparation\\.queries|ref\\.preparation\\.queries\\.dead)$",
+        "write": "^(ref\\.api\\.collection\\.replies|ref\\.api\\.communication\\.replies|ref\\.api\\.loyalty\\.replies|ref\\.api\\.menu\\.replies|ref\\.api\\.ordering\\.replies|ref\\.api\\.preparation\\.replies|ref\\.collection\\.commands|ref\\.collection\\.commands\\.dead|ref\\.collection\\.delivery|ref\\.collection\\.open\\-pickup|ref\\.collection\\.open\\-pickup\\.command|ref\\.collection\\.open\\-pickup\\.command\\.dead|ref\\.collection\\.open\\-pickup\\.command\\.retry|ref\\.collection\\.open\\-pickup\\.dead|ref\\.collection\\.open\\-pickup\\.retry|ref\\.collection\\.publish\\-order\\-collected|ref\\.collection\\.publish\\-order\\-collected\\.dead|ref\\.collection\\.publish\\-order\\-collected\\.retry|ref\\.collection\\.publish\\-pickup\\-opened|ref\\.collection\\.publish\\-pickup\\-opened\\.dead|ref\\.collection\\.publish\\-pickup\\-opened\\.retry|ref\\.collection\\.queries|ref\\.collection\\.queries\\.dead|ref\\.communication\\.commands|ref\\.communication\\.commands\\.dead|ref\\.communication\\.deliver\\-notice|ref\\.communication\\.deliver\\-notice\\.command|ref\\.communication\\.deliver\\-notice\\.command\\.dead|ref\\.communication\\.deliver\\-notice\\.command\\.retry|ref\\.communication\\.deliver\\-notice\\.dead|ref\\.communication\\.deliver\\-notice\\.retry|ref\\.communication\\.delivery|ref\\.communication\\.pickup\\-notice|ref\\.communication\\.pickup\\-notice\\.command|ref\\.communication\\.pickup\\-notice\\.command\\.dead|ref\\.communication\\.pickup\\-notice\\.command\\.retry|ref\\.communication\\.pickup\\-notice\\.dead|ref\\.communication\\.pickup\\-notice\\.retry|ref\\.communication\\.queries|ref\\.communication\\.queries\\.dead|ref\\.communication\\.reward\\-notice|ref\\.communication\\.reward\\-notice\\.command|ref\\.communication\\.reward\\-notice\\.command\\.dead|ref\\.communication\\.reward\\-notice\\.command\\.retry|ref\\.communication\\.reward\\-notice\\.dead|ref\\.communication\\.reward\\-notice\\.retry|ref\\.loyalty\\.commands|ref\\.loyalty\\.commands\\.dead|ref\\.loyalty\\.credit\\-collection|ref\\.loyalty\\.credit\\-collection\\.command|ref\\.loyalty\\.credit\\-collection\\.command\\.dead|ref\\.loyalty\\.credit\\-collection\\.command\\.retry|ref\\.loyalty\\.credit\\-collection\\.dead|ref\\.loyalty\\.credit\\-collection\\.retry|ref\\.loyalty\\.delivery|ref\\.loyalty\\.issue\\-reward|ref\\.loyalty\\.issue\\-reward\\.command|ref\\.loyalty\\.issue\\-reward\\.command\\.dead|ref\\.loyalty\\.issue\\-reward\\.command\\.retry|ref\\.loyalty\\.issue\\-reward\\.dead|ref\\.loyalty\\.issue\\-reward\\.retry|ref\\.loyalty\\.publish\\-reward\\-issued|ref\\.loyalty\\.publish\\-reward\\-issued\\.dead|ref\\.loyalty\\.publish\\-reward\\-issued\\.retry|ref\\.loyalty\\.queries|ref\\.loyalty\\.queries\\.dead|ref\\.menu\\.commands|ref\\.menu\\.commands\\.dead|ref\\.menu\\.delivery|ref\\.menu\\.drink\\-directory|ref\\.menu\\.drink\\-directory\\.dead|ref\\.menu\\.drink\\-directory\\.retry|ref\\.menu\\.publish\\-edition\\-published|ref\\.menu\\.publish\\-edition\\-published\\.dead|ref\\.menu\\.publish\\-edition\\-published\\.retry|ref\\.menu\\.queries|ref\\.menu\\.queries\\.dead|ref\\.ordering\\.commands|ref\\.ordering\\.commands\\.dead|ref\\.ordering\\.delivery|ref\\.ordering\\.menu\\-directory|ref\\.ordering\\.menu\\-directory\\.dead|ref\\.ordering\\.menu\\-directory\\.retry|ref\\.ordering\\.publish\\-order\\-placed|ref\\.ordering\\.publish\\-order\\-placed\\.dead|ref\\.ordering\\.publish\\-order\\-placed\\.retry|ref\\.ordering\\.queries|ref\\.ordering\\.queries\\.dead|ref\\.preparation\\.accept\\-order|ref\\.preparation\\.accept\\-order\\.command|ref\\.preparation\\.accept\\-order\\.command\\.dead|ref\\.preparation\\.accept\\-order\\.command\\.retry|ref\\.preparation\\.accept\\-order\\.dead|ref\\.preparation\\.accept\\-order\\.retry|ref\\.preparation\\.commands|ref\\.preparation\\.commands\\.dead|ref\\.preparation\\.delivery|ref\\.preparation\\.publish\\-drinks\\-ready|ref\\.preparation\\.publish\\-drinks\\-ready\\.dead|ref\\.preparation\\.publish\\-drinks\\-ready\\.retry|ref\\.preparation\\.queries|ref\\.preparation\\.queries\\.dead)$",
+        "read": "^(cafe\\.events|cafe\\.replies|cafe\\.requests|ref\\.collection\\.commands|ref\\.collection\\.delivery|ref\\.collection\\.open\\-pickup\\.command\\.retry|ref\\.collection\\.open\\-pickup\\.retry|ref\\.collection\\.publish\\-order\\-collected\\.retry|ref\\.collection\\.publish\\-pickup\\-opened\\.retry|ref\\.collection\\.queries|ref\\.communication\\.commands|ref\\.communication\\.deliver\\-notice\\.command\\.retry|ref\\.communication\\.deliver\\-notice\\.retry|ref\\.communication\\.delivery|ref\\.communication\\.pickup\\-notice\\.command\\.retry|ref\\.communication\\.pickup\\-notice\\.retry|ref\\.communication\\.queries|ref\\.communication\\.reward\\-notice\\.command\\.retry|ref\\.communication\\.reward\\-notice\\.retry|ref\\.loyalty\\.commands|ref\\.loyalty\\.credit\\-collection\\.command\\.retry|ref\\.loyalty\\.credit\\-collection\\.retry|ref\\.loyalty\\.delivery|ref\\.loyalty\\.issue\\-reward\\.command\\.retry|ref\\.loyalty\\.issue\\-reward\\.retry|ref\\.loyalty\\.publish\\-reward\\-issued\\.retry|ref\\.loyalty\\.queries|ref\\.menu\\.commands|ref\\.menu\\.delivery|ref\\.menu\\.drink\\-directory\\.retry|ref\\.menu\\.publish\\-edition\\-published\\.retry|ref\\.menu\\.queries|ref\\.ordering\\.commands|ref\\.ordering\\.delivery|ref\\.ordering\\.menu\\-directory\\.retry|ref\\.ordering\\.publish\\-order\\-placed\\.retry|ref\\.ordering\\.queries|ref\\.preparation\\.accept\\-order\\.command\\.retry|ref\\.preparation\\.accept\\-order\\.retry|ref\\.preparation\\.commands|ref\\.preparation\\.delivery|ref\\.preparation\\.publish\\-drinks\\-ready\\.retry|ref\\.preparation\\.queries)$"
+      },
+      "topics": [
+        {
+          "exchange": "cafe.events",
+          "write": "^$",
+          "read": "^(domain\\.collection\\.order\\-collected\\.domain|domain\\.collection\\.pickup\\-opened\\.domain|domain\\.communication\\.notification\\-requested|domain\\.loyalty\\.reward\\-earned|domain\\.loyalty\\.reward\\-issued\\.domain|domain\\.menu\\.drink\\-published|domain\\.menu\\.edition\\-published\\.domain|domain\\.ordering\\.order\\-placed\\.domain|domain\\.preparation\\.drinks\\-ready\\.domain|integration\\.collection\\.order\\-collected|integration\\.collection\\.pickup\\-opened|integration\\.loyalty\\.reward\\-issued|integration\\.menu\\.edition\\-published|integration\\.ordering\\.order\\-placed|integration\\.preparation\\.drinks\\-ready)$"
+        },
+        {
+          "exchange": "cafe.requests",
+          "write": "^$",
+          "read": "^(request\\.collection\\.command|request\\.collection\\.query|request\\.communication\\.command|request\\.communication\\.query|request\\.loyalty\\.command|request\\.loyalty\\.query|request\\.menu\\.command|request\\.menu\\.query|request\\.ordering\\.command|request\\.ordering\\.query|request\\.preparation\\.command|request\\.preparation\\.query)$"
+        },
+        {
+          "exchange": "cafe.replies",
+          "write": "^$",
+          "read": "^(reply\\.collection|reply\\.communication|reply\\.loyalty|reply\\.menu|reply\\.ordering|reply\\.preparation)$"
+        }
+      ]
+    }
+  }
+}

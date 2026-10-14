@@ -31,7 +31,8 @@ from operations.adaptors.persistence.postgres_database import fingerprint
 
 @pytest.mark.parametrize("counter", ["invalid", -2147483648, 2147483647, Decimal("1.5"), True, None])
 def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counter: object) -> None:
-    consumer = "collection.test-" + new_id()
+    # The integration lane stops runtime workers before using their declared queues.
+    consumer = "collection.open-pickup"
     queue = "ref." + consumer
     stop, handled = Event(), Event()
     connection = broker_connection(os.environ["BROKER_ADMIN_URL"])
@@ -40,11 +41,6 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
     poison_id = new_id()
     try:
         channel.confirm_delivery()
-        for suffix in ("", ".retry", ".dead"):
-            channel.queue_declare(
-                queue + suffix, durable=True, arguments={"x-queue-type": "quorum", "x-delivery-limit": -1}
-            )
-            channel.queue_bind(queue + suffix, "ref.collection.delivery", queue + suffix)
         channel.basic_publish(
             "ref.collection.delivery",
             queue,
@@ -115,12 +111,12 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
         if worker:
             worker.join(timeout=7)
         for suffix in ("", ".retry", ".dead"):
-            channel.queue_delete(queue + suffix)
+            channel.queue_purge(queue + suffix)
         connection.close()
 
 
 def test_typed_order_delivery_preserves_original_receipt_material() -> None:
-    consumer = "preparation.test-" + new_id()
+    consumer = "preparation.accept-order"
     queue, stop = "ref." + consumer, Event()
     received: Future[tuple[Metadata, OrderPlacedIntegrationEvent]] = Future()
     event = WireEvent(
@@ -174,10 +170,6 @@ def test_typed_order_delivery_preserves_original_receipt_material() -> None:
         channel = connection.channel()
         try:
             channel.confirm_delivery()
-            channel.queue_declare(
-                queue, durable=True, arguments={"x-queue-type": "quorum", "x-delivery-limit": -1}
-            )
-            channel.queue_bind(queue, "ref.preparation.delivery", queue)
             channel.basic_publish(
                 "ref.preparation.delivery",
                 queue,
@@ -206,4 +198,4 @@ def test_typed_order_delivery_preserves_original_receipt_material() -> None:
             stop.set()
             if worker.ident is not None:
                 worker.join(timeout=7)
-            channel.queue_delete(queue)
+            channel.queue_purge(queue)

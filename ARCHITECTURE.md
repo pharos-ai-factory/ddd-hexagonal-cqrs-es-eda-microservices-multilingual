@@ -130,7 +130,11 @@ administrative endpoints are not exposed through browser ingress.
 An internal Go realtime gateway authorises each context credential for publication
 to its own channel and the session credential for disconnection. Domain processes
 do not receive Centrifugo's full API key. RabbitMQ runtime credentials cannot
-create, change or delete topology; the separate bootstrap owns those operations.
+create, change or delete topology. The bootstrap uses a dedicated topology user;
+only the host launcher provisions users through the administrator. Exact queue
+permissions come from the event/subscription and API request catalogues. See the
+[broker permission model](docs/broker-permissions.md) and
+[decision 0022](docs/decisions/0022-catalogue-scoped-broker-authority.md).
 Session/revocation state and disposable realtime history use separate Valkey
 instances and credentials. Session writes retain `appendfsync always`; history
 loss is handled by browser reconciliation.

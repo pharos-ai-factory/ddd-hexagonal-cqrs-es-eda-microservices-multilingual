@@ -14,7 +14,8 @@ for (const { counter, malformed } of [
   void test(`invalid retry counter ${String(counter)} with ${malformed ? 'malformed' : 'valid'} bytes reaches quarantine`, async () => {
     const connection = await amqp.connect(process.env.BROKER_ADMIN_URL!);
     const channel = await connection.createConfirmChannel();
-    const consumer = 'loyalty.test-' + randomUUID(),
+    // Runtime workers are stopped; retain the generated queue topology and owner credential.
+    const consumer = 'loyalty.issue-reward',
       queue = 'ref.' + consumer;
     const controller = new AbortController();
     let worker: Promise<void> | undefined;
@@ -34,13 +35,6 @@ for (const { counter, malformed } of [
     let routed = 0,
       handled = 0;
     try {
-      for (const suffix of ['', '.retry', '.dead']) {
-        await channel.assertQueue(queue + suffix, {
-          durable: true,
-          arguments: { 'x-queue-type': 'quorum', 'x-delivery-limit': -1 },
-        });
-        await channel.bindQueue(queue + suffix, 'ref.loyalty.delivery', queue + suffix);
-      }
       await confirmed(channel, 'ref.loyalty.delivery', queue, body, {
         messageId: event.id,
         contentType: 'application/x-protobuf',
@@ -92,7 +86,7 @@ for (const { counter, malformed } of [
     } finally {
       controller.abort();
       await worker;
-      for (const suffix of ['', '.retry', '.dead']) await channel.deleteQueue(queue + suffix);
+      for (const suffix of ['', '.retry', '.dead']) await channel.purgeQueue(queue + suffix);
       await connection.close();
     }
   });

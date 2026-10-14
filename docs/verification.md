@@ -1,5 +1,9 @@
 # Executed verification
 
+## Catalogue-scoped broker authority, 14 October 2026
+
+[Topology credentials, generated permissions and executed checks](verification/2026-10-14-broker-permissions.md).
+
 ## Adaptor organisation across all services, 14 October 2026
 
 [Five services, six contexts and executed checks](verification/2026-10-14-all-service-adaptors.md).

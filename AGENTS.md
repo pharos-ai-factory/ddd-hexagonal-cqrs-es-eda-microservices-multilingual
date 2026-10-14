@@ -8,7 +8,8 @@ The [decision index](docs/decisions/README.md) explains which accepted decisions
 refine earlier rules. Decisions 0010–0015 define DI, durable command reactions,
 enforcement, the source layout and persistence role names. Decision 0021 extends the adaptor responsibility layout across every service and context. Decision 0017 defines
 generated event boundaries. Decision 0019 requires private domain delivery before
-integration publication.
+integration publication. Decision 0022 defines catalogue-scoped broker permissions
+and a dedicated topology credential.
 
 ## Start with ownership
 

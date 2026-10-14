@@ -102,6 +102,7 @@ for folder in (
 for owner in ("menu", "ordering"):
     GENERATED.add(f"services/storefront/contexts/{owner}/adaptors/messaging/generated/{owner}_private.pb.go")
 GENERATED.add("services/storefront/apps/topology/generated.json")
+GENERATED.add("services/storefront/apps/topology/permissions.generated.json")
 GENERATED.add("services/storefront/apps/replay/generated.json")
 for owner in ("loyalty", "communication"):
     GENERATED.add(

@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//go:embed generated.json
+//go:embed generated.json permissions.generated.json
 var definitions embed.FS
 
 func main() {
@@ -34,11 +34,21 @@ func main() {
 	for _, event := range events {
 		bindings = append(bindings, broker.Binding{Consumer: event.Consumer, Event: event.Name, Visibility: event.Visibility, Command: event.Command, Context: strings.SplitN(event.Consumer, ".", 2)[0]})
 	}
-	url, err := config.Secret("BROKER_ADMIN_URL")
+	data, err = definitions.ReadFile("permissions.generated.json")
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := broker.DeclareRequests(url, []string{"menu", "ordering", "preparation", "collection", "loyalty", "communication"}); err != nil {
+	var permissions struct {
+		RequestOwners []string `json:"request_owners"`
+	}
+	if err = json.Unmarshal(data, &permissions); err != nil {
+		log.Fatal(err)
+	}
+	url, err := config.Secret("TOPOLOGY_BROKER_URL")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := broker.DeclareRequests(url, permissions.RequestOwners); err != nil {
 		log.Fatal(err)
 	}
 	if err := broker.Declare(url, bindings); err != nil {

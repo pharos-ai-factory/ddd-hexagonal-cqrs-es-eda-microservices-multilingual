@@ -13,10 +13,11 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from broker_permissions import GENERATED
+from contract_sources import OWNERS
 from secret_files import atomic_private_write, compose_environment, read_configuration, resolve_files
 
 ROOT = Path(__file__).resolve().parents[1]
-OWNERS = ("menu", "ordering", "preparation", "collection", "loyalty", "communication")
 PORTS = {
     "PG_PORT": 25432,
     "AMQP_PORT": 25673,
@@ -54,6 +55,7 @@ def configure(path, disposable=False):
         "ENGAGEMENT_API_KEY",
         "SESSION_REALTIME_KEY",
         "API_BROKER_PASSWORD",
+        "TOPOLOGY_BROKER_PASSWORD",
     ):
         if key + "_FILE" not in values:
             values.setdefault(key, secrets.token_hex(24))
@@ -104,60 +106,17 @@ def broker_users(values):
     deadline = time.monotonic() + 60
     while True:
         try:
-            for owner in OWNERS:
-                user = "cafe_" + owner
+            policy = json.loads((ROOT / GENERATED).read_text())
+            for user, authority in policy["users"].items():
                 broker_request(
                     values,
                     "PUT",
                     f"users/{user}",
-                    {"password": values[owner.upper() + "_BROKER_PASSWORD"], "tags": ""},
+                    {"password": values[authority["password_key"]], "tags": ""},
                 )
-                queue = rf"^ref\.{owner}\..*"
-                broker_request(
-                    values,
-                    "PUT",
-                    f"permissions/reference/{user}",
-                    {
-                        "configure": "^$",
-                        "write": rf"^ref\.{owner}\.delivery$|^cafe\.(events|replies)$",
-                        "read": queue,
-                    },
-                )
-                broker_request(
-                    values,
-                    "PUT",
-                    f"topic-permissions/reference/{user}",
-                    {
-                        "exchange": "cafe.events",
-                        "write": rf"^(domain|integration)\.{owner}\..*$",
-                        "read": rf"^(domain\.{owner}\..*|integration\..*)$",
-                    },
-                )
-                broker_request(
-                    values,
-                    "PUT",
-                    f"topic-permissions/reference/{user}",
-                    {"exchange": "cafe.replies", "write": rf"^reply\.{owner}$", "read": "^$"},
-                )
-            broker_request(
-                values, "PUT", "users/cafe_api", {"password": values["API_BROKER_PASSWORD"], "tags": ""}
-            )
-            broker_request(
-                values,
-                "PUT",
-                "permissions/reference/cafe_api",
-                {"configure": "^$", "write": r"^cafe\.requests$", "read": r"^ref\.api\.[a-z]+\.replies$"},
-            )
-            broker_request(
-                values,
-                "PUT",
-                "topic-permissions/reference/cafe_api",
-                {
-                    "exchange": "cafe.requests",
-                    "write": r"^request\.(menu|ordering|preparation|collection|loyalty|communication)\.(command|query)$",
-                    "read": "^$",
-                },
-            )
+                broker_request(values, "PUT", f"permissions/reference/{user}", authority["permissions"])
+                for topic in authority["topics"]:
+                    broker_request(values, "PUT", f"topic-permissions/reference/{user}", topic)
             return
         except (urllib.error.URLError, OSError, http.client.RemoteDisconnected):
             if time.monotonic() >= deadline:
@@ -172,8 +131,19 @@ def up(path):
     from migrate import migrate
 
     migrate(path)
+    # Replace cached broker permissions by restarting every managed runtime connection.
+    compose(path, "stop", "storefront", "operations", "engagement", "api")
     broker_users(values)
-    compose(path, "up", "--build", "--abort-on-container-exit", "--exit-code-from", "topology", "topology")
+    compose(
+        path,
+        "up",
+        "--build",
+        "--force-recreate",
+        "--abort-on-container-exit",
+        "--exit-code-from",
+        "topology",
+        "topology",
+    )
     compose(
         path,
         "up",
@@ -219,6 +189,9 @@ def test_environment(values):
         )
     result["API_BROKER_URL"] = (
         f"amqp://cafe_api:{values['API_BROKER_PASSWORD']}@127.0.0.1:{values['AMQP_PORT']}/reference"
+    )
+    result["TOPOLOGY_BROKER_URL"] = (
+        f"amqp://cafe_topology:{values['TOPOLOGY_BROKER_PASSWORD']}@127.0.0.1:{values['AMQP_PORT']}/reference"
     )
     result["BROKER_ADMIN_URL"] = (
         f"amqp://administrator:{values['BROKER_PASSWORD']}@127.0.0.1:{values['AMQP_PORT']}/reference"

@@ -35,13 +35,11 @@ func ownedFixture(t *testing.T, owner string) (context.Context, string, transpor
 	if url == "" {
 		t.Fatalf("integration lane requires %s_BROKER_URL", strings.ToUpper(owner))
 	}
-	consumer := owner + ".test-" + store.NewID()
+	// Runtime consumers use the declared queues while the disposable services are stopped.
+	consumer := map[string]string{"menu": "menu.drink-directory", "ordering": "ordering.menu-directory"}[owner]
 	binding := transport.Binding{Consumer: consumer, Context: owner, Event: "menu.drink-published", Visibility: "domain"}
 	if owner == "ordering" {
 		binding.Event, binding.Visibility = "ordering.order-placed", "integration"
-	}
-	if err := transport.Declare(os.Getenv("BROKER_ADMIN_URL"), []transport.Binding{binding}); err != nil {
-		t.Fatal(err)
 	}
 	t.Cleanup(func() {
 		conn, err := rabbit.Dial(os.Getenv("BROKER_ADMIN_URL"))
@@ -55,7 +53,7 @@ func ownedFixture(t *testing.T, owner string) (context.Context, string, transpor
 		}
 		defer channel.Close()
 		for _, suffix := range []string{"", ".retry", ".dead"} {
-			_, _ = channel.QueueDelete(transport.Queue(consumer)+suffix, false, false, false)
+			_, _ = channel.QueuePurge(transport.Queue(consumer)+suffix, false)
 		}
 	})
 	account := store.NewID()

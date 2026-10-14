@@ -21,6 +21,13 @@ unreadable and empty files cause configuration failure without printing the
 credential or path. One final newline is removed; other secret bytes are
 preserved. File support stays in technical composition and adaptor code.
 
+The generated `TOPOLOGY_BROKER_PASSWORD` is separate from `BROKER_PASSWORD` and
+all owner/API passwords. Only topology receives `TOPOLOGY_BROKER_URL_FILE`.
+Administrative AMQP credentials are confined to disposable test fixtures; the
+host launcher uses administrator HTTP access to provision the
+[catalogue-scoped permissions](broker-permissions.md). The topology process has
+no administrator secret or management tag.
+
 ## Individual developer credentials
 
 Credentials for a paid external provider are real secrets even when used for

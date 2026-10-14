@@ -71,7 +71,10 @@ class SecretFilesTest(unittest.TestCase):
             "MENU_BROKER_PASSWORD": "x:y",
             "BROKER_PASSWORD": "p@ss",
             "API_BROKER_PASSWORD": "r:p",
+            "TOPOLOGY_BROKER_PASSWORD": "t/p",
         }
         environment = compose_environment(values, ["menu"])
         self.assertIn(":a%2Fb%40c@postgres:", environment["MENU_DATABASE_URL"])
         self.assertIn(":x%3Ay@rabbitmq:", environment["MENU_BROKER_URL"])
+        self.assertIn("cafe_topology:t%2Fp@rabbitmq:", environment["TOPOLOGY_BROKER_URL"])
+        self.assertNotIn("BROKER_ADMIN_URL", environment)

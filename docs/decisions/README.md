@@ -45,6 +45,10 @@ packages, generated request factories and checked delivery/persistence boundarie
 extends 0020 across every service and context with responsibility packages, business
 resource filenames and owner-specific outbound delivery.
 
+[0022 — Broker authority](0022-catalogue-scoped-broker-authority.md) refines 0004,
+0007 and 0017 with a dedicated topology user and catalogue-generated owner/API
+queue and topic permissions. See [the permission model](../broker-permissions.md).
+
 ## Foundations and public boundaries
 
 | Decision                                                                                   | Scope and later refinement                                                                                               |

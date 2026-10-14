@@ -72,6 +72,6 @@ def compose_environment(values, owners):
         result[prefix + "_BROKER_URL"] = f"amqp://cafe_{owner}:{password}@rabbitmq:5672/reference"
     password = quote(values["API_BROKER_PASSWORD"], safe="")
     result["API_BROKER_URL"] = f"amqp://cafe_api:{password}@rabbitmq:5672/reference"
-    password = quote(values["BROKER_PASSWORD"], safe="")
-    result["BROKER_ADMIN_URL"] = f"amqp://administrator:{password}@rabbitmq:5672/reference"
+    password = quote(values["TOPOLOGY_BROKER_PASSWORD"], safe="")
+    result["TOPOLOGY_BROKER_URL"] = f"amqp://cafe_topology:{password}@rabbitmq:5672/reference"
     return result

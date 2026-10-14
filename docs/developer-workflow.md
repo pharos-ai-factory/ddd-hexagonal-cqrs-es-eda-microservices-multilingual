@@ -340,3 +340,13 @@ first use of another producer. The shared envelope and handwritten codecs requir
 no event-specific edits. Keep semantic evidence checks in context adaptors.
 See [the event recipe](../contracts/shared/messaging/events.md) and
 [decision 0017](decisions/0017-generated-event-boundaries.md).
+
+## Changing broker subscriptions and authority
+
+After editing an owner subscription or API request contract selection, run
+`pnpm generate:contracts` and review the generated topology and
+`services/storefront/apps/topology/permissions.generated.json`. Run `pnpm dev:up`
+to apply the catalogue permissions with the dedicated topology credential. The
+launcher restarts managed broker clients; restart separately launched host workers
+to replace cached authorisation. See [broker permissions](broker-permissions.md)
+for queue families, private-event ownership and real-broker verification.

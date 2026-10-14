@@ -251,3 +251,13 @@ PostgreSQL/RabbitMQ. Repository negative tests prohibit direct integration stagi
 Adaptor layout rules cover all services and contexts with negative fixtures in
 `scripts/test_adaptor_layout.py`. Shared Go executor and persistence infrastructure
 retain their explicit command-boundary classification after relocation.
+
+## Broker permission coverage
+
+[Decision 0022](docs/decisions/0022-catalogue-scoped-broker-authority.md) generates
+exact queue and topic permissions. Tooling tests cover collisions, negative
+authority cases and provisioning. Real RabbitMQ tests exercise all owners, the
+API and the dedicated topology user, including successful request/reply delivery
+and denied bindings, forged events/replies and unregistered queues. Recovery
+fixtures use existing catalogue queues under owner credentials while runtime
+workers are stopped. See [the permission model](docs/broker-permissions.md).

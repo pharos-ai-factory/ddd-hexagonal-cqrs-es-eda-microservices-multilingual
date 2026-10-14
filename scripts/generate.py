@@ -2,6 +2,7 @@
 """Generate declared transport bindings from context-owned wire schemas."""
 
 from http_contracts import generate as generate_http_contracts
+from broker_permissions import generate as generate_broker_permissions
 from contract_sources import PRIVATE, catalogue, command_subscriptions, sources as contract_sources
 from generate_requests import generate_requests
 from generate_selected import generate_selected, qualify_python_imports
@@ -109,6 +110,7 @@ engagement_out = ROOT / "services/engagement/src/adaptors/generated"
 command_consumers = {item["consumer"] for item in command_subscriptions()}
 topology = [{**entry, "command": entry["consumer"] in command_consumers} for entry in catalogue("topology")]
 (ROOT / "services/storefront/apps/topology/generated.json").write_text(json.dumps(topology, indent=2) + "\n")
+generate_broker_permissions()
 shutil.copyfile(
     ROOT / "services/storefront/apps/topology/generated.json",
     ROOT / "services/storefront/apps/replay/generated.json",

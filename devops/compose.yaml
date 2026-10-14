@@ -135,9 +135,9 @@ services:
     build: { context: .., dockerfile: devops/Dockerfile, args: { SERVICE: topology } }
     environment:
       APP_ENV: development
-      BROKER_ADMIN_URL_FILE: /run/secrets/BROKER_ADMIN_URL
+      TOPOLOGY_BROKER_URL_FILE: /run/secrets/TOPOLOGY_BROKER_URL
     secrets:
-      - { source: BROKER_ADMIN_URL, <<: *runtime-secret }
+      - { source: TOPOLOGY_BROKER_URL, <<: *runtime-secret }
     depends_on:
       rabbitmq: { condition: service_healthy }
   delivery-simulator:
@@ -275,7 +275,7 @@ secrets:
   OPERATIONS_API_KEY: { environment: OPERATIONS_API_KEY }
   ENGAGEMENT_API_KEY: { environment: ENGAGEMENT_API_KEY }
   SESSION_REALTIME_KEY: { environment: SESSION_REALTIME_KEY }
-  BROKER_ADMIN_URL: { environment: BROKER_ADMIN_URL }
+  TOPOLOGY_BROKER_URL: { environment: TOPOLOGY_BROKER_URL }
   API_BROKER_URL: { environment: API_BROKER_URL }
   MENU_DB_PASSWORD: { environment: MENU_DB_PASSWORD }
   MENU_BROKER_PASSWORD: { environment: MENU_BROKER_PASSWORD }

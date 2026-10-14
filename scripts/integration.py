@@ -31,7 +31,7 @@ def execute(env_file, keep=False):
         os.environ["PAUSED_CONSUMERS"] = "loyalty.issue-reward"
         up(env_file)
         # Foundation fixtures cannot compete with live application relays.
-        compose(env_file, "stop", "storefront", "operations", "engagement")
+        compose(env_file, "stop", "storefront", "operations", "engagement", "api")
         check(
             "Context migrations",
             [sys.executable, "tests/infrastructure/context_migrations.py"],
@@ -115,7 +115,7 @@ def execute(env_file, keep=False):
                 + " CASCADE",
                 stdout=subprocess.DEVNULL,
             )
-        compose(env_file, "start", "storefront", "operations", "engagement")
+        compose(env_file, "start", "storefront", "operations", "engagement", "api")
         wait_ready(values)
 
         def recovery(stage, client, customer, order):
