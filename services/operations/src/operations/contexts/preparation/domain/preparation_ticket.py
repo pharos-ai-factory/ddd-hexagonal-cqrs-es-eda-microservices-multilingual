@@ -27,7 +27,7 @@ class TicketState:
 
 
 @dataclass(frozen=True)
-class PreparationStarted:
+class PreparationStartedDomainEvent:
     """Records the private domain fact that preparation began for a ticket."""
 
     name: ClassVar[str] = "PreparationStarted"
@@ -35,7 +35,7 @@ class PreparationStarted:
 
 
 @dataclass(frozen=True)
-class DrinksReady:
+class DrinksReadyDomainEvent:
     """Private fact raised when this context completes a preparation ticket."""
 
     name: ClassVar[str] = "DrinksReady"
@@ -43,7 +43,7 @@ class DrinksReady:
     customer_id: str
 
 
-type TicketFact = PreparationStarted | DrinksReady
+type TicketFact = PreparationStartedDomainEvent | DrinksReadyDomainEvent
 
 
 class PreparationTicket:
@@ -85,13 +85,13 @@ class PreparationTicket:
         if self._state.status != "queued":
             raise Rejection("ticket_not_queued", "Only queued tickets can start")
         self._state = replace(self._state, status="preparing")
-        self._facts.append(PreparationStarted(self._state))
+        self._facts.append(PreparationStartedDomainEvent(self._state))
 
     def complete(self) -> None:
         if self._state.status != "preparing":
             raise Rejection("preparation_not_started", "Only preparing tickets can become ready")
         self._state = replace(self._state, status="ready")
-        self._facts.append(DrinksReady(self._state.order_id, self._state.customer_id))
+        self._facts.append(DrinksReadyDomainEvent(self._state.order_id, self._state.customer_id))
 
     def snapshot(self) -> TicketSnapshot:
         s = self._state

@@ -2,5 +2,10 @@
   {
     "consumer": "ordering.menu-directory",
     "event": "menu.edition-published"
+  },
+  {
+    "consumer": "ordering.publish-order-placed",
+    "event": "ordering.order-placed.domain",
+    "publication": "ordering.order-placed"
   }
 ]

@@ -23,8 +23,8 @@ class ContractSourcesTests(unittest.TestCase):
     def test_private_metadata_is_added_only_to_its_runtime(self):
         self.assertTrue(all(item["visibility"] == "integration" for item in catalogue()))
         for service, owners in (
-            ("storefront", {"menu"}),
-            ("operations", set()),
+            ("storefront", {"menu", "ordering"}),
+            ("operations", {"preparation", "collection"}),
             ("engagement", {"loyalty", "communication"}),
         ):
             private = [item for item in catalogue(service) if item["visibility"] == "domain"]

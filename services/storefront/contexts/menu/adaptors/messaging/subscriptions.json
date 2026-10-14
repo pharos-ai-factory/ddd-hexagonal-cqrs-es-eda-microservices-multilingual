@@ -2,5 +2,10 @@
   {
     "consumer": "menu.drink-directory",
     "event": "menu.drink-published"
+  },
+  {
+    "consumer": "menu.publish-edition-published",
+    "event": "menu.edition-published.domain",
+    "publication": "menu.edition-published"
   }
 ]

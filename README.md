@@ -246,7 +246,12 @@ the workflow to converge after recoverable failures.
 
 Domain facts that need delivery and integration events use the same durable
 PostgreSQL/RabbitMQ mechanism. Their visibility and contracts differ. A domain
-fact with no asynchronous reaction need not become a broker message.
+fact with no asynchronous reaction need not become a broker message. Aggregates
+queue explicit `*DomainEvent` types; a save commits selected private facts with
+the root. Independent domain-event handlers translate externally relevant facts
+to generated `*IntegrationEvent` DTOs. Each publishing subscriber commits its
+receipt and integration outbox bytes together, then ACKs its own queue delivery.
+See [decision 0019](docs/decisions/0019-durable-domain-event-publication.md).
 
 Event sourcing is a separate persistence choice: an aggregate's authoritative
 state is reconstructed from its event history. This reference stores current

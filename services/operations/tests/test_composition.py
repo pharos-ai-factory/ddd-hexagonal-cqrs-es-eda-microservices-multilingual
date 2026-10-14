@@ -34,8 +34,8 @@ def test_context_graphs_and_resources_are_independent() -> None:
                 provider()
         assert container.database().owner == owner
         assert container.database() is container.database()
-    assert len(preparation_subscriptions(preparation)) == 2
-    assert len(collection_subscriptions(collection)) == 2
+    assert len(preparation_subscriptions(preparation)) == 3
+    assert len(collection_subscriptions(collection)) == 4
     assert closed == []
     preparation.shutdown_resources()
     assert closed == ["preparation"]

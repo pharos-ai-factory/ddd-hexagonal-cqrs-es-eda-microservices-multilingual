@@ -10,6 +10,14 @@
     "command": true
   },
   {
+    "name": "collection.order-collected.domain",
+    "owner": "collection",
+    "visibility": "domain",
+    "kind": "pickup",
+    "consumer": "collection.publish-order-collected",
+    "command": false
+  },
+  {
     "name": "collection.pickup-opened",
     "owner": "collection",
     "kind": "pickup",
@@ -18,6 +26,14 @@
     "type": "cafe.v1.PickupOpened",
     "consumer": "communication.pickup-notice",
     "command": true
+  },
+  {
+    "name": "collection.pickup-opened.domain",
+    "owner": "collection",
+    "visibility": "domain",
+    "kind": "pickup",
+    "consumer": "collection.publish-pickup-opened",
+    "command": false
   },
   {
     "name": "communication.notification-requested",
@@ -46,6 +62,14 @@
     "command": true
   },
   {
+    "name": "loyalty.reward-issued.domain",
+    "owner": "loyalty",
+    "visibility": "domain",
+    "kind": "reward",
+    "consumer": "loyalty.publish-reward-issued",
+    "command": false
+  },
+  {
     "name": "menu.drink-published",
     "owner": "menu",
     "visibility": "domain",
@@ -64,6 +88,14 @@
     "command": false
   },
   {
+    "name": "menu.edition-published.domain",
+    "owner": "menu",
+    "visibility": "domain",
+    "kind": "edition",
+    "consumer": "menu.publish-edition-published",
+    "command": false
+  },
+  {
     "name": "ordering.order-placed",
     "owner": "ordering",
     "kind": "order",
@@ -74,6 +106,14 @@
     "command": true
   },
   {
+    "name": "ordering.order-placed.domain",
+    "owner": "ordering",
+    "visibility": "domain",
+    "kind": "order",
+    "consumer": "ordering.publish-order-placed",
+    "command": false
+  },
+  {
     "name": "preparation.drinks-ready",
     "owner": "preparation",
     "kind": "ticket",
@@ -82,5 +122,13 @@
     "type": "cafe.v1.DrinksReady",
     "consumer": "collection.open-pickup",
     "command": true
+  },
+  {
+    "name": "preparation.drinks-ready.domain",
+    "owner": "preparation",
+    "visibility": "domain",
+    "kind": "ticket",
+    "consumer": "preparation.publish-drinks-ready",
+    "command": false
   }
 ]

@@ -1,3 +1,6 @@
+import { PostgresPublicationOutbox } from '../../adaptors/publication-outbox.js';
+import { published } from '../../adaptors/generated/event-types.js';
+import { RewardIssuedDomainEventHandler } from '../../contexts/loyalty/application/event-handlers/publish-reward-issued.js';
 import { bindCommand, type CommandExecutor } from '../../adaptors/command-execution.js';
 import { accountPublications } from '../../contexts/loyalty/adaptors/messaging/account-publications.js';
 import { rewardPublications } from '../../contexts/loyalty/adaptors/messaging/reward-publications.js';
@@ -43,7 +46,7 @@ import { OrderCollectedIntegrationEventHandler } from '../../contexts/loyalty/ap
 import { RewardEarnedDomainEventHandler } from '../../contexts/loyalty/application/event-handlers/reward-earned.js';
 import schema from '../../contexts/loyalty/adaptors/messaging/generated/internal_commands.json' with { type: 'json' };
 import definitions from '../../contexts/loyalty/adaptors/messaging/subscriptions.json' with { type: 'json' };
-import { commandSubscription, completeSubscriptions } from '../runtime.js';
+import { commandSubscription, completeSubscriptions, publicationSubscription } from '../runtime.js';
 
 /** Typed provider bindings for the Loyalty context. */
 export type LoyaltyDependencies = {
@@ -65,6 +68,7 @@ export type LoyaltyDependencies = {
   issueCodec: InternalCommandCodec<IssueRewardCommand>;
   collected: OrderCollectedIntegrationEventHandler;
   earned: RewardEarnedDomainEventHandler;
+  publishIssued: RewardIssuedDomainEventHandler;
   clock: () => Date;
 };
 
@@ -145,6 +149,14 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
           new PostgresDurableCommandOutbox(c.database, c.creditCodec),
         ),
     ).singleton(),
+    publishIssued: asFunction(
+      (c: LoyaltyDependencies) =>
+        new RewardIssuedDomainEventHandler(
+          new PostgresPublicationOutbox(c.database, 'loyalty.publish-reward-issued', 'reward', (payload) =>
+            published('loyalty.reward-issued', payload),
+          ),
+        ),
+    ).singleton(),
     earned: asFunction(
       (c: LoyaltyDependencies) =>
         new RewardEarnedDomainEventHandler(new PostgresDurableCommandOutbox(c.database, c.issueCodec)),
@@ -164,6 +176,14 @@ export async function composeLoyalty() {
       commandHeader: commandPublication(schema, 'loyalty'),
       dispose: () => container.dispose(),
       subscriptions: completeSubscriptions('loyalty', definitions, [
+        publicationSubscription(
+          'loyalty',
+          'loyalty.publish-reward-issued',
+          'loyalty.reward-issued.domain',
+          'loyalty.reward-issued',
+          definitions,
+          c.publishIssued,
+        ),
         ...commandSubscription(
           'collection.order-collected',
           c.creditCodec,

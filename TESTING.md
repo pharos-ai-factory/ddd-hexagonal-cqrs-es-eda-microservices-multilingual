@@ -228,3 +228,13 @@ envelope or registry and reject invalid ownership, constraints and subscriptions
 Consumer boundary tests cover semantic evidence checks. The generic public envelope
 transition and newly declared constraints are accepted explicitly by decision 0017;
 comparisons against a current-format baseline retain ordinary compatibility checks.
+
+## Durable domain-to-integration publication
+
+Follow [decision 0019](docs/decisions/0019-durable-domain-event-publication.md).
+Aggregate saves stage private `*DomainEvent` facts. A publication subscriber maps
+them to generated `*IntegrationEvent` DTOs and commits its receipt/outbox atomically
+before ACK. Add codec compatibility fixtures, mapping tests and a manifest entry
+with `publication`. Verify rollback at the final receipt insert, concurrent
+redelivery, unchanged outgoing bytes and independent subscribers using real
+PostgreSQL/RabbitMQ. Repository negative tests prohibit direct integration staging.

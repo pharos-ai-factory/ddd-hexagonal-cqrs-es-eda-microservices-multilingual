@@ -33,7 +33,7 @@ func checkOfferInput(value model.Offer) error {
 	return nil
 }
 
-func toMenuPublished(value model.MenuPublished) *pb.MenuPublished {
+func toMenuPublished(value model.MenuPublishedIntegrationEvent) *pb.MenuPublished {
 	result := &pb.MenuPublished{}
 	result.EditionId = value.EditionID
 	result.Currency = value.Currency
@@ -43,8 +43,8 @@ func toMenuPublished(value model.MenuPublished) *pb.MenuPublished {
 	return result
 }
 
-func fromMenuPublished(value *pb.MenuPublished) model.MenuPublished {
-	result := model.MenuPublished{}
+func fromMenuPublished(value *pb.MenuPublished) model.MenuPublishedIntegrationEvent {
+	result := model.MenuPublishedIntegrationEvent{}
 	result.EditionID = value.EditionId
 	result.Currency = value.Currency
 	result.Offers = make([]model.Offer, 0, len(value.Offers))
@@ -54,7 +54,7 @@ func fromMenuPublished(value *pb.MenuPublished) model.MenuPublished {
 	return result
 }
 
-func checkMenuPublishedInput(value model.MenuPublished) error {
+func checkMenuPublishedInput(value model.MenuPublishedIntegrationEvent) error {
 	for _, item := range value.Offers {
 		if err := checkOfferInput(item); err != nil {
 			return err
@@ -64,6 +64,6 @@ func checkMenuPublishedInput(value model.MenuPublished) error {
 }
 
 // PublishMenuPublished binds the published identity to its plain payload type.
-func PublishMenuPublished(payload model.MenuPublished) a.Publication {
+func PublishMenuPublished(payload model.MenuPublishedIntegrationEvent) a.Publication {
 	return a.Publication{Name: "menu.edition-published", Visibility: a.Public, Payload: payload}
 }

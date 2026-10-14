@@ -63,11 +63,18 @@ func (r *EventRecordingRepository[A]) Get(ctx context.Context, id string) (a.Loa
 	return r.Source.Get(ctx, id)
 }
 func (r *EventRecordingRepository[A]) Save(ctx context.Context, aggregate A) error {
+	var publications []a.Publication
+	if r.Map != nil {
+		publications = r.Map(aggregate)
+	}
+	for _, publication := range publications {
+		if publication.Visibility != a.Private {
+			return fmt.Errorf("aggregate saves may stage only private domain events")
+		}
+	}
 	if err := r.Source.Save(ctx, aggregate); err != nil {
 		return err
 	}
-	if r.Map != nil {
-		r.Publications = r.Map(aggregate)
-	}
+	r.Publications = publications
 	return nil
 }

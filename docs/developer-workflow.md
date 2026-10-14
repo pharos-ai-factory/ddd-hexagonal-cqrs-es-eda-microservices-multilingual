@@ -313,7 +313,14 @@ Define the event once in its producer's Protobuf schema with `cafe.events.event`
 metadata and `cafe.events.rules` constraints. New schema files in an existing
 context family are discovered automatically. Run `pnpm generate:contracts` to
 produce the plain DTO, typed conversion, publication factory and registry.
-Map the owner's domain fact through the generated publication factory.
+Queue a plain `*DomainEvent` on the aggregate and define its owner-private codec.
+The repository adaptor stages that private event when saving. Add an independent
+`*DomainEventHandler` that maps the delivered fact to the generated
+`*IntegrationEvent` DTO through `DurablePublicationPort`. Its concrete outbox
+adaptor uses the typed publication factory and commits the subscription receipt
+with outgoing bytes and dispatch. ACK follows that commit; a relay handles the
+later broker publication. Declare the private consumer's `publication` in its
+manifest and bind it through the shared publication-subscription helper.
 
 Declare each consumer in its own `adaptors/messaging/subscriptions.json` and bind
 its handler explicitly. Add a service contract-family dependency when this is its

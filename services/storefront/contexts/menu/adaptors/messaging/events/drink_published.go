@@ -12,18 +12,18 @@ import (
 	"unicode/utf8"
 )
 
-func EncodePrivateEvent(message a.Message) ([]byte, error) {
+func encodeDrink(message a.Message) ([]byte, error) {
 	if err := validatePrivate(message); err != nil {
 		return nil, err
 	}
-	p, ok := message.Payload.(menu.DrinkPublished)
+	p, ok := message.Payload.(menu.DrinkPublishedDomainEvent)
 	if !ok || message.Name != "menu.drink-published" || message.Context != "menu" {
 		return nil, fmt.Errorf("foreign private message")
 	}
 	event := &private.PrivateEvent{Id: message.ID, Name: message.Name, Context: message.Context, Visibility: "domain", FormatRevision: message.ContractVersion, AggregateKind: message.AggregateKind, AggregateId: message.AggregateID, AggregateVersion: message.AggregateVersion, CorrelationId: message.CorrelationID, CausationId: message.CausationID, OccurredAt: message.OccurredAt.UTC().Format(time.RFC3339Nano), Payload: &private.PrivateEvent_DrinkPublished{DrinkPublished: &private.DrinkPublished{DrinkId: p.DrinkID, Name: p.Name, Revision: p.Revision}}}
 	return proto.MarshalOptions{Deterministic: true}.Marshal(event)
 }
-func DecodePrivateEvent(data []byte) (a.Message, error) {
+func decodeDrink(data []byte) (a.Message, error) {
 	event := &private.PrivateEvent{}
 	if err := proto.Unmarshal(data, event); err != nil {
 		return a.Message{}, err
@@ -36,7 +36,7 @@ func DecodePrivateEvent(data []byte) (a.Message, error) {
 		return a.Message{}, err
 	}
 	p := event.GetDrinkPublished()
-	message := a.Message{ID: event.Id, Name: event.Name, Context: event.Context, Visibility: a.Visibility(event.Visibility), ContractVersion: event.FormatRevision, AggregateKind: event.AggregateKind, AggregateID: event.AggregateId, AggregateVersion: event.AggregateVersion, CorrelationID: event.CorrelationId, CausationID: event.CausationId, OccurredAt: occurred, Payload: menu.DrinkPublished{DrinkID: p.DrinkId, Name: p.Name, Revision: p.Revision}}
+	message := a.Message{ID: event.Id, Name: event.Name, Context: event.Context, Visibility: a.Visibility(event.Visibility), ContractVersion: event.FormatRevision, AggregateKind: event.AggregateKind, AggregateID: event.AggregateId, AggregateVersion: event.AggregateVersion, CorrelationID: event.CorrelationId, CausationID: event.CausationId, OccurredAt: occurred, Payload: menu.DrinkPublishedDomainEvent{DrinkID: p.DrinkId, Name: p.Name, Revision: p.Revision}}
 	if message.Visibility != a.Private {
 		return a.Message{}, fmt.Errorf("private message escaped its owner")
 	}
@@ -47,7 +47,7 @@ func validatePrivate(m a.Message) error {
 	if err := envelope.ValidateMetadata(m); err != nil {
 		return err
 	}
-	p, ok := m.Payload.(menu.DrinkPublished)
+	p, ok := m.Payload.(menu.DrinkPublishedDomainEvent)
 	if !ok || m.Name != "menu.drink-published" || m.Context != "menu" || m.Visibility != a.Private || m.AggregateKind != "drink" || m.ContractVersion != 1 || p.DrinkID != m.AggregateID || strings.TrimSpace(p.Name) == "" || !utf8.ValidString(p.Name) || utf8.RuneCountInString(p.Name) > 80 || p.Revision == 0 {
 		return fmt.Errorf("invalid private drink publication")
 	}

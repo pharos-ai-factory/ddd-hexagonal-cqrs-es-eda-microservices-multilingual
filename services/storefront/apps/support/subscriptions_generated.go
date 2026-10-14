@@ -4,6 +4,8 @@ package support
 import broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/amqp"
 
 var expectedSubscriptions = map[string]broker.Binding{
-	"menu.drink-directory":    {Consumer: "menu.drink-directory", Event: "menu.drink-published", Visibility: "domain", Context: "menu"},
-	"ordering.menu-directory": {Consumer: "ordering.menu-directory", Event: "menu.edition-published", Visibility: "integration", Context: "ordering"},
+	"menu.drink-directory":           {Consumer: "menu.drink-directory", Event: "menu.drink-published", Visibility: "domain", Context: "menu"},
+	"ordering.menu-directory":        {Consumer: "ordering.menu-directory", Event: "menu.edition-published", Visibility: "integration", Context: "ordering"},
+	"menu.publish-edition-published": {Consumer: "menu.publish-edition-published", Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu"},
+	"ordering.publish-order-placed":  {Consumer: "ordering.publish-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"},
 }

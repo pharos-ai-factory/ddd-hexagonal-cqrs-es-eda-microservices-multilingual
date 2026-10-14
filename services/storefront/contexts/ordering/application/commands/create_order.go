@@ -18,7 +18,7 @@ type CreateOrderCommand struct {
 // CreateOrderCommandHandler applies CreateOrder through one aggregate command transaction.
 type CreateOrderCommandHandler struct {
 	Repository ports.OrderWriteRepository
-	Menus      a.ProjectionPort[model.MenuPublished]
+	Menus      a.ProjectionPort[model.MenuPublishedIntegrationEvent]
 }
 
 func (h CreateOrderCommandHandler) Execute(ctx context.Context, m a.CommandContext, c CreateOrderCommand) (a.CommandResult, error) {

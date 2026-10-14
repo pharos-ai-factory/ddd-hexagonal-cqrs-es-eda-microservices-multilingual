@@ -4,7 +4,7 @@ from typing import TypedDict
 
 
 
-class DrinksReady(TypedDict):
-    """Published DrinksReady data owned by preparation."""
+class DrinksReadyIntegrationEvent(TypedDict):
+    """Published DrinksReadyIntegrationEvent data owned by preparation."""
     orderId: str
     customerId: str

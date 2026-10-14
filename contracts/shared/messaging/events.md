@@ -17,7 +17,12 @@ identities and schema constraints before exposing plain data to the application.
 1. Add a message to an owned schema, or create a new `.proto` file in its existing
    event directory. Include the event metadata and field constraints. New files
    need the same package and Go package options as their context's other schemas.
-2. Map the owner's domain fact through the generated typed publication factory.
+2. Queue an explicit `*DomainEvent` on the aggregate. Add its owner-private schema,
+   codec and metadata, then stage that private fact through the repository mapper.
+   Define an independent `*DomainEventHandler` using `DurablePublicationPort` to
+   map the delivered fact to the generated `*IntegrationEvent` DTO. Bind the port's
+   adaptor to the generated publication factory and declare `publication` in the
+   private subscriber's manifest.
 3. Each receiver declares its own `adaptors/messaging/subscriptions.json` entry
    and binds its projection or durable-command reaction in composition. Declare a
    new contract-family dependency in `contracts/generation.json` when needed.
@@ -31,7 +36,9 @@ published contracts and owner-private delivery metadata.
 
 ## Type and validation rules
 
-Generated published DTOs are plain language types with no Protobuf dependency.
+Generated published DTOs use explicit `IntegrationEvent` suffixes and plain
+language types with no Protobuf dependency. Published Protobuf names and wire
+identities retain their existing spelling for compatibility.
 Application commands, domain facts and read models retain their own definitions.
 The generator supports strings, booleans, int32/int64, uint32/uint64, singular
 messages and repeated messages. Integers must fit JavaScript's safe-integer range
@@ -57,6 +64,11 @@ metadata live in context adaptors. Private subscriptions stay inside that owner.
 Both private and published deliveries use the transactional outbox, manual ACK,
 bounded retry, dead-letter and replay path. Aggregate-changing reactions durably
 enqueue an owner command before ACK; projection reactions update consumer reads.
+Publication reactions commit the subscription receipt, exact integration bytes and
+dispatch together before ACK. Broker publication and publisher confirm happen in
+the relay afterwards. The source revision, occurrence time and correlation survive
+the mapping; the private event ID becomes causation. See
+[decision 0019](../../../docs/decisions/0019-durable-domain-event-publication.md).
 
 The public envelope was redesigned by [decision 0017](../../../docs/decisions/0017-generated-event-boundaries.md).
 The shared RewardIssued fixture now uses the generic envelope. Private formats,

@@ -75,7 +75,7 @@ def describe(name, root=ROOT):
     entry = next(item for item in entries(root) if item["name"] == name)
     source = root / entry["source"]
     lines = [f"{name.title()} — {entry['purpose']}", "", "Start: " + entry["source"] + "/README.md"]
-    for role in ("commands", "queries", "event_handlers", "event-handlers", "projections"):
+    for role in ("commands", "queries", "event_handlers", "event-handlers", "eventhandlers", "projections"):
         folder = source / "application" / role
         if folder.exists():
             files = [

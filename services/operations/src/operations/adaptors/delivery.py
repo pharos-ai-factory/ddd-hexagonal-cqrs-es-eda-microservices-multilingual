@@ -223,6 +223,7 @@ class EventSubscription[P]:
     target: Callable[[P], str]
     handle: Callable[[Metadata, P], Outcome]
     command_decoder: Callable[[bytes], tuple[Metadata, P]] | None = None
+    source_target: bool = False
 
 
 def consume[P](url: str, subscription: EventSubscription[P], stop: Event) -> None:
@@ -282,7 +283,7 @@ def consume[P](url: str, subscription: EventSubscription[P], stop: Event) -> Non
                             payload = sub.parse(event)
                             metadata = Metadata(
                                 id=derived_id(sub.consumer, event.id),
-                                target=sub.target(payload),
+                                target=event.aggregate_id if sub.source_target else sub.target(payload),
                                 name=sub.consumer,
                                 correlation=event.correlation_id,
                                 input=wire_payload,
@@ -290,6 +291,9 @@ def consume[P](url: str, subscription: EventSubscription[P], stop: Event) -> Non
                                 consumer=sub.consumer,
                                 source_id=event.id,
                                 source_hash=sha256(body).hexdigest(),
+                                source_kind=event.aggregate_kind,
+                                source_version=event.aggregate_version,
+                                source_time=event.occurred_at,
                             )
                         validation = False
                         outcome = sub.handle(metadata, payload)

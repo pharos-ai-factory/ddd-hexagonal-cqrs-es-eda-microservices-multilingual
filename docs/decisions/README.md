@@ -31,6 +31,12 @@ compatibility checks.
 [0018 — Static checks and formatting](0018-static-checks-and-formatting.md) extends
 0012 with one edit/CI gate, complete typed test coverage and repository formatting.
 
+[0019 — Durable domain publication](0019-durable-domain-event-publication.md) refines
+0001, 0011, 0015 and 0017: aggregates stage private facts and independent private
+subscribers atomically commit receipts with integration outbox entries before ACK.
+Plain types use explicit `DomainEvent` and `IntegrationEvent` suffixes; historical
+wire identities remain stable.
+
 ## Foundations and public boundaries
 
 | Decision                                                                                   | Scope and later refinement                                                                                               |

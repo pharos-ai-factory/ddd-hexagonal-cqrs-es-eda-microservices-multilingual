@@ -1,3 +1,4 @@
+import catalogue from './generated/catalogue.json' with { type: 'json' };
 import type { Loaded, Metadata, Outcome, Publication } from '../foundation/application.js';
 import type { CommandContext, CommandResult, WriteRepository } from '../foundation/write-repository.js';
 
@@ -44,7 +45,10 @@ export class EventRecordingWriteRepository<A> implements WriteRepository<A> {
     return this.source.get(id);
   }
   async save(aggregate: A) {
+    const publications = this.map(aggregate);
+    if (publications.some((p) => !catalogue.some((e) => e.name === p.name && e.visibility === 'domain')))
+      throw new Error('Aggregate saves may stage only private domain events');
     await this.source.save(aggregate);
-    this.publications = this.map(aggregate);
+    this.publications = publications;
   }
 }

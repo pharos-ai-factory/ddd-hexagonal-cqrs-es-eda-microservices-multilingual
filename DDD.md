@@ -49,8 +49,11 @@ without acquiring mutation capability. Domain methods have no network,
 database, logging, wall-clock or random-number calls; time and identity arrive
 as explicit input.
 
-A successful domain transition records plain past-tense facts. The application
-selects private domain delivery and public integration delivery explicitly.
+A successful domain transition queues plain `*DomainEvent` facts inside the
+aggregate. Saving stages selected private facts in the command transaction.
+Independent durable subscribers react after commit. A publication subscriber maps
+a fact to a generated `*IntegrationEvent` DTO and commits its receipt with the
+integration outbox bytes before acknowledging its own queue delivery.
 All required aggregate-to-aggregate reactions are durable and asynchronous,
 including reactions inside the same process.
 
@@ -58,13 +61,15 @@ Examples:
 
 ```text
 PlaceOrder → OrderPlaced → AcceptOrder → PreparationTicket
-CompletePreparation → DrinksReady → OpenPickup → Pickup
+CompletePreparation → DrinksReadyDomainEvent → DrinksReadyDomainEventHandler
+  → DrinksReadyIntegrationEvent → OpenPickup → Pickup
 CollectOrder → OrderCollected → CreditCollection → LoyaltyAccount
 RewardEarned (private domain delivery) → IssueReward → Reward
 RewardIssued (published integration delivery) → RequestNotification → Notification
 ```
 
-Each event-to-command arrow is a durable hand-off. The reaction commits acceptance
+Each domain-to-integration arrow is an independent private subscription with an
+atomic receipt/outbox transaction. Each event-to-command arrow is a durable hand-off. The reaction commits acceptance
 and command bytes, then acknowledges the event. The receiving command consumer
 owns the subsequent aggregate transaction and retries. A projection handler can
 instead update consumer-owned read data without mutating a root.
@@ -120,7 +125,11 @@ ports keep these use cases independent of DI, transport and persistence. See
 
 Command handlers load and save through `<Aggregate>WriteRepository`. The root
 records domain facts while enforcing its rules. A central command executor and
-owner persistence/message adaptors commit the aggregate and selected outgoing
+owner persistence/message adaptors commit the aggregate and selected private
 facts together with technical receipt/outcome records. This local transaction
 belongs to one aggregate and one context database. Feature code carries no
 transaction callbacks or delivery bookkeeping. See [decision 0015](docs/decisions/0015-explicit-persistence-role-names.md).
+
+Publication handlers use `DurablePublicationPort` without changing a root. Their
+receipts and integration bytes commit separately from the original command. See
+[decision 0019](docs/decisions/0019-durable-domain-event-publication.md).

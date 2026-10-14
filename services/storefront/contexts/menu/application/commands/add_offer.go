@@ -21,7 +21,7 @@ type AddOfferCommand struct {
 // AddOfferCommandHandler applies AddOffer through one aggregate command transaction.
 type AddOfferCommandHandler struct {
 	Repository ports.EditionWriteRepository
-	Drinks     a.ProjectionPort[app.DrinkPublished]
+	Drinks     a.ProjectionPort[app.DrinkPublishedDomainEvent]
 }
 
 func (h AddOfferCommandHandler) Execute(ctx context.Context, m a.CommandContext, c AddOfferCommand) (a.CommandResult, error) {

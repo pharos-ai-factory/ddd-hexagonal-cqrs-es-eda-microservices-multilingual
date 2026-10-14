@@ -132,3 +132,31 @@ void test('oversized publications fail before their bytes can be committed', () 
     /limit/,
   );
 });
+
+void test('private reward-issued fixture retains its owner, source identity and exact bytes', () => {
+  const raw = Buffer.from(
+    readFileSync(
+      new URL('../contexts/loyalty/adaptors/messaging/fixtures/reward-issued.domain.hex', import.meta.url),
+      'utf8',
+    ).trim(),
+    'hex',
+  );
+  const event = decode(raw);
+  assert.equal(event.name, 'loyalty.reward-issued.domain');
+  assert.equal(event.visibility, 'domain');
+  const type = protobuf.Root.fromJSON(privateSchema).lookupType('cafe.loyalty.internal.PrivateEvent');
+  assert.deepEqual(Buffer.from(type.encode(type.decode(raw)).finish()), raw);
+  const value = type.toObject(type.decode(raw), { longs: Number }) as {
+    context: string;
+    formatRevision: number;
+    rewardIssued: Record<string, unknown>;
+  };
+  for (const invalid of [
+    { ...value, context: 'communication' },
+    { ...value, formatRevision: 2 },
+    { ...value, rewardIssued: { ...value.rewardIssued, rewardId: '55555555-5555-4555-8555-555555555555' } },
+    { ...value, rewardIssued: { ...value.rewardIssued, benefit: '' } },
+    { ...value, rewardIssued: { ...value.rewardIssued, expiresAt: '2026-10-03' } },
+  ])
+    assert.throws(() => decode(type.encode(type.create(invalid)).finish()));
+});

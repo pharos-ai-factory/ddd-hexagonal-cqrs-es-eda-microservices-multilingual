@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	orderingpub "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/publications"
+	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/eventhandlers"
 	orderingports "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	"testing"
@@ -18,7 +19,7 @@ import (
 
 type orderWorld struct {
 	orders s.CommandProbe[d.OrderState]
-	menus  s.ProjectionProbe[model.MenuPublished]
+	menus  s.ProjectionProbe[model.MenuPublishedIntegrationEvent]
 }
 
 func (w *orderWorld) add(id, edition, code string, quantity int) error {
@@ -47,11 +48,11 @@ func TestOrderingFeatures(t *testing.T) {
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
 			w := &orderWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
-				*w = orderWorld{menus: s.ProjectionProbe[model.MenuPublished]{Values: map[string]model.MenuPublished{}}}
+				*w = orderWorld{menus: s.ProjectionProbe[model.MenuPublishedIntegrationEvent]{Values: map[string]model.MenuPublishedIntegrationEvent{}}}
 				return ctx, nil
 			})
 			sc.Step(`^Ordering knows a published edition offering "([^"]*)" for (\d+) minor units$`, func(name string, minor int64) {
-				w.menus.Values[s.Edition] = model.MenuPublished{EditionID: s.Edition, Currency: "EUR", Offers: []model.Offer{
+				w.menus.Values[s.Edition] = model.MenuPublishedIntegrationEvent{EditionID: s.Edition, Currency: "EUR", Offers: []model.Offer{
 					{Code: "C1", DrinkID: s.Drink, DrinkRevision: 1, Name: name, Minor: minor, Currency: "EUR"}}}
 			})
 			sc.Step(`^a customer has a draft order for that edition$`, func() error {
@@ -93,10 +94,19 @@ func TestOrderingFeatures(t *testing.T) {
 					return err
 				}
 				p := w.orders.Last.Publications
-				if len(p) != 1 || p[0].Name != "ordering.order-placed" || p[0].Visibility != a.Public {
+				if len(p) != 1 || p[0].Name != "ordering.order-placed.domain" || p[0].Visibility != a.Private {
 					return fmt.Errorf("wrong publications: %+v", p)
 				}
-				event, ok := p[0].Payload.(model.OrderPlaced)
+				private, ok := p[0].Payload.(d.OrderPlacedDomainEvent)
+				if !ok {
+					return fmt.Errorf("wrong private payload: %T", p[0].Payload)
+				}
+				outgoing := &s.PublicationProbe[model.OrderPlacedIntegrationEvent]{}
+				handler := reactions.OrderPlacedDomainEventHandler{Publications: outgoing}
+				if _, err := handler.Handle(context.Background(), a.Metadata{AggregateID: private.State.ID}, private); err != nil {
+					return err
+				}
+				event := outgoing.Payload
 				if !ok || event.OrderID != s.Order || event.CustomerID != s.Customer || event.EditionID != s.Edition || event.Currency != "EUR" || len(event.Lines) != 1 {
 					return fmt.Errorf("wrong order: %+v", event)
 				}

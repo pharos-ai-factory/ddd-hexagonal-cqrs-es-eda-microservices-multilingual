@@ -1,0 +1,32 @@
+syntax = "proto3";
+package cafe.collection.internal;
+
+message PickupOpenedDomainEvent {
+  string pickup_id = 1;
+  string order_id = 2;
+  string customer_id = 3;
+  string collection_code = 4;
+}
+
+message OrderCollectedDomainEvent {
+  string order_id = 1;
+  string customer_id = 2;
+}
+
+message PrivateEvent {
+  string id = 1;
+  string name = 2;
+  string context = 3;
+  string visibility = 4;
+  uint32 format_revision = 5;
+  string aggregate_kind = 6;
+  string aggregate_id = 7;
+  uint64 aggregate_version = 8;
+  string correlation_id = 9;
+  string causation_id = 10;
+  string occurred_at = 11;
+  oneof payload {
+    PickupOpenedDomainEvent pickup_opened = 20;
+    OrderCollectedDomainEvent order_collected = 21;
+  }
+}

@@ -3,8 +3,10 @@ package protobuf
 
 import (
 	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/events"
+	ordering "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/events"
 )
 
 var privateCodecs = map[string]privateCodec{
-	"menu": {encode: menu.EncodePrivateEvent, decode: menu.DecodePrivateEvent},
+	"menu":     {encode: menu.EncodePrivateEvent, decode: menu.DecodePrivateEvent},
+	"ordering": {encode: ordering.EncodePrivateEvent, decode: ordering.DecodePrivateEvent},
 }

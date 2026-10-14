@@ -17,7 +17,7 @@ type DrinkState struct {
 // Drink owns the publication lifecycle and revisions of one drink.
 type Drink struct {
 	state DrinkState
-	facts []core.Fact
+	facts []core.DomainEvent
 }
 
 func NewDrink(id, name string) (*Drink, error) {
@@ -47,7 +47,7 @@ func (d *Drink) Revise(name string) error {
 	}
 	d.state.Name = name
 	d.state.Published = false
-	d.facts = append(d.facts, core.Fact{Name: "DrinkRevised", Data: d.state})
+	d.facts = append(d.facts, DrinkRevisedDomainEvent{State: d.state})
 	return nil
 }
 func (d *Drink) Publish() error {
@@ -56,8 +56,8 @@ func (d *Drink) Publish() error {
 	}
 	d.state.Revision++
 	d.state.Published = true
-	d.facts = append(d.facts, core.Fact{Name: "DrinkPublished", Data: d.state})
+	d.facts = append(d.facts, DrinkPublishedDomainEvent{State: d.state})
 	return nil
 }
-func (d *Drink) Snapshot() DrinkState { return d.state }
-func (d *Drink) Events() []core.Fact  { return append([]core.Fact(nil), d.facts...) }
+func (d *Drink) Snapshot() DrinkState       { return d.state }
+func (d *Drink) Events() []core.DomainEvent { return append([]core.DomainEvent(nil), d.facts...) }

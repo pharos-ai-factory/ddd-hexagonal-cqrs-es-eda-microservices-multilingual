@@ -4,5 +4,11 @@
     "owner": "loyalty",
     "visibility": "domain",
     "kind": "account"
+  },
+  {
+    "name": "loyalty.reward-issued.domain",
+    "owner": "loyalty",
+    "visibility": "domain",
+    "kind": "reward"
   }
 ]

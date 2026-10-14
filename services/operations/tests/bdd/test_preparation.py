@@ -1,3 +1,9 @@
+from tests.bdd.publication_probe import PublicationProbe, private_delivery
+from operations.contexts.preparation.application.event_handlers.publish_drinks_ready import (
+    DrinksReadyDomainEventHandler,
+)
+from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN
+from operations.adaptors.generated.event_preparation import publish_DrinksReady
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
 from operations.adaptors.command_execution import CommandExecutor
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket
@@ -18,11 +24,11 @@ from operations.contexts.preparation.application.commands.complete_preparation i
     CompletePreparationCommandHandler,
 )
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
-from operations.contracts.events.generated.ordering import OrderPlaced
+from operations.contracts.events.generated.ordering import OrderPlacedIntegrationEvent
 from operations.foundation.application import Metadata, Outcome
 from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe
 
-type PreparationProbe = CommandProbe[TicketSnapshot, OrderPlaced]
+type PreparationProbe = CommandProbe[TicketSnapshot, OrderPlacedIntegrationEvent]
 
 scenarios(str(SPECIFICATIONS / "preparation"))
 
@@ -120,8 +126,14 @@ def unchanged(probe: PreparationProbe) -> None:
 
 
 @then("one DrinksReady publication identifies the order and customer")
-def ready_event(probe: PreparationProbe) -> None:
+def ready_event(probe: PreparationProbe, metadata: Metadata) -> None:
     assert len(probe.publications) == 1
-    event = probe.publications[0]
+    private = probe.publications[0]
+    assert private.name == "preparation.drinks-ready.domain"
+    outgoing = PublicationProbe(publish_DrinksReady)
+    wire = private_delivery("preparation", "ticket", metadata, private)
+    DrinksReadyDomainEventHandler(outgoing).handle(metadata, DRINKS_READY_DOMAIN.parse(wire))
+    assert len(outgoing.publications) == 1
+    event = outgoing.publications[0]
     assert event.name == "preparation.drinks-ready"
     assert event.payload == {"orderId": ORDER, "customerId": CUSTOMER}

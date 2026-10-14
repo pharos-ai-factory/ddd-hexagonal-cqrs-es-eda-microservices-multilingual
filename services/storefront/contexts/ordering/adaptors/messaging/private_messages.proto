@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cafe.ordering.internal;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternal";
+
+message Line {
+  string id = 1;
+  string offer_code = 2;
+  string name = 3;
+  int32 quantity = 4;
+  int64 minor = 5;
+}
+
+message OrderPlacedDomainEvent {
+  string order_id = 1;
+  string customer_id = 2;
+  string edition_id = 3;
+  string currency = 4;
+  repeated Line lines = 5;
+}
+
+message PrivateEvent {
+  string id = 1;
+  string name = 2;
+  string context = 3;
+  string visibility = 4;
+  uint32 format_revision = 5;
+  string aggregate_kind = 6;
+  string aggregate_id = 7;
+  uint64 aggregate_version = 8;
+  string correlation_id = 9;
+  string causation_id = 10;
+  string occurred_at = 11;
+  oneof payload {
+    OrderPlacedDomainEvent order_placed = 20;
+  }
+}

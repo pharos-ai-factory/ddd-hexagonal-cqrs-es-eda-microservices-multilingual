@@ -48,6 +48,9 @@ class Metadata:
     consumer: str = ""
     source_id: str = ""
     source_hash: str = ""
+    source_kind: str = ""
+    source_version: int = 0
+    source_time: str = ""
 
 
 @dataclass(frozen=True)
@@ -79,3 +82,9 @@ class DurableCommandPort[C](Protocol):
     """Commit a receiving receipt and outgoing command before returning acceptance."""
 
     def enqueue(self, metadata: Metadata, command: C) -> Outcome: ...
+
+
+class DurablePublicationPort[P](Protocol):
+    """Commit this subscription's receipt and exact outgoing integration event together."""
+
+    def publish(self, metadata: Metadata, event: P) -> Outcome: ...

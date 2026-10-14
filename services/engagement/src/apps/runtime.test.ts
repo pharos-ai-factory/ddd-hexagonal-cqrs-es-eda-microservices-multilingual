@@ -47,7 +47,7 @@ function incompatibleHandler(container: ReturnType<typeof createLoyaltyContainer
   const wrong = {
     handle: async (
       _m: import('../foundation/application.js').Metadata,
-      event: import('../contracts/events/generated/loyalty.js').RewardIssued,
+      event: import('../contracts/events/generated/loyalty.js').RewardIssuedIntegrationEvent,
     ) => ({ aggregateId: event.rewardId, version: 0, status: 'queued' }),
   };
   commandSubscription(
@@ -55,9 +55,48 @@ function incompatibleHandler(container: ReturnType<typeof createLoyaltyContainer
     c.creditCodec,
     definitions,
     (e) => e.customerId,
-    // @ts-expect-error RewardIssued cannot handle an OrderCollected subscription.
+    // @ts-expect-error RewardIssuedIntegrationEvent cannot handle an OrderCollectedIntegrationEvent subscription.
     wrong,
     c.credit,
   );
 }
 void incompatibleHandler;
+
+void test('publication subscriptions require one private worker and exactly one reaction mode', async () => {
+  const { publicationSubscription } = await import('./runtime.js');
+  const container = createLoyaltyContainer('postgresql://unused@127.0.0.1:1/unused');
+  const declared = {
+    consumer: 'loyalty.publish-reward-issued',
+    event: 'loyalty.reward-issued.domain',
+    publication: 'loyalty.reward-issued',
+  };
+  try {
+    const worker = publicationSubscription(
+      'loyalty',
+      declared.consumer,
+      'loyalty.reward-issued.domain',
+      declared.publication,
+      [declared],
+      container.cradle.publishIssued,
+    );
+    assert.equal(worker.sourceTarget, true);
+    assert.equal(completeSubscriptions('loyalty', [declared], [worker]).length, 1);
+    for (const workers of [[], [worker, worker], [{ ...worker, owner: 'communication' }]])
+      assert.throws(() => completeSubscriptions('loyalty', [declared], workers));
+    assert.throws(() =>
+      completeSubscriptions('loyalty', [{ ...declared, command: 'issueReward' }], [worker]),
+    );
+    assert.throws(() =>
+      publicationSubscription(
+        'loyalty',
+        declared.consumer,
+        'loyalty.reward-issued.domain',
+        'wrong',
+        [declared],
+        container.cradle.publishIssued,
+      ),
+    );
+  } finally {
+    await container.dispose();
+  }
+});

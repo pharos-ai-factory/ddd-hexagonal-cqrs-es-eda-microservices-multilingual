@@ -99,6 +99,7 @@ export async function relay(
 export type EventSubscription = {
   owner: string;
   consumer: string;
+  sourceTarget?: boolean;
   event: string;
   target(payload: object): string;
   handle(metadata: Metadata, payload: object): Promise<Outcome>;
@@ -180,7 +181,7 @@ export async function consume(url: string, sub: EventSubscription, signal: Abort
                 payload = event.payload;
                 m = {
                   id: derivedId(sub.consumer, event.id),
-                  target: sub.target(payload),
+                  target: sub.sourceTarget ? event.aggregateId : sub.target(payload),
                   name: sub.consumer,
                   correlation: event.correlationId,
                   causation: event.id,
@@ -188,6 +189,9 @@ export async function consume(url: string, sub: EventSubscription, signal: Abort
                   consumer: sub.consumer,
                   sourceId: event.id,
                   sourceHash: createHash('sha256').update(message.content).digest('hex'),
+                  sourceKind: event.aggregateKind,
+                  sourceVersion: event.aggregateVersion,
+                  sourceTime: event.occurredAt,
                 };
               }
               validating = false;

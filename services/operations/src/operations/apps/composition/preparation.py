@@ -35,6 +35,14 @@ from operations.foundation.identity import derived_id
 from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
+from operations.adaptors.publication_outbox import PostgresPublicationOutbox
+from operations.apps.runtime import publication_subscription
+from operations.adaptors.generated.event_preparation import publish_DrinksReady
+from operations.contexts.preparation.application.event_handlers.publish_drinks_ready import (
+    DrinksReadyDomainEventHandler,
+)
+from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN
+
 
 class PreparationContainer(containers.DeclarativeContainer):
     """Resolve the graph before starting threads; one owner resource and plain handlers."""
@@ -60,6 +68,11 @@ class PreparationContainer(containers.DeclarativeContainer):
     start = providers.Singleton(CommandExecutor, ticket_transaction, StartPreparationCommandHandler)
     complete = providers.Singleton(CommandExecutor, ticket_transaction, CompletePreparationCommandHandler)
 
+    drinks_ready_publications = providers.Singleton(
+        PostgresPublicationOutbox, database, "preparation.publish-drinks-ready", "ticket", publish_DrinksReady
+    )
+    publish_drinks_ready = providers.Singleton(DrinksReadyDomainEventHandler, drinks_ready_publications)
+
 
 def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, ...]:
     definitions = subscription_definitions("preparation")
@@ -73,5 +86,13 @@ def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, 
             lambda event: derived_id("ticket", event["orderId"]),
             container.accepted().handle,
             container.accept().execute,
+        )
+        + publication_subscription(
+            "preparation",
+            "preparation.publish-drinks-ready",
+            definitions,
+            DRINKS_READY_DOMAIN,
+            "preparation.drinks-ready",
+            container.publish_drinks_ready().handle,
         ),
     )

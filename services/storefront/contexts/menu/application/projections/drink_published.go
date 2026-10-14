@@ -10,10 +10,10 @@ import (
 
 // DrinkDirectoryProjectionHandler updates the consumer-owned projection without aggregate mutation.
 type DrinkDirectoryProjectionHandler struct {
-	Directory a.ProjectionPort[events.DrinkPublished]
+	Directory a.ProjectionPort[events.DrinkPublishedDomainEvent]
 }
 
-func (h DrinkDirectoryProjectionHandler) Handle(ctx context.Context, m a.Metadata, event events.DrinkPublished) (a.Outcome, error) {
+func (h DrinkDirectoryProjectionHandler) Handle(ctx context.Context, m a.Metadata, event events.DrinkPublishedDomainEvent) (a.Outcome, error) {
 	key := fmt.Sprintf("%s/%d", event.DrinkID, event.Revision)
 	return a.Outcome{}, h.Directory.Record(ctx, m, key, event.Revision, event)
 }

@@ -25,7 +25,7 @@ class PickupSnapshot(TypedDict):
 
 
 @dataclass(frozen=True)
-class PickupOpened:
+class PickupOpenedDomainEvent:
     """Private fact raised when a Pickup becomes available for collection."""
 
     name: ClassVar[str] = "PickupOpened"
@@ -36,7 +36,7 @@ class PickupOpened:
 
 
 @dataclass(frozen=True)
-class OrderCollected:
+class OrderCollectedDomainEvent:
     """Private fact raised when a Pickup records its single collection."""
 
     name: ClassVar[str] = "OrderCollected"
@@ -44,7 +44,7 @@ class OrderCollected:
     customer_id: str
 
 
-type PickupFact = PickupOpened | OrderCollected
+type PickupFact = PickupOpenedDomainEvent | OrderCollectedDomainEvent
 
 
 @dataclass(frozen=True)
@@ -85,7 +85,7 @@ class Pickup:
     @classmethod
     def open(cls, identity: str, order: str, customer: str, code: str) -> "Pickup":
         pickup = cls(PickupState(identity, order, customer, CollectionCode(code)))
-        pickup._facts.append(PickupOpened(identity, order, customer, code))
+        pickup._facts.append(PickupOpenedDomainEvent(identity, order, customer, code))
         return pickup
 
     @classmethod
@@ -114,7 +114,7 @@ class Pickup:
         if code != self._state.code.value:
             raise Rejection("incorrect_collection_code", "The collection code does not match")
         self._state = replace(self._state, status="collected")
-        self._facts.append(OrderCollected(self._state.order_id, self._state.customer_id))
+        self._facts.append(OrderCollectedDomainEvent(self._state.order_id, self._state.customer_id))
 
     def snapshot(self) -> PickupSnapshot:
         s = self._state

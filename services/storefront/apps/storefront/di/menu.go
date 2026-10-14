@@ -8,10 +8,13 @@ import (
 	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/queries"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
+	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/eventhandlers"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	menuprojections "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/projections"
 	q "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/queries"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
+	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
@@ -20,6 +23,9 @@ import (
 
 func menuModule() fx.Option {
 	return fx.Module("menu", fx.Provide(
+		func(s *support.StorefrontRuntime) reactions.MenuEditionPublishedDomainEventHandler {
+			return reactions.MenuEditionPublishedDomainEventHandler{Publications: store.NewPublicationOutbox[model.MenuPublishedIntegrationEvent](s.Databases["menu"], "menu.publish-edition-published", "edition", codec.PublishMenuPublished)}
+		},
 		func(s *support.StorefrontRuntime) execution.Transaction[*d.Drink] {
 			return pg.NewDrinkTransaction(s.Databases["menu"])
 		},
@@ -32,8 +38,8 @@ func menuModule() fx.Option {
 		func(s *support.StorefrontRuntime) ports.EditionReadRepository {
 			return pg.NewEditionReadRepository(s.Databases["menu"])
 		},
-		func(s *support.StorefrontRuntime) a.ProjectionPort[app.DrinkPublished] {
-			return store.Project[app.DrinkPublished](s.Databases["menu"], "published-drinks")
+		func(s *support.StorefrontRuntime) a.ProjectionPort[app.DrinkPublishedDomainEvent] {
+			return store.Project[app.DrinkPublishedDomainEvent](s.Databases["menu"], "published-drinks")
 		},
 		func(port execution.Transaction[*d.Drink]) execution.Executor[menucommands.CreateDrinkCommand] {
 			return execution.Bind(port, func(repository ports.DrinkWriteRepository) menucommands.CreateDrinkCommandHandler {
@@ -55,9 +61,9 @@ func menuModule() fx.Option {
 				return menucommands.CreateEditionCommandHandler{Repository: repository}
 			})
 		},
-		func(port execution.Transaction[*d.MenuEdition], directory a.ProjectionPort[app.DrinkPublished]) execution.Executor[menucommands.AddOfferCommand] {
+		func(port execution.Transaction[*d.MenuEdition], directory a.ProjectionPort[app.DrinkPublishedDomainEvent]) execution.Executor[menucommands.AddOfferCommand] {
 			return execution.BindProjection(port, directory, func(c menucommands.AddOfferCommand) string { return fmt.Sprintf("%s/%d", c.DrinkID, c.DrinkRevision) },
-				func(repository ports.EditionWriteRepository, directory a.ProjectionPort[app.DrinkPublished]) menucommands.AddOfferCommandHandler {
+				func(repository ports.EditionWriteRepository, directory a.ProjectionPort[app.DrinkPublishedDomainEvent]) menucommands.AddOfferCommandHandler {
 					return menucommands.AddOfferCommandHandler{Repository: repository, Drinks: directory}
 				})
 		},
@@ -118,12 +124,16 @@ func menuRequestHandlers(p MenuHandlerDependencies) rpc.MenuRequestHandlers {
 		PublishEdition: p.PublishEdition,
 	}
 }
-func mountMenu(s *support.StorefrontRuntime, handlers rpc.MenuRequestHandlers, directory a.ProjectionPort[app.DrinkPublished]) {
+func mountMenu(s *support.StorefrontRuntime, handlers rpc.MenuRequestHandlers, directory a.ProjectionPort[app.DrinkPublishedDomainEvent], publication reactions.MenuEditionPublishedDomainEventHandler) {
+	support.SubscribePrivate(s, rpc.Subscription(string(PublishMenuEditionPublishedSubscription)), func(event d.MenuEditionPublishedDomainEvent) string { return event.State.ID }, publication.Handle)
 	s.RequestWorkers["menu"] = rpc.Bind(handlers).Run
-	support.SubscribePrivate(s, rpc.Subscription(string(DrinkDirectorySubscription)), func(p app.DrinkPublished) string { return p.DrinkID }, menuprojections.DrinkDirectoryProjectionHandler{Directory: directory}.Handle)
+	support.SubscribePrivate(s, rpc.Subscription(string(DrinkDirectorySubscription)), func(p app.DrinkPublishedDomainEvent) string { return p.DrinkID }, menuprojections.DrinkDirectoryProjectionHandler{Directory: directory}.Handle)
 }
 
 // MenuSubscription identifies private projection delivery without untyped routing literals.
 type MenuSubscription string
 
 const DrinkDirectorySubscription MenuSubscription = "menu.drink-directory"
+
+// PublishMenuEditionPublishedSubscription independently delivers the private publication reaction.
+const PublishMenuEditionPublishedSubscription MenuSubscription = "menu.publish-edition-published"

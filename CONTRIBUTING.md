@@ -177,3 +177,13 @@ Use conventional commits such as `feat(loyalty): add reward cancellation`.
 Describe the triggering behaviour, final rule and evidence in the PR. Keep secrets,
 `.local`, `.tools` and build outputs out of commits. This reference supports
 local/development compositions only; release workflows are outside its scope.
+
+## Durable domain-to-integration publication
+
+Follow [decision 0019](docs/decisions/0019-durable-domain-event-publication.md).
+Aggregate saves stage private `*DomainEvent` facts. A publication subscriber maps
+them to generated `*IntegrationEvent` DTOs and commits its receipt/outbox atomically
+before ACK. Add codec compatibility fixtures, mapping tests and a manifest entry
+with `publication`. Verify rollback at the final receipt insert, concurrent
+redelivery, unchanged outgoing bytes and independent subscribers using real
+PostgreSQL/RabbitMQ. Repository negative tests prohibit direct integration staging.

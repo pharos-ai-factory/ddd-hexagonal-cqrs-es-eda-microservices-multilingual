@@ -4,5 +4,11 @@
     "owner": "menu",
     "visibility": "domain",
     "kind": "drink"
+  },
+  {
+    "name": "menu.edition-published.domain",
+    "owner": "menu",
+    "visibility": "domain",
+    "kind": "edition"
   }
 ]

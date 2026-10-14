@@ -29,5 +29,9 @@ def subscription_definitions(owner: str) -> list[SubscriptionDefinition]:
         consumer = text(item["consumer"])
         if not consumer.startswith(owner + "."):
             raise ValueError("Foreign subscription")
-        result.append(SubscriptionDefinition(consumer, text(item["event"]), text(item["command"])))
+        command = text(item["command"]) if "command" in item else ""
+        publication = text(item["publication"]) if "publication" in item else ""
+        if bool(command) == bool(publication):
+            raise ValueError("Declare exactly one command or publication reaction")
+        result.append(SubscriptionDefinition(consumer, text(item["event"]), command, publication))
     return result

@@ -43,6 +43,9 @@ Then('two different earned grants each create one reward', async function (this:
   for (const event of earned) await this.evidence.receipt('loyalty.issue-reward', event.id);
   for (const reward of rewards) {
     assert.equal(reward.version, 1);
+    const facts = await this.evidence.events('loyalty', 'loyalty.reward-issued.domain', reward.state.id);
+    assert.equal(facts.length, 1);
+    await this.evidence.receipt('loyalty.publish-reward-issued', facts[0]!.id);
     assert.equal((await this.evidence.events('loyalty', 'loyalty.reward-issued', reward.state.id)).length, 1);
   }
 });
@@ -97,6 +100,10 @@ Then('the original completion rejection is returned', function (this: W) {
 });
 Then('no DrinksReady fact has been committed', async function (this: W) {
   assert.deepEqual(
+    await this.evidence.events('preparation', 'preparation.drinks-ready.domain', this.last.ticket),
+    [],
+  );
+  assert.deepEqual(
     await this.evidence.events('preparation', 'preparation.drinks-ready', this.last.ticket),
     [],
   );
@@ -109,6 +116,13 @@ When('the barista makes a new completion attempt', async function (this: W) {
 });
 Then('the order becomes ready with one DrinksReady fact', async function (this: W) {
   await this.client.state('collection/pickups/' + this.last.pickup, (state) => state.status === 'ready');
+  const facts = await this.evidence.events(
+    'preparation',
+    'preparation.drinks-ready.domain',
+    this.last.ticket,
+  );
+  assert.equal(facts.length, 1);
+  await this.evidence.receipt('preparation.publish-drinks-ready', facts[0]!.id);
   assert.equal(
     (await this.evidence.events('preparation', 'preparation.drinks-ready', this.last.ticket)).length,
     1,

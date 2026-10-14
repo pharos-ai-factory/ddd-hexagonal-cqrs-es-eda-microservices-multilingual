@@ -96,7 +96,8 @@ for folder in (
 ):
     for name in ("envelopes.go",):
         GENERATED.add(folder + "/cafe/requests/v1/" + name)
-GENERATED.add("services/storefront/contexts/menu/adaptors/messaging/generated/menu_private.pb.go")
+for owner in ("menu", "ordering"):
+    GENERATED.add(f"services/storefront/contexts/{owner}/adaptors/messaging/generated/{owner}_private.pb.go")
 GENERATED.add("services/storefront/apps/topology/generated.json")
 GENERATED.add("services/storefront/apps/replay/generated.json")
 for owner in ("loyalty", "communication"):
@@ -108,6 +109,10 @@ for owner in ("preparation", "collection"):
     for suffix in ("py", "pyi"):
         GENERATED.add(
             f"services/operations/src/operations/adaptors/generated/cafe/internal/{owner}/internal_commands_pb2.{suffix}"
+        )
+    for suffix in ("py", "pyi"):
+        GENERATED.add(
+            f"services/operations/src/operations/adaptors/generated/cafe/internal/{owner}/private_messages_pb2.{suffix}"
         )
 for owner in ("loyalty", "communication"):
     GENERATED.add(
@@ -124,6 +129,7 @@ for pattern in (
     "services/storefront/contexts/*/adaptors/messaging/subscriptions_generated.go",
     "services/operations/src/operations/contracts/events/generated/*.py",
     "services/operations/src/operations/adaptors/generated/event_*.py",
+    "services/operations/src/operations/adaptors/generated/private_event_registry.py",
     "services/engagement/src/contracts/events/generated/*.ts",
     "services/engagement/src/adaptors/generated/event-*",
     "services/engagement/src/adaptors/generated/private-event-registry.ts",
@@ -199,6 +205,7 @@ def core_violation(path, target):
     if "contexts" not in parts:
         if (
             "adaptors" in parts
+            and not path.endswith("/adaptors/generated/private_event_registry.py")
             and "/contexts/" in "/" + target
             and "/generated/" not in "/" + target
             and not path.endswith((".integration.ts", ".test.ts"))

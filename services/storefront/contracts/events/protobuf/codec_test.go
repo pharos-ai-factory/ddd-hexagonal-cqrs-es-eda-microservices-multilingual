@@ -13,7 +13,7 @@ import (
 )
 
 func fixture() a.Message {
-	return a.Message{ID: "11111111-1111-4111-8111-111111111111", Name: "menu.edition-published", Context: "menu", Visibility: a.Public, ContractVersion: 1, AggregateKind: "edition", AggregateID: "22222222-2222-4222-8222-222222222222", AggregateVersion: 3, CorrelationID: "33333333-3333-4333-8333-333333333333", CausationID: "44444444-4444-4444-8444-444444444444", OccurredAt: time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC), Payload: model.MenuPublished{EditionID: "22222222-2222-4222-8222-222222222222", Currency: "EUR", Offers: []model.Offer{{Code: "TEA", DrinkID: "55555555-5555-4555-8555-555555555555", DrinkRevision: 1, Name: "Tea", Minor: 300, Currency: "EUR"}}}}
+	return a.Message{ID: "11111111-1111-4111-8111-111111111111", Name: "menu.edition-published", Context: "menu", Visibility: a.Public, ContractVersion: 1, AggregateKind: "edition", AggregateID: "22222222-2222-4222-8222-222222222222", AggregateVersion: 3, CorrelationID: "33333333-3333-4333-8333-333333333333", CausationID: "44444444-4444-4444-8444-444444444444", OccurredAt: time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC), Payload: model.MenuPublishedIntegrationEvent{EditionID: "22222222-2222-4222-8222-222222222222", Currency: "EUR", Offers: []model.Offer{{Code: "TEA", DrinkID: "55555555-5555-4555-8555-555555555555", DrinkRevision: 1, Name: "Tea", Minor: 300, Currency: "EUR"}}}}
 }
 
 func TestDecoderRejectsSemanticallyInvalidWirePayload(t *testing.T) {
@@ -73,7 +73,7 @@ func TestClosedContractRejectsWrongScopeAndType(t *testing.T) {
 		t.Fatal("unknown version accepted")
 	}
 	message = fixture()
-	message.Payload = model.OrderPlaced{OrderID: message.ID}
+	message.Payload = model.OrderPlacedIntegrationEvent{OrderID: message.ID}
 	if _, err := Encode(message); err == nil {
 		t.Fatal("payload/name mismatch accepted")
 	}
@@ -113,7 +113,7 @@ func TestEnvelopeRequiresCausationInEveryLanguage(t *testing.T) {
 func TestPublishedDrinkPreservesAnEightyCharacterUnicodeName(t *testing.T) {
 	message := fixture()
 	message.Name, message.Context, message.AggregateKind, message.Visibility = "menu.drink-published", "menu", "drink", a.Private
-	message.Payload = menu.DrinkPublished{DrinkID: message.AggregateID, Name: strings.Repeat("ή", 80), Revision: 1}
+	message.Payload = menu.DrinkPublishedDomainEvent{DrinkID: message.AggregateID, Name: strings.Repeat("ή", 80), Revision: 1}
 	body, err := Encode(message)
 	if err != nil {
 		t.Fatalf("the published contract rejected a name inside its character limit: %v", err)
@@ -126,7 +126,7 @@ func TestPublishedDrinkPreservesAnEightyCharacterUnicodeName(t *testing.T) {
 func TestGeneratedPayloadMappingRejectsIntegerOverflowBeforeConversion(t *testing.T) {
 	message := fixture()
 	message.Name, message.Context, message.AggregateKind = "ordering.order-placed", "ordering", "order"
-	message.Payload = model.OrderPlaced{OrderID: message.AggregateID, CustomerID: message.ID, EditionID: message.ID, Currency: "EUR", Lines: []model.Line{{ID: message.ID, OfferCode: "TEA", Name: "Tea", Quantity: 4294967297, Minor: 0}}}
+	message.Payload = model.OrderPlacedIntegrationEvent{OrderID: message.AggregateID, CustomerID: message.ID, EditionID: message.ID, Currency: "EUR", Lines: []model.Line{{ID: message.ID, OfferCode: "TEA", Name: "Tea", Quantity: 4294967297, Minor: 0}}}
 	if _, err := Encode(message); err == nil {
 		t.Fatal("quantity overflow wrapped into an accepted value")
 	}

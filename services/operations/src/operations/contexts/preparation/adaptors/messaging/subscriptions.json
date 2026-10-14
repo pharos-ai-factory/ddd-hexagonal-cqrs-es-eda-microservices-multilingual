@@ -3,5 +3,10 @@
     "consumer": "preparation.accept-order",
     "event": "ordering.order-placed",
     "command": "acceptOrder"
+  },
+  {
+    "consumer": "preparation.publish-drinks-ready",
+    "event": "preparation.drinks-ready.domain",
+    "publication": "preparation.drinks-ready"
   }
 ]

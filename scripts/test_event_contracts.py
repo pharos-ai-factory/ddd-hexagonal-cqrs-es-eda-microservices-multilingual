@@ -47,7 +47,7 @@ message MenuArchived {
         generate(self.root)
         self.assertEqual(hashlib.sha256(envelope.read_bytes()).hexdigest(), before)
         model = (self.root / "services/storefront/contracts/events/model/menu_generated.go").read_text()
-        self.assertIn("type MenuArchived struct", model)
+        self.assertIn("type MenuArchivedIntegrationEvent struct", model)
         self.assertRegex(model, r"Reason\s+string")
         codec = (self.root / "services/storefront/contracts/events/protobuf/menu_generated.go").read_text()
         self.assertIn("func PublishMenuArchived(", codec)
@@ -70,6 +70,44 @@ message MenuArchived {
             {"ordering.menu-directory", "ordering.menu-audit"},
         )
         self.assertTrue(all("consumer" not in item for item in catalogue(root=self.root)))
+
+    def test_publication_subscriptions_require_private_source_and_same_owner_and_kind(self):
+        path = self.root / CONTEXT_PATHS["loyalty"] / "subscriptions.json"
+        base = {
+            "consumer": "loyalty.publish-reward-issued",
+            "event": "loyalty.reward-issued.domain",
+            "publication": "loyalty.reward-issued",
+        }
+        for changes in (
+            {"command": "issueReward"},
+            {"event": "loyalty.reward-issued"},
+            {"event": "loyalty.reward-earned"},
+            {"publication": "collection.order-collected"},
+            {"publication": "loyalty.reward-issued.domain"},
+            {"publication": "missing.event"},
+        ):
+            with self.subTest(changes=changes):
+                path.write_text(json.dumps([{**base, **changes}]))
+                with self.assertRaisesRegex(ValueError, "publication subscription"):
+                    catalogue("topology", self.root)
+
+    def test_explicit_dto_names_preserve_published_wire_identity(self):
+        generate(self.root)
+        python = (
+            self.root / "services/operations/src/operations/contracts/events/generated/preparation.py"
+        ).read_text()
+        typescript = (self.root / "services/engagement/src/contracts/events/generated/loyalty.ts").read_text()
+        self.assertIn("class DrinksReadyIntegrationEvent", python)
+        self.assertIn("type RewardIssuedIntegrationEvent", typescript)
+        event = next(e for e in load(self.root)["events"] if e["name"] == "preparation.drinks-ready")
+        self.assertEqual(event["version"], 1)
+        self.assertIn(
+            "message DrinksReady {",
+            (
+                self.root
+                / "contracts/preparation/messaging/integration_events/v1/preparation_integration_events.proto"
+            ).read_text(),
+        )
 
     def test_generated_outputs_have_clear_paths_and_prune_stale_producers(self):
         before = {p for p in self.root.rglob("*") if p.is_file()}

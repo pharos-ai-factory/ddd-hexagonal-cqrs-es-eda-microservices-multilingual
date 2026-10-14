@@ -33,6 +33,7 @@
                   "oneofs": {
                     "payload": {
                       "oneof": [
+                        "rewardIssued",
                         "rewardEarned"
                       ]
                     }
@@ -89,10 +90,38 @@
                       "id": 11,
                       "protoName": "occurred_at"
                     },
+                    "rewardIssued": {
+                      "type": "RewardIssuedDomainEvent",
+                      "id": 27,
+                      "protoName": "reward_issued"
+                    },
                     "rewardEarned": {
                       "type": "RewardEarned",
                       "id": 26,
                       "protoName": "reward_earned"
+                    }
+                  }
+                },
+                "RewardIssuedDomainEvent": {
+                  "fields": {
+                    "rewardId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "reward_id"
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "customer_id"
+                    },
+                    "benefit": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "id": 4,
+                      "protoName": "expires_at"
                     }
                   }
                 }

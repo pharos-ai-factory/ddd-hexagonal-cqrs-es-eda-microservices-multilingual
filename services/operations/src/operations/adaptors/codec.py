@@ -10,6 +10,7 @@ from operations.foundation.domain import identifier
 from operations.foundation.identity import new_id
 
 from operations.adaptors.generated.event_registry import PAYLOAD_CODECS
+from operations.adaptors.generated.private_event_registry import PRIVATE_CODECS
 from operations.adaptors.event_payload import timestamp
 
 
@@ -34,27 +35,48 @@ def decode(body: bytes) -> tuple[Event, dict[str, object]]:
     if len(body) > 256 * 1024:
         raise ValueError("Event exceeds its wire limit")
     event = Event.FromString(body)
+    if event.visibility == "domain":
+        private = PRIVATE_CODECS.get(event.name)
+        if private is None:
+            raise ValueError("Unknown private event")
+        return private.decode(body)
     validate(event)
     return event, dict(PAYLOAD_CODECS[event.name].decode(event.payload, event.aggregate_id))
 
 
 def encode(
-    owner: str, kind: str, identity: str, version: int, metadata: Metadata, publication: Publication
+    owner: str,
+    kind: str,
+    identity: str,
+    version: int,
+    metadata: Metadata,
+    publication: Publication,
+    *,
+    occurred_at: str | None = None,
 ) -> tuple[Event, bytes]:
-    definition = PAYLOAD_CODECS[publication.name]
+    private = PRIVATE_CODECS.get(publication.name)
+    definition = PAYLOAD_CODECS.get(publication.name)
+    if private is None and definition is None:
+        raise ValueError("Unknown publication")
     event = Event(
         id=new_id(),
         name=publication.name,
         context=owner,
-        visibility="integration",
-        contract_version=definition.version,
+        visibility="domain" if private else "integration",
+        contract_version=definition.version if definition else 1,
         aggregate_kind=kind,
         aggregate_id=identity,
         aggregate_version=version,
         correlation_id=metadata.correlation,
         causation_id=metadata.id,
-        occurred_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        occurred_at=occurred_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     )
+    if private:
+        body = private.encode(event, publication.payload)
+        if len(body) > 256 * 1024:
+            raise ValueError("Event exceeds its wire limit")
+        return event, body
+    assert definition is not None
     event.payload = definition.encode(publication.payload, identity)
     validate(event)
     body = event.SerializeToString(deterministic=True)

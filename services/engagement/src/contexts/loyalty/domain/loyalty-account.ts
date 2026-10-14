@@ -8,9 +8,11 @@ export type AccountState = Readonly<{
   grantsEarned: number;
   lastGrant?: Grant;
 }>;
-export type AccountFact = Readonly<
-  { type: 'RewardEarned'; grant: Grant } | { type: 'StampCredited'; orderId: string }
->;
+/** Records an earned grant within this account's transition. */
+export type RewardEarnedDomainEvent = Readonly<{ type: 'RewardEarned'; grant: Grant }>;
+/** Records one credited collection. */
+export type StampCreditedDomainEvent = Readonly<{ type: 'StampCredited'; orderId: string }>;
+export type AccountFact = RewardEarnedDomainEvent | StampCreditedDomainEvent;
 
 /** Owns collection credits, stamp balance and immutable earned reward grants. */
 export class LoyaltyAccount {

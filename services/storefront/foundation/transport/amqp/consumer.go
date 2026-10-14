@@ -59,7 +59,7 @@ func Consume(ctx context.Context, url string, sub Subscription, decode a.Decoder
 			processing := validation
 			if processing == nil {
 				sum := sha256.Sum256(delivery.Body)
-				metadata := a.Metadata{ID: ids(sub.Binding.Consumer, message.ID), Name: sub.Binding.Consumer, CorrelationID: message.CorrelationID, CausationID: message.ID, Input: message.Payload, Consumer: sub.Binding.Consumer, SourceEventID: message.ID, SourceHash: hex.EncodeToString(sum[:])}
+				metadata := a.Metadata{ID: ids(sub.Binding.Consumer, message.ID), Name: sub.Binding.Consumer, CorrelationID: message.CorrelationID, CausationID: message.ID, Input: message.Payload, Consumer: sub.Binding.Consumer, SourceEventID: message.ID, SourceHash: hex.EncodeToString(sum[:]), SourceKind: message.AggregateKind, SourceVersion: message.AggregateVersion, SourceTime: message.OccurredAt}
 				processing = sub.Handle(ctx, metadata, message)
 			}
 			if processing == nil {

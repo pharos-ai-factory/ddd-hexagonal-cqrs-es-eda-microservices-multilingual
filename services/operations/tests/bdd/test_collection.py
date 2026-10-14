@@ -1,3 +1,14 @@
+from tests.bdd.publication_probe import PublicationProbe, private_delivery
+from operations.contexts.collection.application.event_handlers.publish_pickup_opened import (
+    PickupOpenedDomainEventHandler,
+)
+from operations.contexts.collection.adaptors.messaging.private_events import PICKUP_OPENED_DOMAIN
+from operations.adaptors.generated.event_collection import publish_PickupOpened
+from operations.contexts.collection.application.event_handlers.publish_order_collected import (
+    OrderCollectedDomainEventHandler,
+)
+from operations.contexts.collection.adaptors.messaging.private_events import ORDER_COLLECTED_DOMAIN
+from operations.adaptors.generated.event_collection import publish_OrderCollected
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
 from operations.adaptors.command_execution import CommandExecutor
 from operations.contexts.collection.domain.pickup import Pickup
@@ -15,12 +26,12 @@ from operations.contexts.collection.application.event_handlers.drinks_ready impo
 )
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain.pickup import PickupSnapshot
-from operations.contracts.events.generated.preparation import DrinksReady
+from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.foundation.application import Metadata, Outcome
 from operations.foundation.identity import derived_id
 from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe
 
-type CollectionProbe = CommandProbe[PickupSnapshot, DrinksReady]
+type CollectionProbe = CommandProbe[PickupSnapshot, DrinksReadyIntegrationEvent]
 
 scenarios(str(SPECIFICATIONS / "collection"))
 
@@ -90,9 +101,15 @@ def pickup(probe: CollectionProbe) -> None:
 
 
 @then("one PickupOpened publication contains that code, order and customer")
-def opened_event(probe: CollectionProbe) -> None:
+def opened_event(probe: CollectionProbe, metadata: Metadata) -> None:
     assert len(probe.publications) == 1
-    event = probe.publications[0]
+    private = probe.publications[0]
+    assert private.name == "collection.pickup-opened.domain"
+    outgoing = PublicationProbe(publish_PickupOpened)
+    wire = private_delivery("collection", "pickup", metadata, private)
+    PickupOpenedDomainEventHandler(outgoing).handle(metadata, PICKUP_OPENED_DOMAIN.parse(wire))
+    assert len(outgoing.publications) == 1
+    event = outgoing.publications[0]
     assert event.name == "collection.pickup-opened"
     assert event.payload == {
         "pickupId": ROOT,
@@ -119,8 +136,14 @@ def collected_state(probe: CollectionProbe) -> None:
 
 
 @then("one OrderCollected publication identifies the order and customer")
-def collected_event(probe: CollectionProbe) -> None:
+def collected_event(probe: CollectionProbe, metadata: Metadata) -> None:
     assert len(probe.publications) == 1
-    event = probe.publications[0]
+    private = probe.publications[0]
+    assert private.name == "collection.order-collected.domain"
+    outgoing = PublicationProbe(publish_OrderCollected)
+    wire = private_delivery("collection", "pickup", metadata, private)
+    OrderCollectedDomainEventHandler(outgoing).handle(metadata, ORDER_COLLECTED_DOMAIN.parse(wire))
+    assert len(outgoing.publications) == 1
+    event = outgoing.publications[0]
     assert event.name == "collection.order-collected"
     assert event.payload == {"orderId": ORDER, "customerId": CUSTOMER}

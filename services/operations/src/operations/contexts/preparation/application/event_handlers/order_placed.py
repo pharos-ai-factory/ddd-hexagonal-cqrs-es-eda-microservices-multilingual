@@ -9,7 +9,7 @@ class OrderPlacedIntegrationEventHandler:
     def __init__(self, commands: DurableCommandPort[AcceptOrderCommand]) -> None:
         self.commands = commands
 
-    def handle(self, metadata: Metadata, event: events.OrderPlaced) -> Outcome:
+    def handle(self, metadata: Metadata, event: events.OrderPlacedIntegrationEvent) -> Outcome:
         return self.commands.enqueue(
             metadata,
             AcceptOrderCommand(

@@ -17,9 +17,11 @@ export type RewardState = Readonly<{
   expiresAt: string;
   redeemedFor?: string;
 }>;
+/** Records the private RewardIssued transition. */
+export type RewardIssuedDomainEvent = Readonly<{ type: 'RewardIssued'; reward: RewardState }>;
 /** Owns issuance, expiry and redemption of one earned reward. */
 export class Reward {
-  #events: { type: 'RewardIssued'; reward: RewardState }[] = [];
+  #events: RewardIssuedDomainEvent[] = [];
   #state: RewardState;
   constructor(state: RewardState) {
     try {
@@ -67,7 +69,7 @@ export class Reward {
       throw new Rejection('reward_not_expired', 'Validity has not ended');
     this.#state = { ...this.#state, status: 'expired' };
   }
-  events(): readonly { type: 'RewardIssued'; reward: RewardState }[] {
+  events(): readonly RewardIssuedDomainEvent[] {
     return structuredClone(this.#events);
   }
   snapshot(): RewardState {

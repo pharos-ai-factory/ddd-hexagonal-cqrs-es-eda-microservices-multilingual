@@ -10,8 +10,8 @@ type Line struct {
 	Minor     int64  `json:"minor"`
 }
 
-// OrderPlaced carries published data owned by ordering.
-type OrderPlaced struct {
+// OrderPlacedIntegrationEvent carries published data owned by ordering.
+type OrderPlacedIntegrationEvent struct {
 	OrderID    string `json:"orderId"`
 	CustomerID string `json:"customerId"`
 	EditionID  string `json:"editionId"`

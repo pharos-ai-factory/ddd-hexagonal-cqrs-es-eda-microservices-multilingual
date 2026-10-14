@@ -21,9 +21,14 @@ function validateContent(id: string, recipient: string, subject: string, body: s
     throw new Rejection('invalid_notification', 'Notification content is missing or too large');
   }
 }
+/** Records the private NotificationRequested transition. */
+export type NotificationRequestedDomainEvent = Readonly<{
+  type: 'NotificationRequested';
+  notificationId: string;
+}>;
 /** Owns requested content and the recorded result of idempotent provider delivery. */
 export class Notification {
-  #events: { type: 'NotificationRequested'; notificationId: string }[] = [];
+  #events: NotificationRequestedDomainEvent[] = [];
   #state: NotificationState;
   constructor(state: NotificationState) {
     try {
@@ -52,7 +57,7 @@ export class Notification {
     this.#state = { ...this.#state, status: 'sent', providerReceipt: receipt };
     return true;
   }
-  events(): readonly { type: 'NotificationRequested'; notificationId: string }[] {
+  events(): readonly NotificationRequestedDomainEvent[] {
     return structuredClone(this.#events);
   }
   snapshot(): NotificationState {

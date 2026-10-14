@@ -7,6 +7,9 @@ ROOT = Path(__file__).resolve().parents[1]
 OWNERS = ("menu", "ordering", "preparation", "collection", "loyalty", "communication")
 PRIVATE = {
     "menu": "services/storefront/contexts/menu/adaptors/messaging",
+    "ordering": "services/storefront/contexts/ordering/adaptors/messaging",
+    "preparation": "services/operations/src/operations/contexts/preparation/adaptors/messaging",
+    "collection": "services/operations/src/operations/contexts/collection/adaptors/messaging",
     "loyalty": "services/engagement/src/contexts/loyalty/adaptors/messaging",
     "communication": "services/engagement/src/contexts/communication/adaptors/messaging",
 }
@@ -85,9 +88,9 @@ def catalogue(service: str | None = None, root=ROOT) -> list[dict]:
         selected = owners(service, "events", root)
         published = [item for item in published if item["owner"] in selected]
     private_owners = {
-        "storefront": ("menu",),
+        "storefront": ("menu", "ordering"),
         "engagement": ("loyalty", "communication"),
-        "operations": (),
+        "operations": ("preparation", "collection"),
         "topology": tuple(PRIVATE),
     }
     for owner in private_owners.get(service, ()):
@@ -106,6 +109,17 @@ def catalogue(service: str | None = None, root=ROOT) -> list[dict]:
                 raise ValueError("Subscription names an unknown event: " + sub["event"])
             if event["visibility"] == "domain" and not sub["consumer"].startswith(event["owner"] + "."):
                 raise ValueError("Private subscription crossed its owner")
+            if "publication" in sub:
+                outgoing = definitions.get(sub["publication"])
+                if (
+                    "command" in sub
+                    or event["visibility"] != "domain"
+                    or outgoing is None
+                    or outgoing["visibility"] != "integration"
+                    or outgoing["owner"] != event["owner"]
+                    or outgoing["kind"] != event["kind"]
+                ):
+                    raise ValueError("Invalid private-to-integration publication subscription")
             result.append({**event, "consumer": sub["consumer"]})
         return sorted(result, key=lambda item: (item["name"], item["consumer"]))
     return sorted(published, key=lambda item: item["name"])
@@ -118,7 +132,7 @@ def command_subscriptions(root=ROOT) -> list[dict]:
 
 if __name__ == "__main__":
     groups = {}
-    for kind in (*ENTRYPOINTS, "menu_private", "loyalty_private", "communication_private"):
+    for kind in (*ENTRYPOINTS, *(owner + "_private" for owner in PRIVATE)):
         groups[kind] = {
             "entrypoint": ENTRYPOINTS.get(kind, kind + ".proto"),
             "sources": {name: path.relative_to(ROOT).as_posix() for name, path in sources(kind).items()},

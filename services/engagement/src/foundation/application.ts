@@ -22,6 +22,9 @@ export type Metadata = {
   consumer?: string;
   sourceId?: string;
   sourceHash?: string;
+  sourceKind?: string;
+  sourceVersion?: number;
+  sourceTime?: string;
 };
 export type Outcome = {
   aggregateId: string;
@@ -44,4 +47,9 @@ export interface DeliveryPort {
 /** Durably accepts an owner-local command; completion belongs to its command consumer. */
 export interface DurableCommandPort<C> {
   enqueue(metadata: Metadata, command: C): Promise<Outcome>;
+}
+
+/** Atomically records one subscription receipt and the exact outgoing integration event. */
+export interface DurablePublicationPort<P> {
+  publish(metadata: Metadata, payload: P): Promise<Outcome>;
 }

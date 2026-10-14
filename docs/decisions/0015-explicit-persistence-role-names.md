@@ -2,6 +2,10 @@
 
 Status: accepted, 9 October 2026. Refines the names introduced by decision 0014.
 
+Refined by [decision 0019](0019-durable-domain-event-publication.md): aggregate
+saves stage private facts; independent domain-event subscribers publish integration
+events through an atomic receipt/outbox transaction.
+
 ## Decision
 
 Use `<Resource>ReadRepository` for application query persistence ports in all

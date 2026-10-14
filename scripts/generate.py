@@ -36,11 +36,12 @@ python_out = ROOT / "services/operations/src/operations/adaptors/generated"
 python_out.mkdir(parents=True, exist_ok=True)
 generate_selected(plugin)
 generate_events()
-for contract in ("menu_private",):
+for contract in ("menu_private", "ordering_private"):
+    owner = contract.removesuffix("_private")
     definitions = contract_sources(contract)
     if len({Path(name).stem for name in definitions}) != len(definitions):
         raise ValueError(f"{contract}: Protobuf filenames must be unique for the shared Go package")
-    go_relative = PRIVATE["menu"] + "/generated"
+    go_relative = PRIVATE[owner] + "/generated"
     go_out = ROOT / go_relative
     go_out.mkdir(parents=True, exist_ok=True)
     for path in go_out.rglob("*.pb.go"):
@@ -77,29 +78,30 @@ for service in ("storefront", "api", "operations"):
 # Internal commands are implementation resources owned by their receiving context.
 for owner in ("preparation", "collection"):
     source = ROOT / f"services/operations/src/operations/contexts/{owner}/adaptors/messaging"
-    with tempfile.TemporaryDirectory() as directory:
-        stage = Path(directory)
-        logical = f"cafe/internal/{owner}/internal_commands.proto"
-        target = stage / logical
-        target.parent.mkdir(parents=True)
-        shutil.copyfile(source / "internal_commands.proto", target)
-        subprocess.run(
-            [
-                "uv",
-                "run",
-                "--no-project",
-                "--with",
-                "grpcio-tools==1.84.0",
-                "python",
-                "-m",
-                "grpc_tools.protoc",
-                f"-I{stage}",
-                f"--python_out={python_out}",
-                f"--pyi_out={python_out}",
-                logical,
-            ],
-            check=True,
-        )
+    for filename in ("internal_commands.proto", "private_messages.proto"):
+        with tempfile.TemporaryDirectory() as directory:
+            stage = Path(directory)
+            logical = f"cafe/internal/{owner}/{filename}"
+            target = stage / logical
+            target.parent.mkdir(parents=True)
+            shutil.copyfile(source / filename, target)
+            subprocess.run(
+                [
+                    "uv",
+                    "run",
+                    "--no-project",
+                    "--with",
+                    "grpcio-tools==1.84.0",
+                    "python",
+                    "-m",
+                    "grpc_tools.protoc",
+                    f"-I{stage}",
+                    f"--python_out={python_out}",
+                    f"--pyi_out={python_out}",
+                    logical,
+                ],
+                check=True,
+            )
 qualify_python_imports(python_out)
 (python_out / "catalogue.json").write_text(json.dumps(catalogue("operations"), indent=2) + "\n")
 engagement_out = ROOT / "services/engagement/src/adaptors/generated"

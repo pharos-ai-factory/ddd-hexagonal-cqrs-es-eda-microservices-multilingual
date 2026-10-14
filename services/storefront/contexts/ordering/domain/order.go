@@ -62,7 +62,7 @@ type OrderState struct {
 type Order struct {
 	state OrderState
 	lines []OrderLine
-	facts []core.Fact
+	facts []core.DomainEvent
 }
 
 func New(id, customer, edition, currency string) (*Order, error) {
@@ -119,7 +119,7 @@ func (o *Order) AddLine(id string, selection Selection, quantity int) error {
 		return tooManyDrinks()
 	}
 	o.lines = append(o.lines, line)
-	o.facts = append(o.facts, core.Fact{Name: "OrderLineAdded", Data: line.Snapshot()})
+	o.facts = append(o.facts, OrderLineAddedDomainEvent{State: line.Snapshot()})
 	return nil
 }
 func (o *Order) ChangeQuantity(id string, quantity int) error {
@@ -140,7 +140,7 @@ func (o *Order) ChangeQuantity(id string, quantity int) error {
 			}
 			line.quantity = q
 			o.lines[i] = line
-			o.facts = append(o.facts, core.Fact{Name: "OrderLineQuantityChanged", Data: line.Snapshot()})
+			o.facts = append(o.facts, OrderLineQuantityChangedDomainEvent{State: line.Snapshot()})
 			return nil
 		}
 	}
@@ -154,7 +154,7 @@ func (o *Order) Place() error {
 		return core.Reject("empty_order", "An order must contain at least one drink")
 	}
 	o.state.Status = "placed"
-	o.facts = append(o.facts, core.Fact{Name: "OrderPlaced", Data: o.Snapshot()})
+	o.facts = append(o.facts, OrderPlacedDomainEvent{State: o.Snapshot()})
 	return nil
 }
 func (o *Order) total() int {
@@ -172,4 +172,13 @@ func (o *Order) Snapshot() OrderState {
 	}
 	return s
 }
-func (o *Order) Events() []core.Fact { return append([]core.Fact(nil), o.facts...) }
+func (o *Order) Events() []core.DomainEvent {
+	facts := append([]core.DomainEvent(nil), o.facts...)
+	for i, fact := range facts {
+		if event, ok := fact.(OrderPlacedDomainEvent); ok {
+			event.State.Lines = append(event.State.Lines[:0:0], event.State.Lines...)
+			facts[i] = event
+		}
+	}
+	return facts
+}

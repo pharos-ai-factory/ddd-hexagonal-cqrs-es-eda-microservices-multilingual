@@ -13,7 +13,7 @@ import (
 func TestOwnerPrivateDeliveryPreservesHistoricalBytes(t *testing.T) {
 	message := fixture()
 	message.Name, message.Context, message.AggregateKind, message.Visibility = "menu.drink-published", "menu", "drink", a.Private
-	message.Payload = menu.DrinkPublished{DrinkID: message.AggregateID, Name: "Coffee", Revision: 1}
+	message.Payload = menu.DrinkPublishedDomainEvent{DrinkID: message.AggregateID, Name: "Coffee", Revision: 1}
 	encoded, err := Encode(message)
 	if err != nil {
 		t.Fatal(err)

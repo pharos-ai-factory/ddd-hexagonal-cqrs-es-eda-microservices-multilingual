@@ -20,7 +20,7 @@ type AddLineCommand struct {
 // AddLineCommandHandler applies AddLine through one aggregate command transaction.
 type AddLineCommandHandler struct {
 	Repository ports.OrderWriteRepository
-	Menus      a.ProjectionPort[model.MenuPublished]
+	Menus      a.ProjectionPort[model.MenuPublishedIntegrationEvent]
 }
 
 func (h AddLineCommandHandler) Execute(ctx context.Context, m a.CommandContext, c AddLineCommand) (a.CommandResult, error) {

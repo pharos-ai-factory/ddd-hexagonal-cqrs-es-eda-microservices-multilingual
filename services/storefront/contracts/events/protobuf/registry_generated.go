@@ -11,7 +11,7 @@ import (
 var payloadCodecs = map[string]payloadCodec{
 	"menu.edition-published": {owner: "menu", kind: "edition", version: 1,
 		encode: func(value any) (proto.Message, error) {
-			payload, ok := value.(model.MenuPublished)
+			payload, ok := value.(model.MenuPublishedIntegrationEvent)
 			if !ok {
 				return nil, fmt.Errorf("event name and typed payload disagree")
 			}
@@ -25,7 +25,7 @@ var payloadCodecs = map[string]payloadCodec{
 	},
 	"ordering.order-placed": {owner: "ordering", kind: "order", version: 1,
 		encode: func(value any) (proto.Message, error) {
-			payload, ok := value.(model.OrderPlaced)
+			payload, ok := value.(model.OrderPlacedIntegrationEvent)
 			if !ok {
 				return nil, fmt.Errorf("event name and typed payload disagree")
 			}

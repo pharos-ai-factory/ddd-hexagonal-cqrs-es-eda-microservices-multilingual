@@ -20,8 +20,8 @@ from operations.adaptors.generated.cafe.v1.contexts.ordering.ordering_integratio
 from operations.adaptors.delivery import EventSubscription, binary, broker_connection, consume
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.foundation.identity import derived_id, new_id
-from operations.contracts.events.generated.preparation import DrinksReady
-from operations.contracts.events.generated.ordering import OrderPlaced
+from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
+from operations.contracts.events.generated.ordering import OrderPlacedIntegrationEvent
 from operations.foundation.application import Metadata, Outcome
 from operations.adaptors.postgres import fingerprint
 
@@ -81,11 +81,11 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
             ),
         )
 
-        def handle(metadata: Metadata, payload: DrinksReady) -> Outcome:
+        def handle(metadata: Metadata, payload: DrinksReadyIntegrationEvent) -> Outcome:
             handled.set()
             return {"aggregateId": metadata.target, "version": 1, "status": "ready"}
 
-        subscription = EventSubscription[DrinksReady](
+        subscription = EventSubscription[DrinksReadyIntegrationEvent](
             "collection", consumer, valid.name, DRINKS_READY.parse, lambda event: event["orderId"], handle
         )
         worker = Thread(
@@ -119,7 +119,7 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
 def test_typed_order_delivery_preserves_original_receipt_material() -> None:
     consumer = "preparation.test-" + new_id()
     queue, stop = "ref." + consumer, Event()
-    received: Future[tuple[Metadata, OrderPlaced]] = Future()
+    received: Future[tuple[Metadata, OrderPlacedIntegrationEvent]] = Future()
     event = WireEvent(
         id=new_id(),
         name="ordering.order-placed",
@@ -152,11 +152,11 @@ def test_typed_order_delivery_preserves_original_receipt_material() -> None:
         "lines": [{"id": line_id, "offerCode": "C1", "name": "Coffee", "quantity": 2, "minor": 350}],
     }
 
-    def handle(metadata: Metadata, payload: OrderPlaced) -> Outcome:
+    def handle(metadata: Metadata, payload: OrderPlacedIntegrationEvent) -> Outcome:
         received.set_result((metadata, payload))
         return {"aggregateId": metadata.target, "version": 1, "status": "queued"}
 
-    subscription = EventSubscription[OrderPlaced](
+    subscription = EventSubscription[OrderPlacedIntegrationEvent](
         "preparation",
         consumer,
         event.name,

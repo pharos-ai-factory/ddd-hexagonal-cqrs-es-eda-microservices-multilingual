@@ -1,0 +1,8 @@
+[
+  {
+    "name": "ordering.order-placed.domain",
+    "owner": "ordering",
+    "visibility": "domain",
+    "kind": "order"
+  }
+]

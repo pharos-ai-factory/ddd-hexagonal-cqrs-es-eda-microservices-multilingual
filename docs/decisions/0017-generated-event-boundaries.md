@@ -2,6 +2,10 @@
 
 Accepted: 2026-10-14.
 
+Refined by [decision 0019](0019-durable-domain-event-publication.md): aggregate
+saves stage private facts; independent domain-event subscribers publish integration
+events through an atomic receipt/outbox transaction.
+
 ## Decision
 
 Each published event message declares its name, producing context, aggregate kind

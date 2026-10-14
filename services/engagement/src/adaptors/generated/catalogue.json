@@ -34,5 +34,11 @@
     "version": 1,
     "visibility": "integration",
     "type": "cafe.v1.RewardIssued"
+  },
+  {
+    "name": "loyalty.reward-issued.domain",
+    "owner": "loyalty",
+    "visibility": "domain",
+    "kind": "reward"
   }
 ]

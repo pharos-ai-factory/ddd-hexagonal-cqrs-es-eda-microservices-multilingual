@@ -34,6 +34,9 @@ type Metadata struct {
 	Input         any
 	Consumer      string
 	SourceEventID string
+	SourceKind    string
+	SourceVersion uint64
+	SourceTime    time.Time
 	SourceHash    string
 }
 

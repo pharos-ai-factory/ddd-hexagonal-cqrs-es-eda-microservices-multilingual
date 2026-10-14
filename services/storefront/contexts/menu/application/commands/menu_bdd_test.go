@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	menupub "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/publications"
+	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/eventhandlers"
 	menuports "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	"testing"
@@ -20,7 +21,7 @@ import (
 type menuWorld struct {
 	drinks    s.CommandProbe[d.DrinkState]
 	editions  s.CommandProbe[d.EditionState]
-	directory s.ProjectionProbe[app.DrinkPublished]
+	directory s.ProjectionProbe[app.DrinkPublishedDomainEvent]
 }
 
 func (w *menuWorld) publishDrink() error {
@@ -34,7 +35,7 @@ func (w *menuWorld) publishDrink() error {
 		return err
 	}
 	state := w.drinks.Loaded.State
-	w.directory.Values[fmt.Sprintf("%s/%d", s.Drink, state.Revision)] = app.DrinkPublished{DrinkID: s.Drink, Name: state.Name, Revision: state.Revision}
+	w.directory.Values[fmt.Sprintf("%s/%d", s.Drink, state.Revision)] = app.DrinkPublishedDomainEvent{DrinkID: s.Drink, Name: state.Name, Revision: state.Revision}
 	return nil
 }
 func (w *menuWorld) add(code string, minor int64) error {
@@ -69,7 +70,7 @@ func TestMenuFeatures(t *testing.T) {
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
 			w := &menuWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
-				*w = menuWorld{directory: s.ProjectionProbe[app.DrinkPublished]{Values: map[string]app.DrinkPublished{}}}
+				*w = menuWorld{directory: s.ProjectionProbe[app.DrinkPublishedDomainEvent]{Values: map[string]app.DrinkPublishedDomainEvent{}}}
 				return ctx, nil
 			})
 			sc.Step(`^a published drink named "([^"]*)"$`, func(name string) error {
@@ -116,10 +117,19 @@ func TestMenuFeatures(t *testing.T) {
 					return err
 				}
 				p := w.editions.Last.Publications
-				if len(p) != 1 || p[0].Name != "menu.edition-published" || p[0].Visibility != a.Public {
+				if len(p) != 1 || p[0].Name != "menu.edition-published.domain" || p[0].Visibility != a.Private {
 					return fmt.Errorf("wrong publications: %+v", p)
 				}
-				event, ok := p[0].Payload.(model.MenuPublished)
+				private, ok := p[0].Payload.(d.MenuEditionPublishedDomainEvent)
+				if !ok {
+					return fmt.Errorf("wrong private payload: %T", p[0].Payload)
+				}
+				outgoing := &s.PublicationProbe[model.MenuPublishedIntegrationEvent]{}
+				handler := reactions.MenuEditionPublishedDomainEventHandler{Publications: outgoing}
+				if _, err := handler.Handle(context.Background(), a.Metadata{AggregateID: private.State.ID}, private); err != nil {
+					return err
+				}
+				event := outgoing.Payload
 				if !ok || event.EditionID != s.Edition || event.Currency != currency || len(event.Offers) != 1 {
 					return fmt.Errorf("wrong menu: %+v", event)
 				}
@@ -166,7 +176,7 @@ func TestMenuFeatures(t *testing.T) {
 				if len(p) != 1 || p[0].Name != "menu.drink-published" || p[0].Visibility != a.Private {
 					return fmt.Errorf("wrong private mapping: %+v", p)
 				}
-				event, ok := p[0].Payload.(app.DrinkPublished)
+				event, ok := p[0].Payload.(app.DrinkPublishedDomainEvent)
 				if !ok || event.DrinkID != s.Drink || event.Revision != 2 || event.Name != name {
 					return fmt.Errorf("wrong drink revision: %+v", event)
 				}

@@ -28,7 +28,8 @@ class SubscriptionDefinition:
 
     consumer: str
     event: str
-    command: str
+    command: str = ""
+    publication: str = ""
 
 
 def command_subscription[E, C: Mapping[str, object]](
@@ -41,7 +42,12 @@ def command_subscription[E, C: Mapping[str, object]](
 ) -> tuple[SubscriptionWorker, SubscriptionWorker]:
     definition = next((item for item in definitions if item.consumer == codec.consumer), None)
     command_name = codec.envelope.DESCRIPTOR.fields_by_name[codec.command].json_name
-    if definition is None or definition.command != command_name or definition.event != incoming_event.name:
+    if (
+        definition is None
+        or definition.publication
+        or definition.command != command_name
+        or definition.event != incoming_event.name
+    ):
         raise ValueError("Subscription manifest disagrees with command binding")
     event = definition.event
 
@@ -70,13 +76,43 @@ def complete_subscriptions(
     if len(expected) != len(definitions):
         raise ValueError("Duplicate subscription declaration")
     for definition in definitions:
+        if bool(definition.command) == bool(definition.publication):
+            raise ValueError("Subscription requires exactly one reaction mode")
         actual = [worker for worker in workers if worker.consumer == definition.consumer]
         if (
-            len(actual) != 2
-            or sum(worker.command for worker in actual) != 1
+            len(actual) != (2 if definition.command else 1)
+            or sum(worker.command for worker in actual) != (1 if definition.command else 0)
             or any(worker.owner != owner or worker.event != definition.event for worker in actual)
         ):
             raise ValueError("Incomplete subscription: " + definition.consumer)
     if any(worker.consumer not in expected for worker in workers):
         raise ValueError("Undeclared subscription")
     return workers
+
+
+def publication_subscription[E](
+    owner: str,
+    consumer: str,
+    definitions: Sequence[SubscriptionDefinition],
+    incoming_event: IncomingEvent[E],
+    publication: str,
+    on_event: Callable[[Metadata, E], Outcome],
+) -> tuple[SubscriptionWorker]:
+    """Bind one private subscription whose handler atomically stages an integration event."""
+    definition = next((item for item in definitions if item.consumer == consumer), None)
+    if (
+        definition is None
+        or definition.command
+        or definition.event != incoming_event.name
+        or definition.publication != publication
+        or not consumer.startswith(owner + ".")
+    ):
+        raise ValueError("Subscription manifest disagrees with publication binding")
+    incoming = EventSubscription(
+        owner, consumer, incoming_event.name, incoming_event.parse, lambda _: "", on_event, source_target=True
+    )
+    return (
+        SubscriptionWorker(
+            owner, consumer, lambda url, stop: consume(url, incoming, stop), incoming_event.name, False
+        ),
+    )

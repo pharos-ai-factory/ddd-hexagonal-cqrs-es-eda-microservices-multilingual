@@ -7,12 +7,13 @@ import (
 )
 
 func TestSubscriptionGraphIsCompleteAndMatchesTheConsumerManifest(t *testing.T) {
-	runtime := &StorefrontRuntime{Databases: map[string]*pg.ContextDatabase{"ordering": {}}}
+	runtime := &StorefrontRuntime{Databases: map[string]*pg.ContextDatabase{"ordering": {}, "menu": {}}}
 	if runtime.validateSubscriptions() == nil {
 		t.Fatal("missing subscription accepted")
 	}
-	binding := expectedSubscriptions["ordering.menu-directory"]
-	runtime.subscriptions = []broker.Subscription{{Binding: binding}}
+	for _, consumer := range []string{"ordering.menu-directory", "ordering.publish-order-placed", "menu.drink-directory", "menu.publish-edition-published"} {
+		runtime.subscriptions = append(runtime.subscriptions, broker.Subscription{Binding: expectedSubscriptions[consumer]})
+	}
 	if err := runtime.validateSubscriptions(); err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +21,7 @@ func TestSubscriptionGraphIsCompleteAndMatchesTheConsumerManifest(t *testing.T) 
 	if runtime.validateSubscriptions() == nil {
 		t.Fatal("duplicate subscription accepted")
 	}
-	runtime.subscriptions = runtime.subscriptions[:1]
+	runtime.subscriptions = runtime.subscriptions[:4]
 	runtime.subscriptions[0].Binding.Event = "ordering.order-placed"
 	if runtime.validateSubscriptions() == nil {
 		t.Fatal("wrong event accepted")

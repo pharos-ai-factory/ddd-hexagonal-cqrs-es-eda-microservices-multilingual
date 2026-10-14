@@ -11,9 +11,9 @@ import (
 func Drink(aggregate *d.Drink) []a.Publication {
 	var publications []a.Publication
 	for _, fact := range aggregate.Events() {
-		if fact.Name == "DrinkPublished" {
-			s := fact.Data.(d.DrinkState)
-			publications = append(publications, a.Publication{Name: "menu.drink-published", Visibility: a.Private, Payload: app.DrinkPublished{DrinkID: s.ID, Name: s.Name, Revision: s.Revision}})
+		if event, ok := fact.(d.DrinkPublishedDomainEvent); ok {
+			s := event.State
+			publications = append(publications, a.Publication{Name: "menu.drink-published", Visibility: a.Private, Payload: app.DrinkPublishedDomainEvent{DrinkID: s.ID, Name: s.Name, Revision: s.Revision}})
 		}
 	}
 	return publications

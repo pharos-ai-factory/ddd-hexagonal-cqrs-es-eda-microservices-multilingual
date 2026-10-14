@@ -13,8 +13,8 @@ class Line(TypedDict):
     minor: int
 
 
-class OrderPlaced(TypedDict):
-    """Published OrderPlaced data owned by ordering."""
+class OrderPlacedIntegrationEvent(TypedDict):
+    """Published OrderPlacedIntegrationEvent data owned by ordering."""
     orderId: str
     customerId: str
     editionId: str

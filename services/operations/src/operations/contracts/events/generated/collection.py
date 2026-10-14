@@ -4,15 +4,15 @@ from typing import TypedDict
 
 
 
-class PickupOpened(TypedDict):
-    """Published PickupOpened data owned by collection."""
+class PickupOpenedIntegrationEvent(TypedDict):
+    """Published PickupOpenedIntegrationEvent data owned by collection."""
     pickupId: str
     orderId: str
     customerId: str
     collectionCode: str
 
 
-class OrderCollected(TypedDict):
-    """Published OrderCollected data owned by collection."""
+class OrderCollectedIntegrationEvent(TypedDict):
+    """Published OrderCollectedIntegrationEvent data owned by collection."""
     orderId: str
     customerId: str

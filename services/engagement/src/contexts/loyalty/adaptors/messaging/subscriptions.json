@@ -8,5 +8,10 @@
     "consumer": "loyalty.issue-reward",
     "event": "loyalty.reward-earned",
     "command": "issueReward"
+  },
+  {
+    "consumer": "loyalty.publish-reward-issued",
+    "event": "loyalty.reward-issued.domain",
+    "publication": "loyalty.reward-issued"
   }
 ]

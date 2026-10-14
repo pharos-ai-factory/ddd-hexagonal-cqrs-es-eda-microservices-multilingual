@@ -28,7 +28,7 @@ export function decode(body: Uint8Array): WireEvent {
   if (body.length > 256 * 1024) throw new Error('Event exceeds wire limit');
   const value = eventType.toObject(eventType.decode(body), { longs: Number }) as Record<string, unknown>;
   if (value.visibility === 'domain') {
-    const codec = privateCodecs[String(value.context)];
+    const codec = privateCodecs[String(value.name)];
     if (!codec) throw new Error('Foreign private message owner');
     return codec.decode(body);
   }
@@ -47,6 +47,7 @@ export function encode(
   version: number,
   m: Metadata,
   p: Publication,
+  occurredAt?: string,
 ) {
   const definition = catalogue.find((item) => item.name === p.name);
   if (!definition) throw new Error('Unregistered publication');
@@ -61,11 +62,11 @@ export function encode(
     aggregateVersion: version,
     correlationId: m.correlation,
     causationId: m.id,
-    occurredAt: new Date().toISOString(),
+    occurredAt: occurredAt ?? new Date().toISOString(),
     payload: p.payload,
   };
   if (event.visibility === 'domain') {
-    const codec = privateCodecs[owner];
+    const codec = privateCodecs[p.name];
     if (!codec) throw new Error('Foreign private message owner');
     return { event, body: Buffer.from(codec.encode(event)) };
   }

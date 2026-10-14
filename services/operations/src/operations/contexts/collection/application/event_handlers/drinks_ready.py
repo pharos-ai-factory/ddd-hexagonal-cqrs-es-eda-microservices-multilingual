@@ -9,7 +9,7 @@ class DrinksReadyIntegrationEventHandler:
     def __init__(self, commands: DurableCommandPort[OpenPickupCommand]) -> None:
         self.commands = commands
 
-    def handle(self, metadata: Metadata, event: events.DrinksReady) -> Outcome:
+    def handle(self, metadata: Metadata, event: events.DrinksReadyIntegrationEvent) -> Outcome:
         return self.commands.enqueue(
             metadata, OpenPickupCommand(orderId=event["orderId"], customerId=event["customerId"])
         )

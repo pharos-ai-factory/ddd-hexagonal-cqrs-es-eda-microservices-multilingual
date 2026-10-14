@@ -1,0 +1,8 @@
+[
+  {
+    "name": "preparation.drinks-ready.domain",
+    "owner": "preparation",
+    "visibility": "domain",
+    "kind": "ticket"
+  }
+]

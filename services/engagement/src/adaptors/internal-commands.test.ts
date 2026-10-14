@@ -91,10 +91,10 @@ void test('every private command retains its historical wire fixture and subscri
           new URL(`../contexts/${owner}/adaptors/messaging/subscriptions.json`, import.meta.url),
           'utf8',
         ),
-      ) as { consumer: string; command: string }[];
+      ) as { consumer: string; command?: string }[];
       assert.deepEqual(
         codecs.map((c) => ({ consumer: c.consumer, command: c.command })),
-        declared.map(({ consumer, command }) => ({ consumer, command })),
+        declared.filter((entry) => entry.command).map(({ consumer, command }) => ({ consumer, command })),
       );
     }
   } finally {

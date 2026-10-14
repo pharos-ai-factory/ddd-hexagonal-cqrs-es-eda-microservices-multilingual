@@ -35,7 +35,8 @@ responsibility review and a corresponding checker change.
 
 The context-first contract source inventory in `scripts/contract_sources.py`
 also derives exact compiler-owned Go/Python context payload and request/reply
-binding paths. Menu's private Go binding and Loyalty/Communication's private
+binding paths. Menu/Ordering private Go bindings, Preparation/Collection private
+Python bindings and Loyalty/Communication private
 TypeScript descriptors are generated in their owning adaptors. Deployment
 topology metadata is generated from published and owner-local queue definitions.
 These derived files have the same generator-owned classification; handwritten
@@ -54,3 +55,7 @@ wire interfaces are also explicitly classified. They are reproducible from the
 published specifications and explicit API ACL map. Request bindings are scoped
 per consuming service; Go dispatch interfaces and factories over native context
 envelopes are generated and retain the same classification.
+
+Decision 0019 adds owner-private compiler outputs and the generated Python private
+event registry to the exact classification. All new handwritten files remain below
+450 lines.

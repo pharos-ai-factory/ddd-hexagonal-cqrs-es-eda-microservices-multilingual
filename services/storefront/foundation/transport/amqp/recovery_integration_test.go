@@ -59,10 +59,10 @@ func ownedFixture(t *testing.T, owner string) (context.Context, string, transpor
 		}
 	})
 	account := store.NewID()
-	message := a.Message{ID: store.NewID(), Name: binding.Event, Context: "menu", Visibility: a.Private, ContractVersion: 1, AggregateKind: "drink", AggregateID: account, AggregateVersion: 3, CorrelationID: store.NewID(), CausationID: store.NewID(), OccurredAt: time.Now().UTC(), Payload: menu.DrinkPublished{DrinkID: account, Name: "Coffee", Revision: 1}}
+	message := a.Message{ID: store.NewID(), Name: binding.Event, Context: "menu", Visibility: a.Private, ContractVersion: 1, AggregateKind: "drink", AggregateID: account, AggregateVersion: 3, CorrelationID: store.NewID(), CausationID: store.NewID(), OccurredAt: time.Now().UTC(), Payload: menu.DrinkPublishedDomainEvent{DrinkID: account, Name: "Coffee", Revision: 1}}
 	if owner == "ordering" {
 		message.Context, message.Visibility, message.AggregateKind = owner, a.Public, "order"
-		message.Payload = model.OrderPlaced{OrderID: account, CustomerID: store.NewID(), EditionID: store.NewID(), Currency: "GBP",
+		message.Payload = model.OrderPlacedIntegrationEvent{OrderID: account, CustomerID: store.NewID(), EditionID: store.NewID(), Currency: "GBP",
 			Lines: []model.Line{{ID: store.NewID(), OfferCode: "COFFEE", Name: "Coffee", Quantity: 1, Minor: 300}}}
 	}
 	body, err := codec.Encode(message)

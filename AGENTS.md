@@ -7,7 +7,8 @@ Use British English and concise, direct prose. Read [ARCHITECTURE.md](ARCHITECTU
 The [decision index](docs/decisions/README.md) explains which accepted decisions
 refine earlier rules. Decisions 0010–0015 define DI, durable command reactions,
 enforcement, the source layout and persistence role names. Decision 0017 defines
-generated event boundaries.
+generated event boundaries. Decision 0019 requires private domain delivery before
+integration publication.
 
 ## Start with ownership
 
@@ -37,7 +38,12 @@ generated event boundaries.
 - Delivered domain events and integration events use the same transactional
   outbox, RabbitMQ publisher confirms, manual acknowledgements, receipts,
   bounded retries, dead-letter and replay mechanisms.
-- Commit one aggregate, receipts, outcome and outgoing event/realtime intent
+- Aggregates queue plain `*DomainEvent` facts; saves stage only private events.
+  Publication `*DomainEventHandler`s map delivered facts to generated
+  `*IntegrationEvent` DTOs through `DurablePublicationPort`. Commit the subscription
+  receipt, integration bytes and dispatch together, then ACK that queue delivery.
+  Keep original source revision/time; causation identifies the private event.
+- Commit one aggregate, receipts, outcome and private event/realtime intent
   atomically. API commands also persist exact reply bytes. ACK after commit.
 - Query handlers use named application read repository ports and application-owned read
   models. Context persistence adaptors validate stored authority and map views.

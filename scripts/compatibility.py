@@ -15,7 +15,7 @@ def proto_snapshot(root):
     import sys
 
     sys.path.insert(0, str(ROOT / "scripts"))
-    from contract_sources import sources
+    from contract_sources import sources, PRIVATE
     from google.protobuf import descriptor_pb2
     import grpc_tools
 
@@ -26,9 +26,11 @@ def proto_snapshot(root):
             "events",
             "requests",
             "realtime",
-            "menu_private",
-            "loyalty_private",
-            "communication_private",
+            *(
+                owner + "_private"
+                for owner, directory in PRIVATE.items()
+                if (root / directory / "private_messages.proto").exists()
+            ),
         )
     }
     for path in root.glob("services/**/internal_commands.proto"):
@@ -117,7 +119,8 @@ def snapshot(root):
         for name, path in http_contracts.DOCUMENTS.items()
     }
     fixtures = {
-        p.relative_to(root).as_posix(): p.read_text() for p in root.glob("services/**/fixtures/*.command.hex")
+        p.relative_to(root).as_posix(): p.read_text()
+        for p in root.glob("services/**/adaptors/messaging/fixtures/*.hex")
     }
     return {"protobuf": proto_snapshot(root), "http": http, "fixtures": fixtures}
 
@@ -132,7 +135,9 @@ def checkout(ref, target):
     ).splitlines()
     for name in names:
         if not (
-            name.endswith((".proto", ".command.hex"))
+            name.endswith(".proto")
+            or "/adaptors/messaging/fixtures/" in name
+            and name.endswith(".hex")
             or name.startswith("contracts/")
             and name.endswith(".json")
         ):
@@ -161,7 +166,7 @@ def main():
             errors.append(name + ": historical queued-command fixture changed or removed")
     if errors:
         raise SystemExit("Contract incompatibility against " + args.against + ":\n" + "\n".join(errors))
-    print("Published interfaces and stored command fixtures are compatible with " + args.against)
+    print("Published interfaces and stored private fixtures are compatible with " + args.against)
 
 
 if __name__ == "__main__":

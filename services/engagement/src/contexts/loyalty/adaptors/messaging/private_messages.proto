@@ -22,6 +22,14 @@ message PrivateEvent {
   string causation_id = 10;
   string occurred_at = 11;
   oneof payload {
+    RewardIssuedDomainEvent reward_issued = 27;
     RewardEarned reward_earned = 26;
   }
+}
+
+message RewardIssuedDomainEvent {
+  string reward_id = 1;
+  string customer_id = 2;
+  string benefit = 3;
+  string expires_at = 4;
 }

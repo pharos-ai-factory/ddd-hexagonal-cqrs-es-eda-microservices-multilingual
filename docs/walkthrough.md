@@ -71,9 +71,17 @@ An older response cannot replace a newer realtime projection.
 
 ## 4. Follow the event across the process boundary
 
-The Order outbox contains one immutable `ordering.order-placed` publication.
-The relay claims its mutable dispatch row, publishes the original bytes with
-mandatory routing and waits for broker confirmation.
+`Order.Place` queues an `OrderPlacedDomainEvent`. Saving commits the root and an
+immutable `ordering.order-placed.domain` outbox entry. The private relay publishes
+those bytes with mandatory routing and waits for broker confirmation.
+
+The `ordering.publish-order-placed` subscription invokes
+[OrderPlacedDomainEventHandler](../services/storefront/contexts/ordering/application/eventhandlers/publish_order_placed.go).
+It maps the fact to `OrderPlacedIntegrationEvent`; the publication port commits
+that subscription's receipt, the `ordering.order-placed` outbox bytes and dispatch
+together. The consumer then ACKs its private queue delivery. A relay subsequently
+publishes the integration event. Other private subscribers have independent queues
+and receipts.
 
 Python Preparation consumes the event under its own credentials. Its application
 entry point is `services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py`. Its integration-event handler maps the fact into an AcceptOrder command and
@@ -82,7 +90,9 @@ event. The command relay publishes those bytes to its dedicated RabbitMQ queue.
 The command consumer creates one PreparationTicket, commits its outcome/receipts,
 and then acknowledges the command.
 
-Preparation completion publishes DrinksReady. Collection durably requests
+`PreparationTicket.complete` queues `DrinksReadyDomainEvent`. The ticket commit
+stages `preparation.drinks-ready.domain`; its publication subscriber maps it to
+`DrinksReadyIntegrationEvent` and stages `preparation.drinks-ready`. Collection durably requests
 OpenPickup, whose command handler creates a Pickup. The operator supplies its
 code to collect the order. OrderCollected reaches Loyalty, which durably requests
 CreditCollection. Each arrow is a separate transaction and can be temporarily pending.

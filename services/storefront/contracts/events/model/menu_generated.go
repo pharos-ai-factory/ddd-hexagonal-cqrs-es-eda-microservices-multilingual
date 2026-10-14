@@ -11,8 +11,8 @@ type Offer struct {
 	Currency      string `json:"currency"`
 }
 
-// MenuPublished carries published data owned by menu.
-type MenuPublished struct {
+// MenuPublishedIntegrationEvent carries published data owned by menu.
+type MenuPublishedIntegrationEvent struct {
 	EditionID string  `json:"editionId"`
 	Currency  string  `json:"currency"`
 	Offers    []Offer `json:"offers"`

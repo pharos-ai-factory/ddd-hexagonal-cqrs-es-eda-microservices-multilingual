@@ -3,5 +3,15 @@
     "consumer": "collection.open-pickup",
     "event": "preparation.drinks-ready",
     "command": "openPickup"
+  },
+  {
+    "consumer": "collection.publish-pickup-opened",
+    "event": "collection.pickup-opened.domain",
+    "publication": "collection.pickup-opened"
+  },
+  {
+    "consumer": "collection.publish-order-collected",
+    "event": "collection.order-collected.domain",
+    "publication": "collection.order-collected"
   }
 ]

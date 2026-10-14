@@ -48,7 +48,7 @@ type EditionState struct {
 // MenuEdition owns offers, prices and immutable publication revisions for a menu.
 type MenuEdition struct {
 	state EditionState
-	facts []core.Fact
+	facts []core.DomainEvent
 }
 
 func NewEdition(id, currency string) (*MenuEdition, error) {
@@ -100,7 +100,7 @@ func (e *MenuEdition) AddOffer(offer MenuOffer) error {
 		return core.Reject("menu_full", "The demonstration menu holds at most 20 offers")
 	}
 	e.state.Offers = append(e.state.Offers, offer.value)
-	e.facts = append(e.facts, core.Fact{Name: "MenuOfferAdded", Data: offer.value})
+	e.facts = append(e.facts, MenuOfferAddedDomainEvent{State: offer.value})
 	return nil
 }
 func (e *MenuEdition) ChangePrice(code string, minor int64) error {
@@ -117,7 +117,7 @@ func (e *MenuEdition) ChangePrice(code string, minor int64) error {
 			}
 			offer.Minor = minor
 			e.state.Offers[i] = offer
-			e.facts = append(e.facts, core.Fact{Name: "MenuOfferChanged", Data: offer})
+			e.facts = append(e.facts, MenuOfferChangedDomainEvent{State: offer})
 			return nil
 		}
 	}
@@ -131,7 +131,7 @@ func (e *MenuEdition) Publish() error {
 		return core.Reject("empty_menu", "A published menu must contain an offer")
 	}
 	e.state.Status = "published"
-	e.facts = append(e.facts, core.Fact{Name: "MenuEditionPublished", Data: e.Snapshot()})
+	e.facts = append(e.facts, MenuEditionPublishedDomainEvent{State: e.Snapshot()})
 	return nil
 }
 func (e *MenuEdition) Snapshot() EditionState {
@@ -139,4 +139,13 @@ func (e *MenuEdition) Snapshot() EditionState {
 	s.Offers = slices.Clone(s.Offers)
 	return s
 }
-func (e *MenuEdition) Events() []core.Fact { return append([]core.Fact(nil), e.facts...) }
+func (e *MenuEdition) Events() []core.DomainEvent {
+	facts := append([]core.DomainEvent(nil), e.facts...)
+	for i, fact := range facts {
+		if event, ok := fact.(MenuEditionPublishedDomainEvent); ok {
+			event.State.Offers = append(event.State.Offers[:0:0], event.State.Offers...)
+			facts[i] = event
+		}
+	}
+	return facts
+}

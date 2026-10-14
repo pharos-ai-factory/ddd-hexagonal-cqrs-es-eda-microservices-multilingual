@@ -1,25 +1,18 @@
-// Package publications maps owner domain facts to delivered messages.
+// Package publications stages owner-private domain events.
 package publications
 
 import (
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
-	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
-// Edition maps only the facts this context has chosen to deliver.
+// Edition selects committed facts for independent private subscriptions.
 func Edition(aggregate *d.MenuEdition) []a.Publication {
-	var publications []a.Publication
+	var result []a.Publication
 	for _, fact := range aggregate.Events() {
-		if fact.Name == "MenuEditionPublished" {
-			s := fact.Data.(d.EditionState)
-			payload := model.MenuPublished{EditionID: s.ID, Currency: s.Currency, Offers: []model.Offer{}}
-			for _, offer := range s.Offers {
-				payload.Offers = append(payload.Offers, model.Offer{Code: offer.Code, DrinkID: offer.DrinkID, DrinkRevision: offer.DrinkRevision, Name: offer.Name, Minor: offer.Minor, Currency: offer.Currency})
-			}
-			publications = append(publications, codec.PublishMenuPublished(payload))
+		if event, ok := fact.(d.MenuEditionPublishedDomainEvent); ok {
+			result = append(result, a.Publication{Name: "menu.edition-published.domain", Visibility: a.Private, Payload: event})
 		}
 	}
-	return publications
+	return result
 }

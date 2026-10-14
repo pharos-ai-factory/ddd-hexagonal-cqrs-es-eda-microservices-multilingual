@@ -1,4 +1,4 @@
-import type { NotificationRequested } from '../../application/events.js';
+import type { NotificationRequestedDomainEventPayload } from '../../application/events.js';
 import protobuf from 'protobufjs';
 import schema from './generated/private_messages.json' with { type: 'json' };
 import { PrivateEventCodec } from '../../../../adaptors/private-event.js';
@@ -21,4 +21,8 @@ export const privateEventCodec = new PrivateEventCodec(
 );
 
 /** Private payload association owned by communication. */
-export type PrivateEventPayloads = { 'communication.notification-requested': NotificationRequested };
+export type PrivateEventPayloads = {
+  'communication.notification-requested': NotificationRequestedDomainEventPayload;
+};
+
+export const privateEventCodecs = { 'communication.notification-requested': privateEventCodec };

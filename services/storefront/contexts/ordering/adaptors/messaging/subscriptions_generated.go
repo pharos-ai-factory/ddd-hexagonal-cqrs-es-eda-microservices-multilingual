@@ -8,6 +8,8 @@ func Subscription(consumer string) broker.Binding {
 	switch consumer {
 	case "ordering.menu-directory":
 		return broker.Binding{Consumer: consumer, Event: "menu.edition-published", Visibility: "integration", Context: "ordering"}
+	case "ordering.publish-order-placed":
+		return broker.Binding{Consumer: consumer, Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"}
 	}
 	panic("undeclared subscription: " + consumer)
 }

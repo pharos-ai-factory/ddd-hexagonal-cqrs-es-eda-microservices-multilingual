@@ -37,11 +37,8 @@ func ValidateID(id string) error {
 	return nil
 }
 
-// Fact has domain meaning only. Delivery identity and causality belong outside it.
-type Fact struct {
-	Name string
-	Data any
-}
+// DomainEvent marks an immutable owner fact; delivery metadata belongs to adaptors.
+type DomainEvent interface{ DomainEvent() }
 
 // Quantity validates a positive item count as an immutable value object.
 type Quantity struct{ value int }

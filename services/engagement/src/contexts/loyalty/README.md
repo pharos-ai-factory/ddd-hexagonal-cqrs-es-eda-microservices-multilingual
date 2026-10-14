@@ -28,7 +28,7 @@ A loyalty account earns each third-collection grant; a reward independently cont
 Start with the named file in `application/commands/` or `application/queries/`.
 The DTO and handler live together. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
-Event reactions enqueue owner commands durably; their handlers execute later.
+Aggregate-changing event reactions enqueue owner commands durably; their handlers execute later.
 Queries use named read repository ports and return application-owned views.
 Persistence adaptors validate stored
 authority and select the fields exposed by those views.
@@ -50,3 +50,10 @@ Published event schemas own their identities and boundary constraints. Contract
 generation supplies plain DTOs and adaptor conversions. This context's messaging
 subscription manifest declares its consumers; composition binds their reactions.
 Keep semantic evidence checks and domain-to-publication mappings in its adaptors.
+
+The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
+bytes with the root. [Publication handlers](application/event-handlers) consume those
+facts independently and map them to generated `*IntegrationEvent` DTOs. Their
+publication port commits the subscription receipt, integration bytes and dispatch
+together before ACK. A committed root awaiting integration publication is a
+permitted pending state; the original fact supplies its revision and terms.

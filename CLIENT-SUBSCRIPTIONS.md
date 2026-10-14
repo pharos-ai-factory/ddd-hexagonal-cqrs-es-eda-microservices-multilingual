@@ -47,7 +47,7 @@ not query business state or create browser polling.
 
 ## Atomic publication
 
-A changed root, its version, command outcome/receipts, domain/integration outbox
+A changed root, its version, command outcome/receipts, private domain-event outbox
 and **exact Protobuf browser snapshot bytes** commit in the same PostgreSQL
 transaction. The browser contract is `contracts/shared/realtime/v1/realtime.proto`.
 It is separate from the broker's domain/integration envelope.
@@ -141,3 +141,7 @@ per-root revision guard and explicit reconnect behaviour. Update the browser
 projection contract separately when its public shape changes. Native frontend
 tests check mapping/reconciliation; the full integration lane verifies independent
 windows, uncertain-command recovery and in-flight session revocation.
+
+Integration publication has its own private subscriber receipt/outbox transaction.
+The root's realtime update may arrive while integration publication remains pending;
+browser revisions continue to describe the committed root. See decision 0019.

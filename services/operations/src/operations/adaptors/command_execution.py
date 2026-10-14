@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
+from operations.adaptors.generated.private_event_registry import PRIVATE_CODECS
 from operations.foundation.application import Loaded, Metadata, Outcome, Publication
 from operations.foundation.write_repository import CommandContext, CommandResult, WriteRepository
 
@@ -61,5 +62,8 @@ class EventRecordingWriteRepository[A]:
         return self._source.get(identity)
 
     def save(self, aggregate: A) -> None:
+        publications = self._map(aggregate)
+        if any(p.name not in PRIVATE_CODECS for p in publications):
+            raise ValueError("Aggregate saves may stage only private domain events")
         self._source.save(aggregate)
-        self.publications = self._map(aggregate)
+        self.publications = publications

@@ -28,7 +28,7 @@ import (
 type projectionWorld struct {
 	db          *pg.ContextDatabase
 	evidence    *pgxpool.Pool
-	menus       *pg.ProjectionStore[model.MenuPublished]
+	menus       *pg.ProjectionStore[model.MenuPublishedIntegrationEvent]
 	m           a.Metadata
 	input       orderingcommands.CreateOrderCommand
 	first, last a.Outcome
@@ -45,7 +45,7 @@ func (w *projectionWorld) request() error {
 }
 func (w *projectionWorld) arrive() error {
 	m := a.Metadata{Consumer: "ordering.menu-directory", SourceEventID: pg.NewID(), SourceHash: "scenario-menu"}
-	return w.menus.Record(context.Background(), m, w.input.EditionID, 1, model.MenuPublished{EditionID: w.input.EditionID, Currency: "EUR",
+	return w.menus.Record(context.Background(), m, w.input.EditionID, 1, model.MenuPublishedIntegrationEvent{EditionID: w.input.EditionID, Currency: "EUR",
 		Offers: []model.Offer{{Code: "C1", DrinkID: pg.NewID(), DrinkRevision: 1, Name: "Coffee", Minor: 300, Currency: "EUR"}}})
 }
 func (w *projectionWorld) noOrder() error {
@@ -103,7 +103,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 			w := &projectionWorld{}
 			sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 				zero := uint64(0)
-				*w = projectionWorld{db: db, evidence: evidence, menus: pg.Project[model.MenuPublished](db, "menu-directory"),
+				*w = projectionWorld{db: db, evidence: evidence, menus: pg.Project[model.MenuPublishedIntegrationEvent](db, "menu-directory"),
 					m:     a.Metadata{ID: pg.NewID(), AggregateID: pg.NewID(), Name: "create-order", CorrelationID: pg.NewID(), ExpectedVersion: &zero},
 					input: orderingcommands.CreateOrderCommand{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
 				return ctx, nil

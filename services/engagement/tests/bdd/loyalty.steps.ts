@@ -1,3 +1,6 @@
+import { RewardIssuedDomainEventHandler } from '../../src/contexts/loyalty/application/event-handlers/publish-reward-issued.js';
+import type { RewardIssuedDomainEventPayload } from '../../src/contexts/loyalty/application/events.js';
+import type { RewardIssuedIntegrationEvent } from '../../src/contracts/events/generated/loyalty.js';
 import { bindCommand } from '../../src/adaptors/command-execution.js';
 import assert from 'node:assert/strict';
 import { Given, When, Then } from '@cucumber/cucumber';
@@ -6,7 +9,7 @@ import { IssueRewardCommandHandler } from '../../src/contexts/loyalty/applicatio
 import { RedeemRewardCommandHandler } from '../../src/contexts/loyalty/application/commands/redeem-reward.js';
 import { derivedId } from '../../src/foundation/identity.js';
 
-import type { RewardEarned } from '../../src/contexts/loyalty/application/events.js';
+import type { RewardEarnedDomainEventPayload } from '../../src/contexts/loyalty/application/events.js';
 import { customer, metadata, selectedOrder } from './probes.js';
 import type { EngagementWorld as W } from './world.js';
 
@@ -27,7 +30,7 @@ async function earn(w: W) {
 }
 async function issue(w: W, instant: string) {
   w.now = new Date(instant);
-  const grant = w.earned[0]?.payload as RewardEarned;
+  const grant = w.earned[0]?.payload as RewardEarnedDomainEventPayload;
   assert.ok(grant);
   const id = derivedId('reward', grant.grantId);
   await bindCommand(
@@ -61,7 +64,10 @@ Then(
 Then('exactly {int} private RewardEarned publications are produced', function (this: W, count: number) {
   assert.equal(this.earned.length, count);
   assert.ok(this.earned.every((event) => event.name === 'loyalty.reward-earned'));
-  assert.equal(new Set(this.earned.map((event) => (event.payload as RewardEarned).grantId)).size, count);
+  assert.equal(
+    new Set(this.earned.map((event) => (event.payload as RewardEarnedDomainEventPayload).grantId)).size,
+    count,
+  );
 });
 Then('no Reward has been created by the credit commands', function (this: W) {
   assert.equal(this.rewards.calls, 0);
@@ -71,14 +77,14 @@ Then(
   'the private grant promises {string} valid for {int} days',
   function (this: W, benefit: string, days: number) {
     assert.equal(this.earned.length, 1);
-    const grant = this.earned[0]!.payload as RewardEarned;
+    const grant = this.earned[0]!.payload as RewardEarnedDomainEventPayload;
     assert.equal(grant.accountId, customer);
     assert.equal(grant.benefit, benefit);
     assert.equal(grant.validDays, days);
   },
 );
 Then('the recorded grant matches the published grant identity', function (this: W) {
-  const grant = this.earned[0]!.payload as RewardEarned;
+  const grant = this.earned[0]!.payload as RewardEarnedDomainEventPayload;
   assert.equal(grant.grantId, this.accounts.loaded?.state.lastGrant?.id);
 });
 Given('the customer has earned a grant', function (this: W) {
@@ -87,22 +93,38 @@ Given('the customer has earned a grant', function (this: W) {
 When('the grant is handled at {string}', function (this: W, instant: string) {
   return issue(this, instant);
 });
-Then('one public RewardIssued publication expires at {string}', function (this: W, expiresAt: string) {
+Then('one public RewardIssued publication expires at {string}', async function (this: W, expiresAt: string) {
   this.rewards.succeeded();
   const state = this.rewards.loaded!.state;
   assert.equal(state.status, 'issued');
-  assert.equal(state.grantId, (this.earned[0]!.payload as RewardEarned).grantId);
-  assert.deepEqual(this.rewards.publications, [
-    {
-      name: 'loyalty.reward-issued',
-      payload: {
-        rewardId: state.id,
-        customerId: customer,
-        benefit: 'one free drink',
-        expiresAt,
-      },
+  assert.equal(state.grantId, (this.earned[0]!.payload as RewardEarnedDomainEventPayload).grantId);
+  assert.equal(this.rewards.publications.length, 1);
+  assert.equal(this.rewards.publications[0]!.name, 'loyalty.reward-issued.domain');
+  const outgoing: RewardIssuedIntegrationEvent[] = [];
+  const handler = new RewardIssuedDomainEventHandler({
+    publish: (m, event) => {
+      outgoing.push(event);
+      return Promise.resolve({ aggregateId: m.target, version: 1, status: 'publication_queued' });
     },
-  ]);
+  });
+  await handler.handle(
+    metadata(state.id),
+    this.rewards.publications[0]!.payload as RewardIssuedDomainEventPayload,
+  );
+  assert.deepEqual(
+    outgoing.map((payload) => ({ name: 'loyalty.reward-issued', payload })),
+    [
+      {
+        name: 'loyalty.reward-issued',
+        payload: {
+          rewardId: state.id,
+          customerId: customer,
+          benefit: 'one free drink',
+          expiresAt,
+        },
+      },
+    ],
+  );
   assert.equal(state.expiresAt, expiresAt);
 });
 Then('the LoyaltyAccount is unchanged by the reward command', function (this: W) {

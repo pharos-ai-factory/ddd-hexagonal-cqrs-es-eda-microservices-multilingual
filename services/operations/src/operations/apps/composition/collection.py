@@ -30,6 +30,19 @@ from operations.foundation.identity import derived_id
 from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
+from operations.adaptors.publication_outbox import PostgresPublicationOutbox
+from operations.apps.runtime import publication_subscription
+from operations.adaptors.generated.event_collection import publish_PickupOpened
+from operations.contexts.collection.application.event_handlers.publish_pickup_opened import (
+    PickupOpenedDomainEventHandler,
+)
+from operations.contexts.collection.adaptors.messaging.private_events import PICKUP_OPENED_DOMAIN
+from operations.adaptors.generated.event_collection import publish_OrderCollected
+from operations.contexts.collection.application.event_handlers.publish_order_collected import (
+    OrderCollectedDomainEventHandler,
+)
+from operations.contexts.collection.adaptors.messaging.private_events import ORDER_COLLECTED_DOMAIN
+
 
 class CollectionContainer(containers.DeclarativeContainer):
     """Owns the shared pool; application classes depend on transport-neutral ports."""
@@ -58,6 +71,25 @@ class CollectionContainer(containers.DeclarativeContainer):
     )
     collect = providers.Singleton(CommandExecutor, pickup_transaction, CollectOrderCommandHandler)
 
+    pickup_opened_publications = providers.Singleton(
+        PostgresPublicationOutbox,
+        database,
+        "collection.publish-pickup-opened",
+        "pickup",
+        publish_PickupOpened,
+    )
+    publish_pickup_opened = providers.Singleton(PickupOpenedDomainEventHandler, pickup_opened_publications)
+    order_collected_publications = providers.Singleton(
+        PostgresPublicationOutbox,
+        database,
+        "collection.publish-order-collected",
+        "pickup",
+        publish_OrderCollected,
+    )
+    publish_order_collected = providers.Singleton(
+        OrderCollectedDomainEventHandler, order_collected_publications
+    )
+
 
 def subscriptions(container: CollectionContainer) -> tuple[SubscriptionWorker, ...]:
     definitions = subscription_definitions("collection")
@@ -71,5 +103,21 @@ def subscriptions(container: CollectionContainer) -> tuple[SubscriptionWorker, .
             lambda event: derived_id("pickup", event["orderId"]),
             container.ready().handle,
             container.open().execute,
+        )
+        + publication_subscription(
+            "collection",
+            "collection.publish-pickup-opened",
+            definitions,
+            PICKUP_OPENED_DOMAIN,
+            "collection.pickup-opened",
+            container.publish_pickup_opened().handle,
+        )
+        + publication_subscription(
+            "collection",
+            "collection.publish-order-collected",
+            definitions,
+            ORDER_COLLECTED_DOMAIN,
+            "collection.order-collected",
+            container.publish_order_collected().handle,
         ),
     )

@@ -4,7 +4,11 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 const groups = JSON.parse(execFileSync('python3', ['scripts/contract_sources.py'], { encoding: 'utf8' }));
 for (const [name, group] of Object.entries(groups)) {
-  if (['menu_private', 'events', 'realtime'].includes(name)) continue;
+  if (
+    ['events', 'realtime'].includes(name) ||
+    (name.endsWith('_private') && !['loyalty_private', 'communication_private'].includes(name))
+  )
+    continue;
   const schema = new protobuf.Root();
   const files = Object.fromEntries(
     Object.entries(group.sources).map(([logical, physical]) => [logical, path.resolve(physical)]),

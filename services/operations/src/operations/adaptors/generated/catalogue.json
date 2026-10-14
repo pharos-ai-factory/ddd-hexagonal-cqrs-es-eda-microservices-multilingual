@@ -8,12 +8,24 @@
     "type": "cafe.v1.OrderCollected"
   },
   {
+    "name": "collection.order-collected.domain",
+    "owner": "collection",
+    "visibility": "domain",
+    "kind": "pickup"
+  },
+  {
     "name": "collection.pickup-opened",
     "owner": "collection",
     "kind": "pickup",
     "version": 1,
     "visibility": "integration",
     "type": "cafe.v1.PickupOpened"
+  },
+  {
+    "name": "collection.pickup-opened.domain",
+    "owner": "collection",
+    "visibility": "domain",
+    "kind": "pickup"
   },
   {
     "name": "ordering.order-placed",
@@ -30,5 +42,11 @@
     "version": 1,
     "visibility": "integration",
     "type": "cafe.v1.DrinksReady"
+  },
+  {
+    "name": "preparation.drinks-ready.domain",
+    "owner": "preparation",
+    "visibility": "domain",
+    "kind": "ticket"
   }
 ]

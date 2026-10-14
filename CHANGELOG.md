@@ -4,6 +4,13 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Queue explicit domain events on aggregates and commit selected private events
+  with the root. Publish all six integration events through independent durable
+  domain-event subscribers with atomic receipt/outbox commits and ACK after commit.
+- Name domain types and generated plain integration DTOs explicitly while retaining
+  historical Protobuf identities and queued bytes. Add private schemas, subscription
+  validation, rollback/recovery tests and decision 0019.
+
 - Generate published event DTOs, typed conversions, publication factories and
   registrations from context-owned Protobuf annotations across Go, Python and
   TypeScript. Adding an event no longer requires a shared codec edit.

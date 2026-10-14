@@ -1,0 +1,14 @@
+[
+  {
+    "name": "collection.pickup-opened.domain",
+    "owner": "collection",
+    "visibility": "domain",
+    "kind": "pickup"
+  },
+  {
+    "name": "collection.order-collected.domain",
+    "owner": "collection",
+    "visibility": "domain",
+    "kind": "pickup"
+  }
+]

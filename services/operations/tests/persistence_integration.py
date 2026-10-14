@@ -48,7 +48,7 @@ def test_atomic_receipts_realtime_rollback_concurrency_and_fencing() -> None:
     }
     try:
         # Encoding fails after the attempted state write: neither state nor receipts may survive.
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError, match="Unknown publication"):
             commands.execute(
                 metadata, lambda _: Change(state, "queued", publications=(Publication("invalid", {}),))
             )

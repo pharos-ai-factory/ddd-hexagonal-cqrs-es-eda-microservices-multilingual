@@ -97,6 +97,7 @@ type PrivateEvent struct {
 	OccurredAt       string                 `protobuf:"bytes,11,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	// Types that are valid to be assigned to Payload:
 	//
+	//	*PrivateEvent_EditionPublished
 	//	*PrivateEvent_DrinkPublished
 	Payload       isPrivateEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
@@ -217,6 +218,15 @@ func (x *PrivateEvent) GetPayload() isPrivateEvent_Payload {
 	return nil
 }
 
+func (x *PrivateEvent) GetEditionPublished() *MenuEditionPublishedDomainEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*PrivateEvent_EditionPublished); ok {
+			return x.EditionPublished
+		}
+	}
+	return nil
+}
+
 func (x *PrivateEvent) GetDrinkPublished() *DrinkPublished {
 	if x != nil {
 		if x, ok := x.Payload.(*PrivateEvent_DrinkPublished); ok {
@@ -230,11 +240,161 @@ type isPrivateEvent_Payload interface {
 	isPrivateEvent_Payload()
 }
 
+type PrivateEvent_EditionPublished struct {
+	EditionPublished *MenuEditionPublishedDomainEvent `protobuf:"bytes,21,opt,name=edition_published,json=editionPublished,proto3,oneof"`
+}
+
 type PrivateEvent_DrinkPublished struct {
 	DrinkPublished *DrinkPublished `protobuf:"bytes,20,opt,name=drink_published,json=drinkPublished,proto3,oneof"`
 }
 
+func (*PrivateEvent_EditionPublished) isPrivateEvent_Payload() {}
+
 func (*PrivateEvent_DrinkPublished) isPrivateEvent_Payload() {}
+
+type Offer struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	DrinkId       string                 `protobuf:"bytes,2,opt,name=drink_id,json=drinkId,proto3" json:"drink_id,omitempty"`
+	DrinkRevision uint64                 `protobuf:"varint,3,opt,name=drink_revision,json=drinkRevision,proto3" json:"drink_revision,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Minor         int64                  `protobuf:"varint,5,opt,name=minor,proto3" json:"minor,omitempty"`
+	Currency      string                 `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Offer) Reset() {
+	*x = Offer{}
+	mi := &file_menu_private_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Offer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Offer) ProtoMessage() {}
+
+func (x *Offer) ProtoReflect() protoreflect.Message {
+	mi := &file_menu_private_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Offer.ProtoReflect.Descriptor instead.
+func (*Offer) Descriptor() ([]byte, []int) {
+	return file_menu_private_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Offer) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *Offer) GetDrinkId() string {
+	if x != nil {
+		return x.DrinkId
+	}
+	return ""
+}
+
+func (x *Offer) GetDrinkRevision() uint64 {
+	if x != nil {
+		return x.DrinkRevision
+	}
+	return 0
+}
+
+func (x *Offer) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Offer) GetMinor() int64 {
+	if x != nil {
+		return x.Minor
+	}
+	return 0
+}
+
+func (x *Offer) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+type MenuEditionPublishedDomainEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EditionId     string                 `protobuf:"bytes,1,opt,name=edition_id,json=editionId,proto3" json:"edition_id,omitempty"`
+	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`
+	Offers        []*Offer               `protobuf:"bytes,3,rep,name=offers,proto3" json:"offers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MenuEditionPublishedDomainEvent) Reset() {
+	*x = MenuEditionPublishedDomainEvent{}
+	mi := &file_menu_private_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MenuEditionPublishedDomainEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MenuEditionPublishedDomainEvent) ProtoMessage() {}
+
+func (x *MenuEditionPublishedDomainEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_menu_private_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MenuEditionPublishedDomainEvent.ProtoReflect.Descriptor instead.
+func (*MenuEditionPublishedDomainEvent) Descriptor() ([]byte, []int) {
+	return file_menu_private_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *MenuEditionPublishedDomainEvent) GetEditionId() string {
+	if x != nil {
+		return x.EditionId
+	}
+	return ""
+}
+
+func (x *MenuEditionPublishedDomainEvent) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *MenuEditionPublishedDomainEvent) GetOffers() []*Offer {
+	if x != nil {
+		return x.Offers
+	}
+	return nil
+}
 
 var File_menu_private_proto protoreflect.FileDescriptor
 
@@ -244,7 +404,7 @@ const file_menu_private_proto_rawDesc = "" +
 	"\x0eDrinkPublished\x12\x19\n" +
 	"\bdrink_id\x18\x01 \x01(\tR\adrinkId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
-	"\brevision\x18\x03 \x01(\x04R\brevision\"\xd1\x03\n" +
+	"\brevision\x18\x03 \x01(\x04R\brevision\"\xb5\x04\n" +
 	"\fPrivateEvent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -260,9 +420,22 @@ const file_menu_private_proto_rawDesc = "" +
 	"\fcausation_id\x18\n" +
 	" \x01(\tR\vcausationId\x12\x1f\n" +
 	"\voccurred_at\x18\v \x01(\tR\n" +
-	"occurredAt\x12M\n" +
+	"occurredAt\x12b\n" +
+	"\x11edition_published\x18\x15 \x01(\v23.cafe.menu.internal.MenuEditionPublishedDomainEventH\x00R\x10editionPublished\x12M\n" +
 	"\x0fdrink_published\x18\x14 \x01(\v2\".cafe.menu.internal.DrinkPublishedH\x00R\x0edrinkPublishedB\t\n" +
-	"\apayloadB\xa0\x01Z\x9d\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated;menuinternalb\x06proto3"
+	"\apayload\"\xa3\x01\n" +
+	"\x05Offer\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x19\n" +
+	"\bdrink_id\x18\x02 \x01(\tR\adrinkId\x12%\n" +
+	"\x0edrink_revision\x18\x03 \x01(\x04R\rdrinkRevision\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x14\n" +
+	"\x05minor\x18\x05 \x01(\x03R\x05minor\x12\x1a\n" +
+	"\bcurrency\x18\x06 \x01(\tR\bcurrency\"\x8f\x01\n" +
+	"\x1fMenuEditionPublishedDomainEvent\x12\x1d\n" +
+	"\n" +
+	"edition_id\x18\x01 \x01(\tR\teditionId\x12\x1a\n" +
+	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x121\n" +
+	"\x06offers\x18\x03 \x03(\v2\x19.cafe.menu.internal.OfferR\x06offersB\xa0\x01Z\x9d\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated;menuinternalb\x06proto3"
 
 var (
 	file_menu_private_proto_rawDescOnce sync.Once
@@ -276,18 +449,22 @@ func file_menu_private_proto_rawDescGZIP() []byte {
 	return file_menu_private_proto_rawDescData
 }
 
-var file_menu_private_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_menu_private_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_menu_private_proto_goTypes = []any{
-	(*DrinkPublished)(nil), // 0: cafe.menu.internal.DrinkPublished
-	(*PrivateEvent)(nil),   // 1: cafe.menu.internal.PrivateEvent
+	(*DrinkPublished)(nil),                  // 0: cafe.menu.internal.DrinkPublished
+	(*PrivateEvent)(nil),                    // 1: cafe.menu.internal.PrivateEvent
+	(*Offer)(nil),                           // 2: cafe.menu.internal.Offer
+	(*MenuEditionPublishedDomainEvent)(nil), // 3: cafe.menu.internal.MenuEditionPublishedDomainEvent
 }
 var file_menu_private_proto_depIdxs = []int32{
-	0, // 0: cafe.menu.internal.PrivateEvent.drink_published:type_name -> cafe.menu.internal.DrinkPublished
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 0: cafe.menu.internal.PrivateEvent.edition_published:type_name -> cafe.menu.internal.MenuEditionPublishedDomainEvent
+	0, // 1: cafe.menu.internal.PrivateEvent.drink_published:type_name -> cafe.menu.internal.DrinkPublished
+	2, // 2: cafe.menu.internal.MenuEditionPublishedDomainEvent.offers:type_name -> cafe.menu.internal.Offer
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_menu_private_proto_init() }
@@ -296,6 +473,7 @@ func file_menu_private_proto_init() {
 		return
 	}
 	file_menu_private_proto_msgTypes[1].OneofWrappers = []any{
+		(*PrivateEvent_EditionPublished)(nil),
 		(*PrivateEvent_DrinkPublished)(nil),
 	}
 	type x struct{}
@@ -304,7 +482,7 @@ func file_menu_private_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_menu_private_proto_rawDesc), len(file_menu_private_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

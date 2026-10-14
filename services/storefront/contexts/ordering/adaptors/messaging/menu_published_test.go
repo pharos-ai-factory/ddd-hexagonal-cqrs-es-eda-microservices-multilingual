@@ -13,11 +13,11 @@ func TestMenuEvidenceIsCheckedBeforeTheProjectionRuns(t *testing.T) {
 		{{Code: "TEA", Currency: "GBP"}},
 	} {
 		called := false
-		receive := MenuPublished(func(context.Context, a.Metadata, model.MenuPublished) (a.Outcome, error) {
+		receive := MenuPublished(func(context.Context, a.Metadata, model.MenuPublishedIntegrationEvent) (a.Outcome, error) {
 			called = true
 			return a.Outcome{}, nil
 		})
-		if _, err := receive(context.Background(), a.Metadata{}, model.MenuPublished{Currency: "EUR", Offers: offers}); err == nil || called {
+		if _, err := receive(context.Background(), a.Metadata{}, model.MenuPublishedIntegrationEvent{Currency: "EUR", Offers: offers}); err == nil || called {
 			t.Fatal("inconsistent evidence reached the projection")
 		}
 	}

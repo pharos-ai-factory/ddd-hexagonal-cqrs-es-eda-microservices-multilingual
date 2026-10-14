@@ -2,12 +2,12 @@
 
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.adaptors.generated.event_ordering import decode_OrderPlaced
-from operations.contracts.events.generated.ordering import OrderPlaced
+from operations.contracts.events.generated.ordering import OrderPlacedIntegrationEvent
 
 
-def order_placed(event: Event) -> OrderPlaced:
+def order_placed(event: Event) -> OrderPlacedIntegrationEvent:
     if event.name != "ordering.order-placed":
-        raise ValueError("Expected OrderPlaced")
+        raise ValueError("Expected OrderPlacedIntegrationEvent")
     payload = decode_OrderPlaced(event.payload, event.aggregate_id)
     lines = payload["lines"]
     if (

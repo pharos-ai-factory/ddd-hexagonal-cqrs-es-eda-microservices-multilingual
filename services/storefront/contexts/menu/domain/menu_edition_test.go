@@ -46,6 +46,17 @@ func TestEditionOwnsOfferedSnapshot(t *testing.T) {
 	if err = edition.Publish(); err != nil {
 		t.Fatal(err)
 	}
+	facts := edition.Events()
+	published := facts[len(facts)-1].(MenuEditionPublishedDomainEvent)
+	published.State.Offers[0].Name = "Changed by observer"
+	fresh := edition.Events()
+	if fresh[len(fresh)-1].(MenuEditionPublishedDomainEvent).State.Offers[0].Name != "Coffee" {
+		t.Fatal("event observer mutated pending fact")
+	}
+	restored, err := RestoreEdition(edition.Snapshot())
+	if err != nil || len(restored.Events()) != 0 {
+		t.Fatal("rehydration replayed pending events")
+	}
 	rejection(t, edition.ChangePrice("C1", 400), "edition_already_published")
 	snapshot := edition.Snapshot()
 	snapshot.Offers[0].Minor = 1

@@ -35,7 +35,7 @@ func checkLineInput(value model.Line) error {
 	return nil
 }
 
-func toOrderPlaced(value model.OrderPlaced) *pb.OrderPlaced {
+func toOrderPlaced(value model.OrderPlacedIntegrationEvent) *pb.OrderPlaced {
 	result := &pb.OrderPlaced{}
 	result.OrderId = value.OrderID
 	result.CustomerId = value.CustomerID
@@ -47,8 +47,8 @@ func toOrderPlaced(value model.OrderPlaced) *pb.OrderPlaced {
 	return result
 }
 
-func fromOrderPlaced(value *pb.OrderPlaced) model.OrderPlaced {
-	result := model.OrderPlaced{}
+func fromOrderPlaced(value *pb.OrderPlaced) model.OrderPlacedIntegrationEvent {
+	result := model.OrderPlacedIntegrationEvent{}
 	result.OrderID = value.OrderId
 	result.CustomerID = value.CustomerId
 	result.EditionID = value.EditionId
@@ -60,7 +60,7 @@ func fromOrderPlaced(value *pb.OrderPlaced) model.OrderPlaced {
 	return result
 }
 
-func checkOrderPlacedInput(value model.OrderPlaced) error {
+func checkOrderPlacedInput(value model.OrderPlacedIntegrationEvent) error {
 	for _, item := range value.Lines {
 		if err := checkLineInput(item); err != nil {
 			return err
@@ -70,6 +70,6 @@ func checkOrderPlacedInput(value model.OrderPlaced) error {
 }
 
 // PublishOrderPlaced binds the published identity to its plain payload type.
-func PublishOrderPlaced(payload model.OrderPlaced) a.Publication {
+func PublishOrderPlaced(payload model.OrderPlacedIntegrationEvent) a.Publication {
 	return a.Publication{Name: "ordering.order-placed", Visibility: a.Public, Payload: payload}
 }

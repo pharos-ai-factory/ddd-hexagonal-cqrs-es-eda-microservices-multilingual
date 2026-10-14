@@ -68,6 +68,7 @@ def execute(env_file, keep=False):
                 "services/operations/tests/delivery_integration.py",
                 "services/operations/tests/identity_integration.py",
                 "services/operations/tests/internal_commands_integration.py",
+                "services/operations/tests/publication_outbox_integration.py",
             ],
             test_environment(values),
         )
@@ -85,6 +86,7 @@ def execute(env_file, keep=False):
                 "src/adaptors/broker.integration.ts",
                 "src/adaptors/corrupt-receipts.integration.ts",
                 "src/adaptors/internal-commands.integration.ts",
+                "src/adaptors/publication-outbox.integration.ts",
             ],
             test_environment(values),
         )

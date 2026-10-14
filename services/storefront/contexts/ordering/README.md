@@ -9,6 +9,7 @@ An order owns its lines and enforces the five-drink limit.
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
+- [Domain publication handlers](application/eventhandlers)
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
 - [Application ports](application/ports)
@@ -51,3 +52,10 @@ Published event schemas own their identities and boundary constraints. Contract
 generation supplies plain DTOs and adaptor conversions. This context's messaging
 subscription manifest declares its consumers; composition binds their reactions.
 Keep semantic evidence checks and domain-to-publication mappings in its adaptors.
+
+The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
+bytes with the root. [Publication handlers](application/eventhandlers) consume those
+facts independently and map them to generated `*IntegrationEvent` DTOs. Their
+publication port commits the subscription receipt, integration bytes and dispatch
+together before ACK. A committed root awaiting integration publication is a
+permitted pending state; the original fact supplies its revision and terms.

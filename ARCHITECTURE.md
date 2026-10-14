@@ -149,7 +149,7 @@ API command processing includes exact reply bytes. Application ports expose one
 aggregate operation and never expose a SQL transaction or an arbitrary collection
 of repositories.
 
-Application handlers never invoke another command handler. An event reaction
+Application handlers never invoke another command handler. An aggregate-changing event reaction
 persists an owner command through `DurableCommandPort`; a separate command consumer
 executes it. Projection updates, rehydration, domain tests and migrations retain
 their distinct roles. Decisions 0011 and 0012 define this stricter convention.
@@ -168,8 +168,10 @@ Delivered domain and integration events share the delivery infrastructure.
 An aggregate-changing reaction follows two receiving stages:
 
 ```text
-producer command → aggregate + receipts + outcome + event/realtime intent → commit
-event outbox → persistent mandatory RabbitMQ publication → publisher confirm
+producer command → aggregate + receipts + outcome + private domain/realtime intent → commit
+private event outbox → mandatory RabbitMQ publication → publisher confirm
+publication subscriber → receipt + integration event bytes + dispatch → commit → private ACK
+integration outbox → mandatory RabbitMQ publication → publisher confirm
 event reaction → acceptance + exact owner command bytes + dispatch → commit → event ACK
 command outbox → persistent mandatory RabbitMQ publication → publisher confirm
 command consumer → one aggregate + receipts + outcome + publications → commit → command ACK
@@ -181,8 +183,16 @@ acceptance, the command's dispatch and consumer own recovery. Command execution
 failure cannot erase the already persisted intent. Projection consumers commit
 their projection and receipt before ACK without introducing an aggregate command.
 
-Domain facts are plain types. Applications map them to owner-private delivery values or published integration
-events. Public interfaces have versioned Protobuf representations. Internal
+Domain facts are plain `*DomainEvent` types queued by their aggregate. Repository
+adaptors stage owner-private delivery values. Dedicated `*DomainEventHandler`
+subscribers map those delivered facts to generated `*IntegrationEvent` DTOs through
+`DurablePublicationPort`. Each handler commits its receipt and integration outbox
+entry together before acknowledging its own subscription's RabbitMQ delivery.
+Other subscriptions retain independent deliveries and receipts. A relay publishes
+the integration bytes afterwards and waits for a separate publisher confirm.
+The publication uses the original fact's revision and occurrence time even when
+the aggregate has advanced. Its causation is the private event ID. See
+[decision 0019](docs/decisions/0019-durable-domain-event-publication.md). Public interfaces have versioned Protobuf representations. Internal
 formats preserve stored delivery bytes and keep their definitions with the owner.
 Both deliveries retain stable identities, correlation and causation. Context-private messages
 are only bound to consumers owned by that context.
@@ -201,7 +211,9 @@ does not establish business completion.
 Command handlers depend on named write repositories and a target-only
 `CommandContext`. They load an aggregate, invoke its behaviour and save it.
 The aggregate records private domain events; owner adaptor mappers stage the
-selected outgoing messages when the repository saves.
+selected private outgoing messages when the repository saves. Direct integration
+staging from aggregate saves is rejected. A committed root awaiting its publication
+subscriber is an allowed pending workflow state.
 
 A central executor supplies a fresh repository to each invocation and owns the
 local PostgreSQL transaction, receipt checks, expected versions, outcomes and
