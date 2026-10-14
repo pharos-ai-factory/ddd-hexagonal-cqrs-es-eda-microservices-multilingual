@@ -138,6 +138,10 @@ for pattern in (
     "services/engagement/src/contracts/events/generated/*.ts",
     "services/engagement/src/adaptors/generated/event-*",
     "services/engagement/src/adaptors/generated/private-event-registry.ts",
+    "services/engagement/src/adaptors/generated/*-names.ts",
+    "services/operations/src/operations/adaptors/generated/*_names.py",
+    "services/storefront/contracts/events/names/*_generated.go",
+    "services/*/**/generated/cafe/requests/v1/names.go",
 ):
     GENERATED.update(path.relative_to(ROOT).as_posix() for path in ROOT.glob(pattern))
 

@@ -86,6 +86,9 @@ and a dedicated topology credential.
 - Register commands directly with their owner parser or codec and plain handler
   factory through the shared command registration API. Configure its transaction
   once per aggregate; shared helpers construct executors internally. See decision 0023.
+- Use generated command/query/event/subscription identifiers in composition. Register
+  each query with its owner parser, named handler and reply mapper; keep its read
+  repository in DI. See decision 0024.
 - Register each durable event/command consumer pair through the shared runtime
   helper. Keep stable typed subscription IDs aligned with owner `subscriptions.json`
   and validate the complete set. Go's current reactions update projections; a new

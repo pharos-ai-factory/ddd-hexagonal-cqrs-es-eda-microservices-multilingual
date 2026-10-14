@@ -1,5 +1,7 @@
 """Collection's providers bind its own database and durable command port."""
 
+from operations.adaptors.generated.message_names import CollectionIntegrationEvent, CollectionSubscription
+
 from operations.contexts.collection.adaptors.persistence.pickup_write_repository import (
     PostgresPickupWriteRepository,
 )
@@ -8,7 +10,7 @@ from operations.contexts.collection.adaptors.persistence.pickup_read_repository 
     PostgresPickupReadRepository,
 )
 from operations.contexts.collection.adaptors.messaging.open_pickup_codec import command_codec
-from operations.contexts.collection.adaptors.messaging.pickup_query_endpoints import PickupQueryEndpoints
+from operations.adaptors.generated.request_names import CollectionCommand, CollectionQuery
 from operations.contexts.collection.application.queries.get_pickup import GetPickupQueryHandler
 from operations.contexts.collection.application.queries.list_pickups import ListPickupsQueryHandler
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
@@ -62,7 +64,6 @@ class CollectionContainer(containers.DeclarativeContainer):
     pickup_read_repository = providers.Singleton(PostgresPickupReadRepository, database)
     get_pickup = providers.Singleton(GetPickupQueryHandler, pickup_read_repository)
     list_pickups = providers.Singleton(ListPickupsQueryHandler, pickup_read_repository)
-    queries = providers.Singleton(PickupQueryEndpoints, get_pickup, list_pickups)
     codec = providers.Singleton(command_codec)
     outbox = providers.Singleton(PostgresDurableCommandOutbox[OpenPickupCommand], database, codec)
     ready = providers.Singleton(DrinksReadyIntegrationEventHandler, outbox)
@@ -71,7 +72,7 @@ class CollectionContainer(containers.DeclarativeContainer):
     pickup_opened_publications = providers.Singleton(
         PostgresPublicationOutbox,
         database,
-        "collection.publish-pickup-opened",
+        CollectionSubscription.PUBLISH_PICKUP_OPENED,
         "pickup",
         publish_PickupOpened,
     )
@@ -79,7 +80,7 @@ class CollectionContainer(containers.DeclarativeContainer):
     order_collected_publications = providers.Singleton(
         PostgresPublicationOutbox,
         database,
-        "collection.publish-order-collected",
+        CollectionSubscription.PUBLISH_ORDER_COLLECTED,
         "pickup",
         publish_OrderCollected,
     )
@@ -91,8 +92,15 @@ class CollectionContainer(containers.DeclarativeContainer):
 def requests(container: CollectionContainer) -> RabbitMQRequestRegistry:
     """Map published collection commands directly to their handlers."""
     registry = RabbitMQRequestRegistry("collection")
-    container.commands().request(registry, "collectOrder", wire.collect, CollectOrderCommandHandler)
-    registry.queries("pickup", "pickups", container.queries(), wire.item, wire.listing)
+    container.commands().request(
+        registry, CollectionCommand.COLLECT_ORDER, wire.collect, CollectOrderCommandHandler
+    )
+    registry.query(
+        CollectionQuery.GET_PICKUP, wire.get_pickup, container.get_pickup().execute, wire.get_reply
+    )
+    registry.query(
+        CollectionQuery.LIST_PICKUPS, wire.list_pickups, container.list_pickups().execute, wire.list_reply
+    )
     return registry
 
 
@@ -111,18 +119,18 @@ def subscriptions(container: CollectionContainer) -> tuple[SubscriptionWorker, .
         )
         + publication_subscription(
             "collection",
-            "collection.publish-pickup-opened",
+            CollectionSubscription.PUBLISH_PICKUP_OPENED,
             definitions,
             PICKUP_OPENED_DOMAIN,
-            "collection.pickup-opened",
+            CollectionIntegrationEvent.PICKUP_OPENED,
             container.publish_pickup_opened().handle,
         )
         + publication_subscription(
             "collection",
-            "collection.publish-order-collected",
+            CollectionSubscription.PUBLISH_ORDER_COLLECTED,
             definitions,
             ORDER_COLLECTED_DOMAIN,
-            "collection.order-collected",
+            CollectionIntegrationEvent.ORDER_COLLECTED,
             container.publish_order_collected().handle,
         ),
     )

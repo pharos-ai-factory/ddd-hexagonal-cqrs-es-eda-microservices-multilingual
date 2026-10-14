@@ -12,6 +12,8 @@ A notification owns its delivery status and stable provider identity.
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
+- [Generated command and query identifiers](../../adaptors/generated/request-names.ts)
+- [Generated event and subscription identifiers](../../adaptors/generated/message-names.ts)
 - [Event reactions](application/event-handlers)
 - [Read models](application/read-models)
 - [Application ports](application/ports)
@@ -32,6 +34,9 @@ context adaptor, then find its binding in the composition module.
 The composition module pairs command names/codecs with concrete handler factories.
 Its aggregate registration helper supplies the executor internally.
 Aggregate-changing event reactions enqueue owner commands durably; their handlers execute later.
+Composition registers each generated query identifier with its input mapper,
+concrete handler and reply mapper. Event and subscription identifiers come from
+the published and owner-private catalogues.
 Queries use named read repository ports and return application-owned views.
 Persistence adaptors validate stored
 authority and select the fields exposed by those views.

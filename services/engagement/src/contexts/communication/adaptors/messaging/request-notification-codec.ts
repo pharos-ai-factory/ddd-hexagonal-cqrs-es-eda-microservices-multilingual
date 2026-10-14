@@ -1,4 +1,7 @@
-import { CommunicationSubscription } from './communication-subscriptions.js';
+import {
+  CommunicationPrivateCommand,
+  CommunicationSubscription,
+} from '../../../../adaptors/generated/message-names.js';
 import { fields } from './command-fields.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
@@ -10,7 +13,7 @@ export function noticeCodec(consumer: CommunicationSubscription) {
   return new InternalCommandCodec(
     'communication',
     consumer,
-    'requestNotification',
+    CommunicationPrivateCommand.REQUEST_NOTIFICATION,
     schema,
     (value): RequestNotificationCommand => {
       const p = fields(value);

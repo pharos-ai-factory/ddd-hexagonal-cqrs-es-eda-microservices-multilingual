@@ -1,5 +1,12 @@
 """Publication declarations own one consumer; aggregate reactions also own a command consumer."""
 
+from operations.adaptors.generated.message_names import (
+    OrderingIntegrationEvent,
+    PreparationDomainEvent,
+    PreparationIntegrationEvent,
+    PreparationSubscription,
+)
+
 from dataclasses import replace
 from unittest.mock import Mock
 import pytest
@@ -7,7 +14,9 @@ from operations.apps.runtime import complete_subscriptions, SubscriptionDefiniti
 
 
 def test_manifest_completeness() -> None:
-    definition = SubscriptionDefinition("preparation.accept-order", "ordering.order-placed", "acceptOrder")
+    definition = SubscriptionDefinition(
+        PreparationSubscription.ACCEPT_ORDER, OrderingIntegrationEvent.ORDER_PLACED, "acceptOrder"
+    )
     worker = SubscriptionWorker("preparation", definition.consumer, Mock(), definition.event, False)
     pair = (worker, replace(worker, command=True))
     assert complete_subscriptions("preparation", [definition], pair) == pair
@@ -20,9 +29,9 @@ def test_manifest_completeness() -> None:
 
 def test_publication_subscriptions_require_one_worker_and_one_reaction_mode() -> None:
     definition = SubscriptionDefinition(
-        "preparation.publish-drinks-ready",
-        "preparation.drinks-ready.domain",
-        publication="preparation.drinks-ready",
+        PreparationSubscription.PUBLISH_DRINKS_READY,
+        PreparationDomainEvent.DRINKS_READY,
+        publication=PreparationIntegrationEvent.DRINKS_READY,
     )
     worker = SubscriptionWorker(
         "preparation", definition.consumer, lambda _url, _stop: None, definition.event, False

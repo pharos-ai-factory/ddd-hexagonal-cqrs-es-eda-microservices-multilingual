@@ -1,5 +1,7 @@
 """Preparation's explicit providers and typed subscription declaration."""
 
+from operations.adaptors.generated.message_names import PreparationIntegrationEvent, PreparationSubscription
+
 from operations.contexts.preparation.adaptors.persistence.ticket_write_repository import (
     PostgresTicketWriteRepository,
 )
@@ -8,7 +10,7 @@ from operations.contexts.preparation.adaptors.persistence.ticket_read_repository
     PostgresTicketReadRepository,
 )
 from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec
-from operations.contexts.preparation.adaptors.messaging.ticket_query_endpoints import TicketQueryEndpoints
+from operations.adaptors.generated.request_names import PreparationCommand, PreparationQuery
 from operations.contexts.preparation.application.queries.get_ticket import GetTicketQueryHandler
 from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
@@ -62,25 +64,37 @@ class PreparationContainer(containers.DeclarativeContainer):
     ticket_read_repository = providers.Singleton(PostgresTicketReadRepository, database)
     get_ticket = providers.Singleton(GetTicketQueryHandler, ticket_read_repository)
     list_tickets = providers.Singleton(ListTicketsQueryHandler, ticket_read_repository)
-    queries = providers.Singleton(TicketQueryEndpoints, get_ticket, list_tickets)
     codec = providers.Singleton(command_codec)
     outbox = providers.Singleton(PostgresDurableCommandOutbox[AcceptOrderCommand], database, codec)
     accepted = providers.Singleton(OrderPlacedIntegrationEventHandler, outbox)
     commands = providers.Singleton(CommandRegistration[PreparationTicket], ticket_transaction)
 
     drinks_ready_publications = providers.Singleton(
-        PostgresPublicationOutbox, database, "preparation.publish-drinks-ready", "ticket", publish_DrinksReady
+        PostgresPublicationOutbox,
+        database,
+        PreparationSubscription.PUBLISH_DRINKS_READY,
+        "ticket",
+        publish_DrinksReady,
     )
     publish_drinks_ready = providers.Singleton(DrinksReadyDomainEventHandler, drinks_ready_publications)
 
 
 def requests(container: PreparationContainer) -> RabbitMQRequestRegistry:
-    """Map published preparation commands directly to their handlers."""
+    """Map published preparation commands and queries directly to their handlers."""
     registry = RabbitMQRequestRegistry("preparation")
     commands = container.commands()
-    commands.request(registry, "startPreparation", wire.start, StartPreparationCommandHandler)
-    commands.request(registry, "completePreparation", wire.complete, CompletePreparationCommandHandler)
-    registry.queries("ticket", "tickets", container.queries(), wire.item, wire.listing)
+    commands.request(
+        registry, PreparationCommand.START_PREPARATION, wire.start, StartPreparationCommandHandler
+    )
+    commands.request(
+        registry, PreparationCommand.COMPLETE_PREPARATION, wire.complete, CompletePreparationCommandHandler
+    )
+    registry.query(
+        PreparationQuery.GET_TICKET, wire.get_ticket, container.get_ticket().execute, wire.get_reply
+    )
+    registry.query(
+        PreparationQuery.LIST_TICKETS, wire.list_tickets, container.list_tickets().execute, wire.list_reply
+    )
     return registry
 
 
@@ -99,10 +113,10 @@ def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, 
         )
         + publication_subscription(
             "preparation",
-            "preparation.publish-drinks-ready",
+            PreparationSubscription.PUBLISH_DRINKS_READY,
             definitions,
             DRINKS_READY_DOMAIN,
-            "preparation.drinks-ready",
+            PreparationIntegrationEvent.DRINKS_READY,
             container.publish_drinks_ready().handle,
         ),
     )

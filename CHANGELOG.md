@@ -6,6 +6,9 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Generate context-specific command, query, event and subscription identifiers;
+  register queries directly with their handlers across Go, Python and TypeScript.
+
 - Register commands directly with plain handler factories across Go, Python and
   TypeScript. Shared composition helpers supply executors, projection preparation
   and notification receipt preparation. Update scaffolds, navigation and checks.

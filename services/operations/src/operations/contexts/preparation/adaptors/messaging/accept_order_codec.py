@@ -1,16 +1,11 @@
 """Preparation owns its private command identity, validation and stored wire format."""
 
-from enum import StrEnum
+from operations.adaptors.generated.message_names import PreparationPrivateCommand, PreparationSubscription
+
 from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.internal.preparation.internal_commands_pb2 import CommandEnvelope
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
 from operations.foundation.domain import identifier, record, text
-
-
-class PreparationSubscription(StrEnum):
-    """Stable subscription identity shared by receipt, queue and replay."""
-
-    ACCEPT_ORDER = "preparation.accept-order"
 
 
 def accept_command(value: object) -> AcceptOrderCommand:
@@ -24,7 +19,11 @@ def accept_command(value: object) -> AcceptOrderCommand:
 
 def command_codec() -> InternalCommandCodec[AcceptOrderCommand]:
     return InternalCommandCodec(
-        "preparation", PreparationSubscription.ACCEPT_ORDER, "accept_order", CommandEnvelope, accept_command
+        "preparation",
+        PreparationSubscription.ACCEPT_ORDER,
+        PreparationPrivateCommand.ACCEPT_ORDER,
+        CommandEnvelope,
+        accept_command,
     )
 
 

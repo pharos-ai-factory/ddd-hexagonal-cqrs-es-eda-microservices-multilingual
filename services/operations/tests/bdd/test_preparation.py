@@ -1,3 +1,4 @@
+from operations.adaptors.generated.message_names import PreparationDomainEvent, PreparationIntegrationEvent
 from tests.bdd.publication_probe import PublicationProbe, private_delivery
 from operations.contexts.preparation.application.event_handlers.publish_drinks_ready import (
     DrinksReadyDomainEventHandler,
@@ -129,11 +130,11 @@ def unchanged(probe: PreparationProbe) -> None:
 def ready_event(probe: PreparationProbe, metadata: Metadata) -> None:
     assert len(probe.publications) == 1
     private = probe.publications[0]
-    assert private.name == "preparation.drinks-ready.domain"
+    assert private.name == PreparationDomainEvent.DRINKS_READY
     outgoing = PublicationProbe(publish_DrinksReady)
     wire = private_delivery("preparation", "ticket", metadata, private)
     DrinksReadyDomainEventHandler(outgoing).handle(metadata, DRINKS_READY_DOMAIN.parse(wire))
     assert len(outgoing.publications) == 1
     event = outgoing.publications[0]
-    assert event.name == "preparation.drinks-ready"
+    assert event.name == PreparationIntegrationEvent.DRINKS_READY
     assert event.payload == {"orderId": ORDER, "customerId": CUSTOMER}

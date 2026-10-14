@@ -1,3 +1,4 @@
+import { LoyaltyDomainEvent } from '../../../../adaptors/generated/message-names.js';
 import type {
   RewardEarnedDomainEventPayload,
   RewardIssuedDomainEventPayload,
@@ -11,7 +12,7 @@ import { timestamp } from '../../../../adaptors/messaging/event-payload-codec.js
 /** Loyalty validates the private grant evidence used to request reward issuance. */
 export const privateEventCodec = new PrivateEventCodec(
   protobuf.Root.fromJSON(schema).lookupType('cafe.loyalty.internal.PrivateEvent'),
-  { owner: 'loyalty', name: 'loyalty.reward-earned', kind: 'account', payload: 'rewardEarned' },
+  { owner: 'loyalty', name: LoyaltyDomainEvent.REWARD_EARNED, kind: 'account', payload: 'rewardEarned' },
   (payload, source) => {
     for (const key of ['accountId', 'grantId']) {
       if (typeof payload[key] !== 'string') throw new Error('Missing grant identity');
@@ -33,14 +34,14 @@ export const privateEventCodec = new PrivateEventCodec(
 
 /** Private payload association owned by loyalty. */
 export type PrivateEventPayloads = {
-  'loyalty.reward-earned': RewardEarnedDomainEventPayload;
-  'loyalty.reward-issued.domain': RewardIssuedDomainEventPayload;
+  [LoyaltyDomainEvent.REWARD_EARNED]: RewardEarnedDomainEventPayload;
+  [LoyaltyDomainEvent.REWARD_ISSUED]: RewardIssuedDomainEventPayload;
 };
 
 /** Reward publication validates source identity and the immutable issued terms. */
 const rewardIssuedCodec = new PrivateEventCodec(
   protobuf.Root.fromJSON(schema).lookupType('cafe.loyalty.internal.PrivateEvent'),
-  { owner: 'loyalty', name: 'loyalty.reward-issued.domain', kind: 'reward', payload: 'rewardIssued' },
+  { owner: 'loyalty', name: LoyaltyDomainEvent.REWARD_ISSUED, kind: 'reward', payload: 'rewardIssued' },
   (payload, source) => {
     if (typeof payload.rewardId !== 'string' || typeof payload.customerId !== 'string')
       throw new Error('Missing reward identity');
@@ -56,6 +57,6 @@ const rewardIssuedCodec = new PrivateEventCodec(
   },
 );
 export const privateEventCodecs = {
-  'loyalty.reward-earned': privateEventCodec,
-  'loyalty.reward-issued.domain': rewardIssuedCodec,
+  [LoyaltyDomainEvent.REWARD_EARNED]: privateEventCodec,
+  [LoyaltyDomainEvent.REWARD_ISSUED]: rewardIssuedCodec,
 };

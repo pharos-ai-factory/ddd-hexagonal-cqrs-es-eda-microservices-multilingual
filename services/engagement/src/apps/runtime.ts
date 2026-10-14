@@ -1,3 +1,8 @@
+import type {
+  EventName,
+  SubscriptionName,
+  IntegrationEventName,
+} from '../adaptors/generated/message-names.js';
 import type { PublishedEventPayloads } from '../adaptors/generated/event-types.js';
 import type { PrivateEventPayloads } from '../adaptors/generated/private-event-registry.js';
 /** Generated published bindings and owner-declared private payloads compose the graph. */
@@ -8,7 +13,7 @@ import type { InternalCommandCodec } from '../adaptors/messaging/internal-comman
 import type { EventSubscription } from '../adaptors/messaging/rabbitmq-consumer.js';
 
 /** An owner-local subscription installs both durable hand-off and command execution. */
-export function commandSubscription<K extends keyof EventPayloads, C extends object>(
+export function commandSubscription<K extends EventName & keyof EventPayloads, C extends object>(
   event: K,
   codec: InternalCommandCodec<C>,
   definitions: readonly { consumer: string; event: string; command?: string; publication?: string }[],
@@ -16,7 +21,7 @@ export function commandSubscription<K extends keyof EventPayloads, C extends obj
   eventHandler: { handle: (m: Metadata, event: NoInfer<EventPayloads[K]>) => Promise<Outcome> },
   commandHandler: { execute: (m: Metadata, command: NoInfer<C>) => Promise<Outcome> },
 ): EventSubscription[] {
-  const definition = definitions.find((item) => item.consumer === codec.consumer);
+  const definition = definitions.find((item) => item.consumer === String(codec.consumer));
   if (
     !definition ||
     definition.publication ||
@@ -72,15 +77,15 @@ export function completeSubscriptions(
 }
 
 /** Bind one independently acknowledged private-event publication subscription. */
-export function publicationSubscription<K extends keyof EventPayloads>(
+export function publicationSubscription<K extends EventName & keyof EventPayloads>(
   owner: string,
-  consumer: string,
+  consumer: SubscriptionName,
   event: K,
-  publication: string,
+  publication: IntegrationEventName,
   definitions: readonly { consumer: string; event: string; command?: string; publication?: string }[],
   handler: { handle(m: Metadata, event: NoInfer<EventPayloads[K]>): Promise<Outcome> },
 ): EventSubscription {
-  const definition = definitions.find((d) => d.consumer === consumer);
+  const definition = definitions.find((d) => d.consumer === String(consumer));
   if (
     !definition ||
     definition.command ||

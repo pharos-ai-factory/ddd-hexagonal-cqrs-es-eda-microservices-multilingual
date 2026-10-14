@@ -104,8 +104,10 @@ defined by decision 0009. See decision 0007 and `contracts/shared/messaging/requ
 
 Owner services expose only health and authenticated diagnostics over HTTP.
 Their composition registers each command with its owner parser and plain handler
-factory through the shared command registration API. Query handlers register with the
-RabbitMQ request registry. Contexts have messaging adaptors for incoming business
+factory through the shared command registration API. Each query registers its generated
+identifier, owner parser, concrete handler and reply mapper directly with the
+RabbitMQ request registry. Event and subscription identifiers also come from their
+source catalogues; domain facts stay plain types. See [decision 0024](docs/decisions/0024-generated-message-identifiers-and-direct-queries.md). Contexts have messaging adaptors for incoming business
 requests. The earlier direct owner HTTP inspection endpoints were retired by
 [decision 0016](docs/decisions/0016-owner-messaging-boundary.md); local inspection
 uses the public API and the same broker path.

@@ -1,12 +1,12 @@
 """Exercise published and durable command registrations through the production composition."""
 
+from operations.adaptors.generated.message_names import CollectionDomainEvent, PreparationSubscription
+from operations.adaptors.generated.request_names import CollectionCommand
 from collections.abc import Callable
 from threading import Event
 from unittest.mock import Mock, patch
-
 from dependency_injector import providers
 import pytest
-
 from operations.adaptors.command_execution import TransactionResult
 from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription
 from operations.apps.composition.collection import CollectionContainer, requests
@@ -39,7 +39,8 @@ def test_published_registration_runs_the_concrete_handler_in_its_transaction() -
 
     container = CollectionContainer()
     container.pickup_transaction.override(providers.Object(Transaction()))
-    container.queries.override(providers.Object(Mock()))
+    container.get_pickup.override(providers.Object(Mock()))
+    container.list_pickups.override(providers.Object(Mock()))
     registry = requests(container)
     request = command()
     request.command.collect_order.code = "ABC123"
@@ -49,9 +50,11 @@ def test_published_registration_runs_the_concrete_handler_in_its_transaction() -
     assert captured[0].id == ID and captured[0].expected == 0
     assert captured[0].name == "collection.CollectOrder"
     assert captured[0].input == {"code": "ABC123"}
-    assert [fact.name for fact in probe.publications] == ["collection.order-collected.domain"]
+    assert [fact.name for fact in probe.publications] == [CollectionDomainEvent.ORDER_COLLECTED]
     with pytest.raises(ValueError, match="Duplicate request handler"):
-        container.commands().request(registry, "collectOrder", lambda _: {}, lambda _: Mock())
+        container.commands().request(
+            registry, CollectionCommand.COLLECT_ORDER, lambda _: {}, lambda _: Mock()
+        )
 
 
 def test_private_registration_uses_the_declared_codec_and_owner_handler() -> None:
@@ -80,7 +83,7 @@ def test_private_registration_uses_the_declared_codec_and_owner_handler() -> Non
 
     def receive(_url: str, subscription: EventSubscription[AcceptOrderCommand], _stop: Event) -> None:
         assert subscription.command_decoder is not None
-        assert subscription.consumer == "preparation.accept-order"
+        assert subscription.consumer == PreparationSubscription.ACCEPT_ORDER
         received, decoded = subscription.command_decoder(body)
         assert decoded == value
         assert received.source_hash == metadata.source_hash

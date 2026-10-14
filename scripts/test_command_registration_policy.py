@@ -57,3 +57,27 @@ class CommandRegistrationTests(unittest.TestCase):
         ]:
             with self.subTest(path=path):
                 self.assertIsNone(violation(path, content))
+
+    def test_grouped_queries_and_string_identifiers_are_rejected(self):
+        fixtures = {
+            "services/operations/src/operations/apps/composition/preparation.py": [
+                'registry.queries("ticket", "tickets", queries, item, listing)',
+                'commands.request(registry, "startPreparation", parse, Handler)',
+                'registry.query("getTicket", parse, handler, reply)',
+                'publication_subscription("preparation", "preparation.publish-drinks-ready", definitions, event, name, handler)',
+            ],
+            "services/engagement/src/apps/composition/loyalty.ts": [
+                "AccountQueryEndpoints(get, list)",
+                "registry.query('getAccount', parse, handler, reply)",
+                "commands.subscription('collection.order-collected', codec, definitions, target, reaction, handler)",
+            ],
+            "services/storefront/apps/storefront/di/menu_requests.go": [
+                'registration.Register(commands, "createDrink", parse, handler)',
+                'requests.Query(registry, "getDrink", parse, handler, reply)',
+                "rpc.RegisterQueries(registry, endpoints)",
+            ],
+        }
+        for path, examples in fixtures.items():
+            for content in examples:
+                with self.subTest(path=path, content=content):
+                    self.assertIsNotNone(violation(path, content))

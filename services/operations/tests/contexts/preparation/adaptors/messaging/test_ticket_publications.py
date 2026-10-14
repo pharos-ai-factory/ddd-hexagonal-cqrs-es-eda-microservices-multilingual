@@ -1,5 +1,7 @@
 """Completing a ticket stages a decodable private fact for independent publication."""
 
+from operations.adaptors.generated.message_names import PreparationDomainEvent
+
 from operations.adaptors.command_execution import EventRecordingWriteRepository
 from operations.adaptors.messaging.event_codec import decode, encode
 from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN
@@ -44,7 +46,7 @@ def test_complete_preparation_stages_private_drinks_ready_with_original_terms() 
     assert source.ticket.snapshot()["status"] == "ready"
     assert len(repository.publications) == 1
     private = repository.publications[0]
-    assert private.name == "preparation.drinks-ready.domain"
+    assert private.name == PreparationDomainEvent.DRINKS_READY
     metadata = Metadata(ORDER, TICKET, "complete", CUSTOMER)
     _, body = encode(
         "preparation", "ticket", TICKET, 3, metadata, private, occurred_at="2026-10-14T10:00:00Z"

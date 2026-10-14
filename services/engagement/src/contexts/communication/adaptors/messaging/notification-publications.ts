@@ -1,10 +1,11 @@
+import { CommunicationDomainEvent } from '../../../../adaptors/generated/message-names.js';
 import type { Notification } from '../../domain/notification.js';
 import type { Publication } from '../../../../foundation/application.js';
 
 /** Map the saved aggregate's private facts to this owner's delivered messages. */
 export function notificationPublications(aggregate: Notification): Publication[] {
   return aggregate.events().map((fact) => ({
-    name: 'communication.notification-requested',
+    name: CommunicationDomainEvent.NOTIFICATION_REQUESTED,
     payload: { notificationId: fact.notificationId },
   }));
 }

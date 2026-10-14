@@ -3,6 +3,7 @@ package requests
 import (
 	"context"
 	"errors"
+	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu"
 	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -24,7 +25,7 @@ func TestCommandTranslationRetainsPlainReceiptMaterialAndZero(t *testing.T) {
 		Minor int64  `json:"minor"`
 	}
 	registry := New("menu")
-	Command(registry, "changePrice", func(p *pb.ChangePrice) input { return input{Code: p.GetCode(), Minor: p.GetMinor()} }, func(_ context.Context, m a.Metadata, c input) (a.Outcome, error) {
+	Command(registry, names.MenuCommandChangePrice, func(p *pb.ChangePrice) input { return input{Code: p.GetCode(), Minor: p.GetMinor()} }, func(_ context.Context, m a.Metadata, c input) (a.Outcome, error) {
 		if c.Code != "coffee" || c.Minor != 0 || m.Input != c || m.Name != "menu.ChangePrice" || m.ID != id || m.ExpectedVersion == nil || *m.ExpectedVersion != 0 {
 			t.Fatal("application command material changed")
 		}
@@ -41,7 +42,7 @@ func TestCommandTranslationRetainsPlainReceiptMaterialAndZero(t *testing.T) {
 func TestInvalidOwnerAndMissingPriceNeverReachHandler(t *testing.T) {
 	registry := New("menu")
 	called := false
-	Command(registry, "changePrice", func(*pb.ChangePrice) struct{} { return struct{}{} }, func(context.Context, a.Metadata, struct{}) (a.Outcome, error) { called = true; return a.Outcome{}, nil })
+	Command(registry, names.MenuCommandChangePrice, func(*pb.ChangePrice) struct{} { return struct{}{} }, func(context.Context, a.Metadata, struct{}) (a.Outcome, error) { called = true; return a.Outcome{}, nil })
 	request := priceRequest()
 	request.GetCommand().GetChangePrice().Minor = nil
 	if _, _, err := Validate(request, "menu"); err == nil {
@@ -56,11 +57,35 @@ func TestInvalidOwnerAndMissingPriceNeverReachHandler(t *testing.T) {
 }
 func TestInfrastructureFailureProducesRetryableReply(t *testing.T) {
 	registry := New("menu")
-	Command(registry, "changePrice", func(*pb.ChangePrice) struct{} { return struct{}{} }, func(context.Context, a.Metadata, struct{}) (a.Outcome, error) {
+	Command(registry, names.MenuCommandChangePrice, func(*pb.ChangePrice) struct{} { return struct{}{} }, func(context.Context, a.Metadata, struct{}) (a.Outcome, error) {
 		return a.Outcome{}, errors.New("database credential private-secret")
 	})
 	reply := registry.Handle(t.Context(), priceRequest())
 	if reply.GetError().Code != "temporarily_unavailable" || reply.GetError().Message != "" {
 		t.Fatal("infrastructure failure leaked or became rejection")
+	}
+}
+
+func TestGeneratedQueryIdentifiersRejectWrongOwnersDuplicatesAndForgedValues(t *testing.T) {
+	registry := New("menu")
+	parse := func(p *pb.GetDrink) string { return p.Id }
+	execute := func(context.Context, string) (string, error) { return "", nil }
+	reply := func(string, string) names.Reply { return &pb.Reply{} }
+	Query(registry, names.MenuQueryGetDrink, parse, execute, reply)
+	for _, name := range []names.QueryName{names.MenuQueryGetDrink, names.OrderingQueryGetOrder, names.MenuQuery("unknown"), nil} {
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Errorf("invalid registration accepted: %v", name)
+				}
+			}()
+			Query(registry, name, parse, execute, reply)
+		}()
+	}
+	if _, ok := any(names.MenuQueryGetDrink).(names.CommandName); ok {
+		t.Fatal("query also implements command role")
+	}
+	if _, ok := any("getDrink").(names.QueryName); ok {
+		t.Fatal("plain string implements generated role")
 	}
 }

@@ -1,5 +1,12 @@
 """Actual RabbitMQ quarantine evidence for malformed retry metadata."""
 
+from operations.adaptors.generated.message_names import (
+    CollectionSubscription,
+    OrderingIntegrationEvent,
+    PreparationIntegrationEvent,
+    PreparationSubscription,
+)
+
 import os
 from decimal import Decimal
 from functools import partial
@@ -32,7 +39,7 @@ from operations.adaptors.persistence.postgres_database import fingerprint
 @pytest.mark.parametrize("counter", ["invalid", -2147483648, 2147483647, Decimal("1.5"), True, None])
 def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counter: object) -> None:
     # The integration lane stops runtime workers before using their declared queues.
-    consumer = "collection.open-pickup"
+    consumer = CollectionSubscription.OPEN_PICKUP
     queue = "ref." + consumer
     stop, handled = Event(), Event()
     connection = broker_connection(os.environ["BROKER_ADMIN_URL"])
@@ -52,7 +59,7 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
         )
         valid = WireEvent(
             id=new_id(),
-            name="preparation.drinks-ready",
+            name=PreparationIntegrationEvent.DRINKS_READY,
             context="preparation",
             visibility="integration",
             contract_version=1,
@@ -116,12 +123,12 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
 
 
 def test_typed_order_delivery_preserves_original_receipt_material() -> None:
-    consumer = "preparation.accept-order"
+    consumer = PreparationSubscription.ACCEPT_ORDER
     queue, stop = "ref." + consumer, Event()
     received: Future[tuple[Metadata, OrderPlacedIntegrationEvent]] = Future()
     event = WireEvent(
         id=new_id(),
-        name="ordering.order-placed",
+        name=OrderingIntegrationEvent.ORDER_PLACED,
         context="ordering",
         visibility="integration",
         contract_version=1,

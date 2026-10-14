@@ -26,6 +26,10 @@ class EventContractTests(unittest.TestCase):
             shutil.copyfile(
                 ROOT / directory / "private_messages.json", self.root / directory / "private_messages.json"
             )
+        for directory in PRIVATE.values():
+            source = ROOT / directory / "internal_commands.proto"
+            if source.exists():
+                shutil.copyfile(source, self.root / directory / source.name)
         self.schema = (
             self.root / "contracts/menu/messaging/integration_events/v1/menu_integration_events.proto"
         )

@@ -1,5 +1,6 @@
 """Encode and validate owner-private command envelopes and receipt material."""
 
+from operations.adaptors.generated.message_names import SubscriptionName, PrivateCommandName
 import base64
 import json
 from collections.abc import Callable, Mapping
@@ -17,7 +18,12 @@ class InternalCommandCodec[C: Mapping[str, object]]:
     """Validate typed owner commands independently from published event envelopes."""
 
     def __init__(
-        self, owner: str, consumer: str, command: str, envelope: type[Message], parse: Callable[[object], C]
+        self,
+        owner: str,
+        consumer: SubscriptionName,
+        command: PrivateCommandName,
+        envelope: type[Message],
+        parse: Callable[[object], C],
     ) -> None:
         if not consumer.startswith(owner + "."):
             raise ValueError("Foreign command subscription")

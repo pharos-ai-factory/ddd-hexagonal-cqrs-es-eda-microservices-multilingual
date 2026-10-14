@@ -55,7 +55,7 @@ class AdaptorLayoutTests(unittest.TestCase):
             "services/engagement/src/contexts/communication/adaptors/",
         ):
             self.assertIsNotNone(layout_violation(prefix + "query_endpoints.py"))
-            self.assertIsNone(layout_violation(prefix + "messaging/ticket_query_endpoints.py"))
+            self.assertIsNone(layout_violation(prefix + "messaging/ticket_requests.py"))
             self.assertIsNone(layout_violation(prefix + "delivery/http-notification-delivery.ts"))
 
     def test_typescript_and_go_keep_delivery_out_of_persistence(self):

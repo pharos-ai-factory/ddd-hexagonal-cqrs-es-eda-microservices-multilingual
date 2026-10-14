@@ -1,3 +1,10 @@
+import {
+  CollectionIntegrationEvent,
+  LoyaltyDomainEvent,
+  LoyaltyIntegrationEvent,
+  LoyaltyPrivateCommand,
+  LoyaltySubscription,
+} from '../adaptors/generated/message-names.js';
 import { CreditCollectionCommandHandler } from '../contexts/loyalty/application/commands/credit-collection.js';
 import { derivedId } from '../foundation/identity.js';
 import { test } from 'node:test';
@@ -5,14 +12,18 @@ import assert from 'node:assert/strict';
 import { completeSubscriptions } from './runtime.js';
 import { createLoyaltyContainer } from './composition/loyalty.js';
 const definitions = [
-  { consumer: 'loyalty.credit-collection', event: 'collection.order-collected', command: 'creditCollection' },
+  {
+    consumer: LoyaltySubscription.CREDIT_COLLECTION,
+    event: CollectionIntegrationEvent.ORDER_COLLECTED,
+    command: LoyaltyPrivateCommand.CREDIT_COLLECTION,
+  },
 ];
 void test('manifest completeness rejects missing, duplicate and mislabelled consumer pairs', async () => {
   const container = createLoyaltyContainer('postgresql://unused@127.0.0.1:1/unused');
   const c = container.cradle;
   try {
     const pair = c.accountCommands.subscription(
-      'collection.order-collected',
+      CollectionIntegrationEvent.ORDER_COLLECTED,
       c.creditCodec,
       definitions,
       (e) => e.customerId,
@@ -30,7 +41,7 @@ void test('manifest completeness rejects missing, duplicate and mislabelled cons
     assert.throws(() => completeSubscriptions('loyalty', [...definitions, ...definitions], pair));
     assert.throws(() =>
       c.accountCommands.subscription(
-        'collection.order-collected',
+        CollectionIntegrationEvent.ORDER_COLLECTED,
         c.creditCodec,
         [{ ...definitions[0]!, event: 'incorrect' }],
         (e) => e.customerId,
@@ -53,7 +64,7 @@ function incompatibleHandler(container: ReturnType<typeof createLoyaltyContainer
     ) => ({ aggregateId: event.rewardId, version: 0, status: 'queued' }),
   };
   c.accountCommands.subscription(
-    'collection.order-collected',
+    CollectionIntegrationEvent.ORDER_COLLECTED,
     c.creditCodec,
     definitions,
     (e) => e.customerId,
@@ -68,15 +79,15 @@ void test('publication subscriptions require one private worker and exactly one 
   const { publicationSubscription } = await import('./runtime.js');
   const container = createLoyaltyContainer('postgresql://unused@127.0.0.1:1/unused');
   const declared = {
-    consumer: 'loyalty.publish-reward-issued',
-    event: 'loyalty.reward-issued.domain',
-    publication: 'loyalty.reward-issued',
+    consumer: LoyaltySubscription.PUBLISH_REWARD_ISSUED,
+    event: LoyaltyDomainEvent.REWARD_ISSUED,
+    publication: LoyaltyIntegrationEvent.REWARD_ISSUED,
   };
   try {
     const worker = publicationSubscription(
       'loyalty',
       declared.consumer,
-      'loyalty.reward-issued.domain',
+      LoyaltyDomainEvent.REWARD_ISSUED,
       declared.publication,
       [declared],
       container.cradle.publishIssued,
@@ -86,14 +97,18 @@ void test('publication subscriptions require one private worker and exactly one 
     for (const workers of [[], [worker, worker], [{ ...worker, owner: 'communication' }]])
       assert.throws(() => completeSubscriptions('loyalty', [declared], workers));
     assert.throws(() =>
-      completeSubscriptions('loyalty', [{ ...declared, command: 'issueReward' }], [worker]),
+      completeSubscriptions(
+        'loyalty',
+        [{ ...declared, command: LoyaltyPrivateCommand.ISSUE_REWARD }],
+        [worker],
+      ),
     );
     assert.throws(() =>
       publicationSubscription(
         'loyalty',
         declared.consumer,
-        'loyalty.reward-issued.domain',
-        'wrong',
+        LoyaltyDomainEvent.REWARD_ISSUED,
+        CollectionIntegrationEvent.PICKUP_OPENED,
         [declared],
         container.cradle.publishIssued,
       ),

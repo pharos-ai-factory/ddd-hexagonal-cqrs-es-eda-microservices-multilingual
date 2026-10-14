@@ -1,5 +1,7 @@
 """Preparation rejects inconsistent immutable order evidence at its boundary."""
 
+from operations.adaptors.generated.message_names import OrderingIntegrationEvent
+
 import pytest
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.adaptors.generated.cafe.v1.contexts.ordering.ordering_integration_events_pb2 import (
@@ -16,7 +18,9 @@ def event(quantities: list[int], duplicate: bool = False) -> Event:
         payload.lines.add(
             id=IDS[3 if duplicate else 3 + index], offer_code="TEA", name="Tea", quantity=quantity, minor=0
         )
-    return Event(name="ordering.order-placed", aggregate_id=IDS[0], payload=payload.SerializeToString())
+    return Event(
+        name=OrderingIntegrationEvent.ORDER_PLACED, aggregate_id=IDS[0], payload=payload.SerializeToString()
+    )
 
 
 def test_free_lines_preserve_zero_amount_and_total_quantity() -> None:

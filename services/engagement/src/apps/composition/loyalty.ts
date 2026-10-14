@@ -1,10 +1,18 @@
+import {
+  CollectionIntegrationEvent,
+  LoyaltyDomainEvent,
+  LoyaltyIntegrationEvent,
+  LoyaltySubscription,
+} from '../../adaptors/generated/message-names.js';
+import * as rewardQueries from '../../contexts/loyalty/adaptors/messaging/reward-query-mapping.js';
+import * as accountQueries from '../../contexts/loyalty/adaptors/messaging/account-query-mapping.js';
+import { LoyaltyQuery, LoyaltyCommand } from '../../adaptors/generated/request-names.js';
 import { PostgresPublicationOutbox } from '../../adaptors/persistence/integration-event-outbox.js';
 import { published } from '../../adaptors/generated/event-types.js';
 import { RewardIssuedDomainEventHandler } from '../../contexts/loyalty/application/event-handlers/publish-reward-issued.js';
 import { CommandRegistration } from '../command-registration.js';
 import { RabbitMQRequestRegistry } from '../../adaptors/messaging/rabbitmq-request-registry.js';
 import * as wire from '../../contexts/loyalty/adaptors/messaging/reward-requests.js';
-import { account as accountWire } from '../../contexts/loyalty/adaptors/messaging/account-replies.js';
 import { accountPublications } from '../../contexts/loyalty/adaptors/messaging/account-publications.js';
 import { rewardPublications } from '../../contexts/loyalty/adaptors/messaging/reward-publications.js';
 import type { Reward } from '../../contexts/loyalty/domain/reward.js';
@@ -13,12 +21,10 @@ import type { LoyaltyAccount } from '../../contexts/loyalty/domain/loyalty-accou
 import { PostgresAccountWriteRepository } from '../../contexts/loyalty/adaptors/persistence/account-write-repository.js';
 import type { AggregateTransaction } from '../../adaptors/command-execution.js';
 import { PostgresAggregateTransaction } from '../../adaptors/persistence/aggregate-transaction.js';
-import { rewardQueryEndpoints } from '../../contexts/loyalty/adaptors/messaging/reward-query-endpoints.js';
 import { ListRewardsQueryHandler } from '../../contexts/loyalty/application/queries/list-rewards.js';
 import { GetRewardQueryHandler } from '../../contexts/loyalty/application/queries/get-reward.js';
 import { restoreRewardSnapshot } from '../../contexts/loyalty/adaptors/persistence/reward-snapshot.js';
 import { PostgresRewardReadRepository } from '../../contexts/loyalty/adaptors/persistence/reward-read-repository.js';
-import { accountQueryEndpoints } from '../../contexts/loyalty/adaptors/messaging/account-query-endpoints.js';
 import { ListAccountsQueryHandler } from '../../contexts/loyalty/application/queries/list-accounts.js';
 import { GetAccountQueryHandler } from '../../contexts/loyalty/application/queries/get-account.js';
 import { restoreAccountSnapshot } from '../../contexts/loyalty/adaptors/persistence/account-snapshot.js';
@@ -54,11 +60,9 @@ export type LoyaltyDependencies = {
   accountReadRepository: PostgresAccountReadRepository;
   getAccount: GetAccountQueryHandler;
   listAccounts: ListAccountsQueryHandler;
-  accountQueries: ReturnType<typeof accountQueryEndpoints>;
   rewardReadRepository: PostgresRewardReadRepository;
   getReward: GetRewardQueryHandler;
   listRewards: ListRewardsQueryHandler;
-  rewardQueries: ReturnType<typeof rewardQueryEndpoints>;
   accountCommands: CommandRegistration<LoyaltyAccount>;
   rewardCommands: CommandRegistration<Reward>;
   creditCodec: InternalCommandCodec<CreditCollectionCommand>;
@@ -108,9 +112,6 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
     listAccounts: asFunction(
       (c: LoyaltyDependencies) => new ListAccountsQueryHandler(c.accountReadRepository),
     ).singleton(),
-    accountQueries: asFunction((c: LoyaltyDependencies) =>
-      accountQueryEndpoints(c.getAccount, c.listAccounts),
-    ).singleton(),
     rewardReadRepository: asFunction(
       (c: LoyaltyDependencies) => new PostgresRewardReadRepository(c.database),
     ).singleton(),
@@ -119,9 +120,6 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
     ).singleton(),
     listRewards: asFunction(
       (c: LoyaltyDependencies) => new ListRewardsQueryHandler(c.rewardReadRepository),
-    ).singleton(),
-    rewardQueries: asFunction((c: LoyaltyDependencies) =>
-      rewardQueryEndpoints(c.getReward, c.listRewards),
     ).singleton(),
     accountCommands: asFunction(
       (c: LoyaltyDependencies) => new CommandRegistration(c.accountTransaction),
@@ -138,8 +136,11 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
     publishIssued: asFunction(
       (c: LoyaltyDependencies) =>
         new RewardIssuedDomainEventHandler(
-          new PostgresPublicationOutbox(c.database, 'loyalty.publish-reward-issued', 'reward', (payload) =>
-            published('loyalty.reward-issued', payload),
+          new PostgresPublicationOutbox(
+            c.database,
+            LoyaltySubscription.PUBLISH_REWARD_ISSUED,
+            'reward',
+            (payload) => published(LoyaltyIntegrationEvent.REWARD_ISSUED, payload),
           ),
         ),
     ).singleton(),
@@ -173,12 +174,24 @@ export function loyaltyRequests(c: LoyaltyDependencies) {
   const clock = c.clock;
   c.rewardCommands.request(
     registry,
-    'redeemReward',
+    LoyaltyCommand.REDEEM_REWARD,
     wire.redeem,
     (repository) => new RedeemRewardCommandHandler(repository, clock),
   );
-  registry.queries('account', 'accounts', c.accountQueries, accountWire);
-  registry.queries('reward', 'rewards', c.rewardQueries, wire.reward);
+  registry.query(LoyaltyQuery.GET_ACCOUNT, accountQueries.getAccount, c.getAccount, accountQueries.getReply);
+  registry.query(
+    LoyaltyQuery.LIST_ACCOUNTS,
+    accountQueries.listAccounts,
+    c.listAccounts,
+    accountQueries.listReply,
+  );
+  registry.query(LoyaltyQuery.GET_REWARD, rewardQueries.getReward, c.getReward, rewardQueries.getReply);
+  registry.query(
+    LoyaltyQuery.LIST_REWARDS,
+    rewardQueries.listRewards,
+    c.listRewards,
+    rewardQueries.listReply,
+  );
   return registry;
 }
 
@@ -188,14 +201,14 @@ export function loyaltySubscriptions(c: LoyaltyDependencies) {
   return completeSubscriptions('loyalty', definitions, [
     publicationSubscription(
       'loyalty',
-      'loyalty.publish-reward-issued',
-      'loyalty.reward-issued.domain',
-      'loyalty.reward-issued',
+      LoyaltySubscription.PUBLISH_REWARD_ISSUED,
+      LoyaltyDomainEvent.REWARD_ISSUED,
+      LoyaltyIntegrationEvent.REWARD_ISSUED,
       definitions,
       c.publishIssued,
     ),
     ...c.accountCommands.subscription(
-      'collection.order-collected',
+      CollectionIntegrationEvent.ORDER_COLLECTED,
       c.creditCodec,
       definitions,
       (event) => event.customerId,
@@ -204,7 +217,7 @@ export function loyaltySubscriptions(c: LoyaltyDependencies) {
       (m, command) => ({ ...m, id: derivedId('collection-credit', command.orderId) }),
     ),
     ...c.rewardCommands.subscription(
-      'loyalty.reward-earned',
+      LoyaltyDomainEvent.REWARD_EARNED,
       c.issueCodec,
       definitions,
       (event) => derivedId('reward', event.grantId),

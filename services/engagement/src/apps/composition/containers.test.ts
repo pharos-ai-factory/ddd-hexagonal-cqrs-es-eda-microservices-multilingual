@@ -1,3 +1,4 @@
+import { LoyaltySubscription } from '../../adaptors/generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { asFunction, asValue } from 'awilix';
@@ -45,7 +46,7 @@ void test('Awilix binds feature execution to the shared command boundary and rep
   container.register({ accountTransaction: asValue(transaction) });
   const id = '00000000-0000-4000-8000-000000000001';
   const worker = loyaltySubscriptions(container.cradle).find(
-    (worker) => worker.consumer === 'loyalty.credit-collection' && worker.decodeCommand,
+    (worker) => worker.consumer === String(LoyaltySubscription.CREDIT_COLLECTION) && worker.decodeCommand,
   )!;
   const outcome = await worker.handle(
     { id, target: id, correlation: id, name: 'fixture', input: {} },

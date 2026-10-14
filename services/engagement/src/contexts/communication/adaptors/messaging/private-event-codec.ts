@@ -1,3 +1,4 @@
+import { CommunicationDomainEvent } from '../../../../adaptors/generated/message-names.js';
 import type { NotificationRequestedDomainEventPayload } from '../../application/events.js';
 import protobuf from 'protobufjs';
 import schema from './generated/private_messages.json' with { type: 'json' };
@@ -9,7 +10,7 @@ export const privateEventCodec = new PrivateEventCodec(
   protobuf.Root.fromJSON(schema).lookupType('cafe.communication.internal.PrivateEvent'),
   {
     owner: 'communication',
-    name: 'communication.notification-requested',
+    name: CommunicationDomainEvent.NOTIFICATION_REQUESTED,
     kind: 'notification',
     payload: 'notificationRequested',
   },
@@ -22,7 +23,7 @@ export const privateEventCodec = new PrivateEventCodec(
 
 /** Private payload association owned by communication. */
 export type PrivateEventPayloads = {
-  'communication.notification-requested': NotificationRequestedDomainEventPayload;
+  [CommunicationDomainEvent.NOTIFICATION_REQUESTED]: NotificationRequestedDomainEventPayload;
 };
 
-export const privateEventCodecs = { 'communication.notification-requested': privateEventCodec };
+export const privateEventCodecs = { [CommunicationDomainEvent.NOTIFICATION_REQUESTED]: privateEventCodec };

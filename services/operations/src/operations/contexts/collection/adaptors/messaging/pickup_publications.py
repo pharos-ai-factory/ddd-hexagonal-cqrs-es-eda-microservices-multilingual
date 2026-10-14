@@ -1,5 +1,7 @@
 """Stage Collection's private facts in the aggregate transaction."""
 
+from operations.adaptors.generated.message_names import CollectionDomainEvent
+
 from operations.contexts.collection.domain.pickup import Pickup, PickupOpenedDomainEvent
 from operations.foundation.application import Publication
 
@@ -8,7 +10,7 @@ def pickup_publications(aggregate: Pickup) -> tuple[Publication, ...]:
     """Select durable private reactions without constructing published contracts."""
     return tuple(
         Publication(
-            "collection.pickup-opened.domain",
+            CollectionDomainEvent.PICKUP_OPENED,
             {
                 "pickupId": fact.pickup_id,
                 "orderId": fact.order_id,
@@ -18,7 +20,7 @@ def pickup_publications(aggregate: Pickup) -> tuple[Publication, ...]:
         )
         if isinstance(fact, PickupOpenedDomainEvent)
         else Publication(
-            "collection.order-collected.domain",
+            CollectionDomainEvent.ORDER_COLLECTED,
             {
                 "orderId": fact.order_id,
                 "customerId": fact.customer_id,

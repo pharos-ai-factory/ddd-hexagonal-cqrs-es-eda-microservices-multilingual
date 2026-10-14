@@ -1,5 +1,6 @@
 """Technical private envelope codec; owner adaptors supply payload validation."""
 
+from operations.adaptors.generated.message_names import DomainEventName
 from collections.abc import Callable, Mapping
 
 from google.protobuf.json_format import ParseDict
@@ -16,7 +17,7 @@ class PrivateEventCodec:
     def __init__(
         self,
         owner: str,
-        name: str,
+        name: DomainEventName,
         kind: str,
         envelope: type[Message],
         field: str,

@@ -1,4 +1,4 @@
-import { identifier, replyType, decodeRequest, type Request } from './request-envelope.js';
+import { replyType, decodeRequest, type Request } from './request-envelope.js';
 import amqp from 'amqplib';
 
 import { confirmed } from './rabbitmq-publisher.js';
@@ -9,11 +9,9 @@ import { currentReply, type ReplyIntent } from '../persistence/command-reply-out
 
 import { pause } from '../../foundation/abortable-delay.js';
 
-import { record, integer } from './request-values.js';
+import { COMMAND_NAMES, QUERY_NAMES, type CommandName, type QueryName } from '../generated/request-names.js';
 
-import type { Metadata, Outcome, Loaded } from '../../foundation/application.js';
-
-import type { PagedQueryPort } from '../../foundation/pagination.js';
+import type { Metadata, Outcome } from '../../foundation/application.js';
 
 type Handler = (request: Request) => Promise<Record<string, unknown>>;
 
@@ -22,10 +20,12 @@ export class RabbitMQRequestRegistry {
   private readonly handlers = new Map<string, Handler>();
   constructor(readonly owner: string) {}
   command<I extends object>(
-    name: string,
+    name: CommandName,
     parse: (value: unknown) => I,
     execute: (metadata: Metadata, value: I) => Promise<Outcome>,
   ) {
+    if (!COMMAND_NAMES[this.owner]?.includes(name))
+      throw new Error('Command identifier disagrees with owner');
     if (this.handlers.has(name)) throw new Error('Duplicate request handler: ' + name);
     this.handlers.set(name, async (request) => {
       if (!request.metadata) throw new Error('Command metadata is required');
@@ -43,33 +43,18 @@ export class RabbitMQRequestRegistry {
       };
     });
   }
-  queries<S>(
-    singular: string,
-    plural: string,
-    queries: PagedQueryPort<S>,
-    map: (value: Loaded<S>) => object,
+  /** Connect one generated query identifier to its parser, plain handler and reply mapper. */
+  query<Q, R>(
+    name: QueryName,
+    parse: (value: unknown) => Q,
+    handler: { execute(query: Q): Promise<R> },
+    reply: (query: Q, result: R) => Record<string, unknown>,
   ) {
-    const title = (value: string) => value[0]!.toUpperCase() + value.slice(1);
-    this.handlers.set('get' + title(singular), async (request) => {
-      const loaded = await queries.get(identifier(request.body.id));
-      return loaded ? { [singular]: map(loaded) } : { error: { code: 'not_found' } };
-    });
-    this.handlers.set('list' + title(plural), async (request) => {
-      if ('page' in request.body) {
-        const page = record(request.body.page);
-        const result = await queries.page({
-          limit: integer(page.limit),
-          after: 'after' in page ? identifier(page.after) : undefined,
-        });
-        return {
-          [plural]: {
-            items: result.items.map(map),
-            paged: true,
-            ...(result.nextId ? { nextId: result.nextId } : {}),
-          },
-        };
-      }
-      return { [plural]: { items: (await queries.list()).map(map), paged: false } };
+    if (!QUERY_NAMES[this.owner]?.includes(name)) throw new Error('Query identifier disagrees with owner');
+    if (this.handlers.has(name)) throw new Error('Duplicate request handler: ' + name);
+    this.handlers.set(name, async (request) => {
+      const query = parse(request.body);
+      return reply(query, await handler.execute(query));
     });
   }
   async handle(request: Request): Promise<Buffer> {

@@ -76,6 +76,19 @@ for contract in ("menu_private", "ordering_private"):
         subprocess.run([*arguments, *definitions], cwd=ROOT, check=True)
 for service in ("storefront", "api", "operations"):
     generate_requests(service, ROOT, plugin, standard_protos)
+subprocess.run(
+    [
+        "uv",
+        "run",
+        "--no-project",
+        "--with",
+        "grpcio-tools==1.84.0",
+        "python",
+        "scripts/generate_request_names.py",
+    ],
+    cwd=ROOT,
+    check=True,
+)
 # Internal commands are implementation resources owned by their receiving context.
 for owner in ("preparation", "collection"):
     source = ROOT / f"services/operations/src/operations/contexts/{owner}/adaptors/messaging"

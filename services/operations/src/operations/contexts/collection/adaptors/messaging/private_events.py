@@ -1,5 +1,7 @@
 """Private delivery codecs and plain domain-event restoration owned by collection."""
 
+from operations.adaptors.generated.message_names import CollectionDomainEvent
+
 from operations.adaptors.messaging.private_event_codec import PrivateEventCodec
 from operations.adaptors.messaging.incoming_event import IncomingEvent
 from operations.adaptors.messaging.event_payload_codec import parse_payload
@@ -32,7 +34,7 @@ def validate_pickup_opened(body: bytes, source: str) -> dict[str, object]:
 
 
 PICKUP_OPENED_DOMAIN = IncomingEvent[PickupOpenedDomainEvent](
-    "collection.pickup-opened.domain", lambda event: decode_pickup_opened(event.payload, event.aggregate_id)
+    CollectionDomainEvent.PICKUP_OPENED, lambda event: decode_pickup_opened(event.payload, event.aggregate_id)
 )
 
 
@@ -50,22 +52,22 @@ def validate_order_collected(body: bytes, source: str) -> dict[str, object]:
 
 
 ORDER_COLLECTED_DOMAIN = IncomingEvent[OrderCollectedDomainEvent](
-    "collection.order-collected.domain",
+    CollectionDomainEvent.ORDER_COLLECTED,
     lambda event: decode_order_collected(event.payload, event.aggregate_id),
 )
 
 PRIVATE_CODECS = {
-    "collection.pickup-opened.domain": PrivateEventCodec(
+    CollectionDomainEvent.PICKUP_OPENED: PrivateEventCodec(
         "collection",
-        "collection.pickup-opened.domain",
+        CollectionDomainEvent.PICKUP_OPENED,
         "pickup",
         wire.PrivateEvent,
         "pickup_opened",
         validate_pickup_opened,
     ),
-    "collection.order-collected.domain": PrivateEventCodec(
+    CollectionDomainEvent.ORDER_COLLECTED: PrivateEventCodec(
         "collection",
-        "collection.order-collected.domain",
+        CollectionDomainEvent.ORDER_COLLECTED,
         "pickup",
         wire.PrivateEvent,
         "order_collected",

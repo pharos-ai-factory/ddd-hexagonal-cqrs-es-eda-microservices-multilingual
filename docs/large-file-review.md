@@ -59,3 +59,7 @@ envelopes are generated and retain the same classification.
 Decision 0019 adds owner-private compiler outputs and the generated Python private
 event registry to the exact classification. All new handwritten files remain below
 450 lines.
+
+Decision 0024 classifies generated request-name and message-name modules in every
+service. Their context-specific enums are derived from compiled envelopes and
+owner catalogues. Handwritten generators retain the ordinary responsibility limit.

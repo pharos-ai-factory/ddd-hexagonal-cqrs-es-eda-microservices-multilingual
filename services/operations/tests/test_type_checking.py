@@ -38,3 +38,30 @@ def test_type_gate_rejects_wrong_commands_events_states_and_ports(tmp_path: Path
     assert status == 1, output + errors
     for line in range(len(IMPORTS.splitlines()) + 1, len(IMPORTS.splitlines()) + len(mistakes) + 1):
         assert f"caller.py:{line}: error:" in output, output
+
+
+def test_registration_identifiers_are_typed(tmp_path: Path) -> None:
+    source = tmp_path / "registration.py"
+    config = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    imports = """from operations.adaptors.generated.request_names import CommandName, QueryName, PreparationCommand, PreparationQuery
+from operations.adaptors.generated.message_names import EventName, PreparationDomainEvent, SubscriptionName, PreparationSubscription
+command: CommandName = PreparationCommand.START_PREPARATION
+query: QueryName = PreparationQuery.GET_TICKET
+event: EventName = PreparationDomainEvent.DRINKS_READY
+subscription: SubscriptionName = PreparationSubscription.ACCEPT_ORDER
+"""
+    arguments = ["--config-file", str(config), "--follow-imports=silent", str(source)]
+    source.write_text(imports)
+    output, errors, status = api.run(arguments)
+    assert status == 0, output + errors
+    mistakes = [
+        'command = "startPreparation"',
+        "query = PreparationCommand.START_PREPARATION",
+        'event = "preparation.drinks-ready.domain"',
+        "subscription = PreparationDomainEvent.DRINKS_READY",
+    ]
+    source.write_text(imports + "\n".join(mistakes) + "\n")
+    output, errors, status = api.run(arguments)
+    assert status == 1, output + errors
+    for line in range(len(imports.splitlines()) + 1, len(imports.splitlines()) + len(mistakes) + 1):
+        assert f"registration.py:{line}: error:" in output, output

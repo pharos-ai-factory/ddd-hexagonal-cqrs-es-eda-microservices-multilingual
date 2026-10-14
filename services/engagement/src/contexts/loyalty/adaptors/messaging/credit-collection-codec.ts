@@ -1,4 +1,4 @@
-import { LoyaltySubscription } from './loyalty-subscriptions.js';
+import { LoyaltyPrivateCommand, LoyaltySubscription } from '../../../../adaptors/generated/message-names.js';
 import { fields } from './command-fields.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
@@ -11,8 +11,8 @@ import type { CreditCollectionCommand } from '../../application/commands/credit-
 export const creditCodec = () =>
   new InternalCommandCodec(
     'loyalty',
-    LoyaltySubscription.CreditCollection,
-    'creditCollection',
+    LoyaltySubscription.CREDIT_COLLECTION,
+    LoyaltyPrivateCommand.CREDIT_COLLECTION,
     schema,
     (value): CreditCollectionCommand => {
       const p = fields(value);

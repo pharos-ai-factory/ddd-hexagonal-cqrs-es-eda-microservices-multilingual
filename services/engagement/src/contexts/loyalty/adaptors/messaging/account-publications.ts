@@ -1,3 +1,4 @@
+import { LoyaltyDomainEvent } from '../../../../adaptors/generated/message-names.js';
 import type { LoyaltyAccount } from '../../domain/loyalty-account.js';
 import type { Publication } from '../../../../foundation/application.js';
 
@@ -7,7 +8,7 @@ export function accountPublications(aggregate: LoyaltyAccount): Publication[] {
     fact.type === 'RewardEarned'
       ? [
           {
-            name: 'loyalty.reward-earned',
+            name: LoyaltyDomainEvent.REWARD_EARNED,
             payload: {
               accountId: fact.grant.accountId,
               grantId: fact.grant.id,

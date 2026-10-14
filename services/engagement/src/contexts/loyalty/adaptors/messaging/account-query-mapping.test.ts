@@ -5,7 +5,7 @@ import { restoreAccountSnapshot } from '../persistence/account-snapshot.js';
 import { accountView } from '../persistence/account-read-repository.js';
 import { GetAccountQueryHandler } from '../../application/queries/get-account.js';
 import { ListAccountsQueryHandler } from '../../application/queries/list-accounts.js';
-import { accountQueryEndpoints } from './account-query-endpoints.js';
+import * as queries from './account-query-mapping.js';
 import type { PageRequest } from '../../../../foundation/pagination.js';
 
 void test('query entry points preserve missing rows, revisions, page requests and storage failures', async () => {
@@ -29,13 +29,11 @@ void test('query entry points preserve missing rows, revisions, page requests an
     },
   };
   const reader = new MappedReadRepository(source, accountView);
-  const endpoints = accountQueryEndpoints(
-    new GetAccountQueryHandler(reader),
-    new ListAccountsQueryHandler(reader),
-  );
-  assert.equal(await endpoints.get('missing'), undefined);
-  assert.deepEqual(await endpoints.get(id), row);
-  assert.deepEqual(await endpoints.list(), [row]);
-  assert.deepEqual(await endpoints.page(page), { items: [row], nextId: id });
-  await assert.rejects(endpoints.get('failed'), failure);
+  const get = new GetAccountQueryHandler(reader);
+  const list = new ListAccountsQueryHandler(reader);
+  assert.equal(await get.execute({ id: 'missing' }), undefined);
+  assert.deepEqual(await get.execute(queries.getAccount({ id })), row);
+  assert.deepEqual((await list.execute(queries.listAccounts({}))).items, [row]);
+  assert.deepEqual(await list.execute(queries.listAccounts({ page })), { items: [row], nextId: id });
+  await assert.rejects(get.execute({ id: 'failed' }), failure);
 });

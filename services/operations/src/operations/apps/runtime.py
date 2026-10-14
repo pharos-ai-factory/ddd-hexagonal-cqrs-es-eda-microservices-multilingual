@@ -1,5 +1,6 @@
 """Common subscription wiring; owner declarations supply only their typed application policy."""
 
+from operations.adaptors.generated.message_names import SubscriptionName, IntegrationEventName
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
@@ -92,10 +93,10 @@ def complete_subscriptions(
 
 def publication_subscription[E](
     owner: str,
-    consumer: str,
+    consumer: SubscriptionName,
     definitions: Sequence[SubscriptionDefinition],
     incoming_event: IncomingEvent[E],
-    publication: str,
+    publication: IntegrationEventName,
     on_event: Callable[[Metadata, E], Outcome],
 ) -> tuple[SubscriptionWorker]:
     """Bind one private subscription whose handler atomically stages an integration event."""

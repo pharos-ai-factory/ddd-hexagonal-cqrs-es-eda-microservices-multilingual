@@ -1,3 +1,4 @@
+import { LoyaltyDomainEvent, LoyaltyIntegrationEvent } from './generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventRecordingWriteRepository } from './command-execution.js';
@@ -12,12 +13,12 @@ void test('aggregate saves cannot bypass their domain publication subscription',
     },
   };
   const publicRepository = new EventRecordingWriteRepository(source, () => [
-    { name: 'loyalty.reward-issued', payload: {} },
+    { name: LoyaltyIntegrationEvent.REWARD_ISSUED, payload: {} },
   ]);
   await assert.rejects(publicRepository.save(1), /private domain/);
   assert.equal(saved, false);
   const privateRepository = new EventRecordingWriteRepository(source, () => [
-    { name: 'loyalty.reward-issued.domain', payload: {} },
+    { name: LoyaltyDomainEvent.REWARD_ISSUED, payload: {} },
   ]);
   await privateRepository.save(1);
   assert.equal(saved, true);

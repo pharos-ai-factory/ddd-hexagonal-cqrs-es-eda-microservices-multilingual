@@ -49,8 +49,11 @@ func (r *RabbitMQRequestRegistry) Handle(ctx context.Context, request RequestEnv
 	}
 	return reply
 }
-func Command[P proto.Message, I any](r *RabbitMQRequestRegistry, name string, convert func(P) I, handle func(context.Context, a.Metadata, I) (a.Outcome, error)) {
-	r.bind(name, func(ctx context.Context, request RequestEnvelope, body proto.Message) (pb.Reply, error) {
+func Command[P proto.Message, I any](r *RabbitMQRequestRegistry, name pb.CommandName, convert func(P) I, handle func(context.Context, a.Metadata, I) (a.Outcome, error)) {
+	if name == nil || name.Owner() != r.Owner || !name.Valid() {
+		panic("command identifier disagrees with owner")
+	}
+	r.bind(name.String(), func(ctx context.Context, request RequestEnvelope, body proto.Message) (pb.Reply, error) {
 		value, ok := body.(P)
 		if !ok {
 			return nil, fmt.Errorf("command payload type disagrees with its mapping")
@@ -65,48 +68,23 @@ func Command[P proto.Message, I any](r *RabbitMQRequestRegistry, name string, co
 		return OutcomeReply(r.Owner, result), nil
 	})
 }
-func Queries[S any](r *RabbitMQRequestRegistry, singular, plural string, list func(context.Context) ([]a.Loaded[S], error), get func(context.Context, string) (a.Loaded[S], error), page func(context.Context, a.PageRequest) (a.Page[S], error), itemReply func(a.Loaded[S]) proto.Message, listReply func([]a.Loaded[S], bool, string) proto.Message) {
-	upper := func(s string) string { return string(s[0]-32) + s[1:] }
-	r.bind("get"+upper(singular), func(ctx context.Context, _ RequestEnvelope, body proto.Message) (pb.Reply, error) {
-		input, ok := body.(interface{ GetId() string })
+
+// Query connects one generated query identifier to its owner parser, handler and reply mapper.
+func Query[P proto.Message, Q, R any](r *RabbitMQRequestRegistry, name pb.QueryName, parse func(P) Q, execute func(context.Context, Q) (R, error), reply func(Q, R) pb.Reply) {
+	if name == nil || name.Owner() != r.Owner || !name.Valid() {
+		panic("query identifier disagrees with owner")
+	}
+	r.bind(name.String(), func(ctx context.Context, _ RequestEnvelope, body proto.Message) (pb.Reply, error) {
+		value, ok := body.(P)
 		if !ok {
-			return nil, fmt.Errorf("item query has no identity")
+			return nil, fmt.Errorf("query payload type disagrees with its mapping")
 		}
-		loaded, err := get(ctx, input.GetId())
+		query := parse(value)
+		result, err := execute(ctx, query)
 		if err != nil {
 			return nil, err
 		}
-		if !loaded.Exists {
-			reply, _ := pb.NewReply(r.Owner, "")
-			return reply, SetPayload(reply, "error", &pb.RequestError{Code: "not_found"})
-		}
-		reply, _ := pb.NewReply(r.Owner, "")
-		return reply, SetPayload(reply, singular, itemReply(loaded))
-	})
-	r.bind("list"+upper(plural), func(ctx context.Context, _ RequestEnvelope, body proto.Message) (pb.Reply, error) {
-		input, ok := body.(interface{ GetPage() *pb.PageRequest })
-		if !ok {
-			return nil, fmt.Errorf("list query has no page input")
-		}
-		request := input.GetPage()
-		var values []a.Loaded[S]
-		var next string
-		var err error
-		if request != nil {
-			if page == nil {
-				return nil, fmt.Errorf("paged query unavailable")
-			}
-			var loaded a.Page[S]
-			loaded, err = page(ctx, a.PageRequest{Limit: int(request.Limit), After: request.GetAfter()})
-			values, next = loaded.Items, loaded.NextID
-		} else {
-			values, err = list(ctx)
-		}
-		if err != nil {
-			return nil, err
-		}
-		reply, _ := pb.NewReply(r.Owner, "")
-		return reply, SetPayload(reply, plural, listReply(values, request != nil, next))
+		return reply(query, result), nil
 	})
 }
 

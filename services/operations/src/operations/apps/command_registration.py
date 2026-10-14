@@ -3,6 +3,7 @@
 from collections.abc import Callable, Mapping, Sequence
 
 from google.protobuf.message import Message
+from operations.adaptors.generated.request_names import CommandName
 
 from operations.adaptors.command_execution import AggregateTransaction, CommandExecutor, FeatureCommandHandler
 from operations.adaptors.messaging.incoming_event import IncomingEvent
@@ -22,7 +23,7 @@ class CommandRegistration[A]:
     def request[C: Mapping[str, object]](
         self,
         registry: RabbitMQRequestRegistry,
-        name: str,
+        name: CommandName,
         parse: Callable[[Message], C],
         handler: Callable[[WriteRepository[A]], FeatureCommandHandler[C]],
     ) -> None:

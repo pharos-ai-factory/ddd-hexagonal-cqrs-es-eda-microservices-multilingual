@@ -1,4 +1,4 @@
-"""Keep feature composition on the direct command-to-handler registration API."""
+"""Keep feature composition on typed, direct message-to-handler registrations."""
 
 import re
 
@@ -17,6 +17,14 @@ def violation(path: str, content: str) -> str | None:
         return None
     if path.endswith(("_test.go", ".test.ts")) or path.rsplit("/", 1)[-1].startswith("test_"):
         return None
+    if re.search(r"\.queries\s*\(|\b\w*QueryEndpoints\b|\bRegisterQueries\b|\b\w+\.Queries\s*\(", content):
+        return "register each query identifier, owner parser, handler and reply mapper directly"
+    if re.search(
+        r"(?:\.request|\bRegister(?:Projection)?|\.Query)\s*\([^,]+,\s*[\"']|\.query\s*\(\s*[\"']", content
+    ):
+        return "use generated command and query identifiers in registrations"
+    if re.search(r"[\"'][a-z]+\.[a-z]+(?:-[a-z]+)+(?:\.domain)?[\"']", content):
+        return "use generated event and subscription identifiers in composition"
     patterns = {
         ".py": r"\b(?:CommandExecutor|command_subscription)\b|\.command\s*\(",
         ".ts": r"\b(?:CommandExecutor|bindCommand|commandSubscription)\b|\.command\s*\(",

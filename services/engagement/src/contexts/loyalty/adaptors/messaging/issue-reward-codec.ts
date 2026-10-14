@@ -1,4 +1,4 @@
-import { LoyaltySubscription } from './loyalty-subscriptions.js';
+import { LoyaltyPrivateCommand, LoyaltySubscription } from '../../../../adaptors/generated/message-names.js';
 import { fields } from './command-fields.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
@@ -11,8 +11,8 @@ import type { IssueRewardCommand } from '../../application/commands/issue-reward
 export const issueCodec = () =>
   new InternalCommandCodec(
     'loyalty',
-    LoyaltySubscription.IssueReward,
-    'issueReward',
+    LoyaltySubscription.ISSUE_REWARD,
+    LoyaltyPrivateCommand.ISSUE_REWARD,
     schema,
     (value): IssueRewardCommand => {
       const p = fields(value);

@@ -1,20 +1,25 @@
+import {
+  CollectionIntegrationEvent,
+  CommunicationDomainEvent,
+  CommunicationSubscription,
+  LoyaltyIntegrationEvent,
+} from '../../adaptors/generated/message-names.js';
+import * as notificationQueries from '../../contexts/communication/adaptors/messaging/notification-query-mapping.js';
+import { CommunicationQuery } from '../../adaptors/generated/request-names.js';
 import { CommandRegistration } from '../command-registration.js';
 import { RabbitMQRequestRegistry } from '../../adaptors/messaging/rabbitmq-request-registry.js';
-import { notification as notificationWire } from '../../contexts/communication/adaptors/messaging/notification-queries.js';
 import { notificationPublications } from '../../contexts/communication/adaptors/messaging/notification-publications.js';
 import { NotificationDeliveryPreparation } from '../../contexts/communication/adaptors/delivery/notification-delivery-preparation.js';
 import type { Notification } from '../../contexts/communication/domain/notification.js';
 import { PostgresNotificationWriteRepository } from '../../contexts/communication/adaptors/persistence/notification-write-repository.js';
 import type { AggregateTransaction } from '../../adaptors/command-execution.js';
 import { PostgresAggregateTransaction } from '../../adaptors/persistence/aggregate-transaction.js';
-import { notificationQueryEndpoints } from '../../contexts/communication/adaptors/messaging/notification-query-endpoints.js';
 import { ListNotificationsQueryHandler } from '../../contexts/communication/application/queries/list-notifications.js';
 import { GetNotificationQueryHandler } from '../../contexts/communication/application/queries/get-notification.js';
 import { restoreNotificationSnapshot } from '../../contexts/communication/adaptors/persistence/notification-snapshot.js';
 import { PostgresNotificationReadRepository } from '../../contexts/communication/adaptors/persistence/notification-read-repository.js';
 import { noticeCodec } from '../../contexts/communication/adaptors/messaging/request-notification-codec.js';
 import { deliveryCodec } from '../../contexts/communication/adaptors/messaging/deliver-notification-codec.js';
-import { CommunicationSubscription } from '../../contexts/communication/adaptors/messaging/communication-subscriptions.js';
 import type { DeliveryPort } from '../../foundation/application.js';
 import type { PagedQueryPort } from '../../foundation/pagination.js';
 import { asFunction, createContainer } from 'awilix';
@@ -47,7 +52,6 @@ export type CommunicationDependencies = {
   notificationReadRepository: PostgresNotificationReadRepository;
   getNotification: GetNotificationQueryHandler;
   listNotifications: ListNotificationsQueryHandler;
-  queries: ReturnType<typeof notificationQueryEndpoints>;
   provider: DeliveryPort;
   notificationSnapshotReadRepository: PagedQueryPort<ReturnType<typeof restoreNotificationSnapshot>>;
   commands: CommandRegistration<Notification>;
@@ -86,9 +90,6 @@ export function createCommunicationContainer(databaseURL: string, deliveryURL: s
     listNotifications: asFunction(
       (c: CommunicationDependencies) => new ListNotificationsQueryHandler(c.notificationReadRepository),
     ).singleton(),
-    queries: asFunction((c: CommunicationDependencies) =>
-      notificationQueryEndpoints(c.getNotification, c.listNotifications),
-    ).singleton(),
     notificationSnapshotReadRepository: asFunction(
       (c: CommunicationDependencies) =>
         new PostgresSnapshotReadRepository(c.database, 'notification', restoreNotificationSnapshot),
@@ -101,8 +102,8 @@ export function createCommunicationContainer(databaseURL: string, deliveryURL: s
       (c: CommunicationDependencies) =>
         new NotificationDeliveryPreparation(c.notificationSnapshotReadRepository, c.provider),
     ).singleton(),
-    pickupCodec: asFunction(() => noticeCodec(CommunicationSubscription.PickupNotice)).singleton(),
-    rewardCodec: asFunction(() => noticeCodec(CommunicationSubscription.RewardNotice)).singleton(),
+    pickupCodec: asFunction(() => noticeCodec(CommunicationSubscription.PICKUP_NOTICE)).singleton(),
+    rewardCodec: asFunction(() => noticeCodec(CommunicationSubscription.REWARD_NOTICE)).singleton(),
     deliveryCodec: asFunction(deliveryCodec).singleton(),
     pickup: asFunction(
       (c: CommunicationDependencies) =>
@@ -145,7 +146,18 @@ export async function composeCommunication() {
 /** Communication exposes query requests and receives commands through durable subscriptions. */
 export function communicationRequests(c: CommunicationDependencies) {
   const registry = new RabbitMQRequestRegistry('communication');
-  registry.queries('notification', 'notifications', c.queries, notificationWire);
+  registry.query(
+    CommunicationQuery.GET_NOTIFICATION,
+    notificationQueries.getNotification,
+    c.getNotification,
+    notificationQueries.getReply,
+  );
+  registry.query(
+    CommunicationQuery.LIST_NOTIFICATIONS,
+    notificationQueries.listNotifications,
+    c.listNotifications,
+    notificationQueries.listReply,
+  );
   return registry;
 }
 
@@ -154,7 +166,7 @@ export function communicationSubscriptions(c: CommunicationDependencies) {
   const preparation = c.deliveryPreparation;
   return completeSubscriptions('communication', definitions, [
     ...c.commands.subscription(
-      'collection.pickup-opened',
+      CollectionIntegrationEvent.PICKUP_OPENED,
       c.pickupCodec,
       definitions,
       (event) => derivedId('pickup-notice', event.pickupId),
@@ -163,7 +175,7 @@ export function communicationSubscriptions(c: CommunicationDependencies) {
       (m, command) => ({ ...m, input: command }),
     ),
     ...c.commands.subscription(
-      'loyalty.reward-issued',
+      LoyaltyIntegrationEvent.REWARD_ISSUED,
       c.rewardCodec,
       definitions,
       (event) => derivedId('reward-notice', event.rewardId),
@@ -172,7 +184,7 @@ export function communicationSubscriptions(c: CommunicationDependencies) {
       (m, command) => ({ ...m, input: command }),
     ),
     ...c.commands.preparedSubscription(
-      'communication.notification-requested',
+      CommunicationDomainEvent.NOTIFICATION_REQUESTED,
       c.deliveryCodec,
       definitions,
       (event) => event.notificationId,

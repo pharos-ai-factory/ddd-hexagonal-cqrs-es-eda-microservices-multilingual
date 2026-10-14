@@ -1,5 +1,7 @@
 """Stage Preparation's private facts in the aggregate transaction."""
 
+from operations.adaptors.generated.message_names import PreparationDomainEvent
+
 from operations.contexts.preparation.domain.preparation_ticket import (
     PreparationTicket,
     DrinksReadyDomainEvent,
@@ -11,7 +13,7 @@ def ticket_publications(aggregate: PreparationTicket) -> tuple[Publication, ...]
     """Select the private fact consumed by the durable integration publication handler."""
     return tuple(
         Publication(
-            "preparation.drinks-ready.domain",
+            PreparationDomainEvent.DRINKS_READY,
             {"orderId": fact.order_id, "customerId": fact.customer_id},
         )
         for fact in aggregate.events()

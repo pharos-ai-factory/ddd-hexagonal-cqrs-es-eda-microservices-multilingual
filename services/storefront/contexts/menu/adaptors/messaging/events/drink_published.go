@@ -5,6 +5,7 @@ import (
 	private "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated"
 	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	envelope "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/envelope"
+	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
 	"strings"
@@ -17,7 +18,7 @@ func encodeDrink(message a.Message) ([]byte, error) {
 		return nil, err
 	}
 	p, ok := message.Payload.(menu.DrinkPublishedDomainEvent)
-	if !ok || message.Name != "menu.drink-published" || message.Context != "menu" {
+	if !ok || message.Name != names.MenuDomainEventDrinkPublished.String() || message.Context != "menu" {
 		return nil, fmt.Errorf("foreign private message")
 	}
 	event := &private.PrivateEvent{Id: message.ID, Name: message.Name, Context: message.Context, Visibility: "domain", FormatRevision: message.ContractVersion, AggregateKind: message.AggregateKind, AggregateId: message.AggregateID, AggregateVersion: message.AggregateVersion, CorrelationId: message.CorrelationID, CausationId: message.CausationID, OccurredAt: message.OccurredAt.UTC().Format(time.RFC3339Nano), Payload: &private.PrivateEvent_DrinkPublished{DrinkPublished: &private.DrinkPublished{DrinkId: p.DrinkID, Name: p.Name, Revision: p.Revision}}}
@@ -48,7 +49,7 @@ func validatePrivate(m a.Message) error {
 		return err
 	}
 	p, ok := m.Payload.(menu.DrinkPublishedDomainEvent)
-	if !ok || m.Name != "menu.drink-published" || m.Context != "menu" || m.Visibility != a.Private || m.AggregateKind != "drink" || m.ContractVersion != 1 || p.DrinkID != m.AggregateID || strings.TrimSpace(p.Name) == "" || !utf8.ValidString(p.Name) || utf8.RuneCountInString(p.Name) > 80 || p.Revision == 0 {
+	if !ok || m.Name != names.MenuDomainEventDrinkPublished.String() || m.Context != "menu" || m.Visibility != a.Private || m.AggregateKind != "drink" || m.ContractVersion != 1 || p.DrinkID != m.AggregateID || strings.TrimSpace(p.Name) == "" || !utf8.ValidString(p.Name) || utf8.RuneCountInString(p.Name) > 80 || p.Revision == 0 {
 		return fmt.Errorf("invalid private drink publication")
 	}
 	return nil

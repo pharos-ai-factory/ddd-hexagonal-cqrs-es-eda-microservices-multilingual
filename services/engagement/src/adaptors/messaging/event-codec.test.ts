@@ -1,3 +1,4 @@
+import { LoyaltyDomainEvent, LoyaltyIntegrationEvent } from '../generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -19,7 +20,7 @@ void test('the owner-local private message retains its historical bytes and scop
   const event = decode(raw);
   assert.equal(event.context, 'loyalty');
   assert.equal(event.visibility, 'domain');
-  assert.equal(event.name, 'loyalty.reward-earned');
+  assert.equal(event.name, LoyaltyDomainEvent.REWARD_EARNED);
   assert.equal((event.payload as { validDays: number }).validDays, 7);
   assert.throws(
     () =>
@@ -57,7 +58,7 @@ void test('the shared integration fixture decodes consistently across languages'
     'hex',
   );
   const event = decode(raw);
-  assert.equal(event.name, 'loyalty.reward-issued');
+  assert.equal(event.name, LoyaltyIntegrationEvent.REWARD_ISSUED);
   assert.equal(event.visibility, 'integration');
   assert.deepEqual(event.payload, {
     rewardId: '22222222-2222-4222-8222-222222222222',
@@ -72,7 +73,7 @@ function rewardIssuedBytes(payload: object) {
   const id = '00000000-0000-4000-8000-000000000001';
   const envelope = {
     id,
-    name: 'loyalty.reward-issued',
+    name: LoyaltyIntegrationEvent.REWARD_ISSUED,
     context: 'loyalty',
     visibility: 'integration',
     contractVersion: 1,
@@ -127,7 +128,10 @@ void test('oversized publications fail before their bytes can be committed', () 
         id,
         1,
         { id, target: id, correlation: id, name: 'issue', input: {} },
-        { name: 'loyalty.reward-issued', payload: { ...rewardIssued, benefit: 'x'.repeat(256 * 1024) } },
+        {
+          name: LoyaltyIntegrationEvent.REWARD_ISSUED,
+          payload: { ...rewardIssued, benefit: 'x'.repeat(256 * 1024) },
+        },
       ),
     /limit/,
   );
@@ -142,7 +146,7 @@ void test('private reward-issued fixture retains its owner, source identity and 
     'hex',
   );
   const event = decode(raw);
-  assert.equal(event.name, 'loyalty.reward-issued.domain');
+  assert.equal(event.name, LoyaltyDomainEvent.REWARD_ISSUED);
   assert.equal(event.visibility, 'domain');
   const type = protobuf.Root.fromJSON(privateSchema).lookupType('cafe.loyalty.internal.PrivateEvent');
   assert.deepEqual(Buffer.from(type.encode(type.decode(raw)).finish()), raw);

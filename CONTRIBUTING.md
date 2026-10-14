@@ -86,6 +86,12 @@ replay. This applies between roots in one context as well as across contexts.
 Go's current subscriptions update projections; a new aggregate-changing Go
 reaction requires the explicit durable-command port/adaptor and paired consumers.
 
+Use generated context-specific command/query enums, event identifiers and
+subscription IDs in composition. Register each query explicitly with its owner
+input parser, concrete handler and reply mapper. Generate from the published
+Protobuf definitions and owner private-message/subscription catalogues. See
+[decision 0024](docs/decisions/0024-generated-message-identifiers-and-direct-queries.md).
+
 Queries use application-owned read models and named read repository ports. Persistence
 adaptors restore and validate stored authority before mapping it into a view.
 Preserve absent-resource behaviour, revisions and continuation identities. An

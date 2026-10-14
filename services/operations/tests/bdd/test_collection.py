@@ -1,3 +1,4 @@
+from operations.adaptors.generated.message_names import CollectionDomainEvent, CollectionIntegrationEvent
 from tests.bdd.publication_probe import PublicationProbe, private_delivery
 from operations.contexts.collection.application.event_handlers.publish_pickup_opened import (
     PickupOpenedDomainEventHandler,
@@ -104,13 +105,13 @@ def pickup(probe: CollectionProbe) -> None:
 def opened_event(probe: CollectionProbe, metadata: Metadata) -> None:
     assert len(probe.publications) == 1
     private = probe.publications[0]
-    assert private.name == "collection.pickup-opened.domain"
+    assert private.name == CollectionDomainEvent.PICKUP_OPENED
     outgoing = PublicationProbe(publish_PickupOpened)
     wire = private_delivery("collection", "pickup", metadata, private)
     PickupOpenedDomainEventHandler(outgoing).handle(metadata, PICKUP_OPENED_DOMAIN.parse(wire))
     assert len(outgoing.publications) == 1
     event = outgoing.publications[0]
-    assert event.name == "collection.pickup-opened"
+    assert event.name == CollectionIntegrationEvent.PICKUP_OPENED
     assert event.payload == {
         "pickupId": ROOT,
         "orderId": ORDER,
@@ -139,11 +140,11 @@ def collected_state(probe: CollectionProbe) -> None:
 def collected_event(probe: CollectionProbe, metadata: Metadata) -> None:
     assert len(probe.publications) == 1
     private = probe.publications[0]
-    assert private.name == "collection.order-collected.domain"
+    assert private.name == CollectionDomainEvent.ORDER_COLLECTED
     outgoing = PublicationProbe(publish_OrderCollected)
     wire = private_delivery("collection", "pickup", metadata, private)
     OrderCollectedDomainEventHandler(outgoing).handle(metadata, ORDER_COLLECTED_DOMAIN.parse(wire))
     assert len(outgoing.publications) == 1
     event = outgoing.publications[0]
-    assert event.name == "collection.order-collected"
+    assert event.name == CollectionIntegrationEvent.ORDER_COLLECTED
     assert event.payload == {"orderId": ORDER, "customerId": CUSTOMER}

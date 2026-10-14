@@ -3,7 +3,7 @@
 This boundary owns notification storage and wire mappings. Start with the
 [context map](../README.md) for invariants and named application handlers.
 
-- [Messaging](messaging): resource query endpoints, request/reply mappings,
+- [Messaging](messaging): resource query mappings, request/reply mappings,
   private fact codecs, publication mappings and stable subscription declarations.
   Start with [notification-queries.ts](messaging/notification-queries.ts) for the published request boundary.
 - [Persistence](persistence): named read/write repositories, snapshot restoration

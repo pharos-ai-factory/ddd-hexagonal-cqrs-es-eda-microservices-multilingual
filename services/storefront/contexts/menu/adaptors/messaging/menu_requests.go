@@ -1,8 +1,6 @@
 package messaging
 
 import (
-	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/requests"
-	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/queryendpoints"
 	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu"
 )
@@ -46,10 +44,4 @@ func ChangePrice(p *pb.ChangePrice) commands.ChangePriceCommand {
 func PublishEdition(p *pb.PublishEdition) commands.PublishEditionCommand {
 	return commands.PublishEditionCommand{}
 
-}
-
-// RegisterQueries mounts the context read endpoints.
-func RegisterQueries(r *rpc.RabbitMQRequestRegistry, drinks endpoints.DrinkQueryEndpoints, editions endpoints.EditionQueryEndpoints) {
-	rpc.Queries(r, "drink", "drinks", drinks.List, drinks.Get, drinks.Page, drinkReply, drinksReply)
-	rpc.Queries(r, "edition", "editions", editions.List, editions.Get, editions.Page, editionReply, editionsReply)
 }

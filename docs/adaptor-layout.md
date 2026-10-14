@@ -16,7 +16,7 @@ how its own aggregates and views are stored.
 
 - `messaging/` translates owner requests into application DTOs, maps query replies,
   encodes private facts and declares durable subscriptions. Business resource names
-  distinguish files such as `ticket_requests.py` and `account-query-endpoints.ts`.
+  distinguish files such as `ticket_requests.py` and `account-query-mapping.ts`.
 - `persistence/` contains named read/write repositories, snapshot restoration,
   aggregate transaction bindings and owner migrations. Go uses a `postgres/`
   package beneath it.

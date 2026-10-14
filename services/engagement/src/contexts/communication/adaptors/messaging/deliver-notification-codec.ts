@@ -1,4 +1,7 @@
-import { CommunicationSubscription } from './communication-subscriptions.js';
+import {
+  CommunicationPrivateCommand,
+  CommunicationSubscription,
+} from '../../../../adaptors/generated/message-names.js';
 import { fields } from './command-fields.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
@@ -11,8 +14,8 @@ import type { DeliverNotificationCommand } from '../../application/commands/deli
 export function deliveryCodec() {
   return new InternalCommandCodec(
     'communication',
-    CommunicationSubscription.DeliverNotice,
-    'deliverNotification',
+    CommunicationSubscription.DELIVER_NOTICE,
+    CommunicationPrivateCommand.DELIVER_NOTIFICATION,
     schema,
     (value): DeliverNotificationCommand => ({
       notificationId: identifier(String(fields(value).notificationId)),

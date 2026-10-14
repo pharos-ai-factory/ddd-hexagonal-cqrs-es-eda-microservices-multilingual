@@ -2,14 +2,21 @@
 package messaging
 
 import broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/amqp"
+import names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
 
 // Subscription resolves a consumer-owned declaration at composition.
-func Subscription(consumer string) broker.Binding {
-	switch consumer {
-	case "menu.drink-directory":
-		return broker.Binding{Consumer: consumer, Event: "menu.drink-published", Visibility: "domain", Context: "menu"}
-	case "menu.publish-edition-published":
-		return broker.Binding{Consumer: consumer, Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu"}
+func Subscription(consumer names.SubscriptionName) broker.Binding {
+	if consumer == nil {
+		panic("missing subscription")
 	}
-	panic("undeclared subscription: " + consumer)
+	if consumer.Owner() != "menu" {
+		panic("foreign subscription")
+	}
+	switch consumer.String() {
+	case "menu.drink-directory":
+		return broker.Binding{Consumer: consumer.String(), Event: "menu.drink-published", Visibility: "domain", Context: "menu"}
+	case "menu.publish-edition-published":
+		return broker.Binding{Consumer: consumer.String(), Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu"}
+	}
+	panic("undeclared subscription: " + consumer.String())
 }

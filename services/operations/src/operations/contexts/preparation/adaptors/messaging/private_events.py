@@ -1,5 +1,7 @@
 """Private delivery codecs and plain domain-event restoration owned by preparation."""
 
+from operations.adaptors.generated.message_names import PreparationDomainEvent
+
 from operations.adaptors.messaging.private_event_codec import PrivateEventCodec
 from operations.adaptors.messaging.incoming_event import IncomingEvent
 from operations.adaptors.messaging.event_payload_codec import parse_payload
@@ -22,13 +24,13 @@ def validate_drinks_ready(body: bytes, source: str) -> dict[str, object]:
 
 
 DRINKS_READY_DOMAIN = IncomingEvent[DrinksReadyDomainEvent](
-    "preparation.drinks-ready.domain", lambda event: decode_drinks_ready(event.payload, event.aggregate_id)
+    PreparationDomainEvent.DRINKS_READY, lambda event: decode_drinks_ready(event.payload, event.aggregate_id)
 )
 
 PRIVATE_CODECS = {
-    "preparation.drinks-ready.domain": PrivateEventCodec(
+    PreparationDomainEvent.DRINKS_READY: PrivateEventCodec(
         "preparation",
-        "preparation.drinks-ready.domain",
+        PreparationDomainEvent.DRINKS_READY,
         "ticket",
         wire.PrivateEvent,
         "drinks_ready",

@@ -78,8 +78,17 @@ class DeveloperTests(unittest.TestCase):
         for context in ("ordering", "preparation", "loyalty"):
             _, files = render("command", context, "ExampleUseCase")
             registration = files["registration.txt"]
-            self.assertIn("exampleUseCase", registration)
+            self.assertIn(context.title() + "Command", registration)
             self.assertIn("ExampleUseCaseCommandHandler", registration)
             self.assertNotIn("CommandExecutor", registration)
             self.assertNotIn("bindCommand", registration)
             self.assertNotIn("providers.Singleton", registration)
+
+    def test_query_starters_register_each_query_directly(self):
+        for context in ("ordering", "preparation", "loyalty"):
+            _, files = render("query", context, "FindResource")
+            registration = files["registration.txt"]
+            self.assertIn(context.title() + "Query", registration)
+            self.assertIn("FindResourceQueryHandler", registration)
+            self.assertIn("wire.", registration)
+            self.assertNotIn("QueryEndpoints", registration)

@@ -2,6 +2,9 @@
 
 Status: accepted, 14 October 2026. Refines decisions 0010, 0015 and 0016.
 
+[Decision 0024](0024-generated-message-identifiers-and-direct-queries.md) extends
+registration to queries and generates command, query, event and subscription identifiers.
+
 ## Decision
 
 Feature composition declares the incoming command name or private codec, its

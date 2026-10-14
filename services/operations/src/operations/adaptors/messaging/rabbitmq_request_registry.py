@@ -19,9 +19,8 @@ from operations.adaptors.messaging.request_envelope import (
     validate,
 )
 from operations.adaptors.persistence.command_reply_outbox import ReplyIntent, current
-from operations.foundation.application import Loaded, Metadata, Outcome
-from operations.foundation.domain import identifier
-from operations.foundation.pagination import PagedQueryPort, PageRequest
+from operations.foundation.application import Metadata, Outcome
+from operations.adaptors.generated.request_names import CommandName, QueryName, COMMAND_TYPES, QUERY_TYPES
 
 
 class RabbitMQRequestRegistry:
@@ -48,10 +47,13 @@ class RabbitMQRequestRegistry:
 
     def command[C: Mapping[str, object]](
         self,
-        name: str,
+        name: CommandName,
         parse: Callable[[Message], C],
         execute: Callable[[Metadata, C], Outcome],
     ) -> None:
+        if not isinstance(name, COMMAND_TYPES.get(self.owner, ())):
+            raise ValueError("Command identifier disagrees with owner")
+
         def handle(request: Request, body: Message) -> Reply:
             value = parse(body)
             wire = request.command.metadata
@@ -71,34 +73,24 @@ class RabbitMQRequestRegistry:
             raise ValueError("Duplicate request handler: " + name)
         self.handlers[name] = handle
 
-    def queries[S](
+    def query[Q, R](
         self,
-        singular: str,
-        plural: str,
-        queries: PagedQueryPort[S],
-        item: Callable[[Loaded[S]], Message],
-        listing_reply: Callable[[list[Loaded[S]], bool, str | None], Reply],
+        name: QueryName,
+        parse: Callable[[Message], Q],
+        execute: Callable[[Q], R],
+        reply: Callable[[Q, R], Reply],
     ) -> None:
-        def get(request: Request, body: Message) -> Reply:
-            loaded = queries.get(identifier(body.id))  # type: ignore[attr-defined]
-            reply = new_reply(self.owner)
-            if loaded is None:
-                reply.error.code = "not_found"
-            else:
-                getattr(reply, singular).CopyFrom(item(loaded))
-            return reply
+        """Connect a generated query identifier to its owner parser, handler and reply mapper."""
+        if not isinstance(name, QUERY_TYPES.get(self.owner, ())):
+            raise ValueError("Query identifier disagrees with owner")
+        if name in self.handlers:
+            raise ValueError("Duplicate request handler: " + name)
 
-        def listing(request: Request, body: Message) -> Reply:
-            paged = body.HasField("page")
-            if paged:
-                page = body.page  # type: ignore[attr-defined]
-                after = identifier(page.after) if page.HasField("after") else None
-                loaded = queries.page(PageRequest(page.limit, after))
-                return listing_reply(loaded.items, True, loaded.next_id)
-            return listing_reply(queries.list(), False, None)
+        def handle(request: Request, body: Message) -> Reply:
+            query = parse(body)
+            return reply(query, execute(query))
 
-        self.handlers["get" + singular.capitalize()] = get
-        self.handlers["list" + plural.capitalize()] = listing
+        self.handlers[name] = handle
 
     def run(self, url: str, stop: Event) -> None:
         from threading import Thread

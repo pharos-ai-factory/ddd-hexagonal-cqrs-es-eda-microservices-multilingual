@@ -1,5 +1,7 @@
 """Real receiving commits, immutable command bytes and independent queue recovery."""
 
+from operations.adaptors.generated.message_names import OrderingIntegrationEvent
+
 from operations.adaptors.command_execution import CommandExecutor
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
@@ -120,7 +122,7 @@ def test_internal_command_acceptance_and_recovery() -> None:
             subscription = EventSubscription(
                 "preparation",
                 codec.consumer,
-                "ordering.order-placed",
+                OrderingIntegrationEvent.ORDER_PLACED,
                 unused,
                 lambda _: target,
                 execute,

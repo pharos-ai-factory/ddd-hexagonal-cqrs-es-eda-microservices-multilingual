@@ -5,8 +5,8 @@ import (
 	"fmt"
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/command"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/publications"
-	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/queryendpoints"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	q "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/queries"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu"
 	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared"
@@ -54,7 +54,7 @@ func TestMenuRegistrationsDispatchPlainHandlersToTheirOwningTransactions(t *test
 	drinkTransaction := &observedTransaction[*d.Drink]{transaction: support.ForAggregate(drinks, d.RestoreDrink, (*d.Drink).Snapshot, publications.Drink), active: &active}
 	editionTransaction := &observedTransaction[*d.MenuEdition]{transaction: support.ForAggregate(editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, publications.Edition), active: &active}
 	directory := &observedDirectory{t: t, active: &active}
-	registry := menuRequestsProvider(drinkTransaction, editionTransaction, directory, endpoints.DrinkQueryEndpoints{}, endpoints.EditionQueryEndpoints{})
+	registry := menuRequestsProvider(drinkTransaction, editionTransaction, directory, q.GetDrinkQueryHandler{}, q.ListDrinksQueryHandler{}, q.GetEditionQueryHandler{}, q.ListEditionsQueryHandler{})
 	request := &pb.Request{ContractVersion: 1, RequestId: support.Customer, Context: "menu", Payload: &pb.Request_Command{Command: &pb.Command{Metadata: &shared.CommandMetadata{CommandId: support.Customer, AggregateId: support.Drink, ExpectedVersion: proto.Uint64(0), CorrelationId: support.Customer}, Payload: &pb.Command_CreateDrink{CreateDrink: &pb.CreateDrink{Name: proto.String("Coffee")}}}}}
 	if reply := registry.Handle(t.Context(), request); reply.GetOutcome() == nil || reply.GetOutcome().Status != "draft" {
 		t.Fatalf("create drink: %v", reply)

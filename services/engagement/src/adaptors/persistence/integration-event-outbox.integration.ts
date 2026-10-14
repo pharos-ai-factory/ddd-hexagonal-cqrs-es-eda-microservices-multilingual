@@ -1,3 +1,9 @@
+import {
+  LoyaltyDomainEvent,
+  LoyaltyIntegrationEvent,
+  LoyaltyPrivateCommand,
+  LoyaltySubscription,
+} from '../generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
@@ -29,17 +35,17 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
   const grantId = randomUUID(),
     target = derivedId('reward', grantId),
     correlation = randomUUID();
-  const consumer = 'loyalty.publish-reward-issued';
+  const consumer = LoyaltySubscription.PUBLISH_REWARD_ISSUED;
   const count = async (table: string, where: string, id: string) =>
     (await admin.query<{ n: number }>(`SELECT count(*)::int AS n FROM cafe.${table} WHERE ${where}=$1`, [id]))
       .rows[0]!.n;
   try {
     await db.verify();
     const issue = loyaltySubscriptions(c).find(
-      (worker) => worker.consumer === 'loyalty.issue-reward' && worker.decodeCommand,
+      (worker) => worker.consumer === String(LoyaltySubscription.ISSUE_REWARD) && worker.decodeCommand,
     )!;
     await issue.handle(
-      { id: randomUUID(), target, name: 'issueReward', correlation, input: {} },
+      { id: randomUUID(), target, name: LoyaltyPrivateCommand.ISSUE_REWARD, correlation, input: {} },
       { grantId, accountId: randomUUID(), benefit: 'one free drink', validDays: 30 },
     );
     const source = (
@@ -49,7 +55,7 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
     ).rows;
     assert.equal(source.length, 1);
     const event = decode(source[0]!.body);
-    assert.equal(event.name, 'loyalty.reward-issued.domain');
+    assert.equal(event.name, LoyaltyDomainEvent.REWARD_ISSUED);
     const payload = event.payload as RewardIssuedDomainEventPayload;
     const m: Metadata = {
       id: derivedId(consumer, event.id),
@@ -74,7 +80,7 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
       metadata: { id: randomUUID(), target, name: 'redeemReward', correlation, input: {}, expected: 1 },
       body: { orderId: randomUUID() },
     });
-    assert.equal((await c.rewardQueries.get(target))?.version, 2);
+    assert.equal((await c.getReward.execute({ id: target }))?.version, 2);
     await admin.query(
       `ALTER TABLE cafe.consumer_receipts ADD CONSTRAINT reject_publication_probe CHECK(event_id <> '${event.id}') NOT VALID`,
     );
@@ -120,7 +126,7 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
       db,
       audit,
       'reward',
-      (p) => published('loyalty.reward-issued', p),
+      (p) => published(LoyaltyIntegrationEvent.REWARD_ISSUED, p),
     );
     await independent.publish(
       { ...m, id: derivedId(audit, event.id), consumer: audit },
@@ -128,7 +134,7 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
     );
     assert.equal(await count('consumer_receipts', 'event_id', event.id), 2);
     assert.equal(await count('outbox_events', 'aggregate_id', target), 3);
-    assert.equal((await c.rewardQueries.get(target))?.version, 2);
+    assert.equal((await c.getReward.execute({ id: target }))?.version, 2);
   } finally {
     await container.dispose();
     await admin.end();

@@ -6,6 +6,7 @@ import (
 	private "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	envelope "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/envelope"
+	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
 	"time"
@@ -62,7 +63,7 @@ func validateOrderPlaced(m a.Message, value d.OrderPlacedDomainEvent) error {
 	if err := envelope.ValidateMetadata(m); err != nil {
 		return err
 	}
-	if m.Context != "ordering" || m.Name != "ordering.order-placed.domain" || m.Visibility != a.Private || m.AggregateKind != "order" || m.ContractVersion != 1 || value.State.ID != m.AggregateID || value.State.Status != "placed" {
+	if m.Context != "ordering" || m.Name != names.OrderingDomainEventOrderPlaced.String() || m.Visibility != a.Private || m.AggregateKind != "order" || m.ContractVersion != 1 || value.State.ID != m.AggregateID || value.State.Status != "placed" {
 		return fmt.Errorf("invalid private ordering event")
 	}
 	_, err := d.Restore(value.State)

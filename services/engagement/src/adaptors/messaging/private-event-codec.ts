@@ -1,3 +1,4 @@
+import type { DomainEventName } from '../generated/message-names.js';
 import protobuf from 'protobufjs';
 import { validateMetadata, type WireEvent } from './event-envelope.js';
 
@@ -5,7 +6,7 @@ import { validateMetadata, type WireEvent } from './event-envelope.js';
 export class PrivateEventCodec {
   constructor(
     private readonly type: protobuf.Type,
-    private readonly definition: { owner: string; name: string; kind: string; payload: string },
+    private readonly definition: { owner: string; name: DomainEventName; kind: string; payload: string },
     private readonly validatePayload: (payload: Record<string, unknown>, source: string) => void,
   ) {}
 
@@ -13,7 +14,7 @@ export class PrivateEventCodec {
     const d = this.definition;
     if (
       event.context !== d.owner ||
-      event.name !== d.name ||
+      event.name !== String(d.name) ||
       event.aggregateKind !== d.kind ||
       event.visibility !== 'domain' ||
       event.contractVersion !== 1

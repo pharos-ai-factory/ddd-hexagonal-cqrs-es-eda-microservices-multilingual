@@ -3,7 +3,7 @@
 This boundary owns account and reward storage and wire mappings. Start with the
 [context map](../README.md) for invariants and named application handlers.
 
-- [Messaging](messaging): resource query endpoints, request/reply mappings,
+- [Messaging](messaging): resource query mappings, request/reply mappings,
   private fact codecs, publication mappings and stable subscription declarations.
   Start with [reward-requests.ts](messaging/reward-requests.ts) for the published request boundary.
 - [Persistence](persistence): named read/write repositories, snapshot restoration
@@ -17,4 +17,4 @@ visible through receipts and dispatch evidence; its meaning is described in the
 context map. Query endpoints return application read models through named read
 repositories.
 
-Account replies live in `messaging/account-replies.ts`. CreditCollection and IssueReward have separate private command codecs; subscription identities live in `loyalty-subscriptions.ts`.
+Account replies live in `messaging/account-replies.ts`. CreditCollection and IssueReward have separate private command codecs; subscription identities come from `adaptors/generated/message-names.ts` in the service.

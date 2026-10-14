@@ -5,7 +5,6 @@ import (
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/persistence/postgres"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/apps/support"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
-	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/queryendpoints"
 	pg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/persistence/postgres"
 	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/eventhandlers"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
@@ -13,6 +12,7 @@ import (
 	q "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/queries"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
+	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"go.uber.org/fx"
@@ -21,7 +21,7 @@ import (
 func orderingModule() fx.Option {
 	return fx.Module("ordering", fx.Provide(
 		func(s *support.StorefrontRuntime) reactions.OrderPlacedDomainEventHandler {
-			return reactions.OrderPlacedDomainEventHandler{Publications: store.NewPublicationOutbox[model.OrderPlacedIntegrationEvent](s.Databases["ordering"], "ordering.publish-order-placed", "order", codec.PublishOrderPlaced)}
+			return reactions.OrderPlacedDomainEventHandler{Publications: store.NewPublicationOutbox[model.OrderPlacedIntegrationEvent](s.Databases["ordering"], names.OrderingSubscriptionPublishOrderPlaced.String(), "order", codec.PublishOrderPlaced)}
 		},
 		func(s *support.StorefrontRuntime) execution.Transaction[*d.Order] {
 			return pg.NewOrderTransaction(s.Databases["ordering"])
@@ -38,23 +38,12 @@ func orderingModule() fx.Option {
 		func(read ports.OrderReadRepository) q.ListOrdersQueryHandler {
 			return q.ListOrdersQueryHandler{ReadRepository: read}
 		},
-		func(get q.GetOrderQueryHandler, list q.ListOrdersQueryHandler) endpoints.OrderQueryEndpoints {
-			return endpoints.OrderQueryEndpoints{GetHandler: get, ListHandler: list}
-		},
 		orderingRequestsProvider,
 	), fx.Invoke(mountOrdering))
 }
 
 func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler) {
-	support.SubscribePrivate(s, rpc.Subscription(string(PublishOrderPlacedSubscription)), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, publication.Handle)
+	support.SubscribePrivate(s, rpc.Subscription(names.OrderingSubscriptionPublishOrderPlaced), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, publication.Handle)
 	s.RequestWorkers["ordering"] = requests.Run
-	support.Subscribe(s, rpc.Subscription(string(MenuDirectorySubscription)), func(p model.MenuPublishedIntegrationEvent) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))
+	support.Subscribe(s, rpc.Subscription(names.OrderingSubscriptionMenuDirectory), func(p model.MenuPublishedIntegrationEvent) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))
 }
-
-// OrderingSubscription identifies owner projection delivery.
-type OrderingSubscription string
-
-const MenuDirectorySubscription OrderingSubscription = "ordering.menu-directory"
-
-// PublishOrderPlacedSubscription independently delivers the private publication reaction.
-const PublishOrderPlacedSubscription OrderingSubscription = "ordering.publish-order-placed"

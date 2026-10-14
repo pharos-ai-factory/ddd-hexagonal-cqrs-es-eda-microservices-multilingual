@@ -1,3 +1,4 @@
+from operations.adaptors.generated.message_names import PreparationIntegrationEvent
 from operations.adaptors.messaging.event_codec import decode
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.foundation.identity import derived_id
@@ -13,7 +14,7 @@ IDS = [f"00000000-0000-4000-8000-{number:012d}" for number in range(1, 5)]
 def test_declared_wire_contract_and_owner_tampering() -> None:
     event = Event(
         id=IDS[0],
-        name="preparation.drinks-ready",
+        name=PreparationIntegrationEvent.DRINKS_READY,
         context="preparation",
         visibility="integration",
         contract_version=1,
@@ -40,7 +41,7 @@ def test_declared_wire_contract_and_owner_tampering() -> None:
 def test_wire_decoder_rejects_an_omitted_required_business_identity(missing: str) -> None:
     event = Event(
         id=IDS[0],
-        name="preparation.drinks-ready",
+        name=PreparationIntegrationEvent.DRINKS_READY,
         context="preparation",
         visibility="integration",
         contract_version=1,
@@ -63,8 +64,8 @@ def test_wire_decoder_rejects_an_omitted_required_business_identity(missing: str
     "name,version,revision",
     [
         ("preparation.unknown", 1, 1),
-        ("preparation.drinks-ready", 2, 1),
-        ("preparation.drinks-ready", 1, 2**53),
+        (PreparationIntegrationEvent.DRINKS_READY, 2, 1),
+        (PreparationIntegrationEvent.DRINKS_READY, 1, 2**53),
     ],
 )
 def test_undeclared_contracts_and_nonportable_revisions_fail(name: str, version: int, revision: int) -> None:

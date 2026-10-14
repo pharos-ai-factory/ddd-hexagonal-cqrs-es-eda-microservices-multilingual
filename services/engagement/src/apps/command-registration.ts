@@ -1,3 +1,5 @@
+import type { EventName } from '../adaptors/generated/message-names.js';
+import type { CommandName } from '../adaptors/generated/request-names.js';
 import {
   bindCommand,
   type AggregateTransaction,
@@ -11,7 +13,7 @@ import { commandSubscription, type EventPayloads } from './runtime.js';
 
 type Definitions = readonly { consumer: string; event: string; command?: string; publication?: string }[];
 type Factory<A, C> = (repository: WriteRepository<A>) => FeatureCommandHandler<C>;
-type Reaction<K extends keyof EventPayloads> = {
+type Reaction<K extends EventName & keyof EventPayloads> = {
   handle(metadata: Metadata, event: NoInfer<EventPayloads[K]>): Promise<Outcome>;
 };
 
@@ -21,7 +23,7 @@ export class CommandRegistration<A> {
 
   request<C extends object>(
     registry: RabbitMQRequestRegistry,
-    name: string,
+    name: CommandName,
     parse: (value: unknown) => C,
     handler: Factory<A, NoInfer<C>>,
   ) {
@@ -29,7 +31,7 @@ export class CommandRegistration<A> {
     registry.command(name, parse, (metadata, command) => executor.execute(metadata, command));
   }
 
-  subscription<K extends keyof EventPayloads, C extends object>(
+  subscription<K extends EventName & keyof EventPayloads, C extends object>(
     event: K,
     codec: InternalCommandCodec<C>,
     definitions: Definitions,
@@ -49,7 +51,7 @@ export class CommandRegistration<A> {
   }
 
   /** Obtain external evidence before acquiring the aggregate transaction and repository. */
-  preparedSubscription<K extends keyof EventPayloads, C extends object, P>(
+  preparedSubscription<K extends EventName & keyof EventPayloads, C extends object, P>(
     event: K,
     codec: InternalCommandCodec<C>,
     definitions: Definitions,

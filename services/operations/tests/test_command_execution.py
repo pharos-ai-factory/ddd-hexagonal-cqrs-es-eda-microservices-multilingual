@@ -1,5 +1,7 @@
 """Aggregate persistence cannot bypass an independent publication subscription."""
 
+from operations.adaptors.generated.message_names import PreparationDomainEvent, PreparationIntegrationEvent
+
 import pytest
 from operations.adaptors.command_execution import EventRecordingWriteRepository
 from operations.foundation.application import Loaded, Publication
@@ -19,13 +21,13 @@ class RepositoryProbe:
 def test_aggregate_save_rejects_integration_publication() -> None:
     source = RepositoryProbe()
     repository = EventRecordingWriteRepository[int](
-        source, lambda _: (Publication("preparation.drinks-ready", {}),)
+        source, lambda _: (Publication(PreparationIntegrationEvent.DRINKS_READY, {}),)
     )
     with pytest.raises(ValueError, match="private domain"):
         repository.save(1)
     assert not source.saved
     private = EventRecordingWriteRepository[int](
-        source, lambda _: (Publication("preparation.drinks-ready.domain", {}),)
+        source, lambda _: (Publication(PreparationDomainEvent.DRINKS_READY, {}),)
     )
     private.save(1)
     assert bool(source.saved)

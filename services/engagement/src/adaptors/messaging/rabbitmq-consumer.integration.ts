@@ -1,3 +1,4 @@
+import { LoyaltyDomainEvent, LoyaltySubscription } from '../generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -15,7 +16,7 @@ for (const { counter, malformed } of [
     const connection = await amqp.connect(process.env.BROKER_ADMIN_URL!);
     const channel = await connection.createConfirmChannel();
     // Runtime workers are stopped; retain the generated queue topology and owner credential.
-    const consumer = 'loyalty.issue-reward',
+    const consumer = LoyaltySubscription.ISSUE_REWARD,
       queue = 'ref.' + consumer;
     const controller = new AbortController();
     let worker: Promise<void> | undefined;
@@ -27,7 +28,7 @@ for (const { counter, malformed } of [
       1,
       { id: randomUUID(), target: id, name: 'test', correlation: id, input: {} },
       {
-        name: 'loyalty.reward-earned',
+        name: LoyaltyDomainEvent.REWARD_EARNED,
         payload: { accountId: id, grantId: randomUUID(), benefit: 'coffee', validDays: 7 },
       },
     );
@@ -54,7 +55,7 @@ for (const { counter, malformed } of [
         {
           owner: 'loyalty',
           consumer,
-          event: 'loyalty.reward-earned',
+          event: LoyaltyDomainEvent.REWARD_EARNED,
           target: () => {
             routed++;
             return id;

@@ -1,5 +1,7 @@
 """Real atomic publication receipts, independent subscribers and lost-ACK recovery."""
 
+from operations.adaptors.generated.message_names import PreparationDomainEvent, PreparationSubscription
+
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from hashlib import sha256
@@ -35,7 +37,7 @@ def test_publication_receipt_outbox_and_subscription_recovery() -> None:
     container.init_resources()
     db = container.database()
     target, order, customer, correlation = (str(uuid4()) for _ in range(4))
-    consumer = "preparation.publish-drinks-ready"
+    consumer = PreparationSubscription.PUBLISH_DRINKS_READY
     try:
         accept = next(worker for worker in subscriptions(container) if worker.command)
         source_id = str(uuid4())
@@ -74,7 +76,7 @@ def test_publication_receipt_outbox_and_subscription_recovery() -> None:
         with db.pool.connection() as connection:
             source = connection.execute(
                 "SELECT body FROM cafe.outbox_events WHERE aggregate_id=%s AND event_name=%s",
-                (target, "preparation.drinks-ready.domain"),
+                (target, PreparationDomainEvent.DRINKS_READY),
             ).fetchone()
             assert source
             body = binary(source["body"])

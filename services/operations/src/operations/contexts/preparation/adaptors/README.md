@@ -3,7 +3,7 @@
 This boundary owns ticket storage and wire mappings. Start with the
 [context map](../README.md) for invariants and named application handlers.
 
-- [Messaging](messaging): resource query endpoints, request/reply mappings,
+- [Messaging](messaging): resource query mappings, request/reply mappings,
   private fact codecs, publication mappings and stable subscription declarations.
   Start with [ticket_requests.py](messaging/ticket_requests.py) for the published request boundary.
 - [Persistence](persistence): named read/write repositories, snapshot restoration

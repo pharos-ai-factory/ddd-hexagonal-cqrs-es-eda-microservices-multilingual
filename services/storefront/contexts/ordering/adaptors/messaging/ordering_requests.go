@@ -1,8 +1,6 @@
 package messaging
 
 import (
-	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/requests"
-	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/queryendpoints"
 	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering"
 )
@@ -28,9 +26,4 @@ func ChangeQuantity(p *pb.ChangeQuantity) commands.ChangeQuantityCommand {
 // PlaceOrder maps the published payload to the application command.
 func PlaceOrder(p *pb.PlaceOrder) commands.PlaceOrderCommand {
 	return commands.PlaceOrderCommand{}
-}
-
-// RegisterQueries mounts the context read endpoints.
-func RegisterQueries(r *rpc.RabbitMQRequestRegistry, orders endpoints.OrderQueryEndpoints) {
-	rpc.Queries(r, "order", "orders", orders.List, orders.Get, orders.Page, orderReply, ordersReply)
 }

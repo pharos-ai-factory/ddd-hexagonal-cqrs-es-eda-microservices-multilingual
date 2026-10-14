@@ -158,7 +158,7 @@ generator and run `pnpm generate:contracts` when extending that catalogue.
    Inject `TicketWriteRepository`; load the root, invoke its behaviour and save it.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
 3. In `apps/composition/preparation.py`, use the configured aggregate registration:
-   `commands.request(registry, "startPreparation", wire.start, StartPreparationCommandHandler)`.
+   `commands.request(registry, PreparationCommand.START_PREPARATION, wire.start, StartPreparationCommandHandler)`.
    The shared helper creates the executor and supplies each invocation's repository.
 4. For an event reaction, use the context's typed definition in
    `adaptors/messaging/order_placed_subscription.py`.
@@ -247,10 +247,31 @@ to obtain the receipt before starting the aggregate transaction. See
    capability. Keep aggregate snapshots inside command/persistence code.
 3. Implement the read repository under the context's persistence adaptor, validating stored
    state before mapping it. Preserve revisions and pagination continuations.
-4. Map transport arguments to the query in the context query adaptor. Bind the
-   read repository and named handlers in composition, then register the transport operation.
+4. Map transport arguments and replies in the owning messaging adaptor. Bind the
+   read repository and named handler in composition. Register the generated query
+   identifier, input mapper, handler and reply mapper directly together.
 5. Update the owner OpenAPI/Protobuf boundary if its public shape changes and run
    generation. Test missing resources, storage failures and relevant read behaviour.
+
+For example, Preparation registers its item query with:
+
+```python
+registry.query(
+    PreparationQuery.GET_TICKET,
+    wire.get_ticket,
+    container.get_ticket().execute,
+    wire.get_reply,
+)
+```
+
+Import `PreparationCommand` and `PreparationQuery` from the generated request-name
+module. Query handlers receive their named read repository through DI. Go uses
+`requests.Query`; TypeScript uses `registry.query` with the handler object.
+
+Integration events, domain delivery, private commands and subscriptions also have
+generated context-specific identifiers. Their sources are the published schema
+annotations, private event catalogue, private command envelope and subscription
+manifest. Keep plain domain facts in their owner. See [decision 0024](decisions/0024-generated-message-identifiers-and-direct-queries.md).
 
 Name the port `<Resource>ReadRepository` and its concrete Python/TypeScript class
 `Postgres<Resource>ReadRepository`. Go uses `postgres.New<Resource>ReadRepository`.

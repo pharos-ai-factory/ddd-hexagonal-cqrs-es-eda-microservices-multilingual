@@ -1,3 +1,5 @@
+import { LoyaltyCommand, CommunicationQuery } from '../generated/request-names.js';
+import * as queries from '../../contexts/communication/adaptors/messaging/notification-query-mapping.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import protobuf from 'protobufjs';
@@ -23,7 +25,7 @@ void test('wire command becomes a plain application command with explicit zero v
   const registry = new RabbitMQRequestRegistry('loyalty');
   let captured: Metadata | undefined;
   registry.command(
-    'redeemReward',
+    LoyaltyCommand.REDEEM_REWARD,
     (value: unknown) => {
       assert.deepEqual(value, { orderId: id });
       return { orderId: id };
@@ -59,18 +61,16 @@ void test('foreign context, missing command fields and missing expected version 
 });
 void test('owner query pagination and an absent next identity remain explicit', async () => {
   const registry = new RabbitMQRequestRegistry('communication');
-  registry.queries(
-    'notification',
-    'notifications',
+  registry.query(
+    CommunicationQuery.LIST_NOTIFICATIONS,
+    queries.listNotifications,
     {
-      get: async () => undefined,
-      list: async () => [],
-      page: async (request) => {
-        assert.deepEqual(request, { limit: 1, after: id });
+      execute: async (query) => {
+        assert.deepEqual(query.page, { limit: 1, after: id });
         return { items: [] };
       },
     },
-    (value) => value,
+    queries.listReply,
   );
   const type = root.lookupType('cafe.communication.requests.v1.Request');
   const request = decodeRequest(

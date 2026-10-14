@@ -1,3 +1,4 @@
+import { LoyaltyDomainEvent, LoyaltyIntegrationEvent } from '../../src/adaptors/generated/message-names.js';
 import { RewardIssuedDomainEventHandler } from '../../src/contexts/loyalty/application/event-handlers/publish-reward-issued.js';
 import type { RewardIssuedDomainEventPayload } from '../../src/contexts/loyalty/application/events.js';
 import type { RewardIssuedIntegrationEvent } from '../../src/contracts/events/generated/loyalty.js';
@@ -63,7 +64,7 @@ Then(
 );
 Then('exactly {int} private RewardEarned publications are produced', function (this: W, count: number) {
   assert.equal(this.earned.length, count);
-  assert.ok(this.earned.every((event) => event.name === 'loyalty.reward-earned'));
+  assert.ok(this.earned.every((event) => event.name === String(LoyaltyDomainEvent.REWARD_EARNED)));
   assert.equal(
     new Set(this.earned.map((event) => (event.payload as RewardEarnedDomainEventPayload).grantId)).size,
     count,
@@ -99,7 +100,7 @@ Then('one public RewardIssued publication expires at {string}', async function (
   assert.equal(state.status, 'issued');
   assert.equal(state.grantId, (this.earned[0]!.payload as RewardEarnedDomainEventPayload).grantId);
   assert.equal(this.rewards.publications.length, 1);
-  assert.equal(this.rewards.publications[0]!.name, 'loyalty.reward-issued.domain');
+  assert.equal(this.rewards.publications[0]!.name, LoyaltyDomainEvent.REWARD_ISSUED);
   const outgoing: RewardIssuedIntegrationEvent[] = [];
   const handler = new RewardIssuedDomainEventHandler({
     publish: (m, event) => {
@@ -112,10 +113,10 @@ Then('one public RewardIssued publication expires at {string}', async function (
     this.rewards.publications[0]!.payload as RewardIssuedDomainEventPayload,
   );
   assert.deepEqual(
-    outgoing.map((payload) => ({ name: 'loyalty.reward-issued', payload })),
+    outgoing.map((payload) => ({ name: LoyaltyIntegrationEvent.REWARD_ISSUED, payload })),
     [
       {
-        name: 'loyalty.reward-issued',
+        name: LoyaltyIntegrationEvent.REWARD_ISSUED,
         payload: {
           rewardId: state.id,
           customerId: customer,

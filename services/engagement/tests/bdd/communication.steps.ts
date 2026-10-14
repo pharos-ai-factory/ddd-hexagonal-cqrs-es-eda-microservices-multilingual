@@ -1,3 +1,4 @@
+import { CommunicationDomainEvent } from '../../src/adaptors/generated/message-names.js';
 import { DeliverNotificationCommandHandler } from '../../src/contexts/communication/application/commands/deliver-notification.js';
 import { NotificationDeliveryPreparation } from '../../src/contexts/communication/adaptors/delivery/notification-delivery-preparation.js';
 import { bindCommand } from '../../src/adaptors/command-execution.js';
@@ -76,7 +77,7 @@ Then('the requested notification tells the customer {string}', function (this: W
 });
 Then('one private NotificationRequested publication identifies the notification', function (this: W) {
   assert.deepEqual(this.notices.publications, [
-    { name: 'communication.notification-requested', payload: { notificationId: notification } },
+    { name: CommunicationDomainEvent.NOTIFICATION_REQUESTED, payload: { notificationId: notification } },
   ]);
 });
 Then('no provider call has been made', function (this: W) {

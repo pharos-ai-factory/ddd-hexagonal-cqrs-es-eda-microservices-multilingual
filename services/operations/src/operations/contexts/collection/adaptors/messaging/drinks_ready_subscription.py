@@ -1,10 +1,13 @@
 """Typed incoming published fact accepted by Collection."""
 
+from operations.adaptors.generated.message_names import PreparationIntegrationEvent
+
 from typing import Final
 from operations.adaptors.generated.event_preparation import decode_DrinksReady
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.adaptors.messaging.incoming_event import IncomingEvent
 
 DRINKS_READY: Final[IncomingEvent[DrinksReadyIntegrationEvent]] = IncomingEvent(
-    "preparation.drinks-ready", lambda event: decode_DrinksReady(event.payload, event.aggregate_id)
+    PreparationIntegrationEvent.DRINKS_READY,
+    lambda event: decode_DrinksReady(event.payload, event.aggregate_id),
 )

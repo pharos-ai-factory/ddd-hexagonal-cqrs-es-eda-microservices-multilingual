@@ -1,3 +1,4 @@
+import type { SubscriptionName, PrivateCommandName } from '../generated/message-names.js';
 import protobuf from 'protobufjs';
 
 import type { Metadata } from '../../foundation/application.js';
@@ -11,8 +12,8 @@ export class InternalCommandCodec<C extends object> {
   private envelope: protobuf.Type;
   constructor(
     readonly owner: string,
-    readonly consumer: string,
-    readonly command: string,
+    readonly consumer: SubscriptionName,
+    readonly command: PrivateCommandName,
     schema: protobuf.INamespace,
     private parse: (value: unknown) => C,
   ) {

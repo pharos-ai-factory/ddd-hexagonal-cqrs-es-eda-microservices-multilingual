@@ -102,6 +102,13 @@ func(h {name}QueryHandler) Execute(ctx context.Context,q {name}Query) (a.Loaded[
             f"queries/{snake}_test.go": f'package queries\nimport "testing"\nfunc Test{name}(t *testing.T) {{ t.Fatal("Define missing, present and failure outcomes") }}\n',
         }
         registration = f"// Add to the owning Fx module:\nfunc(reader ports.{name}ReadRepository) queries.{name}QueryHandler {{ return queries.{name}QueryHandler{{ReadRepository:reader}} }},\n"
+    action = name[0].lower() + name[1:]
+    registration += {
+        "operations": f"registry.query({context.title()}Query.{snake.upper()}, wire.{snake}, container.{snake}().execute, wire.{snake}_reply)\n",
+        "engagement": f"registry.query({context.title()}Query.{snake.upper()}, wire.{action}, c.{action}, wire.{action}Reply);\n",
+        "storefront": f"requests.Query(registry, names.{context.title()}Query{name}, wire.{name}, handler.Execute, wire.{name}Reply)\n",
+    }[service]
+    registration += "Define the published query contract and run pnpm generate:contracts; import its generated identifier. Keep input/reply mappings in the owner messaging adaptor.\n"
     files["registration.txt"] = registration
     files["placement.txt"] = (
         "Place queries/, ports/ and read models under the owning application/ directory.\n"

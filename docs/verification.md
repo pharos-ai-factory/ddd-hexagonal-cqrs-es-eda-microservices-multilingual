@@ -1,6 +1,6 @@
 # Executed verification
 
-[Direct command registration across all six contexts, 14 October 2026](verification/2026-10-14-direct-command-registration.md).
+[Generated identifiers and direct queries, 14 October 2026](verification/2026-10-14-typed-message-registration.md). [Direct command registration across all six contexts, 14 October 2026](verification/2026-10-14-direct-command-registration.md).
 
 ## Catalogue-scoped broker authority, 14 October 2026
 

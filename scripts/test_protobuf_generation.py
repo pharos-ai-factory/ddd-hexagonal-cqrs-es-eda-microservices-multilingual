@@ -73,6 +73,30 @@ class ProtobufGenerationTests(unittest.TestCase):
             self.assertIn(
                 "Command_CreateOrder", (output / f"contexts/{owner}/{owner}_requests.pb.go").read_text()
             )
+        subprocess.run(
+            [
+                "uv",
+                "run",
+                "--no-project",
+                "--with",
+                "grpcio-tools==1.84.0",
+                "python",
+                str(ROOT / "scripts/generate_request_names.py"),
+                "--root",
+                str(self.root),
+            ],
+            check=True,
+        )
+        names = (output / "names.go").read_text()
+        self.assertIn("MenuCommandCreateOrder", names)
+        self.assertIn("OrderingCommandCreateOrder", names)
+        self.assertIn("MenuQueryGetDrink", names)
+        python_names = (
+            self.root / "services/operations/src/operations/adaptors/generated/request_names.py"
+        ).read_text()
+        self.assertIn("class PreparationCommand(StrEnum)", python_names)
+        self.assertIn("START_PREPARATION = 'startPreparation'", python_names)
+        self.assertNotIn("MenuCommand", python_names)
         # Compile both owner packages and the dispatch interfaces together.
         module = ROOT / "services/api"
         for name in ("go.mod", "go.sum"):

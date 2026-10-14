@@ -53,6 +53,10 @@ queue and topic permissions. See [the permission model](../broker-permissions.md
 0010, 0015 and 0016: declare command names/codecs and plain handler factories together;
 shared registration helpers supply execution policy for each aggregate.
 
+[0024 — Generated identifiers and direct queries](0024-generated-message-identifiers-and-direct-queries.md)
+extends 0014, 0017, 0019 and 0023 with generated message/subscription identifiers
+and explicit query-to-handler registration in every owner service.
+
 ## Foundations and public boundaries
 
 | Decision                                                                                   | Scope and later refinement                                                                                               |

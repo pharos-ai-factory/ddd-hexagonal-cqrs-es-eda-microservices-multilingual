@@ -6,6 +6,7 @@ import (
 	private "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	envelope "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/envelope"
+	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
 	"time"
@@ -13,7 +14,7 @@ import (
 
 // EncodePrivateEvent preserves owner-private wire identities and typed facts.
 func EncodePrivateEvent(message a.Message) ([]byte, error) {
-	if message.Name == "menu.drink-published" {
+	if message.Name == names.MenuDomainEventDrinkPublished.String() {
 		return encodeDrink(message)
 	}
 	value, ok := message.Payload.(d.MenuEditionPublishedDomainEvent)
@@ -43,7 +44,7 @@ func DecodePrivateEvent(data []byte) (a.Message, error) {
 	if err := proto.Unmarshal(data, event); err != nil {
 		return a.Message{}, err
 	}
-	if event.Name == "menu.drink-published" {
+	if event.Name == names.MenuDomainEventDrinkPublished.String() {
 		return decodeDrink(data)
 	}
 	p := event.GetEditionPublished()
@@ -66,7 +67,7 @@ func validateMenuEditionPublished(m a.Message, value d.MenuEditionPublishedDomai
 	if err := envelope.ValidateMetadata(m); err != nil {
 		return err
 	}
-	if m.Context != "menu" || m.Name != "menu.edition-published.domain" || m.Visibility != a.Private || m.AggregateKind != "edition" || m.ContractVersion != 1 || value.State.ID != m.AggregateID || value.State.Status != "published" {
+	if m.Context != "menu" || m.Name != names.MenuDomainEventEditionPublished.String() || m.Visibility != a.Private || m.AggregateKind != "edition" || m.ContractVersion != 1 || value.State.ID != m.AggregateID || value.State.Status != "published" {
 		return fmt.Errorf("invalid private menu event")
 	}
 	_, err := d.RestoreEdition(value.State)

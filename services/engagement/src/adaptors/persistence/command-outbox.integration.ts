@@ -1,3 +1,4 @@
+import { CollectionIntegrationEvent, LoyaltySubscription } from '../generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -30,7 +31,7 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
     db = c.database,
     codec = c.creditCodec;
   const credit = loyaltySubscriptions(c).find(
-    (worker) => worker.consumer === 'loyalty.credit-collection' && worker.decodeCommand,
+    (worker) => worker.consumer === String(LoyaltySubscription.CREDIT_COLLECTION) && worker.decodeCommand,
   )!;
   const admin = new Pool({
     connectionString: process.env.DATABASE_ADMIN_URL!.replace(/\/[^/?]+(?=\?|$)/, '/cafe_loyalty'),
@@ -80,7 +81,11 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
     await outbox.enqueue(m, command);
     await outbox.enqueue(m, command);
     await assert.rejects(outbox.enqueue({ ...m, sourceHash: 'b'.repeat(64) }, command));
-    assert.equal(await c.accountQueries.get(target), undefined, 'Event acceptance mutated an aggregate');
+    assert.equal(
+      await c.getAccount.execute({ id: target }),
+      undefined,
+      'Event acceptance mutated an aggregate',
+    );
     const saved = (
       await db.pool.query<Record<string, unknown>>('SELECT body FROM cafe.internal_commands WHERE id=$1', [
         m.id,
@@ -113,7 +118,7 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
         {
           owner: 'loyalty',
           consumer: codec.consumer,
-          event: 'collection.order-collected',
+          event: CollectionIntegrationEvent.ORDER_COLLECTED,
           target: () => target,
           decodeCommand: (body) => codec.decode(body),
           handle: async (metadata, payload) => {
@@ -141,16 +146,16 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
     assert.equal(failure?.correlation, m.correlation);
     const dead = quarantined as unknown as amqp.GetMessage;
     assert.deepEqual(dead.content, saved);
-    assert.equal(await c.accountQueries.get(target), undefined);
+    assert.equal(await c.getAccount.execute({ id: target }), undefined);
     unavailable = false;
     const properties = { ...dead.properties, headers: { 'contract-version': 1 } };
     await confirmed(channel, 'ref.loyalty.delivery', queue, dead.content, properties);
     channel.ack(dead);
-    await until(async () => Boolean(await c.accountQueries.get(target)));
+    await until(async () => Boolean(await c.getAccount.execute({ id: target })));
     // Lost ACK / duplicate publication reuses the committed command and source receipts.
     await confirmed(channel, 'ref.loyalty.delivery', queue, saved, properties);
     await until(async () => completed >= 2);
-    const loaded = await c.accountQueries.get(target);
+    const loaded = await c.getAccount.execute({ id: target });
     assert.equal(loaded?.version, 1);
     assert.equal(loaded?.state.collections, 1);
     assert.equal(

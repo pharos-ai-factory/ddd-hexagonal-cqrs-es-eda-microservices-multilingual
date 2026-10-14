@@ -1,16 +1,11 @@
 """Collection owns its private command identity, validation and stored wire format."""
 
-from enum import StrEnum
+from operations.adaptors.generated.message_names import CollectionPrivateCommand, CollectionSubscription
+
 from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.internal.collection.internal_commands_pb2 import CommandEnvelope
 from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
 from operations.foundation.domain import identifier, record
-
-
-class CollectionSubscription(StrEnum):
-    """Stable queue and receipt identity, independent of Python class names."""
-
-    OPEN_PICKUP = "collection.open-pickup"
 
 
 def open_command(value: object) -> OpenPickupCommand:
@@ -20,7 +15,11 @@ def open_command(value: object) -> OpenPickupCommand:
 
 def command_codec() -> InternalCommandCodec[OpenPickupCommand]:
     return InternalCommandCodec(
-        "collection", CollectionSubscription.OPEN_PICKUP, "open_pickup", CommandEnvelope, open_command
+        "collection",
+        CollectionSubscription.OPEN_PICKUP,
+        CollectionPrivateCommand.OPEN_PICKUP,
+        CommandEnvelope,
+        open_command,
     )
 
 

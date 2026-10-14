@@ -270,3 +270,14 @@ reject the earlier per-command wiring in all three languages. Composition tests
 exercise published command parsing, selected aggregate transactions, private codec
 bindings, projection preparation, independent notification receipts and provider
 failures before transactions. Infrastructure lanes exercise the same registrations.
+
+## Generated message identifiers and direct queries
+
+[Decision 0024](docs/decisions/0024-generated-message-identifiers-and-direct-queries.md)
+adds generated command/query/event/subscription identifiers and direct query
+registrations. Generator tests preserve context selection and overlapping owner
+names and reject private commands absent from the compiled owner envelope. Typed
+negative callers reject string identifiers and mixed roles. Query dispatch tests
+use real handlers to preserve missing roots, revisions, complete lists, pagination,
+invalid-input rejection and retryable storage failure. Architecture fixtures and
+scaffold tests enforce the same composition pattern for new use cases.

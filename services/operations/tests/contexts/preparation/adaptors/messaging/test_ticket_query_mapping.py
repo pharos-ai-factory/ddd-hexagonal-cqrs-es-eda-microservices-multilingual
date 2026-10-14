@@ -5,7 +5,13 @@ from operations.foundation.pagination import Page, PageRequest
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.contexts.preparation.adaptors.persistence.ticket_snapshot import restore_ticket_snapshot
 from operations.contexts.preparation.adaptors.persistence.ticket_read_repository import ticket_view
-from operations.contexts.preparation.adaptors.messaging.ticket_query_endpoints import TicketQueryEndpoints
+from operations.contexts.preparation.adaptors.messaging import ticket_requests as wire
+from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_queries_pb2 import (
+    GetTicket,
+    ListTickets,
+)
+from operations.contexts.preparation.application.queries.get_ticket import GetTicketQuery
+from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQuery
 from operations.contexts.preparation.application.queries.get_ticket import GetTicketQueryHandler
 from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 
@@ -36,13 +42,14 @@ def test_query_boundary_preserves_missing_rows_revisions_and_continuations() -> 
             return Page([row], ID)
 
     reader = MappedReadRepository(Reader(), ticket_view)
-    endpoints = TicketQueryEndpoints(GetTicketQueryHandler(reader), ListTicketsQueryHandler(reader))
-    assert endpoints.get("missing") is None
-    assert endpoints.get(ID) == row
-    assert endpoints.list() == [row]
-    assert endpoints.page(request) == Page([row], ID)
+    get = GetTicketQueryHandler(reader)
+    listing = ListTicketsQueryHandler(reader)
+    assert get.execute(GetTicketQuery("missing")) is None
+    assert get.execute(wire.get_ticket(GetTicket(id=ID))) == row
+    assert listing.execute(wire.list_tickets(ListTickets())).items == [row]
+    assert listing.execute(ListTicketsQuery(request)) == Page([row], ID)
     with pytest.raises(RuntimeError, match="storage unavailable"):
-        endpoints.get("failed")
+        get.execute(GetTicketQuery("failed"))
 
 
 def test_persistence_reader_validates_before_selecting_view_fields() -> None:

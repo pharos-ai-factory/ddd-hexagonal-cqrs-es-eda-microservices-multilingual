@@ -11,6 +11,8 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
+- [Generated command and query identifiers](../../contracts/requests/generated/cafe/requests/v1/names.go)
+- [Generated event and subscription identifiers](../../contracts/events/names/names_generated.go)
 - [Domain publication handlers](application/eventhandlers)
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
@@ -23,7 +25,7 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Published contracts](../../../../contracts/menu)
 - [Executable specifications](../../../../specifications/menu)
 - [Dependency composition](../../apps/storefront/di/menu.go)
-- [Command registrations](../../apps/storefront/di/menu_requests.go)
+- [Command and query registrations](../../apps/storefront/di/menu_requests.go)
 - [Context tests](.)
 
 ## Follow a use case
@@ -35,6 +37,9 @@ Command handlers load, mutate and save through named write repositories.
 Composition pairs each command with its plain handler factory through the shared
 registration helper, which supplies each invocation's repository and transaction. Owner adaptors map aggregate facts into outgoing messages.
 Projection handlers update consumer-owned read data without changing aggregates.
+Composition registers each generated query identifier with its input mapper,
+concrete handler and reply mapper. Event and subscription identifiers come from
+the published and owner-private catalogues.
 Queries use named read repository ports and return application-owned views.
 Persistence adaptors validate stored
 authority and select the fields exposed by those views.

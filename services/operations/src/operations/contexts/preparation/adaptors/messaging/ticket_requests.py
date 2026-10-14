@@ -17,6 +17,14 @@ from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.prepara
     StartPreparation,
     CompletePreparation,
 )
+from operations.contexts.preparation.application.queries.get_ticket import GetTicketQuery
+from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQuery
+from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_queries_pb2 import (
+    GetTicket,
+    ListTickets,
+)
+from operations.foundation.domain import identifier
+from operations.foundation.pagination import Page, PageRequest
 
 
 def start(value: Message) -> StartPreparationCommand:
@@ -51,3 +59,36 @@ def listing(items: list[Loaded[TicketView]], paged: bool, next_id: str | None) -
     if next_id is not None:
         result.next_id = next_id
     return Reply(tickets=result)
+
+
+def get_ticket(value: Message) -> GetTicketQuery:
+    """Decode the published item query into its application input."""
+    if not isinstance(value, GetTicket):
+        raise ValueError("Unexpected get ticket payload")
+    return GetTicketQuery(identifier(value.id))
+
+
+def list_tickets(value: Message) -> ListTicketsQuery:
+    """Preserve complete reads and explicitly requested pagination."""
+    if not isinstance(value, ListTickets):
+        raise ValueError("Unexpected list tickets payload")
+    page = value.page if value.HasField("page") else None
+    return ListTicketsQuery(
+        PageRequest(page.limit, identifier(page.after) if page.HasField("after") else None)
+        if page is not None
+        else None
+    )
+
+
+def get_reply(query: GetTicketQuery, loaded: Loaded[TicketView] | None) -> Reply:
+    """Map a missing resource or its current revision to the owner reply."""
+    if loaded is None:
+        reply = Reply()
+        reply.error.code = "not_found"
+        return reply
+    return Reply(ticket=item(loaded))
+
+
+def list_reply(query: ListTicketsQuery, page: Page[TicketView]) -> Reply:
+    """Retain the pagination flag and continuation from the application result."""
+    return listing(page.items, query.page is not None, page.next_id)

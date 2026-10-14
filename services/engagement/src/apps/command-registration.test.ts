@@ -1,3 +1,5 @@
+import { LoyaltyCommand } from '../adaptors/generated/request-names.js';
+import { CommunicationSubscription } from '../adaptors/generated/message-names.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { asValue } from 'awilix';
@@ -55,7 +57,7 @@ void test('published registration parses the command and supplies the selected a
       owner: 'loyalty',
       kind: 'command',
       id,
-      name: 'redeemReward',
+      name: LoyaltyCommand.REDEEM_REWARD,
       body: { orderId: second },
       metadata: { ...metadata(id), expected: 1 },
     };
@@ -70,7 +72,7 @@ void test('published registration parses the command and supplies the selected a
       () =>
         container.cradle.rewardCommands.request(
           registry,
-          'redeemReward',
+          LoyaltyCommand.REDEEM_REWARD,
           () => ({}),
           () => ({ execute: async () => ({ status: 'wrong' }) }),
         ),
@@ -137,7 +139,8 @@ void test('delivery registration prepares independent receipts before each trans
   });
   try {
     const worker = communicationSubscriptions(container.cradle).find(
-      (worker) => worker.consumer === 'communication.deliver-notice' && worker.decodeCommand,
+      (worker) =>
+        worker.consumer === String(CommunicationSubscription.DELIVER_NOTICE) && worker.decodeCommand,
     )!;
     const results = await Promise.all(
       [id, second].map((target) => worker.handle(metadata(target), { notificationId: target })),
