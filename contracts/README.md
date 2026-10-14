@@ -76,7 +76,7 @@ locations are:
 | Consumer              | Generated output                                                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Go API                | `services/api/adaptors/messaging/generated/`, `adaptors/openapi/generated/` and `adaptors/http/backend/generated/`                   |
-| Go Storefront         | `services/storefront/contracts/{events,requests,realtime}/generated/` and `foundation/transport/openapi/generated/`                  |
+| Go Storefront         | `services/storefront/contracts/{events,requests,realtime}/generated/` and `adaptors/http/openapi/generated/`                         |
 | Python Operations     | `services/operations/src/operations/adaptors/generated/`; Protobuf `.py` and `.pyi` files, including private owner command bindings  |
 | TypeScript Engagement | `services/engagement/src/adaptors/generated/`; owner-private descriptors also live in each context's `adaptors/messaging/generated/` |
 | Browser               | `services/web/src/adaptors/generated/{http.ts,realtime.json}`                                                                        |

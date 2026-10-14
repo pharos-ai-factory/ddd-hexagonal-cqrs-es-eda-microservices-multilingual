@@ -229,6 +229,15 @@ Consumer boundary tests cover semantic evidence checks. The generic public envel
 transition and newly declared constraints are accepted explicitly by decision 0017;
 comparisons against a current-format baseline retain ordinary compatibility checks.
 
+## Shared Operations adaptors
+
+Architecture negative fixtures reject flat shared transport modules, direct database
+drivers in messaging/realtime and network clients in persistence. Preparation
+regressions run its completion handler through private-fact staging and decoding.
+Request tests cover both generated owner factories and unknown-owner rejection.
+Existing infrastructure lanes use the relocated transaction, outbox, lease and
+RabbitMQ modules. See [decision 0020](docs/decisions/0020-operations-adaptor-layout.md).
+
 ## Durable domain-to-integration publication
 
 Follow [decision 0019](docs/decisions/0019-durable-domain-event-publication.md).
@@ -238,3 +247,7 @@ before ACK. Add codec compatibility fixtures, mapping tests and a manifest entry
 with `publication`. Verify rollback at the final receipt insert, concurrent
 redelivery, unchanged outgoing bytes and independent subscribers using real
 PostgreSQL/RabbitMQ. Repository negative tests prohibit direct integration staging.
+
+Adaptor layout rules cover all services and contexts with negative fixtures in
+`scripts/test_adaptor_layout.py`. Shared Go executor and persistence infrastructure
+retain their explicit command-boundary classification after relocation.

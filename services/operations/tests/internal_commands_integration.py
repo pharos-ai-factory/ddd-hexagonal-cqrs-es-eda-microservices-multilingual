@@ -2,7 +2,7 @@
 
 from operations.adaptors.command_execution import CommandExecutor
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.contexts.preparation.adaptors.persistence.ticket_write_repository import (
     PostgresTicketWriteRepository,
 )
@@ -19,18 +19,16 @@ from operations.contexts.preparation.adaptors.messaging.accept_order_codec impor
     command_header,
 )
 from operations.contexts.preparation.adaptors.persistence.ticket_snapshot import restore_ticket_snapshot
-from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
-from operations.adaptors.delivery import (
-    EventSubscription,
-    binary,
-    broker_connection,
-    claim,
-    consume,
-    finish,
-    relay,
-)
-from operations.adaptors.postgres import PostgresContextDatabase
-from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
+from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
+from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription
+from operations.adaptors.persistence.dispatch_leases import binary
+from operations.adaptors.messaging.rabbitmq_connection import broker_connection
+from operations.adaptors.persistence.dispatch_leases import claim
+from operations.adaptors.messaging.rabbitmq_consumer import consume
+from operations.adaptors.persistence.dispatch_leases import finish
+from operations.adaptors.messaging.rabbitmq_outbox_relay import relay
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
+from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.contexts.preparation.application.commands.accept_order import (
     AcceptOrderCommand,

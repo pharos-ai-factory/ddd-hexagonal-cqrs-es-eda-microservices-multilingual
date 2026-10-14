@@ -8,15 +8,15 @@ from operations.contexts.collection.adaptors.persistence.pickup_read_repository 
     PostgresPickupReadRepository,
 )
 from operations.contexts.collection.adaptors.messaging.open_pickup_codec import command_codec
-from operations.contexts.collection.adaptors.query_endpoints import PickupQueryEndpoints
+from operations.contexts.collection.adaptors.messaging.pickup_query_endpoints import PickupQueryEndpoints
 from operations.contexts.collection.application.queries.get_pickup import GetPickupQueryHandler
 from operations.contexts.collection.application.queries.list_pickups import ListPickupsQueryHandler
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
 from dependency_injector import containers, providers
 from operations.adaptors.command_execution import CommandExecutor
-from operations.contexts.collection.adaptors.messaging.incoming_event import DRINKS_READY
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
-from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
+from operations.contexts.collection.adaptors.messaging.drinks_ready_subscription import DRINKS_READY
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
 from operations.contexts.collection.application.commands.open_pickup import (
     OpenPickupCommand,
     OpenPickupCommandHandler,
@@ -30,7 +30,7 @@ from operations.foundation.identity import derived_id
 from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
-from operations.adaptors.publication_outbox import PostgresPublicationOutbox
+from operations.adaptors.persistence.integration_event_outbox import PostgresPublicationOutbox
 from operations.apps.runtime import publication_subscription
 from operations.adaptors.generated.event_collection import publish_PickupOpened
 from operations.contexts.collection.application.event_handlers.publish_pickup_opened import (

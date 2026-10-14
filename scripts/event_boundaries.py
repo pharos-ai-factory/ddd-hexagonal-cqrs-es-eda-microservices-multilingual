@@ -3,11 +3,11 @@
 import re
 
 SHARED_CODECS = {
-    "services/operations/src/operations/adaptors/codec.py",
-    "services/operations/src/operations/adaptors/event_payload.py",
-    "services/engagement/src/adaptors/codec.ts",
-    "services/engagement/src/adaptors/event-payload.ts",
-    "services/engagement/src/adaptors/event-envelope.ts",
+    "services/operations/src/operations/adaptors/messaging/event_codec.py",
+    "services/operations/src/operations/adaptors/messaging/event_payload_codec.py",
+    "services/engagement/src/adaptors/messaging/event-codec.ts",
+    "services/engagement/src/adaptors/messaging/event-payload-codec.ts",
+    "services/engagement/src/adaptors/messaging/event-envelope.ts",
     "services/storefront/contracts/events/protobuf/codec.go",
     "services/storefront/contracts/events/protobuf/validation.go",
 }

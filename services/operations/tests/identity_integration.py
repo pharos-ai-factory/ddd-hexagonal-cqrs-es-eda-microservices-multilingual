@@ -2,7 +2,7 @@
 
 from operations.adaptors.command_execution import CommandExecutor
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.contexts.collection.adaptors.persistence.pickup_snapshot import restore_pickup_snapshot
 from operations.contexts.collection.adaptors.persistence.pickup_write_repository import (
     PostgresPickupWriteRepository,
@@ -13,8 +13,8 @@ import pytest
 from psycopg import Connection, connect
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
-from operations.adaptors.postgres import PostgresContextDatabase, Row
-from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase, Row
+from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 from operations.foundation.application import Change, Metadata

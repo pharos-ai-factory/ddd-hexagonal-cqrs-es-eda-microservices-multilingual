@@ -17,7 +17,7 @@ LEGACY = {
     "0002_realtime.sql": "91307774de1e1254578913bb9e5523f8bc05dd9ef497e46bd4b6b62a4d5a45e1",
 }
 OUTPUTS = {
-    "storefront": "services/storefront/foundation/persistence/postgres/migrations/generated/contexts.json",
+    "storefront": "services/storefront/adaptors/persistence/postgres/migrations/generated/contexts.json",
     "operations": "services/operations/src/operations/adaptors/generated/context-persistence.json",
     "engagement": "services/engagement/src/adaptors/generated/context-persistence.json",
 }

@@ -1,8 +1,8 @@
 """Private delivery codecs and plain domain-event restoration owned by preparation."""
 
-from operations.adaptors.private_event import PrivateEventCodec
-from operations.adaptors.incoming_event import IncomingEvent
-from operations.adaptors.event_payload import parse_payload
+from operations.adaptors.messaging.private_event_codec import PrivateEventCodec
+from operations.adaptors.messaging.incoming_event import IncomingEvent
+from operations.adaptors.messaging.event_payload_codec import parse_payload
 from operations.adaptors.generated.cafe.internal.preparation import private_messages_pb2 as wire
 from operations.contexts.preparation.domain.preparation_ticket import DrinksReadyDomainEvent
 from operations.foundation.domain import identifier

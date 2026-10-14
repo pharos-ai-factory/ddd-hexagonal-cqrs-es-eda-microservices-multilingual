@@ -20,7 +20,8 @@ class ArchitectureTests(unittest.TestCase):
     def test_application_cannot_read_another_context(self):
         self.assertIsNotNone(
             import_violation(
-                MODULE + "/contexts/ordering/application", MODULE + "/contexts/menu/adaptors/postgres"
+                MODULE + "/contexts/ordering/application",
+                MODULE + "/contexts/menu/adaptors/persistence/postgres",
             )
         )
 
@@ -90,7 +91,7 @@ class ArchitectureTests(unittest.TestCase):
         self.assertIsNotNone(
             import_violation(
                 MODULE + "/services/storefront/contexts/menu/domain",
-                MODULE + "/services/storefront/foundation/transport/http",
+                MODULE + "/services/storefront/adaptors/http/operational",
             )
         )
         self.assertIsNotNone(

@@ -3,9 +3,9 @@ import type { PrivateEventPayloads } from '../adaptors/generated/private-event-r
 /** Generated published bindings and owner-declared private payloads compose the graph. */
 export type EventPayloads = PublishedEventPayloads & PrivateEventPayloads;
 import type { Metadata, Outcome } from '../foundation/application.js';
-import type { PostgresContextDatabase } from '../adaptors/postgres.js';
-import type { InternalCommandCodec } from '../adaptors/internal-commands.js';
-import type { EventSubscription } from '../adaptors/broker.js';
+import type { PostgresContextDatabase } from '../adaptors/persistence/postgres-database.js';
+import type { InternalCommandCodec } from '../adaptors/messaging/internal-command-codec.js';
+import type { EventSubscription } from '../adaptors/messaging/rabbitmq-consumer.js';
 
 /** An owner-local subscription installs both durable hand-off and command execution. */
 export function commandSubscription<K extends keyof EventPayloads, C extends object>(

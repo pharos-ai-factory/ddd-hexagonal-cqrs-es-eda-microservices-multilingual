@@ -3,7 +3,7 @@
 from dataclasses import replace
 from pathlib import Path
 from collections.abc import Mapping
-from operations.adaptors.internal_commands import InternalCommandCodec
+from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
 import pytest
 from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec

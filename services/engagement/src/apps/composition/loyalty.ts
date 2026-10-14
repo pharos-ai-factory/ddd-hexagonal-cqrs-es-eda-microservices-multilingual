@@ -1,4 +1,4 @@
-import { PostgresPublicationOutbox } from '../../adaptors/publication-outbox.js';
+import { PostgresPublicationOutbox } from '../../adaptors/persistence/integration-event-outbox.js';
 import { published } from '../../adaptors/generated/event-types.js';
 import { RewardIssuedDomainEventHandler } from '../../contexts/loyalty/application/event-handlers/publish-reward-issued.js';
 import { bindCommand, type CommandExecutor } from '../../adaptors/command-execution.js';
@@ -9,25 +9,23 @@ import { PostgresRewardWriteRepository } from '../../contexts/loyalty/adaptors/p
 import type { LoyaltyAccount } from '../../contexts/loyalty/domain/loyalty-account.js';
 import { PostgresAccountWriteRepository } from '../../contexts/loyalty/adaptors/persistence/account-write-repository.js';
 import type { AggregateTransaction } from '../../adaptors/command-execution.js';
-import { PostgresAggregateTransaction } from '../../adaptors/aggregate-transaction.js';
-import { rewardQueryEndpoints } from '../../contexts/loyalty/adaptors/reward-query-endpoints.js';
+import { PostgresAggregateTransaction } from '../../adaptors/persistence/aggregate-transaction.js';
+import { rewardQueryEndpoints } from '../../contexts/loyalty/adaptors/messaging/reward-query-endpoints.js';
 import { ListRewardsQueryHandler } from '../../contexts/loyalty/application/queries/list-rewards.js';
 import { GetRewardQueryHandler } from '../../contexts/loyalty/application/queries/get-reward.js';
 import { restoreRewardSnapshot } from '../../contexts/loyalty/adaptors/persistence/reward-snapshot.js';
 import { PostgresRewardReadRepository } from '../../contexts/loyalty/adaptors/persistence/reward-read-repository.js';
-import { accountQueryEndpoints } from '../../contexts/loyalty/adaptors/account-query-endpoints.js';
+import { accountQueryEndpoints } from '../../contexts/loyalty/adaptors/messaging/account-query-endpoints.js';
 import { ListAccountsQueryHandler } from '../../contexts/loyalty/application/queries/list-accounts.js';
 import { GetAccountQueryHandler } from '../../contexts/loyalty/application/queries/get-account.js';
 import { restoreAccountSnapshot } from '../../contexts/loyalty/adaptors/persistence/account-snapshot.js';
 import { PostgresAccountReadRepository } from '../../contexts/loyalty/adaptors/persistence/account-read-repository.js';
-import { creditCodec, issueCodec } from '../../contexts/loyalty/adaptors/messaging/command-codecs.js';
+import { creditCodec } from '../../contexts/loyalty/adaptors/messaging/credit-collection-codec.js';
+import { issueCodec } from '../../contexts/loyalty/adaptors/messaging/issue-reward-codec.js';
 import { asFunction, asValue, createContainer } from 'awilix';
-import { PostgresContextDatabase } from '../../adaptors/postgres.js';
-import {
-  InternalCommandCodec,
-  PostgresDurableCommandOutbox,
-  commandPublication,
-} from '../../adaptors/internal-commands.js';
+import { PostgresContextDatabase } from '../../adaptors/persistence/postgres-database.js';
+import { InternalCommandCodec, commandPublication } from '../../adaptors/messaging/internal-command-codec.js';
+import { PostgresDurableCommandOutbox } from '../../adaptors/persistence/command-outbox.js';
 import { derivedId } from '../../foundation/identity.js';
 import { secret } from '../../foundation/secrets.js';
 import {

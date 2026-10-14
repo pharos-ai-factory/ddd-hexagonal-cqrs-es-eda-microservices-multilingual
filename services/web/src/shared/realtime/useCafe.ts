@@ -1,12 +1,12 @@
 'use client';
 import { Centrifuge } from 'centrifuge/build/protobuf';
 import { useEffect, useReducer, useState } from 'react';
-import { decode } from './codec';
+import { decode } from '../../adaptors/realtime/projection-codec';
 import { merge, owners, type Projection, type Snapshot } from './model';
 import { subscriptionBarrier } from './queries';
-import { SessionEnded } from '../../adaptors/http/client';
+import { SessionEnded } from '../../adaptors/http/operation-client';
 import { projections } from './httpProjection';
-import { request } from '../../adaptors/http/client';
+import { request } from '../../adaptors/http/operation-client';
 import { reconciliationQueue } from './reconciliation';
 
 export function useCafe(active: boolean, sessionEnded: () => void) {

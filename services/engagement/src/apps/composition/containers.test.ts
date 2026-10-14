@@ -4,7 +4,7 @@ import { asFunction, asValue } from 'awilix';
 import { createLoyaltyContainer } from './loyalty.js';
 import { createCommunicationContainer } from './communication.js';
 import { OrderCollectedIntegrationEventHandler } from '../../contexts/loyalty/application/event-handlers/order-collected.js';
-import type { PostgresContextDatabase } from '../../adaptors/postgres.js';
+import type { PostgresContextDatabase } from '../../adaptors/persistence/postgres-database.js';
 import type { AggregateTransaction } from '../../adaptors/command-execution.js';
 import type { LoyaltyAccount, AccountState } from '../../contexts/loyalty/domain/loyalty-account.js';
 

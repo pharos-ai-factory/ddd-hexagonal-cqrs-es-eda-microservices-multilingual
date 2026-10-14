@@ -1,6 +1,6 @@
 import { once } from 'node:events';
 import { setTimeout } from 'node:timers/promises';
-import { PostgresContextDatabase } from '../src/adaptors/postgres.js';
+import { PostgresContextDatabase } from '../src/adaptors/persistence/postgres-database.js';
 
 // Observe the real pool in a separate process, without allowing a fatal error
 // to terminate the test runner or print connection credentials.

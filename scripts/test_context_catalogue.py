@@ -47,7 +47,7 @@ class ContextNavigationTests(unittest.TestCase):
             )
         self.assertIsNone(
             core_violation(
-                "services/engagement/src/adaptors/codec.ts",
+                "services/engagement/src/adaptors/messaging/event-codec.ts",
                 "services/engagement/src/contexts/loyalty/adaptors/messaging/generated/private_messages.json",
             )
         )

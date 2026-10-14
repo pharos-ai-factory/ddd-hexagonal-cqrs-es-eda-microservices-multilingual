@@ -6,6 +6,8 @@ An order owns its lines and enforces the five-drink limit.
 
 ## Find the code
 
+- [Adaptor responsibilities and navigation](adaptors/README.md)
+
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
@@ -13,10 +15,10 @@ An order owns its lines and enforces the five-drink limit.
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
 - [Application ports](application/ports)
-- [Order write repository](adaptors/postgres/order_write_repository.go)
-- [Order read repository](adaptors/postgres/order_read_repository.go)
+- [Order write repository](adaptors/persistence/postgres/order_write_repository.go)
+- [Order read repository](adaptors/persistence/postgres/order_read_repository.go)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
-- [Persistence mapping](adaptors/postgres)
+- [Persistence mapping](adaptors/persistence/postgres)
 - [Published contracts](../../../../contracts/ordering)
 - [Executable specifications](../../../../specifications/ordering)
 - [Dependency composition](../../apps/storefront/di/ordering.go)

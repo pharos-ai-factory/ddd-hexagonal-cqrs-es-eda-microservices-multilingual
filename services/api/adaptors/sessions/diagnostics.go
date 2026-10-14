@@ -3,7 +3,6 @@ package sessions
 import (
 	"context"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"log/slog"
 	"time"
 )
@@ -50,14 +49,4 @@ func (s *ValkeySessionStore) Diagnostics(ctx context.Context) (Diagnostics, erro
 	}
 	result.PendingRevocations, result.ExpiredSessionsAwaitingRevocation = pending.Val(), expired.Val()
 	return result, nil
-}
-
-// Keep the pending evidence when completion fails; a later worker will retry.
-func (s *ValkeySessionStore) complete(ctx context.Context, work, fence string) {
-	_, err := s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-		pipe.SRem(ctx, prefix+"disconnects", work)
-		pipe.Del(ctx, fence)
-		return nil
-	})
-	s.record("complete", err)
 }

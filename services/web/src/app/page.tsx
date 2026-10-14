@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useCafe } from '../shared/realtime/useCafe';
-import { request } from '../adaptors/http/client';
+import { request } from '../adaptors/http/operation-client';
 import { useCommand } from '../shared/commands/useCommand';
 import { MenuPanel } from '../features/menu/MenuPanel';
 import { OrderingPanel } from '../features/ordering/OrderingPanel';

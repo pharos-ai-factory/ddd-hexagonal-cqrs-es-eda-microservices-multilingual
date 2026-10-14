@@ -6,6 +6,8 @@ A preparation ticket moves from queued to preparing to ready.
 
 ## Find the code
 
+- [Adaptor responsibilities and navigation](adaptors/README.md)
+
 - [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
@@ -19,6 +21,7 @@ A preparation ticket moves from queued to preparing to ready.
 - [Persistence mapping](adaptors/persistence)
 - [Published contracts](../../../../../../contracts/preparation)
 - [Executable specifications](../../../../../../specifications/preparation)
+- [Shared technical adaptor map](../../adaptors/README.md)
 - [Dependency composition](../../apps/composition/preparation.py)
 - [Context tests](../../../../tests/contexts/preparation)
 

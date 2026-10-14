@@ -6,6 +6,8 @@ A menu edition owns its offers; every offer pins a published drink revision.
 
 ## Find the code
 
+- [Adaptor responsibilities and navigation](adaptors/README.md)
+
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
@@ -13,11 +15,11 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
 - [Application ports](application/ports)
-- [Drink write repository](adaptors/postgres/drink_write_repository.go)
-- [Drink read repository](adaptors/postgres/drink_read_repository.go)
-- [Edition read repository](adaptors/postgres/edition_read_repository.go)
+- [Drink write repository](adaptors/persistence/postgres/drink_write_repository.go)
+- [Drink read repository](adaptors/persistence/postgres/drink_read_repository.go)
+- [Edition read repository](adaptors/persistence/postgres/edition_read_repository.go)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
-- [Persistence mapping](adaptors/postgres)
+- [Persistence mapping](adaptors/persistence/postgres)
 - [Published contracts](../../../../contracts/menu)
 - [Executable specifications](../../../../specifications/menu)
 - [Dependency composition](../../apps/storefront/di/menu.go)

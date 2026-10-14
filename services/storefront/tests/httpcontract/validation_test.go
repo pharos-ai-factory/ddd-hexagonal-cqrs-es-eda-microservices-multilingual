@@ -1,7 +1,7 @@
 package httpcontract
 
 import (
-	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/openapi"
+	contract "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/http/openapi"
 	"net/http/httptest"
 	"testing"
 )

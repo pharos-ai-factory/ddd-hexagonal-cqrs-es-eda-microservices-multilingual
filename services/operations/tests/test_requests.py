@@ -1,13 +1,34 @@
 """Native transport translation checks; delivery claims use real RabbitMQ."""
 
 import pytest
-from operations.contexts.collection.adaptors.messaging import requests as collection_wire
-from operations.adaptors.requests import RabbitMQRequestRegistry, validate
+from operations.contexts.collection.adaptors.messaging import pickup_requests as collection_wire
+from operations.adaptors.messaging.rabbitmq_request_registry import RabbitMQRequestRegistry
+from operations.adaptors.messaging.request_envelope import validate
+from operations.adaptors.messaging.request_envelope import new_reply, parse_request
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Request
 from operations.foundation.application import Metadata, Outcome
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommand
 
 ID = "11111111-1111-4111-8111-111111111111"
+
+
+@pytest.mark.parametrize("owner", ["preparation", "collection"])
+def test_generated_owner_envelopes_preserve_request_identity(owner: str) -> None:
+    reply = new_reply(owner)
+    assert reply.DESCRIPTOR.full_name == f"cafe.{owner}.requests.v1.Reply"
+    from operations.adaptors.generated.request_registry import REQUEST_TYPES
+
+    request = REQUEST_TYPES[owner](contract_version=1, request_id=ID, context=owner)
+    decoded = parse_request(owner, request.SerializeToString(deterministic=True))
+    assert decoded == request
+    assert decoded.DESCRIPTOR.full_name == f"cafe.{owner}.requests.v1.Request"
+
+
+def test_unknown_request_owner_is_rejected() -> None:
+    with pytest.raises(ValueError, match="Unknown request owner"):
+        parse_request("unknown", b"")
+    with pytest.raises(ValueError, match="Unknown request owner"):
+        new_reply("unknown")
 
 
 def command() -> Request:
@@ -53,7 +74,7 @@ def test_missing_fields_and_foreign_context_fail_before_application() -> None:
 def test_future_optional_input_is_not_required_and_explicit_zero_is_present() -> None:
     from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
     from operations.adaptors.generated.cafe.requests.v1.validation_pb2 import required_input
-    from operations.adaptors.requests import required_inputs
+    from operations.adaptors.messaging.request_envelope import required_inputs
 
     source = descriptor_pb2.FileDescriptorProto(
         name="future_python_input.proto", package="test", syntax="proto3"

@@ -37,6 +37,14 @@ subscribers atomically commit receipts with integration outbox entries before AC
 Plain types use explicit `DomainEvent` and `IntegrationEvent` suffixes; historical
 wire identities remain stable.
 
+[0020 — Shared Operations adaptors](0020-operations-adaptor-layout.md) refines
+0014–0017 and 0019 with persistence, messaging, realtime and operational HTTP
+packages, generated request factories and checked delivery/persistence boundaries.
+
+[0021 — Service and context adaptors](0021-service-and-context-adaptor-layout.md)
+extends 0020 across every service and context with responsibility packages, business
+resource filenames and owner-specific outbound delivery.
+
 ## Foundations and public boundaries
 
 | Decision                                                                                   | Scope and later refinement                                                                                               |

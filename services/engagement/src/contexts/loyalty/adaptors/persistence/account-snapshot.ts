@@ -1,4 +1,4 @@
-import { storedObject } from '../../../../adaptors/stored-values.js';
+import { storedObject } from '../../../../adaptors/persistence/stored-values.js';
 import { LoyaltyAccount, type AccountState } from '../../domain/loyalty-account.js';
 
 /** Restore the owning aggregate before exposing stored authority. */

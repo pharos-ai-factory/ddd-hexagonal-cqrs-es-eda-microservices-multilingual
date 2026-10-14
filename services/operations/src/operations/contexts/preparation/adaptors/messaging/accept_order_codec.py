@@ -1,7 +1,7 @@
 """Preparation owns its private command identity, validation and stored wire format."""
 
 from enum import StrEnum
-from operations.adaptors.internal_commands import InternalCommandCodec
+from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.internal.preparation.internal_commands_pb2 import CommandEnvelope
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
 from operations.foundation.domain import identifier, record, text

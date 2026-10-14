@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Check service ownership and inward dependencies in all implementation languages."""
 
-import ast
+from python_imports import python_imports
 from request_contracts import OWNED
 from event_boundaries import violation as event_boundary_violation
 from generated_files import violation as generated_file_violation
 from contract_sources import sources, catalogue, command_subscriptions
 from migration_catalogue import metadata, OUTPUTS
 from owner_http_boundary import violation as owner_http_violation
+from adaptor_layout import layout_violation as adaptor_layout_violation
+from adaptor_layout import import_violation as adaptor_import_violation
 from hashlib import sha256
 import json
 import os
@@ -53,15 +55,16 @@ GENERATED = {
     "services/web/src/adaptors/generated/realtime.json",
     "services/web/src/adaptors/generated/http.ts",
     "services/api/adaptors/http/backend/generated/mapping.go",
-    "services/storefront/foundation/persistence/postgres/migrations/generated/contexts.json",
-    "services/storefront/foundation/persistence/postgres/migrations/generated/0001_initial.sql",
-    "services/storefront/foundation/persistence/postgres/migrations/generated/0002_realtime.sql",
+    "services/storefront/adaptors/persistence/postgres/migrations/generated/contexts.json",
+    "services/storefront/adaptors/persistence/postgres/migrations/generated/0001_initial.sql",
+    "services/storefront/adaptors/persistence/postgres/migrations/generated/0002_realtime.sql",
     "services/operations/src/operations/adaptors/generated/context-persistence.json",
+    "services/operations/src/operations/adaptors/generated/request_registry.py",
     "services/engagement/src/adaptors/generated/context-persistence.json",
     "services/api/adaptors/openapi/generated/api.openapi.json",
     "services/api/adaptors/openapi/generated/gateway.openapi.json",
-    "services/storefront/foundation/transport/openapi/generated/storefront.openapi.json",
-    "services/storefront/foundation/transport/openapi/generated/provider.openapi.json",
+    "services/storefront/adaptors/http/openapi/generated/storefront.openapi.json",
+    "services/storefront/adaptors/http/openapi/generated/provider.openapi.json",
     "pnpm-lock.yaml",
     "services/operations/uv.lock",
 }
@@ -141,6 +144,8 @@ def import_violation(package, imported):
     path = package.removeprefix(MODULE + "/")
     target = imported.removeprefix(MODULE + "/")
     internal = imported.startswith(MODULE + "/")
+    if reason := adaptor_import_violation(path + "/", target):
+        return reason
     if path.startswith("services/"):
         service = path.split("/")[1]
         if internal and not target.startswith("services/" + service + "/"):
@@ -195,6 +200,8 @@ def import_violation(package, imported):
 
 def core_violation(path, target):
     """Normalised service-local Python/TypeScript module paths."""
+    if reason := adaptor_import_violation(path, target):
+        return reason
     if path.startswith("tests/acceptance/") and target.startswith("services/"):
         return "cross-service acceptance must use published boundaries"
     parts = path.split("/")
@@ -271,27 +278,6 @@ def files():
             yield Path(directory) / name
 
 
-def python_imports(path, content):
-    for node in ast.walk(ast.parse(content)):
-        if isinstance(node, ast.Import):
-            yield from (item.name.replace(".", "/") for item in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            if node.level:
-                base = path.parent
-                for _ in range(node.level - 1):
-                    base = base.parent
-                target = base.relative_to(ROOT).as_posix()
-                if node.module:
-                    target += "/" + node.module.replace(".", "/")
-            else:
-                target = (node.module or "").replace(".", "/")
-            yield target
-            # ImportFrom may name a child module, including `from .. import collection`.
-            for item in node.names:
-                if item.name != "*":
-                    yield target + "/" + item.name.replace(".", "/")
-
-
 def check():
     errors, packages = [], []
     event_names = {item["name"] for item in catalogue()}
@@ -337,6 +323,8 @@ def check():
             errors.append(f"{relative}: {reason}")
         if len(content.splitlines()) > 450 and relative not in GENERATED:
             errors.append(f"{relative} exceeds 450 lines without a responsibility review")
+        if reason := adaptor_layout_violation(relative):
+            errors.append(f"{relative}: {reason}")
         if (
             relative in GENERATED
             or path.name.endswith(("_test.go", ".test.ts", ".spec.ts"))
@@ -393,7 +381,7 @@ def check():
     if (
         baseline.read_bytes()
         != (
-            ROOT / "services/storefront/foundation/persistence/postgres/migrations/generated/0001_initial.sql"
+            ROOT / "services/storefront/adaptors/persistence/postgres/migrations/generated/0001_initial.sql"
         ).read_bytes()
     ):
         errors.append("Go embedded migration differs from the shared persistence contract")
@@ -417,7 +405,7 @@ def check():
         if json.loads((ROOT / folder / "persistence.json").read_text()) != checksums:
             errors.append(folder + ": migration checksum drift")
     if (ROOT / "devops/postgres/bootstrap/0002_realtime.sql").read_bytes() != (
-        ROOT / "services/storefront/foundation/persistence/postgres/migrations/generated/0002_realtime.sql"
+        ROOT / "services/storefront/adaptors/persistence/postgres/migrations/generated/0002_realtime.sql"
     ).read_bytes():
         errors.append("Go realtime migration drift")
     for name in ("events", "realtime", "requests"):

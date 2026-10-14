@@ -129,7 +129,7 @@ Feature folders under `services/web/src/features/` follow user tasks: menu,
 ordering, preparation, collection, rewards and notifications. The page composes
 these views; business invariants remain in their owning services.
 
-Use `adaptors/http/client` and its generated operation/request/response types for
+Use `adaptors/http/operation-client` and its generated operation/request/response types for
 HTTP. Change the owning OpenAPI source and regenerate before adjusting a caller.
 Keep command persistence/retry in `shared/commands/`, projection validation and
 reconciliation in `shared/realtime/`, and common formatting in `shared/ui/`.

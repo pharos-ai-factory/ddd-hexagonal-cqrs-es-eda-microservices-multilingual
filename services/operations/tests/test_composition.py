@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from unittest.mock import Mock
 from dependency_injector import providers
-from operations.adaptors.postgres import PostgresContextDatabase
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
 from operations.apps.composition.preparation import (
     PreparationContainer,
     subscriptions as preparation_subscriptions,

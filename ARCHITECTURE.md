@@ -46,6 +46,15 @@ include `generated`, or sit beneath a `generated` folder. Python and TypeScript
 plain event DTOs use `contracts/events/generated/`; their application-facing role
 is preserved. Dependency lockfiles and Next.js' required `next-env.d.ts` retain
 their standard names.
+Owner services group shared adaptors into `persistence/`, `messaging/`, `realtime/`
+and `http/`. Python/TypeScript keep explicit command execution and diagnostics
+modules; Go uses small responsibility packages. Context adaptors expose messaging,
+persistence and outbound delivery, with business resource names in their files.
+The API exposes HTTP, messaging, sessions and subscription authorisation; web
+exposes its operation client and projection codec. The [adaptor map](docs/adaptor-layout.md)
+and [decision 0021](docs/decisions/0021-service-and-context-adaptor-layout.md)
+explain every service and context boundary.
+
 Each context has `application/commands/` and `application/queries/`, with one
 named DTO and its matching handler per business use-case file. Go/Python filenames
 use snake_case; TypeScript uses kebab-case. Callers import those packages/modules

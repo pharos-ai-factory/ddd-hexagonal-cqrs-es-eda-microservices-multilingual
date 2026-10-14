@@ -1,5 +1,13 @@
 # Executed verification
 
+## Adaptor organisation across all services, 14 October 2026
+
+[Five services, six contexts and executed checks](verification/2026-10-14-all-service-adaptors.md).
+
+## Operations adaptor organisation, 14 October 2026
+
+[Private-event fix, package responsibilities and executed checks](verification/2026-10-14-operations-adaptors.md).
+
 ## Durable domain-to-integration publication, 14 October 2026
 
 [Implementation, recovery evidence and executed checks](verification/2026-10-14-durable-domain-publication.md).

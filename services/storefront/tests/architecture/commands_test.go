@@ -236,7 +236,7 @@ func TestProductionCommandBoundaries(t *testing.T) {
 	fileset := token.NewFileSet()
 	imports := importer.ForCompiler(fileset, "gc", func(name string) (io.ReadCloser, error) { return os.Open(exports[name]) })
 	for _, p := range packages {
-		if strings.Contains(p.ImportPath, "/domain") || strings.Contains(p.ImportPath, "/generated") || strings.Contains(p.ImportPath, "/foundation/") || strings.Contains(p.ImportPath, "/tests/") {
+		if strings.Contains(p.ImportPath, "/domain") || strings.Contains(p.ImportPath, "/generated") || strings.Contains(p.ImportPath, "/foundation/") || strings.HasSuffix(p.ImportPath, "/storefront/adaptors/command") || strings.HasSuffix(p.ImportPath, "/storefront/adaptors/persistence/postgres") || strings.Contains(p.ImportPath, "/tests/") {
 			continue
 		}
 		var files []*ast.File

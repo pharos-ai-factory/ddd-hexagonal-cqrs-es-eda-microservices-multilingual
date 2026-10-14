@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from operations.foundation.domain import record, text
 from operations.apps.runtime import SubscriptionDefinition
-from operations.adaptors.postgres import PostgresContextDatabase
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
 
 
 def context_database(owner: str, url: str) -> Iterator[PostgresContextDatabase]:

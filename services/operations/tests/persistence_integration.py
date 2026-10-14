@@ -2,7 +2,7 @@
 
 from operations.adaptors.command_execution import CommandExecutor
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.contexts.collection.adaptors.persistence.pickup_snapshot import restore_pickup_snapshot
 from operations.contexts.collection.adaptors.persistence.pickup_write_repository import (
     PostgresPickupWriteRepository,
@@ -12,9 +12,9 @@ from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor
 import os
 import pytest
-from operations.adaptors.postgres import PostgresContextDatabase, Row
-from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
-from operations.adaptors.delivery import claim, finish
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase, Row
+from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
+from operations.adaptors.persistence.dispatch_leases import claim, finish
 from operations.foundation.application import Change, Metadata, Outcome, Publication
 from operations.foundation.domain import record
 from operations.foundation.identity import new_id
@@ -248,8 +248,8 @@ def test_queries_traverse_more_than_one_page_and_retain_unpaginated_reads() -> N
 
 
 def test_reply_bytes_commit_with_root_and_retry_recovers_saved_outcome() -> None:
-    from operations.adaptors.replies import ReplyIntent, current, claim_reply
-    from operations.adaptors.requests import outcome_reply
+    from operations.adaptors.persistence.command_reply_outbox import ReplyIntent, current, claim_reply
+    from operations.adaptors.messaging.request_envelope import outcome_reply
 
     database = PostgresContextDatabase("preparation", os.environ["PREPARATION_DATABASE_URL"])
 
@@ -304,7 +304,7 @@ def test_reply_bytes_commit_with_root_and_retry_recovers_saved_outcome() -> None
                         "SELECT body FROM cafe.command_replies WHERE id=%s", (request.identity,)
                     ).fetchone()
                 )
-                from operations.adaptors.delivery import binary
+                from operations.adaptors.persistence.dispatch_leases import binary
 
                 assert binary(row["body"]) == encode(first)
             assert (
@@ -317,7 +317,7 @@ def test_reply_bytes_commit_with_root_and_retry_recovers_saved_outcome() -> None
             )
         # An abandoned claim must become deliverable before its original expiry.
         import time
-        from operations.adaptors.delivery import binary
+        from operations.adaptors.persistence.dispatch_leases import binary
 
         abandoned = present(claim_reply(database, new_id()))
         with database.pool.connection() as connection:

@@ -3,7 +3,7 @@
 from pathlib import Path
 import pytest
 from operations.foundation.domain import Rejection
-from operations.adaptors.codec import decode
+from operations.adaptors.messaging.event_codec import decode
 from operations.adaptors.generated.private_event_registry import PRIVATE_CODECS
 
 

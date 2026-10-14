@@ -3,13 +3,15 @@ import type { Server } from 'node:http';
 import { composeLoyalty } from './composition/loyalty.js';
 import { composeCommunication } from './composition/communication.js';
 import { diagnostics } from '../adaptors/diagnostics.js';
-import { relay, consume } from '../adaptors/broker.js';
-import { realtimeRelay } from '../adaptors/dispatch.js';
-import { server } from '../adaptors/http.js';
-import { replyRelay } from '../adaptors/replies.js';
-import { RabbitMQRequestRegistry } from '../adaptors/requests.js';
-import * as loyaltyWire from '../contexts/loyalty/adaptors/messaging/requests.js';
-import { notification as notificationWire } from '../contexts/communication/adaptors/messaging/requests.js';
+import { relay } from '../adaptors/messaging/rabbitmq-outbox-relay.js';
+import { consume } from '../adaptors/messaging/rabbitmq-consumer.js';
+import { realtimeRelay } from '../adaptors/realtime/gateway-relay.js';
+import { server } from '../adaptors/http/operational-security.js';
+import { replyRelay } from '../adaptors/messaging/rabbitmq-reply-relay.js';
+import { RabbitMQRequestRegistry } from '../adaptors/messaging/rabbitmq-request-registry.js';
+import { account as accountWire } from '../contexts/loyalty/adaptors/messaging/account-replies.js';
+import * as loyaltyWire from '../contexts/loyalty/adaptors/messaging/reward-requests.js';
+import { notification as notificationWire } from '../contexts/communication/adaptors/messaging/notification-queries.js';
 
 import { secret as required } from '../foundation/secrets.js';
 if (!['local', 'development'].includes(process.env.APP_ENV ?? ''))
@@ -58,7 +60,7 @@ try {
   const redeem = loyalty.redeem;
   const loyaltyRequests = new RabbitMQRequestRegistry('loyalty');
   loyaltyRequests.command('redeemReward', loyaltyWire.redeem, (m, input) => redeem.execute(m, input));
-  loyaltyRequests.queries('account', 'accounts', loyalty.accountQueries, loyaltyWire.account);
+  loyaltyRequests.queries('account', 'accounts', loyalty.accountQueries, accountWire);
   loyaltyRequests.queries('reward', 'rewards', loyalty.rewardQueries, loyaltyWire.reward);
   const communicationRequests = new RabbitMQRequestRegistry('communication');
   communicationRequests.queries('notification', 'notifications', noticeQueries, notificationWire);

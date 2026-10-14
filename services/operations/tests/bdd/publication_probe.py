@@ -1,7 +1,7 @@
 """Exercise publication policy and codecs; real infrastructure proves atomicity."""
 
 from collections.abc import Callable
-from operations.adaptors import codec
+from operations.adaptors.messaging import event_codec as codec
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.foundation.application import Metadata, Outcome, Publication
 

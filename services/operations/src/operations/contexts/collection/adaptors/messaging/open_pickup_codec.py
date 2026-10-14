@@ -1,7 +1,7 @@
 """Collection owns its private command identity, validation and stored wire format."""
 
 from enum import StrEnum
-from operations.adaptors.internal_commands import InternalCommandCodec
+from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.internal.collection.internal_commands_pb2 import CommandEnvelope
 from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
 from operations.foundation.domain import identifier, record

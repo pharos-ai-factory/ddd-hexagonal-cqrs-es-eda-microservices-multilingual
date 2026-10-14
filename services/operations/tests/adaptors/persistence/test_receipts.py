@@ -1,5 +1,5 @@
 import pytest
-from operations.adaptors import receipts
+from operations.adaptors.persistence import receipt_outcome as receipts
 from operations.foundation.domain import CorruptState
 
 ID = "00000000-0000-4000-8000-000000000001"

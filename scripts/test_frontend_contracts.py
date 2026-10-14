@@ -91,7 +91,7 @@ class FrontendContractsTests(unittest.TestCase):
         document["paths"]["/api/v1/menu/drinks/{id}"]["get"].setdefault("parameters", []).append(
             {"in": "query", "name": "reason", "required": True, "schema": {"type": "string"}}
         )
-        probe = "import {request} from './adaptors/http/client';\nrequest('getDrink', {path: {id: 'test'}});"
+        probe = "import {request} from './adaptors/http/operation-client';\nrequest('getDrink', {path: {id: 'test'}});"
         rejected = self.compile(document, probe)
         self.assertNotEqual(rejected.returncode, 0)
         self.assertIn("query", rejected.stdout)

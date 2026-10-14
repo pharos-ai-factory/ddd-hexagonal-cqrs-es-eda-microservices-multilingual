@@ -1,4 +1,4 @@
-import { request, success } from '../../adaptors/http/client';
+import { request, success } from '../../adaptors/http/operation-client';
 import type { ListOperation, Success } from '../../adaptors/generated/http';
 import type { Projection } from './model';
 

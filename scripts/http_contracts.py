@@ -19,8 +19,8 @@ DOCUMENTS = {
 OUTPUTS = {
     "api": "services/api/adaptors/openapi/generated",
     "gateway": "services/api/adaptors/openapi/generated",
-    "storefront": "services/storefront/foundation/transport/openapi/generated",
-    "provider": "services/storefront/foundation/transport/openapi/generated",
+    "storefront": "services/storefront/adaptors/http/openapi/generated",
+    "provider": "services/storefront/adaptors/http/openapi/generated",
 }
 
 

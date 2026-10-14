@@ -1,7 +1,7 @@
 import type { NotificationRequestedDomainEventPayload } from '../../application/events.js';
 import protobuf from 'protobufjs';
 import schema from './generated/private_messages.json' with { type: 'json' };
-import { PrivateEventCodec } from '../../../../adaptors/private-event.js';
+import { PrivateEventCodec } from '../../../../adaptors/messaging/private-event-codec.js';
 import { identifier } from '../../../../foundation/domain.js';
 
 /** Communication accepts delivery work only for its source notification. */

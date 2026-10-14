@@ -1,8 +1,8 @@
 """Technical fixtures drive the real command transaction using snapshot-only decisions."""
 
 from collections.abc import Callable, Mapping
-from operations.adaptors.postgres import PostgresContextDatabase
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.foundation.application import Change, Metadata, Outcome
 from operations.foundation.write_repository import WriteRepository
 from operations.adaptors.command_execution import TransactionResult as CommandResult

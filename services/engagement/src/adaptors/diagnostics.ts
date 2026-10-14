@@ -1,4 +1,4 @@
-import type { PostgresContextDatabase } from './postgres.js';
+import type { PostgresContextDatabase } from './persistence/postgres-database.js';
 
 type Failure = { at: string; class: string; event: string | undefined; correlation: string | undefined };
 type Worker = {

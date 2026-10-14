@@ -1,6 +1,6 @@
-import type { PostgresContextDatabase } from '../../../../adaptors/postgres.js';
-import { PostgresSnapshotReadRepository } from '../../../../adaptors/snapshot-read-repository.js';
-import { MappedReadRepository } from '../../../../adaptors/mapped-read-repository.js';
+import type { PostgresContextDatabase } from '../../../../adaptors/persistence/postgres-database.js';
+import { PostgresSnapshotReadRepository } from '../../../../adaptors/persistence/snapshot-read-repository.js';
+import { MappedReadRepository } from '../../../../adaptors/persistence/mapped-read-repository.js';
 import { restoreRewardSnapshot } from './reward-snapshot.js';
 import type { RewardState } from '../../domain/reward.js';
 import type { RewardView } from '../../application/read-models/reward.js';

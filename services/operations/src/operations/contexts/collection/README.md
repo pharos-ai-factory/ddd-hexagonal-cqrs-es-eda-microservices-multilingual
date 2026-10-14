@@ -6,6 +6,8 @@ A pickup verifies its collection code and permits one handover.
 
 ## Find the code
 
+- [Adaptor responsibilities and navigation](adaptors/README.md)
+
 - [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
@@ -19,6 +21,7 @@ A pickup verifies its collection code and permits one handover.
 - [Persistence mapping](adaptors/persistence)
 - [Published contracts](../../../../../../contracts/collection)
 - [Executable specifications](../../../../../../specifications/collection)
+- [Shared technical adaptor map](../../adaptors/README.md)
 - [Dependency composition](../../apps/composition/collection.py)
 - [Context tests](../../../../tests/contexts/collection)
 

@@ -40,7 +40,7 @@ def generate(root, messages, events):
         codecs = [
             HEADER,
             "from google.protobuf.message import Message\n",
-            "from operations.adaptors.event_payload import parse_payload\n",
+            "from operations.adaptors.messaging.event_payload_codec import parse_payload\n",
             "from operations.foundation.application import Publication\n",
             f"from operations.contracts.events.generated.{owner} import {', '.join(m['name'] for m in owned)}\n",
         ]
@@ -90,7 +90,7 @@ def generate(root, messages, events):
             line if "adaptors.generated.cafe." in line else explicit_names(line) for line in code.split("\n")
         )
         (base / f"adaptors/generated/event_{owner}.py").write_text(code)
-    registry = [HEADER, "from operations.adaptors.event_payload import PayloadCodec\n"]
+    registry = [HEADER, "from operations.adaptors.messaging.event_payload_codec import PayloadCodec\n"]
     for event in events:
         name = event["type"].split(".")[-1]
         registry.append(f"from .event_{event['owner']} import decode_{name}, Wire{name}\n")

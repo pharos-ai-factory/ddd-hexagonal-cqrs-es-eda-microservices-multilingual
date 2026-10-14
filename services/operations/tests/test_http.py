@@ -22,7 +22,7 @@ def app() -> Iterator[FastAPI]:
         ExitStack() as resources,
         patch.dict("os.environ", {"APP_ENV": "development"}),
         patch.object(service, "secret", return_value=KEY),
-        patch("operations.adaptors.http.secret", return_value=KEY),
+        patch("operations.adaptors.http.operational_security.secret", return_value=KEY),
         patch.object(preparation_di, "PreparationContainer", return_value=MagicMock()),
         patch.object(collection_di, "CollectionContainer", return_value=MagicMock()),
         patch.object(preparation_di, "subscriptions", return_value=()),

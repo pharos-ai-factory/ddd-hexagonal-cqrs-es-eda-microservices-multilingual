@@ -1,8 +1,8 @@
 """PostgreSQL read repository for Preparation application views."""
 
-from operations.adaptors.postgres import PostgresContextDatabase
-from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
-from operations.adaptors.mapped_read_repository import MappedReadRepository
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
+from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
+from operations.adaptors.persistence.mapped_read_repository import MappedReadRepository
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.contexts.preparation.application.read_models.ticket import TicketView
 from operations.contexts.preparation.adaptors.persistence.ticket_snapshot import restore_ticket_snapshot

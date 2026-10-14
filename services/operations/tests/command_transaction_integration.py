@@ -3,9 +3,9 @@
 from dataclasses import replace
 import os
 import pytest
-from operations.adaptors.postgres import PostgresContextDatabase
-from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
+from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.contexts.preparation.adaptors.persistence.ticket_snapshot import restore_ticket_snapshot
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.foundation.application import Metadata

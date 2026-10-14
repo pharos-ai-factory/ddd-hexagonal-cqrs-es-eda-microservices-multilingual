@@ -1,8 +1,8 @@
 """PostgreSQL read repository for Collection application views."""
 
-from operations.adaptors.postgres import PostgresContextDatabase
-from operations.adaptors.snapshot_read_repository import PostgresSnapshotReadRepository
-from operations.adaptors.mapped_read_repository import MappedReadRepository
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
+from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
+from operations.adaptors.persistence.mapped_read_repository import MappedReadRepository
 from operations.contexts.collection.domain.pickup import PickupSnapshot
 from operations.contexts.collection.application.read_models.pickup import PickupView
 from operations.contexts.collection.adaptors.persistence.pickup_snapshot import restore_pickup_snapshot

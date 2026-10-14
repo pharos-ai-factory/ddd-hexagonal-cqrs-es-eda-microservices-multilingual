@@ -6,7 +6,7 @@ Use British English and concise, direct prose. Read [ARCHITECTURE.md](ARCHITECTU
 [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer workflow](docs/developer-workflow.md).
 The [decision index](docs/decisions/README.md) explains which accepted decisions
 refine earlier rules. Decisions 0010–0015 define DI, durable command reactions,
-enforcement, the source layout and persistence role names. Decision 0017 defines
+enforcement, the source layout and persistence role names. Decision 0021 extends the adaptor responsibility layout across every service and context. Decision 0017 defines
 generated event boundaries. Decision 0019 requires private domain delivery before
 integration publication.
 
@@ -64,6 +64,12 @@ integration publication.
   Keep Python package initialisers documentation-only.
 - Keep decoding, restoration and business mappings in the owning context's
   adaptors. Shared infrastructure stays technical; generated catalogues may be shared.
+- Group shared owner-service adaptors under `persistence/`, `messaging/`, `realtime/`
+  and `http/`. Keep database access in persistence and network delivery in its
+  transport package. Context roots expose messaging, persistence and outbound
+  delivery with business resource or command names. Go uses small role packages;
+  Python/TypeScript retain root command execution and diagnostics modules.
+  Use generated request factories and concrete module imports. See decision 0021.
 - Name query persistence ports `<Resource>ReadRepository`; use
   `Postgres<Resource>ReadRepository` in Python/TypeScript and
   `postgres.New<Resource>ReadRepository` constructors in Go. Keep snapshot

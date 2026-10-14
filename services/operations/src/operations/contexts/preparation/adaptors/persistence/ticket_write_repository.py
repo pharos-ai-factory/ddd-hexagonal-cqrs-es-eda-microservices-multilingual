@@ -1,6 +1,6 @@
 """PostgreSQL aggregate restoration and persistence owned by Preparation."""
 
-from operations.adaptors.mapped_write_repository import MappedWriteRepository
+from operations.adaptors.persistence.mapped_write_repository import MappedWriteRepository
 from operations.foundation.write_repository import WriteRepository
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketSnapshot
 

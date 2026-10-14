@@ -9,9 +9,10 @@ from uuid import uuid4
 import pika
 import psycopg
 import pytest
-from operations.adaptors.codec import decode
-from operations.adaptors.delivery import binary, broker_connection
-from operations.adaptors.publication_outbox import PostgresPublicationOutbox
+from operations.adaptors.messaging.event_codec import decode
+from operations.adaptors.persistence.dispatch_leases import binary
+from operations.adaptors.messaging.rabbitmq_connection import broker_connection
+from operations.adaptors.persistence.integration_event_outbox import PostgresPublicationOutbox
 from operations.adaptors.generated.event_preparation import publish_DrinksReady
 from operations.apps.composition.preparation import PreparationContainer
 from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN

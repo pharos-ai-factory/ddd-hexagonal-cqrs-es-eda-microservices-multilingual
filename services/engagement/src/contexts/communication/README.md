@@ -6,6 +6,8 @@ A notification owns its delivery status and stable provider identity.
 
 ## Find the code
 
+- [Adaptor responsibilities and navigation](adaptors/README.md)
+
 - [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)

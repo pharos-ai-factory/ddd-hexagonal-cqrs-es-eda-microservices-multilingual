@@ -4,9 +4,9 @@ import type {
 } from '../../application/events.js';
 import protobuf from 'protobufjs';
 import schema from './generated/private_messages.json' with { type: 'json' };
-import { PrivateEventCodec } from '../../../../adaptors/private-event.js';
+import { PrivateEventCodec } from '../../../../adaptors/messaging/private-event-codec.js';
 import { identifier } from '../../../../foundation/domain.js';
-import { timestamp } from '../../../../adaptors/event-payload.js';
+import { timestamp } from '../../../../adaptors/messaging/event-payload-codec.js';
 
 /** Loyalty validates the private grant evidence used to request reward issuance. */
 export const privateEventCodec = new PrivateEventCodec(

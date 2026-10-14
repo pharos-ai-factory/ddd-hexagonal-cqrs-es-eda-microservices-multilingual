@@ -1,0 +1,1 @@
+"""Shared Operations persistence adaptors."""

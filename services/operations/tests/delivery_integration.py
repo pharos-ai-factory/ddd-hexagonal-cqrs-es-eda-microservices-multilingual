@@ -9,7 +9,7 @@ from threading import Event, Thread
 import time
 import pika
 import pytest
-from operations.contexts.collection.adaptors.messaging.incoming_event import DRINKS_READY
+from operations.contexts.collection.adaptors.messaging.drinks_ready_subscription import DRINKS_READY
 from operations.contexts.preparation.adaptors.messaging.order_placed_payload import order_placed
 from operations.adaptors.generated.cafe.v1.contexts.preparation.preparation_integration_events_pb2 import (
     DrinksReady as WireDrinksReady,
@@ -17,13 +17,16 @@ from operations.adaptors.generated.cafe.v1.contexts.preparation.preparation_inte
 from operations.adaptors.generated.cafe.v1.contexts.ordering.ordering_integration_events_pb2 import (
     OrderPlaced as WireOrderPlaced,
 )
-from operations.adaptors.delivery import EventSubscription, binary, broker_connection, consume
+from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription
+from operations.adaptors.persistence.dispatch_leases import binary
+from operations.adaptors.messaging.rabbitmq_connection import broker_connection
+from operations.adaptors.messaging.rabbitmq_consumer import consume
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.foundation.identity import derived_id, new_id
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.contracts.events.generated.ordering import OrderPlacedIntegrationEvent
 from operations.foundation.application import Metadata, Outcome
-from operations.adaptors.postgres import fingerprint
+from operations.adaptors.persistence.postgres_database import fingerprint
 
 
 @pytest.mark.parametrize("counter", ["invalid", -2147483648, 2147483647, Decimal("1.5"), True, None])

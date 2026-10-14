@@ -60,7 +60,7 @@ adaptors construct `GetOrderQuery`; the
 [query handler](../services/storefront/contexts/ordering/application/queries/get_order.go)
 reads through `OrderReadRepository` and returns an application-owned `OrderView`.
 
-The [PostgreSQL read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go)
+The [PostgreSQL read repository](../services/storefront/contexts/ordering/adaptors/persistence/postgres/order_read_repository.go)
 validates the stored Order before selecting view fields. It preserves the root
 revision; a missing row remains absent. The wire reply and HTTP response map that
 view to their published shapes. The query acquires no aggregate mutation capability.
@@ -119,16 +119,16 @@ command succeeds, and preparation converges after Operations restarts.
 
 ## 6. Explore the failure evidence
 
-| Test file                                                                           | Question it answers                                                                                                  |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `services/storefront/foundation/persistence/postgres/command_integration_test.go`   | Can state escape without its receipt/outbox? What if the database connection is terminated before commit?            |
-| `services/storefront/foundation/persistence/postgres/ownership_integration_test.go` | Can one transaction write a second root, a runtime role rewrite history, or an expired relay complete another lease? |
-| `services/storefront/foundation/persistence/postgres/receipt_integration_test.go`   | Can concurrent conflicting copies of one event change two targets?                                                   |
-| `services/storefront/foundation/transport/amqp/recovery_integration_test.go`        | What happens after commit but before ACK, on unroutable publication, or after retry exhaustion?                      |
-| `services/operations/tests/persistence_integration.py`                              | Can a Python transaction leak state on encoder failure or complete an expired realtime lease?                        |
-| `services/engagement/src/adaptors/postgres.integration.ts`                          | Does TypeScript preserve receipts, concurrency and atomic browser intent?                                            |
-| `scripts/browser/cafe.spec.ts`                                                      | Do independent windows recover without polling and revalidate revoked sessions?                                      |
-| `scripts/journey.py`                                                                | Does the full business workflow converge, including a lost provider response?                                        |
+| Test file                                                                         | Question it answers                                                                                                  |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `services/storefront/adaptors/persistence/postgres/command_integration_test.go`   | Can state escape without its receipt/outbox? What if the database connection is terminated before commit?            |
+| `services/storefront/adaptors/persistence/postgres/ownership_integration_test.go` | Can one transaction write a second root, a runtime role rewrite history, or an expired relay complete another lease? |
+| `services/storefront/adaptors/persistence/postgres/receipt_integration_test.go`   | Can concurrent conflicting copies of one event change two targets?                                                   |
+| `services/storefront/adaptors/messaging/amqp/recovery_integration_test.go`        | What happens after commit but before ACK, on unroutable publication, or after retry exhaustion?                      |
+| `services/operations/tests/persistence_integration.py`                            | Can a Python transaction leak state on encoder failure or complete an expired realtime lease?                        |
+| `services/engagement/src/adaptors/persistence/postgres-database.integration.ts`   | Does TypeScript preserve receipts, concurrency and atomic browser intent?                                            |
+| `scripts/browser/cafe.spec.ts`                                                    | Do independent windows recover without polling and revalidate revoked sessions?                                      |
+| `scripts/journey.py`                                                              | Does the full business workflow converge, including a lost provider response?                                        |
 
 The provider simulator accepts one notification and deliberately loses the
 response. Communication retries the same notification identity and records the

@@ -6,7 +6,7 @@ import json
 import logging
 from threading import Lock
 from typing import TypedDict
-from operations.adaptors.postgres import PostgresContextDatabase
+from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
 
 
 class Failure(TypedDict):

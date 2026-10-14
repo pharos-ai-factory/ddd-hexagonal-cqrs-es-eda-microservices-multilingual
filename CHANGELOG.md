@@ -1,8 +1,16 @@
 # Changelog
 
+- Organise adaptor boundaries across all five services and six contexts; split Engagement delivery, API revocation and context command codecs; move Storefront infrastructure into its adaptor tree.
+
 Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
+
+- Organise shared Operations adaptors by persistence, messaging, realtime and
+  operational HTTP responsibilities. Split codecs, database leases and network
+  relays; generate owner request factories and document the navigation in decision 0020.
+- Correct Preparation completion to stage a private DrinksReady domain event before
+  its independent integration publication; add regression and layout-boundary tests.
 
 - Queue explicit domain events on aggregates and commit selected private events
   with the root. Publish all six integration events through independent durable

@@ -37,7 +37,7 @@ Paths in this table are relative to the owning context.
 | Event reaction                            | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript)                                                                            |
 | Projection update                         | Go's current reactions live in `application/projections/`                                                                                                       |
 | Protobuf input mapping                    | `adaptors/messaging/`; HTTP mapping lives in `services/api/adaptors/http/backend/` relative to the repository root                                              |
-| Stored-state restoration and view mapping | `adaptors/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript)                                                                                        |
+| Stored-state restoration and view mapping | `adaptors/persistence/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript)                                                                            |
 | DI bindings and worker/resource lifetime  | Owning service's `apps/` composition module                                                                                                                     |
 
 Use snake_case filenames in Go/Python and kebab-case in TypeScript. Import the
@@ -55,6 +55,13 @@ Use `<Resource>ReadRepository` for query persistence ports. Concrete classes use
 Use `<Aggregate>WriteRepository` for authoritative aggregate loads and saves.
 Keep snapshot restoration and domain-fact publication mapping in owner adaptors.
 The central command executor owns transactions, receipts and outgoing intent. See [decision 0015](docs/decisions/0015-explicit-persistence-role-names.md).
+In owner services, place shared database capabilities in `adaptors/persistence/`,
+RabbitMQ delivery and envelope codecs in `adaptors/messaging/`, browser publication
+in `adaptors/realtime/`, and operational HTTP security in `adaptors/http/`.
+Keep business mappings in the owning context. See
+[the adaptor map](docs/adaptor-layout.md) and
+[decision 0021](docs/decisions/0021-service-and-context-adaptor-layout.md).
+
 Keep handwritten source and documentation below 450 lines; record and explicitly
 classify any justified exception in [the responsibility review](docs/large-file-review.md).
 

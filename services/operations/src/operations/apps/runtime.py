@@ -4,9 +4,9 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from threading import Event
-from operations.adaptors.incoming_event import IncomingEvent
-from operations.adaptors.delivery import EventSubscription, consume
-from operations.adaptors.internal_commands import InternalCommandCodec
+from operations.adaptors.messaging.incoming_event import IncomingEvent
+from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription, consume
+from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.foundation.application import Metadata, Outcome
 

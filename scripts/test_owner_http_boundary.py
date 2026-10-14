@@ -21,7 +21,10 @@ class OwnerHTTPBoundaryTests(unittest.TestCase):
                 "services/operations/src/operations/apps/service.py",
                 'app.get("/v1/preparation/tickets")(handler)',
             ),
-            ("services/engagement/src/adaptors/http.ts", "if (path === '/v1/loyalty/rewards') handle();"),
+            (
+                "services/engagement/src/adaptors/http/operational-security.ts",
+                "if (path === '/v1/loyalty/rewards') handle();",
+            ),
         ):
             # Go patterns include their method before the route.
             self.assertIsNotNone(violation(path, content))

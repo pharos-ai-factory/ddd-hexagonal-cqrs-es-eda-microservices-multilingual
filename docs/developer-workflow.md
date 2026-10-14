@@ -18,13 +18,13 @@ Read the [current rules](../CONTRIBUTING.md) and the affected entries in the
 invariant, aggregate owner, use-case role and any eventual downstream step.
 Use a nearby implementation as the starting point:
 
-| Role                      | Go                                                                                                             | Python                                                                                                                              | TypeScript                                                                                                             |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Command and handler       | [PlaceOrder](../services/storefront/contexts/ordering/application/commands/place_order.go)                     | [AcceptOrder](../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py)                      | [CreditCollection](../services/engagement/src/contexts/loyalty/application/commands/credit-collection.ts)              |
-| Query and handler         | [GetOrder](../services/storefront/contexts/ordering/application/queries/get_order.go)                          | [GetTicket](../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py)                           | [GetAccount](../services/engagement/src/contexts/loyalty/application/queries/get-account.ts)                           |
-| Event/projection reaction | [MenuPublished projection](../services/storefront/contexts/ordering/application/projections/menu_published.go) | [OrderPlaced reaction](../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py)       | [RewardEarned reaction](../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts)       |
-| Read persistence mapping  | [Order read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go)   | [Ticket read repository](../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) | [Account read repository](../services/engagement/src/contexts/loyalty/adaptors/persistence/account-read-repository.ts) |
-| DI composition            | [Ordering Fx module](../services/storefront/apps/storefront/di/ordering.go)                                    | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py)                                      | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts)                                     |
+| Role                      | Go                                                                                                                       | Python                                                                                                                              | TypeScript                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Command and handler       | [PlaceOrder](../services/storefront/contexts/ordering/application/commands/place_order.go)                               | [AcceptOrder](../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py)                      | [CreditCollection](../services/engagement/src/contexts/loyalty/application/commands/credit-collection.ts)              |
+| Query and handler         | [GetOrder](../services/storefront/contexts/ordering/application/queries/get_order.go)                                    | [GetTicket](../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py)                           | [GetAccount](../services/engagement/src/contexts/loyalty/application/queries/get-account.ts)                           |
+| Event/projection reaction | [MenuPublished projection](../services/storefront/contexts/ordering/application/projections/menu_published.go)           | [OrderPlaced reaction](../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py)       | [RewardEarned reaction](../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts)       |
+| Read persistence mapping  | [Order read repository](../services/storefront/contexts/ordering/adaptors/persistence/postgres/order_read_repository.go) | [Ticket read repository](../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) | [Account read repository](../services/engagement/src/contexts/loyalty/adaptors/persistence/account-read-repository.ts) |
+| DI composition            | [Ordering Fx module](../services/storefront/apps/storefront/di/ordering.go)                                              | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py)                                      | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts)                                     |
 
 ## The edit/test loop
 
@@ -137,6 +137,18 @@ subscription needs an owner durable command port, private codec/outbox and paire
 consumers, following the Operations and Engagement examples. A generated event
 handler is a starting point for that explicit implementation.
 
+## Shared boundary infrastructure
+
+Start with [the service and context adaptor map](adaptor-layout.md).
+Shared `persistence/` modules own database access, exact outbox/reply bytes and
+lease updates. `messaging/` modules own envelopes and RabbitMQ delivery;
+`realtime/` owns browser encoding and gateway publication; `http/` owns operational
+security. Context-specific parsing and restoration stay in the context.
+
+Request envelope factories come from the declared request families. Update their
+generator and run `pnpm generate:contracts` when extending that catalogue.
+[Decision 0021](decisions/0021-service-and-context-adaptor-layout.md) records the layout.
+
 ## Python: add a Preparation command or subscription
 
 1. Add a TypedDict command and named handler together in Preparation's
@@ -145,7 +157,7 @@ handler is a starting point for that explicit implementation.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
 3. Bind its factory through `CommandExecutor` in `apps/composition/preparation.py`.
 4. For an event reaction, use the context's typed definition in
-   `adaptors/messaging/incoming_event.py`.
+   `adaptors/messaging/order_placed_subscription.py`.
    Map its payload in the application event handler and enqueue the owner command.
 5. Add the private Protobuf payload, codec, stable subscription declaration and
    historical fixture. Register its pair with `command_subscription`, then pass
@@ -251,7 +263,7 @@ Cross-context transport conformance and infrastructure checks remain service-wid
 3. Run `pnpm generate:contracts` for a combined change, or `pnpm generate:http`
    for OpenAPI alone. Review generated frontend types, Go bundles and wire mappings.
 4. Update the feature and relevant conformance examples. Feature requests use
-   `adaptors/http/client`; incompatible schema changes must fail real callers.
+   `adaptors/http/operation-client`; incompatible schema changes must fail real callers.
 5. Run generation/compatibility checks, the focused service/web tests and both
    hand-off gates. The integration lane exercises the actual browser and owner DTOs.
 

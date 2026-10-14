@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { failure, processWorkers } from './diagnostics.js';
-import { server } from './http.js';
+import { server } from './http/operational-security.js';
 
 void test('failure before claiming work survives without exposing credentials', () => {
   failure('test', 'connect', new Error('amqp://username:secret@host'));

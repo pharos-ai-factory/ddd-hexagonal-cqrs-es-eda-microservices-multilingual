@@ -8,15 +8,15 @@ from operations.contexts.preparation.adaptors.persistence.ticket_read_repository
     PostgresTicketReadRepository,
 )
 from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec
-from operations.contexts.preparation.adaptors.query_endpoints import TicketQueryEndpoints
+from operations.contexts.preparation.adaptors.messaging.ticket_query_endpoints import TicketQueryEndpoints
 from operations.contexts.preparation.application.queries.get_ticket import GetTicketQueryHandler
 from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
 from dependency_injector import containers, providers
 from operations.adaptors.command_execution import CommandExecutor
-from operations.contexts.preparation.adaptors.messaging.incoming_event import ORDER_PLACED
-from operations.adaptors.aggregate_transaction import PostgresAggregateTransaction
-from operations.adaptors.internal_commands import PostgresDurableCommandOutbox
+from operations.contexts.preparation.adaptors.messaging.order_placed_subscription import ORDER_PLACED
+from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
+from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
 from operations.contexts.preparation.application.commands.accept_order import (
     AcceptOrderCommand,
     AcceptOrderCommandHandler,
@@ -35,7 +35,7 @@ from operations.foundation.identity import derived_id
 from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
-from operations.adaptors.publication_outbox import PostgresPublicationOutbox
+from operations.adaptors.persistence.integration_event_outbox import PostgresPublicationOutbox
 from operations.apps.runtime import publication_subscription
 from operations.adaptors.generated.event_preparation import publish_DrinksReady
 from operations.contexts.preparation.application.event_handlers.publish_drinks_ready import (

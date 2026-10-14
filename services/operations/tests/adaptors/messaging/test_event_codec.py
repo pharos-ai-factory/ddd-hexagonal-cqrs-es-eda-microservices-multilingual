@@ -1,4 +1,4 @@
-from operations.adaptors.codec import decode
+from operations.adaptors.messaging.event_codec import decode
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.foundation.identity import derived_id
 from operations.adaptors.generated.cafe.v1.contexts.preparation.preparation_integration_events_pb2 import (

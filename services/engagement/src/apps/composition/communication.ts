@@ -4,28 +4,23 @@ import { NotificationDeliveryCommandExecutor } from '../../contexts/communicatio
 import type { Notification } from '../../contexts/communication/domain/notification.js';
 import { PostgresNotificationWriteRepository } from '../../contexts/communication/adaptors/persistence/notification-write-repository.js';
 import type { AggregateTransaction } from '../../adaptors/command-execution.js';
-import { PostgresAggregateTransaction } from '../../adaptors/aggregate-transaction.js';
-import { notificationQueryEndpoints } from '../../contexts/communication/adaptors/notification-query-endpoints.js';
+import { PostgresAggregateTransaction } from '../../adaptors/persistence/aggregate-transaction.js';
+import { notificationQueryEndpoints } from '../../contexts/communication/adaptors/messaging/notification-query-endpoints.js';
 import { ListNotificationsQueryHandler } from '../../contexts/communication/application/queries/list-notifications.js';
 import { GetNotificationQueryHandler } from '../../contexts/communication/application/queries/get-notification.js';
 import { restoreNotificationSnapshot } from '../../contexts/communication/adaptors/persistence/notification-snapshot.js';
 import { PostgresNotificationReadRepository } from '../../contexts/communication/adaptors/persistence/notification-read-repository.js';
-import {
-  noticeCodec,
-  deliveryCodec,
-  CommunicationSubscription,
-} from '../../contexts/communication/adaptors/messaging/command-codecs.js';
+import { noticeCodec } from '../../contexts/communication/adaptors/messaging/request-notification-codec.js';
+import { deliveryCodec } from '../../contexts/communication/adaptors/messaging/deliver-notification-codec.js';
+import { CommunicationSubscription } from '../../contexts/communication/adaptors/messaging/communication-subscriptions.js';
 import type { DeliveryPort } from '../../foundation/application.js';
 import type { PagedQueryPort } from '../../foundation/pagination.js';
 import { asFunction, createContainer } from 'awilix';
-import { PostgresContextDatabase } from '../../adaptors/postgres.js';
-import { PostgresSnapshotReadRepository } from '../../adaptors/snapshot-read-repository.js';
-import {
-  InternalCommandCodec,
-  PostgresDurableCommandOutbox,
-  commandPublication,
-} from '../../adaptors/internal-commands.js';
-import { HttpNotificationDelivery } from '../../adaptors/provider.js';
+import { PostgresContextDatabase } from '../../adaptors/persistence/postgres-database.js';
+import { PostgresSnapshotReadRepository } from '../../adaptors/persistence/snapshot-read-repository.js';
+import { InternalCommandCodec, commandPublication } from '../../adaptors/messaging/internal-command-codec.js';
+import { PostgresDurableCommandOutbox } from '../../adaptors/persistence/command-outbox.js';
+import { HttpNotificationDelivery } from '../../contexts/communication/adaptors/delivery/http-notification-delivery.js';
 import { secret } from '../../foundation/secrets.js';
 import { derivedId } from '../../foundation/identity.js';
 import {

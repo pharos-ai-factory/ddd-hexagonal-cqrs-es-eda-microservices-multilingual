@@ -1,6 +1,6 @@
-import type { PostgresContextDatabase } from '../../../../adaptors/postgres.js';
-import { PostgresSnapshotReadRepository } from '../../../../adaptors/snapshot-read-repository.js';
-import { MappedReadRepository } from '../../../../adaptors/mapped-read-repository.js';
+import type { PostgresContextDatabase } from '../../../../adaptors/persistence/postgres-database.js';
+import { PostgresSnapshotReadRepository } from '../../../../adaptors/persistence/snapshot-read-repository.js';
+import { MappedReadRepository } from '../../../../adaptors/persistence/mapped-read-repository.js';
 import { restoreNotificationSnapshot } from './notification-snapshot.js';
 import type { NotificationState } from '../../domain/notification.js';
 import type { NotificationView } from '../../application/read-models/notification.js';

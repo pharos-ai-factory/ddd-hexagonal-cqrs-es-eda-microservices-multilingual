@@ -16,7 +16,7 @@ The following exact paths are classified as generated source or dependency locks
 | `services/engagement/src/adaptors/generated/events.json`                                  | TypeScript event descriptor                |
 | `services/engagement/src/adaptors/generated/realtime.json`                                | TypeScript browser descriptor              |
 | `services/web/src/adaptors/generated/realtime.json`                                       | Browser decoder descriptor                 |
-| `services/storefront/foundation/persistence/postgres/migrations/generated/contexts.json`  | Storefront context migration checksums     |
+| `services/storefront/adaptors/persistence/postgres/migrations/generated/contexts.json`    | Storefront context migration checksums     |
 | `services/operations/src/operations/adaptors/generated/context-persistence.json`          | Operations context migration checksums     |
 | `services/engagement/src/adaptors/generated/context-persistence.json`                     | Engagement context migration checksums     |
 | `pnpm-lock.yaml`                                                                          | Reproducible Node dependency resolution    |
@@ -46,7 +46,7 @@ Generated output filenames contain `generated`, or live under a `generated`
 folder. The architecture gate checks both this inventory and generated-code
 headers. Python/TypeScript plain event DTOs use `contracts/events/generated/`;
 Go's embedded bootstrap copies and context checksums use
-`foundation/persistence/postgres/migrations/generated/`. The canonical SQL remains
+`adaptors/persistence/postgres/migrations/generated/`. The canonical SQL remains
 under `devops/postgres/bootstrap/`. Dependency lockfiles and Next.js' required
 `next-env.d.ts` retain their standard names.
 

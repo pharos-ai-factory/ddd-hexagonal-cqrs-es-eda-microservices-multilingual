@@ -50,7 +50,7 @@ named exactly `generated`. Names such as `subscriptions_generated.go` and
 `generated.json` already identify their ownership. Python and TypeScript plain
 event DTOs live in their service's `contracts/events/generated/` folder. Go's
 embedded migration copies and checksum metadata live in
-`foundation/persistence/postgres/migrations/generated/`.
+`adaptors/persistence/postgres/migrations/generated/`.
 
 `pnpm check` enforces this rule for classified outputs and generated-code headers,
 including misplaced files outside the generator inventory. Dependency lockfiles

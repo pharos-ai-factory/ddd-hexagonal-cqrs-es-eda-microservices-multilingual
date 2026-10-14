@@ -1,4 +1,4 @@
-import { storedObject } from '../../../../adaptors/stored-values.js';
+import { storedObject } from '../../../../adaptors/persistence/stored-values.js';
 import { Notification, type NotificationState } from '../../domain/notification.js';
 
 /** Restore the owning aggregate before exposing stored authority. */

@@ -1,6 +1,6 @@
 import type { WriteRepository } from '../../../../foundation/write-repository.js';
 
-import { MappedWriteRepository } from '../../../../adaptors/mapped-write-repository.js';
+import { MappedWriteRepository } from '../../../../adaptors/persistence/mapped-write-repository.js';
 import { Notification, type NotificationState } from '../../domain/notification.js';
 
 /** Restore authoritative aggregates and stage snapshots in the active PostgreSQL transaction. */

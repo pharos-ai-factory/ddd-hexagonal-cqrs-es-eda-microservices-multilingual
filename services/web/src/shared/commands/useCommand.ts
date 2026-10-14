@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { commandRequest, success } from '../../adaptors/http/client';
+import { commandRequest, success } from '../../adaptors/http/operation-client';
 import {
   routes,
   type CommandOperation,
