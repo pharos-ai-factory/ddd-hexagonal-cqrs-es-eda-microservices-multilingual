@@ -49,6 +49,10 @@ resource filenames and owner-specific outbound delivery.
 0007 and 0017 with a dedicated topology user and catalogue-generated owner/API
 queue and topic permissions. See [the permission model](../broker-permissions.md).
 
+[0023 — Direct command registration](0023-direct-command-registration.md) refines
+0010, 0015 and 0016: declare command names/codecs and plain handler factories together;
+shared registration helpers supply execution policy for each aggregate.
+
 ## Foundations and public boundaries
 
 | Decision                                                                                   | Scope and later refinement                                                                                               |

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { setTimeout } from 'node:timers/promises';
 import { Pool } from 'pg';
 import amqp from 'amqplib';
-import { createLoyaltyContainer } from '../../apps/composition/loyalty.js';
+import { createLoyaltyContainer, loyaltySubscriptions } from '../../apps/composition/loyalty.js';
 import { PostgresDurableCommandOutbox } from './command-outbox.js';
 import { commandPublication } from '../messaging/internal-command-codec.js';
 import schema from '../../contexts/loyalty/adaptors/messaging/generated/internal_commands.json' with { type: 'json' };
@@ -29,6 +29,9 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
   const c = container.cradle,
     db = c.database,
     codec = c.creditCodec;
+  const credit = loyaltySubscriptions(c).find(
+    (worker) => worker.consumer === 'loyalty.credit-collection' && worker.decodeCommand,
+  )!;
   const admin = new Pool({
     connectionString: process.env.DATABASE_ADMIN_URL!.replace(/\/[^/?]+(?=\?|$)/, '/cafe_loyalty'),
   });
@@ -116,7 +119,7 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
           handle: async (metadata, payload) => {
             attempts++;
             if (unavailable) throw new Error('injected infrastructure outage');
-            const outcome = await c.credit.execute(metadata, payload as typeof command);
+            const outcome = await credit.handle(metadata, payload);
             completed++;
             return outcome;
           },

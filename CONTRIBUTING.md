@@ -69,7 +69,9 @@ classify any justified exception in [the responsibility review](docs/large-file-
 
 A runtime aggregate business change starts in its named command handler. Make
 the handler a plain repository consumer: load the target, invoke aggregate
-behaviour and save. Register it through the central command executor in composition.
+behaviour and save. Register the command name or codec, owner parser and plain
+handler factory together through the shared command registration API. Configure
+the transaction once per aggregate; the helper supplies execution policy.
 Feature handlers receive `CommandContext` and a business result; infrastructure
 owns delivery metadata, deduplication, versions and transaction coordination. Commit one root, receipts, outcome and
 outgoing event/realtime intent atomically. API commands also commit exact reply

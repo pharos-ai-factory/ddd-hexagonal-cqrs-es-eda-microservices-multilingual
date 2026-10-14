@@ -1,4 +1,5 @@
-import { NotificationDeliveryCommandExecutor } from '../../src/contexts/communication/adaptors/persistence/notification-delivery-command-executor.js';
+import { DeliverNotificationCommandHandler } from '../../src/contexts/communication/application/commands/deliver-notification.js';
+import { NotificationDeliveryPreparation } from '../../src/contexts/communication/adaptors/delivery/notification-delivery-preparation.js';
 import { bindCommand } from '../../src/adaptors/command-execution.js';
 import assert from 'node:assert/strict';
 import { Given, When, Then } from '@cucumber/cucumber';
@@ -44,10 +45,12 @@ async function deliver(w: W) {
   w.commandsBeforeDelivery = w.notices.calls;
   w.deliveryError = undefined;
   try {
-    await new NotificationDeliveryCommandExecutor(w.noticesTransaction, w.notices, w.provider).execute(
-      metadata(notification),
-      { notificationId: notification },
-    );
+    const command = { notificationId: notification };
+    const receipt = await new NotificationDeliveryPreparation(w.notices, w.provider).prepare(command);
+    await bindCommand(
+      w.noticesTransaction,
+      (repository) => new DeliverNotificationCommandHandler(repository, receipt),
+    ).execute(metadata(notification), command);
   } catch (error) {
     w.deliveryError = error;
   }

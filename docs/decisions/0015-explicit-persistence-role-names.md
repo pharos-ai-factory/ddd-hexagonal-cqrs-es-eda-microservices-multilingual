@@ -6,6 +6,10 @@ Refined by [decision 0019](0019-durable-domain-event-publication.md): aggregate
 saves stage private facts; independent domain-event subscribers publish integration
 events through an atomic receipt/outbox transaction.
 
+Refined by [decision 0023](0023-direct-command-registration.md): shared registration
+helpers construct executors internally; feature declarations pair commands directly
+with plain handler factories. The factory names below describe the earlier wiring.
+
 ## Decision
 
 Use `<Resource>ReadRepository` for application query persistence ports in all

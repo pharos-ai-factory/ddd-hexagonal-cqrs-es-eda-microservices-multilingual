@@ -2,7 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
-import { createLoyaltyContainer } from '../../apps/composition/loyalty.js';
+import {
+  createLoyaltyContainer,
+  loyaltySubscriptions,
+  loyaltyRequests,
+} from '../../apps/composition/loyalty.js';
 import type { RewardIssuedDomainEventPayload } from '../../contexts/loyalty/application/events.js';
 import type { RewardIssuedIntegrationEvent } from '../../contracts/events/generated/loyalty.js';
 import type { Metadata } from '../../foundation/application.js';
@@ -31,7 +35,10 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
       .rows[0]!.n;
   try {
     await db.verify();
-    await c.issue.execute(
+    const issue = loyaltySubscriptions(c).find(
+      (worker) => worker.consumer === 'loyalty.issue-reward' && worker.decodeCommand,
+    )!;
+    await issue.handle(
       { id: randomUUID(), target, name: 'issueReward', correlation, input: {} },
       { grantId, accountId: randomUUID(), benefit: 'one free drink', validDays: 30 },
     );
@@ -59,10 +66,14 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
       causation: event.id,
     };
     // A delayed subscriber publishes the immutable source revision even after the root advances.
-    await c.redeem.execute(
-      { id: randomUUID(), target, name: 'redeemReward', correlation, input: {}, expected: 1 },
-      { orderId: randomUUID() },
-    );
+    await loyaltyRequests(c).handle({
+      kind: 'command',
+      id: randomUUID(),
+      owner: 'loyalty',
+      name: 'redeemReward',
+      metadata: { id: randomUUID(), target, name: 'redeemReward', correlation, input: {}, expected: 1 },
+      body: { orderId: randomUUID() },
+    });
     assert.equal((await c.rewardQueries.get(target))?.version, 2);
     await admin.query(
       `ALTER TABLE cafe.consumer_receipts ADD CONSTRAINT reject_publication_probe CHECK(event_id <> '${event.id}') NOT VALID`,

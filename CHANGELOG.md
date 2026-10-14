@@ -6,6 +6,10 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Register commands directly with plain handler factories across Go, Python and
+  TypeScript. Shared composition helpers supply executors, projection preparation
+  and notification receipt preparation. Update scaffolds, navigation and checks.
+
 - Organise shared Operations adaptors by persistence, messaging, realtime and
   operational HTTP responsibilities. Split codecs, database leases and network
   relays; generate owner request factories and document the navigation in decision 0020.

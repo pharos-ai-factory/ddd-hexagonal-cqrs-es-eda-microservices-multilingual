@@ -86,8 +86,9 @@ A command loads and saves one root through its named write repository. Its domai
 rule. A query reads through a query port. An event handler translates a fact into
 a durable owner command; the receiving command handler changes the root later.
 Application handlers never call another command handler. Register each handler
-through the central command executor; it supplies the repository and owns
-transaction and delivery bookkeeping. A projection reaction updates read data without changing a root.
+through the shared command registration API, naming the command and plain handler
+factory together. Its internal executor supplies the repository and owns transaction
+and delivery bookkeeping. A projection reaction updates read data without changing a root.
 
 Every context puts commands in `application/commands/`, with one command DTO and
 its matching handler in the same file. Name the file after the business action:
@@ -125,9 +126,10 @@ field numbers or silently register unfinished policy.
    Use `package commands`; follow `change_quantity.go` for the load, mutate and save flow.
 2. Implement and test the root behaviour in `domain/order.go`. Use `OrderWriteRepository` to load the root, call its method and save it.
    The aggregate records facts; the owner publication mapper selects outgoing messages.
-3. Register the handler in `apps/storefront/di/ordering.go`, receiving
-   the invocation-scoped `OrderWriteRepository` through `command.Bind`.
-   Register the returned executor with the owner RabbitMQ adaptor.
+3. Register the command name, owner parser and handler factory together in
+   `apps/storefront/di/ordering_requests.go` with `registration.Register`. The
+   aggregate registry supplies its transaction and invocation-scoped repository.
+   Use `RegisterProjection` when immutable projection data must be prepared first.
 4. For an API operation, update Ordering's OpenAPI and Protobuf request sources,
    owner messaging translation and API mapping. Run contract generation.
 5. Add a Gherkin example and native binding. Run the focused Ordering lane.
@@ -155,17 +157,19 @@ generator and run `pnpm generate:contracts` when extending that catalogue.
    `application/commands/<action>.py` module.
    Inject `TicketWriteRepository`; load the root, invoke its behaviour and save it.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
-3. Bind its factory through `CommandExecutor` in `apps/composition/preparation.py`.
+3. In `apps/composition/preparation.py`, use the configured aggregate registration:
+   `commands.request(registry, "startPreparation", wire.start, StartPreparationCommandHandler)`.
+   The shared helper creates the executor and supplies each invocation's repository.
 4. For an event reaction, use the context's typed definition in
    `adaptors/messaging/order_placed_subscription.py`.
    Map its payload in the application event handler and enqueue the owner command.
 5. Add the private Protobuf payload, codec, stable subscription declaration and
-   historical fixture. Register its pair with `command_subscription`, then pass
+   historical fixture. Register its codec and handler factory through `container.commands().subscription`, then pass
    the complete context set through `complete_subscriptions`.
 6. Add scenario/type/codec tests and run the focused Preparation lane.
 
 The simple context registration supplies the typed incoming event, target,
-event-handler method and command-handler method to the common runtime helper.
+event-handler method and plain command-handler factory to the common registration helper.
 It receives no Pika connection or SQL transaction.
 
 ## TypeScript: add a Loyalty command or subscription
@@ -175,12 +179,15 @@ It receives no Pika connection or SQL transaction.
    constructor receives application ports.
 2. Implement the aggregate rule and its domain test.
 3. Extend `LoyaltyDependencies` and the explicit Awilix factory in
-   `apps/composition/loyalty.ts`. Wrap its factory with `bindCommand`.
+   `apps/composition/loyalty.ts` for any new dependency. Register the command name,
+   parser and handler factory together through `c.rewardCommands.request(...)`
+   or the aggregate registration's `subscription(...)` method.
    Select concrete adaptors in composition; keep
    decoding and restoration in the owning adaptor modules.
 4. For a reaction, use the generated published name/payload association,
    map it in the event handler, and add its private command codec/manifest/fixture.
-5. Register through `commandSubscription` and validate the complete context set.
+5. Register the codec and plain handler factory through the aggregate registration's
+   `subscription` method and validate the complete context set.
    The type checker rejects a handler for an incompatible event payload.
 6. Resolve the provider in a composition test and run the focused Loyalty lane.
 
@@ -206,18 +213,18 @@ codec and command handler. Keep these responsibilities explicit:
 For example, the existing Preparation composition binds one subscription with:
 
 ```python
-command_subscription(
+container.commands().subscription(
     container.codec(), definitions, ORDER_PLACED,
     lambda event: derived_id("ticket", event["orderId"]),
-    container.accepted().handle, container.accept().execute,
+    container.accepted().handle, AcceptOrderCommandHandler,
 )
 ```
 
 This is an excerpt from
 [Preparation composition](../services/operations/src/operations/apps/composition/preparation.py).
 It returns both workers; the composition passes its complete worker set through
-`complete_subscriptions`. TypeScript uses `commandSubscription` and
-`completeSubscriptions` in the same roles. A projection-only subscription uses
+`complete_subscriptions`. TypeScript uses `c.accountCommands.subscription` and
+`completeSubscriptions` in the same roles. Both helpers construct executors internally. A projection-only subscription uses
 its projection delivery path rather than creating an aggregate command.
 
 Acceptance commits the event receipt, exact mapped command bytes and dispatch
@@ -226,6 +233,12 @@ After commit, command dispatch/execution owns recovery. Business rejections are
 recorded outcomes; infrastructure failures remain retryable. Test duplicate
 acceptance, rollback, lost confirms/ACKs and replay through the real infrastructure
 lane. See [decision 0011](decisions/0011-durable-commands-before-aggregate-mutations.md).
+
+The command name or private codec and its concrete handler factory appear in the
+same registration. Dependencies are resolved at startup. For provider evidence,
+Communication uses `preparedSubscription` and `NotificationDeliveryPreparation`
+to obtain the receipt before starting the aggregate transaction. See
+[decision 0023](decisions/0023-direct-command-registration.md).
 
 ## Add or change a query
 

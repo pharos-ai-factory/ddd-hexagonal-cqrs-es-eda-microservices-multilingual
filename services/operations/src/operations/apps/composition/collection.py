@@ -13,7 +13,9 @@ from operations.contexts.collection.application.queries.get_pickup import GetPic
 from operations.contexts.collection.application.queries.list_pickups import ListPickupsQueryHandler
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
 from dependency_injector import containers, providers
-from operations.adaptors.command_execution import CommandExecutor
+from operations.apps.command_registration import CommandRegistration
+from operations.adaptors.messaging.rabbitmq_request_registry import RabbitMQRequestRegistry
+from operations.contexts.collection.adaptors.messaging import pickup_requests as wire
 from operations.contexts.collection.adaptors.messaging.drinks_ready_subscription import DRINKS_READY
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
@@ -27,7 +29,7 @@ from operations.contexts.collection.application.event_handlers.drinks_ready impo
 )
 from operations.contexts.collection.domain.pickup import PickupSnapshot, Pickup
 from operations.foundation.identity import derived_id
-from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
+from operations.apps.runtime import SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
 from operations.adaptors.persistence.integration_event_outbox import PostgresPublicationOutbox
@@ -64,12 +66,7 @@ class CollectionContainer(containers.DeclarativeContainer):
     codec = providers.Singleton(command_codec)
     outbox = providers.Singleton(PostgresDurableCommandOutbox[OpenPickupCommand], database, codec)
     ready = providers.Singleton(DrinksReadyIntegrationEventHandler, outbox)
-    open = providers.Singleton(
-        CommandExecutor,
-        pickup_transaction,
-        lambda repository: OpenPickupCommandHandler(repository, derived_id),
-    )
-    collect = providers.Singleton(CommandExecutor, pickup_transaction, CollectOrderCommandHandler)
+    commands = providers.Singleton(CommandRegistration[Pickup], pickup_transaction)
 
     pickup_opened_publications = providers.Singleton(
         PostgresPublicationOutbox,
@@ -91,18 +88,26 @@ class CollectionContainer(containers.DeclarativeContainer):
     )
 
 
+def requests(container: CollectionContainer) -> RabbitMQRequestRegistry:
+    """Map published collection commands directly to their handlers."""
+    registry = RabbitMQRequestRegistry("collection")
+    container.commands().request(registry, "collectOrder", wire.collect, CollectOrderCommandHandler)
+    registry.queries("pickup", "pickups", container.queries(), wire.item, wire.listing)
+    return registry
+
+
 def subscriptions(container: CollectionContainer) -> tuple[SubscriptionWorker, ...]:
     definitions = subscription_definitions("collection")
     return complete_subscriptions(
         "collection",
         definitions,
-        command_subscription(
+        container.commands().subscription(
             container.codec(),
             definitions,
             DRINKS_READY,
             lambda event: derived_id("pickup", event["orderId"]),
             container.ready().handle,
-            container.open().execute,
+            lambda repository: OpenPickupCommandHandler(repository, derived_id),
         )
         + publication_subscription(
             "collection",

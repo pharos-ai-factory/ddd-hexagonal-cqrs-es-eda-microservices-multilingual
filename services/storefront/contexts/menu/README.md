@@ -23,6 +23,7 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Published contracts](../../../../contracts/menu)
 - [Executable specifications](../../../../specifications/menu)
 - [Dependency composition](../../apps/storefront/di/menu.go)
+- [Command registrations](../../apps/storefront/di/menu_requests.go)
 - [Context tests](.)
 
 ## Follow a use case
@@ -31,8 +32,8 @@ Start with the named file in `application/commands/` or `application/queries/`.
 The DTO and handler live together. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
 Command handlers load, mutate and save through named write repositories.
-Composition registers a central executor that supplies each invocation's repository
-and manages its transaction. Owner adaptors map aggregate facts into outgoing messages.
+Composition pairs each command with its plain handler factory through the shared
+registration helper, which supplies each invocation's repository and transaction. Owner adaptors map aggregate facts into outgoing messages.
 Projection handlers update consumer-owned read data without changing aggregates.
 Queries use named read repository ports and return application-owned views.
 Persistence adaptors validate stored

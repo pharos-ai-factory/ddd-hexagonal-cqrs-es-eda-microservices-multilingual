@@ -1,6 +1,8 @@
-import { bindCommand, type CommandExecutor } from '../../adaptors/command-execution.js';
+import { CommandRegistration } from '../command-registration.js';
+import { RabbitMQRequestRegistry } from '../../adaptors/messaging/rabbitmq-request-registry.js';
+import { notification as notificationWire } from '../../contexts/communication/adaptors/messaging/notification-queries.js';
 import { notificationPublications } from '../../contexts/communication/adaptors/messaging/notification-publications.js';
-import { NotificationDeliveryCommandExecutor } from '../../contexts/communication/adaptors/persistence/notification-delivery-command-executor.js';
+import { NotificationDeliveryPreparation } from '../../contexts/communication/adaptors/delivery/notification-delivery-preparation.js';
 import type { Notification } from '../../contexts/communication/domain/notification.js';
 import { PostgresNotificationWriteRepository } from '../../contexts/communication/adaptors/persistence/notification-write-repository.js';
 import type { AggregateTransaction } from '../../adaptors/command-execution.js';
@@ -27,13 +29,16 @@ import {
   RequestNotificationCommandHandler,
   type RequestNotificationCommand,
 } from '../../contexts/communication/application/commands/request-notification.js';
-import { type DeliverNotificationCommand } from '../../contexts/communication/application/commands/deliver-notification.js';
+import {
+  DeliverNotificationCommandHandler,
+  type DeliverNotificationCommand,
+} from '../../contexts/communication/application/commands/deliver-notification.js';
 import { PickupOpenedIntegrationEventHandler } from '../../contexts/communication/application/event-handlers/pickup-opened.js';
 import { RewardIssuedIntegrationEventHandler } from '../../contexts/communication/application/event-handlers/reward-issued.js';
 import { NotificationRequestedDomainEventHandler } from '../../contexts/communication/application/event-handlers/notification-requested.js';
 import schema from '../../contexts/communication/adaptors/messaging/generated/internal_commands.json' with { type: 'json' };
 import definitions from '../../contexts/communication/adaptors/messaging/subscriptions.json' with { type: 'json' };
-import { commandSubscription, completeSubscriptions } from '../runtime.js';
+import { completeSubscriptions } from '../runtime.js';
 
 /** Typed provider bindings for the Communication context. */
 export type CommunicationDependencies = {
@@ -45,8 +50,8 @@ export type CommunicationDependencies = {
   queries: ReturnType<typeof notificationQueryEndpoints>;
   provider: DeliveryPort;
   notificationSnapshotReadRepository: PagedQueryPort<ReturnType<typeof restoreNotificationSnapshot>>;
-  request: CommandExecutor<RequestNotificationCommand>;
-  deliver: CommandExecutor<DeliverNotificationCommand>;
+  commands: CommandRegistration<Notification>;
+  deliveryPreparation: NotificationDeliveryPreparation;
   pickupCodec: InternalCommandCodec<RequestNotificationCommand>;
   rewardCodec: InternalCommandCodec<RequestNotificationCommand>;
   deliveryCodec: InternalCommandCodec<DeliverNotificationCommand>;
@@ -89,20 +94,12 @@ export function createCommunicationContainer(databaseURL: string, deliveryURL: s
         new PostgresSnapshotReadRepository(c.database, 'notification', restoreNotificationSnapshot),
     ).singleton(),
     provider: asFunction(() => new HttpNotificationDelivery(deliveryURL, deliveryKey)).singleton(),
-    request: asFunction((c: CommunicationDependencies) =>
-      bindCommand(
-        c.notificationTransaction,
-        (repository) => new RequestNotificationCommandHandler(repository),
-        (m, command) => ({ ...m, input: command }),
-      ),
+    commands: asFunction(
+      (c: CommunicationDependencies) => new CommandRegistration(c.notificationTransaction),
     ).singleton(),
-    deliver: asFunction(
+    deliveryPreparation: asFunction(
       (c: CommunicationDependencies) =>
-        new NotificationDeliveryCommandExecutor(
-          c.notificationTransaction,
-          c.notificationSnapshotReadRepository,
-          c.provider,
-        ),
+        new NotificationDeliveryPreparation(c.notificationSnapshotReadRepository, c.provider),
     ).singleton(),
     pickupCodec: asFunction(() => noticeCodec(CommunicationSubscription.PickupNotice)).singleton(),
     rewardCodec: asFunction(() => noticeCodec(CommunicationSubscription.RewardNotice)).singleton(),
@@ -134,38 +131,54 @@ export async function composeCommunication() {
     const c = container.cradle;
     return {
       database: c.database,
-      queries: c.queries,
+      requests: communicationRequests(c),
       commandHeader: commandPublication(schema, 'communication'),
       dispose: () => container.dispose(),
-      subscriptions: completeSubscriptions('communication', definitions, [
-        ...commandSubscription(
-          'collection.pickup-opened',
-          c.pickupCodec,
-          definitions,
-          (event) => derivedId('pickup-notice', event.pickupId),
-          c.pickup,
-          c.request,
-        ),
-        ...commandSubscription(
-          'loyalty.reward-issued',
-          c.rewardCodec,
-          definitions,
-          (event) => derivedId('reward-notice', event.rewardId),
-          c.reward,
-          c.request,
-        ),
-        ...commandSubscription(
-          'communication.notification-requested',
-          c.deliveryCodec,
-          definitions,
-          (event) => event.notificationId,
-          c.requested,
-          c.deliver,
-        ),
-      ]),
+      subscriptions: communicationSubscriptions(c),
     };
   } catch (error) {
     await container.dispose();
     throw error;
   }
+}
+
+/** Communication exposes query requests and receives commands through durable subscriptions. */
+export function communicationRequests(c: CommunicationDependencies) {
+  const registry = new RabbitMQRequestRegistry('communication');
+  registry.queries('notification', 'notifications', c.queries, notificationWire);
+  return registry;
+}
+
+/** Register each private command codec alongside its concrete handler factory. */
+export function communicationSubscriptions(c: CommunicationDependencies) {
+  const preparation = c.deliveryPreparation;
+  return completeSubscriptions('communication', definitions, [
+    ...c.commands.subscription(
+      'collection.pickup-opened',
+      c.pickupCodec,
+      definitions,
+      (event) => derivedId('pickup-notice', event.pickupId),
+      c.pickup,
+      (repository) => new RequestNotificationCommandHandler(repository),
+      (m, command) => ({ ...m, input: command }),
+    ),
+    ...c.commands.subscription(
+      'loyalty.reward-issued',
+      c.rewardCodec,
+      definitions,
+      (event) => derivedId('reward-notice', event.rewardId),
+      c.reward,
+      (repository) => new RequestNotificationCommandHandler(repository),
+      (m, command) => ({ ...m, input: command }),
+    ),
+    ...c.commands.preparedSubscription(
+      'communication.notification-requested',
+      c.deliveryCodec,
+      definitions,
+      (event) => event.notificationId,
+      c.requested,
+      (command) => preparation.prepare(command),
+      (repository, receipt) => new DeliverNotificationCommandHandler(repository, receipt),
+    ),
+  ]);
 }

@@ -8,10 +8,6 @@ import { consume } from '../adaptors/messaging/rabbitmq-consumer.js';
 import { realtimeRelay } from '../adaptors/realtime/gateway-relay.js';
 import { server } from '../adaptors/http/operational-security.js';
 import { replyRelay } from '../adaptors/messaging/rabbitmq-reply-relay.js';
-import { RabbitMQRequestRegistry } from '../adaptors/messaging/rabbitmq-request-registry.js';
-import { account as accountWire } from '../contexts/loyalty/adaptors/messaging/account-replies.js';
-import * as loyaltyWire from '../contexts/loyalty/adaptors/messaging/reward-requests.js';
-import { notification as notificationWire } from '../contexts/communication/adaptors/messaging/notification-queries.js';
 
 import { secret as required } from '../foundation/secrets.js';
 if (!['local', 'development'].includes(process.env.APP_ENV ?? ''))
@@ -25,7 +21,6 @@ try {
   const communication = await lifecycle.acquire(composeCommunication);
   const contexts = [loyalty, communication];
   const databases = { loyalty: loyalty.database, communication: communication.database };
-  const noticeQueries = communication.queries;
   await Promise.all(contexts.map((c) => c.database.verify()));
   // Validate all credentials before starting any worker.
   for (const name of [
@@ -57,15 +52,8 @@ try {
       tasks.push(consume(url, subscription, controller.signal));
     }
   }
-  const redeem = loyalty.redeem;
-  const loyaltyRequests = new RabbitMQRequestRegistry('loyalty');
-  loyaltyRequests.command('redeemReward', loyaltyWire.redeem, (m, input) => redeem.execute(m, input));
-  loyaltyRequests.queries('account', 'accounts', loyalty.accountQueries, accountWire);
-  loyaltyRequests.queries('reward', 'rewards', loyalty.rewardQueries, loyaltyWire.reward);
-  const communicationRequests = new RabbitMQRequestRegistry('communication');
-  communicationRequests.queries('notification', 'notifications', noticeQueries, notificationWire);
-  tasks.push(loyaltyRequests.run(required('LOYALTY_BROKER_URL'), controller.signal));
-  tasks.push(communicationRequests.run(required('COMMUNICATION_BROKER_URL'), controller.signal));
+  tasks.push(loyalty.requests.run(required('LOYALTY_BROKER_URL'), controller.signal));
+  tasks.push(communication.requests.run(required('COMMUNICATION_BROKER_URL'), controller.signal));
   http = server(required('API_KEY'), () => diagnostics(databases));
   await new Promise<void>((resolve, reject) => {
     http!.once('error', reject);

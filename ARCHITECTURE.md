@@ -103,7 +103,8 @@ separate command/query consumers and transactionally stored response bytes are
 defined by decision 0009. See decision 0007 and `contracts/shared/messaging/requests.md`.
 
 Owner services expose only health and authenticated diagnostics over HTTP.
-Their composition injects typed executors and query handlers directly into the
+Their composition registers each command with its owner parser and plain handler
+factory through the shared command registration API. Query handlers register with the
 RabbitMQ request registry. Contexts have messaging adaptors for incoming business
 requests. The earlier direct owner HTTP inspection endpoints were retired by
 [decision 0016](docs/decisions/0016-owner-messaging-boundary.md); local inspection
@@ -234,7 +235,9 @@ outgoing bytes. Rejected commands can commit a durable rejection without saving
 an aggregate. Infrastructure failures roll back the whole attempt. There is no
 application `UnitOfWork` dependency or transaction callback. Each transaction is
 restricted to one aggregate in one context database; cross-context work proceeds
-through RabbitMQ. Composition binds the shared executor once per use case.
+through RabbitMQ. Composition configures one registration object per aggregate;
+each command declaration names its parser and concrete handler factory. The helper
+supplies the executor internally. See [decision 0023](docs/decisions/0023-direct-command-registration.md).
 
 ## Reads and external effects
 

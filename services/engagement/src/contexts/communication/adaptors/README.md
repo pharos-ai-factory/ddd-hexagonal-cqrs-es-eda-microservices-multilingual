@@ -18,3 +18,8 @@ context map. Query endpoints return application read models through named read
 repositories.
 
 [Notification delivery](delivery/http-notification-delivery.ts) implements the outbound provider port with a stable idempotency key.
+
+[Delivery preparation](delivery/notification-delivery-preparation.ts) validates
+stored content and obtains the provider receipt before the command registration
+helper opens the aggregate transaction. The registration names
+`DeliverNotificationCommandHandler` directly.

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { asFunction, asValue } from 'awilix';
-import { createLoyaltyContainer } from './loyalty.js';
+import { createLoyaltyContainer, loyaltySubscriptions } from './loyalty.js';
 import { createCommunicationContainer } from './communication.js';
 import { OrderCollectedIntegrationEventHandler } from '../../contexts/loyalty/application/event-handlers/order-collected.js';
 import type { PostgresContextDatabase } from '../../adaptors/persistence/postgres-database.js';
@@ -44,12 +44,13 @@ void test('Awilix binds feature execution to the shared command boundary and rep
   };
   container.register({ accountTransaction: asValue(transaction) });
   const id = '00000000-0000-4000-8000-000000000001';
-  const outcome = await container
-    .resolve('credit')
-    .execute(
-      { id, target: id, correlation: id, name: 'fixture', input: {} },
-      { customerId: id, orderId: id },
-    );
+  const worker = loyaltySubscriptions(container.cradle).find(
+    (worker) => worker.consumer === 'loyalty.credit-collection' && worker.decodeCommand,
+  )!;
+  const outcome = await worker.handle(
+    { id, target: id, correlation: id, name: 'fixture', input: {} },
+    { customerId: id, orderId: id },
+  );
   assert.equal(outcome.status, 'active');
   assert.equal(saved.length, 1);
   assert.equal(saved[0]?.collections, 1);
@@ -60,6 +61,6 @@ void test('Awilix binds feature execution to the shared command boundary and rep
       throw new Error('missing aggregate port');
     }).singleton(),
   });
-  assert.throws(() => broken.resolve('credit'), /missing aggregate port/);
+  assert.throws(() => loyaltySubscriptions(broken.cradle), /missing aggregate port/);
   await broken.dispose();
 });

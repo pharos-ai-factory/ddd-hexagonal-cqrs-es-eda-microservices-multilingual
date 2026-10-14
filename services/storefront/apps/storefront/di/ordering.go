@@ -7,7 +7,6 @@ import (
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
 	endpoints "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/queryendpoints"
 	pg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/persistence/postgres"
-	orderingcommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/eventhandlers"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	orderingprojections "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/projections"
@@ -33,26 +32,6 @@ func orderingModule() fx.Option {
 		func(s *support.StorefrontRuntime) a.ProjectionPort[model.MenuPublishedIntegrationEvent] {
 			return store.Project[model.MenuPublishedIntegrationEvent](s.Databases["ordering"], "published-menus")
 		},
-		func(port execution.Transaction[*d.Order], directory a.ProjectionPort[model.MenuPublishedIntegrationEvent]) execution.Executor[orderingcommands.CreateOrderCommand] {
-			return execution.BindProjection(port, directory, func(c orderingcommands.CreateOrderCommand) string { return c.EditionID }, func(repository ports.OrderWriteRepository, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent]) orderingcommands.CreateOrderCommandHandler {
-				return orderingcommands.CreateOrderCommandHandler{Repository: repository, Menus: directory}
-			})
-		},
-		func(port execution.Transaction[*d.Order], directory a.ProjectionPort[model.MenuPublishedIntegrationEvent]) execution.Executor[orderingcommands.AddLineCommand] {
-			return execution.BindProjection(port, directory, func(c orderingcommands.AddLineCommand) string { return c.EditionID }, func(repository ports.OrderWriteRepository, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent]) orderingcommands.AddLineCommandHandler {
-				return orderingcommands.AddLineCommandHandler{Repository: repository, Menus: directory}
-			})
-		},
-		func(port execution.Transaction[*d.Order]) execution.Executor[orderingcommands.ChangeQuantityCommand] {
-			return execution.Bind(port, func(repository ports.OrderWriteRepository) orderingcommands.ChangeQuantityCommandHandler {
-				return orderingcommands.ChangeQuantityCommandHandler{Repository: repository}
-			})
-		},
-		func(port execution.Transaction[*d.Order]) execution.Executor[orderingcommands.PlaceOrderCommand] {
-			return execution.Bind(port, func(repository ports.OrderWriteRepository) orderingcommands.PlaceOrderCommandHandler {
-				return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
-			})
-		},
 		func(read ports.OrderReadRepository) q.GetOrderQueryHandler {
 			return q.GetOrderQueryHandler{ReadRepository: read}
 		},
@@ -62,31 +41,13 @@ func orderingModule() fx.Option {
 		func(get q.GetOrderQueryHandler, list q.ListOrdersQueryHandler) endpoints.OrderQueryEndpoints {
 			return endpoints.OrderQueryEndpoints{GetHandler: get, ListHandler: list}
 		},
-		orderingRequestHandlers,
+		orderingRequestsProvider,
 	), fx.Invoke(mountOrdering))
 }
 
-// OrderingHandlerDependencies declares the complete RabbitMQ request handler graph.
-type OrderingHandlerDependencies struct {
-	fx.In
-	Queries        endpoints.OrderQueryEndpoints
-	CreateOrder    execution.Executor[orderingcommands.CreateOrderCommand]
-	AddLine        execution.Executor[orderingcommands.AddLineCommand]
-	ChangeQuantity execution.Executor[orderingcommands.ChangeQuantityCommand]
-	PlaceOrder     execution.Executor[orderingcommands.PlaceOrderCommand]
-}
-
-func orderingRequestHandlers(p OrderingHandlerDependencies) rpc.OrderingRequestHandlers {
-	return rpc.OrderingRequestHandlers{Queries: p.Queries,
-		CreateOrder:    p.CreateOrder,
-		AddLine:        p.AddLine,
-		ChangeQuantity: p.ChangeQuantity,
-		PlaceOrder:     p.PlaceOrder,
-	}
-}
-func mountOrdering(s *support.StorefrontRuntime, h rpc.OrderingRequestHandlers, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler) {
+func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler) {
 	support.SubscribePrivate(s, rpc.Subscription(string(PublishOrderPlacedSubscription)), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, publication.Handle)
-	s.RequestWorkers["ordering"] = rpc.Bind(h).Run
+	s.RequestWorkers["ordering"] = requests.Run
 	support.Subscribe(s, rpc.Subscription(string(MenuDirectorySubscription)), func(p model.MenuPublishedIntegrationEvent) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))
 }
 

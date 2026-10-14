@@ -2,6 +2,7 @@
 """Check service ownership and inward dependencies in all implementation languages."""
 
 from python_imports import python_imports
+from command_registration_policy import violation as command_registration_violation
 from request_contracts import OWNED
 from event_boundaries import violation as event_boundary_violation
 from generated_files import violation as generated_file_violation
@@ -342,6 +343,8 @@ def check():
                 if reason := core_violation(relative, normal):
                     errors.append(f"{relative}: {reason}: {target}")
         if reason := event_boundary_violation(relative, content, event_names):
+            errors.append(f"{relative}: {reason}")
+        if reason := command_registration_violation(relative, content):
             errors.append(f"{relative}: {reason}")
         if reason := owner_http_violation(relative, content):
             errors.append(f"{relative}: {reason}")

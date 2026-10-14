@@ -67,6 +67,8 @@ class RabbitMQRequestRegistry:
             reply = outcome_reply(self.owner, outcome)
             return reply
 
+        if name in self.handlers:
+            raise ValueError("Duplicate request handler: " + name)
         self.handlers[name] = handle
 
     def queries[S](

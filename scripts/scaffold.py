@@ -150,11 +150,17 @@ type {name}{role}[S any] struct {{ Repository {port} }}
             "Place commands/ under the owning context application/ directory.\n"
             "Keep the command DTO and handler together; import their module directly.\n"
             "Replace the generic aggregate type with the owner root and use its named WriteRepository port.\n"
-            "Register through the central command executor; it provides a fresh repository and owns transaction policy.\n"
+            "Register the command, owner parser and plain handler together through the aggregate command registration API.\n"
             "Place Python test modules under tests/contexts/<context>/application/commands/.\n"
         )
     if kind == "command":
-        registration += "Bind this plain handler through the existing context command executor factory; register that executor with the owner RabbitMQ adaptor.\n"
+        action = name[0].lower() + name[1:]
+        registration = {
+            "operations": f'# In the context requests function, use its configured CommandRegistration:\ncommands.request(registry, "{action}", wire.{snake}, {name}CommandHandler)\n',
+            "engagement": f"// In the context request composition, use its configured CommandRegistration:\ncommands.request(registry, '{action}', wire.{action}, (repository) => new {name}CommandHandler(repository));\n",
+            "storefront": f'// In the context request composition, use its aggregate registry:\nregistration.Register(aggregateCommands, "{action}", wire.{name}, func(repository ports.OwningWriteRepository) commands.{name}CommandHandler {{\n return commands.{name}CommandHandler{{Repository: repository}}\n}})\n',
+        }[service]
+        registration += "Define the owner parser and published command contract, then register the handler here. The shared helper supplies execution policy.\n"
     files["registration.txt"] = registration
     if kind == "subscription":
         # Reactions use the command from its command/handler module.
@@ -185,7 +191,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
         files["wiring.txt"] = (
             "Add the typed incoming event and owner command DTO. Map the event inside handle; the starter forwards an already mapped command.\n"
             "Add its private Protobuf payload with an unused field number, decoder and golden fixture.\n"
-            "Add the manifest entry, typed codec and provider; register both consumers through commandSubscription/command_subscription.\n"
+            "Add the manifest entry, typed codec and provider; register the codec and plain handler factory through the aggregate command registration subscription method.\n"
             "Run completeSubscriptions/complete_subscriptions, generation and the composition tests.\n"
             "For Go, introduce the owner durable command port/adaptor before adding an aggregate-changing subscription; existing Go subscriptions are projections.\n"
         )

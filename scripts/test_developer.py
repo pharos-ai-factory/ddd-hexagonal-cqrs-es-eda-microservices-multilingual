@@ -73,3 +73,13 @@ class DeveloperTests(unittest.TestCase):
             self.assertTrue(
                 any(path.startswith(folder + "/") and path.endswith("." + suffix) for path in files)
             )
+
+    def test_command_starters_register_the_command_and_handler_directly(self):
+        for context in ("ordering", "preparation", "loyalty"):
+            _, files = render("command", context, "ExampleUseCase")
+            registration = files["registration.txt"]
+            self.assertIn("exampleUseCase", registration)
+            self.assertIn("ExampleUseCaseCommandHandler", registration)
+            self.assertNotIn("CommandExecutor", registration)
+            self.assertNotIn("bindCommand", registration)
+            self.assertNotIn("providers.Singleton", registration)

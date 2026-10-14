@@ -14,10 +14,7 @@ from operations.adaptors.diagnostics import diagnostics
 from operations.adaptors.realtime.gateway_relay import relay as realtime_relay
 from operations.adaptors.messaging.rabbitmq_outbox_relay import relay
 from operations.adaptors.http.operational_security import authenticate
-from operations.adaptors.messaging.rabbitmq_request_registry import RabbitMQRequestRegistry
 from operations.adaptors.messaging.rabbitmq_reply_relay import relay as reply_relay
-from operations.contexts.preparation.adaptors.messaging import ticket_requests as preparation_wire
-from operations.contexts.collection.adaptors.messaging import pickup_requests as collection_wire
 from operations.foundation.secrets import secret
 from operations.apps.composition import preparation as preparation_di, collection as collection_di
 
@@ -48,19 +45,8 @@ def configure_app(resources: ExitStack) -> FastAPI:
     collection.init_resources()
     databases = {"preparation": preparation.database(), "collection": collection.database()}
     subscriptions = (*preparation_di.subscriptions(preparation), *collection_di.subscriptions(collection))
-    preparation_requests = RabbitMQRequestRegistry("preparation")
-    preparation_requests.command("startPreparation", preparation_wire.start, preparation.start().execute)
-    preparation_requests.command(
-        "completePreparation", preparation_wire.complete, preparation.complete().execute
-    )
-    preparation_requests.queries(
-        "ticket", "tickets", preparation.queries(), preparation_wire.item, preparation_wire.listing
-    )
-    collection_requests = RabbitMQRequestRegistry("collection")
-    collection_requests.command("collectOrder", collection_wire.collect, collection.collect().execute)
-    collection_requests.queries(
-        "pickup", "pickups", collection.queries(), collection_wire.item, collection_wire.listing
-    )
+    preparation_requests = preparation_di.requests(preparation)
+    collection_requests = collection_di.requests(collection)
     stop = Event()
     workers: list[Thread] = []
 

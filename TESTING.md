@@ -261,3 +261,12 @@ API and the dedicated topology user, including successful request/reply delivery
 and denied bindings, forged events/replies and unregistered queues. Recovery
 fixtures use existing catalogue queues under owner credentials while runtime
 workers are stopped. See [the permission model](docs/broker-permissions.md).
+
+## Direct command registration
+
+[Decision 0023](docs/decisions/0023-direct-command-registration.md) keeps executor
+construction inside shared registration helpers. Architecture negative fixtures
+reject the earlier per-command wiring in all three languages. Composition tests
+exercise published command parsing, selected aggregate transactions, private codec
+bindings, projection preparation, independent notification receipts and provider
+failures before transactions. Infrastructure lanes exercise the same registrations.

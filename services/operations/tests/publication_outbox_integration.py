@@ -6,6 +6,8 @@ from hashlib import sha256
 import os
 from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
+from threading import Event
+from unittest.mock import patch
 import pika
 import psycopg
 import pytest
@@ -14,7 +16,12 @@ from operations.adaptors.persistence.dispatch_leases import binary
 from operations.adaptors.messaging.rabbitmq_connection import broker_connection
 from operations.adaptors.persistence.integration_event_outbox import PostgresPublicationOutbox
 from operations.adaptors.generated.event_preparation import publish_DrinksReady
-from operations.apps.composition.preparation import PreparationContainer
+from operations.apps.composition.preparation import PreparationContainer, requests, subscriptions
+from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription
+from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_requests_pb2 import (
+    Request,
+)
+from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
 from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.foundation.application import Metadata
@@ -29,13 +36,41 @@ def test_publication_receipt_outbox_and_subscription_recovery() -> None:
     db = container.database()
     target, order, customer, correlation = (str(uuid4()) for _ in range(4))
     consumer = "preparation.publish-drinks-ready"
-    command = Metadata(id=str(uuid4()), target=target, name="acceptOrder", correlation=correlation)
     try:
-        container.accept().execute(
-            command, {"orderId": order, "customerId": customer, "instructions": "1 × Tea"}
+        accept = next(worker for worker in subscriptions(container) if worker.command)
+        source_id = str(uuid4())
+        command = Metadata(
+            id=derived_id(accept.consumer, source_id),
+            target=target,
+            name=accept.consumer,
+            correlation=correlation,
+            consumer=accept.consumer,
+            source_id=source_id,
+            source_hash="a" * 64,
+            input={"orderId": order},
         )
-        container.start().execute(replace(command, id=str(uuid4()), name="startPreparation"), {})
-        container.complete().execute(replace(command, id=str(uuid4()), name="completePreparation"), {})
+        accept_command = AcceptOrderCommand(orderId=order, customerId=customer, instructions="1 × Tea")
+        queued = container.codec().encode(command, accept_command)
+
+        def deliver(_url: str, subscription: EventSubscription[AcceptOrderCommand], _stop: Event) -> None:
+            assert subscription.command_decoder is not None
+            metadata, value = subscription.command_decoder(queued)
+            assert subscription.handle(metadata, value)["status"] == "queued"
+
+        with patch("operations.apps.runtime.consume", deliver):
+            accept.run("unused", Event())
+        registry = requests(container)
+        for version, action, status in [
+            (1, "start_preparation", "preparing"),
+            (2, "complete_preparation", "ready"),
+        ]:
+            request = Request(contract_version=1, request_id=str(uuid4()), context="preparation")
+            request.command.metadata.command_id = str(uuid4())
+            request.command.metadata.aggregate_id = target
+            request.command.metadata.correlation_id = correlation
+            request.command.metadata.expected_version = version
+            getattr(request.command, action).SetInParent()
+            assert registry.handle(request).outcome.status == status
         with db.pool.connection() as connection:
             source = connection.execute(
                 "SELECT body FROM cafe.outbox_events WHERE aggregate_id=%s AND event_name=%s",

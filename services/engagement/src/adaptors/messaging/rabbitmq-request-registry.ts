@@ -26,6 +26,7 @@ export class RabbitMQRequestRegistry {
     parse: (value: unknown) => I,
     execute: (metadata: Metadata, value: I) => Promise<Outcome>,
   ) {
+    if (this.handlers.has(name)) throw new Error('Duplicate request handler: ' + name);
     this.handlers.set(name, async (request) => {
       if (!request.metadata) throw new Error('Command metadata is required');
       const input = parse(request.body);

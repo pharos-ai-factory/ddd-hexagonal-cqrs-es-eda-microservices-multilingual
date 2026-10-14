@@ -13,7 +13,9 @@ from operations.contexts.preparation.application.queries.get_ticket import GetTi
 from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
 from dependency_injector import containers, providers
-from operations.adaptors.command_execution import CommandExecutor
+from operations.apps.command_registration import CommandRegistration
+from operations.adaptors.messaging.rabbitmq_request_registry import RabbitMQRequestRegistry
+from operations.contexts.preparation.adaptors.messaging import ticket_requests as wire
 from operations.contexts.preparation.adaptors.messaging.order_placed_subscription import ORDER_PLACED
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
@@ -32,7 +34,7 @@ from operations.contexts.preparation.application.event_handlers.order_placed imp
 )
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot, PreparationTicket
 from operations.foundation.identity import derived_id
-from operations.apps.runtime import command_subscription, SubscriptionWorker, complete_subscriptions
+from operations.apps.runtime import SubscriptionWorker, complete_subscriptions
 from operations.apps.composition import context_database, subscription_definitions
 
 from operations.adaptors.persistence.integration_event_outbox import PostgresPublicationOutbox
@@ -64,9 +66,7 @@ class PreparationContainer(containers.DeclarativeContainer):
     codec = providers.Singleton(command_codec)
     outbox = providers.Singleton(PostgresDurableCommandOutbox[AcceptOrderCommand], database, codec)
     accepted = providers.Singleton(OrderPlacedIntegrationEventHandler, outbox)
-    accept = providers.Singleton(CommandExecutor, ticket_transaction, AcceptOrderCommandHandler)
-    start = providers.Singleton(CommandExecutor, ticket_transaction, StartPreparationCommandHandler)
-    complete = providers.Singleton(CommandExecutor, ticket_transaction, CompletePreparationCommandHandler)
+    commands = providers.Singleton(CommandRegistration[PreparationTicket], ticket_transaction)
 
     drinks_ready_publications = providers.Singleton(
         PostgresPublicationOutbox, database, "preparation.publish-drinks-ready", "ticket", publish_DrinksReady
@@ -74,18 +74,28 @@ class PreparationContainer(containers.DeclarativeContainer):
     publish_drinks_ready = providers.Singleton(DrinksReadyDomainEventHandler, drinks_ready_publications)
 
 
+def requests(container: PreparationContainer) -> RabbitMQRequestRegistry:
+    """Map published preparation commands directly to their handlers."""
+    registry = RabbitMQRequestRegistry("preparation")
+    commands = container.commands()
+    commands.request(registry, "startPreparation", wire.start, StartPreparationCommandHandler)
+    commands.request(registry, "completePreparation", wire.complete, CompletePreparationCommandHandler)
+    registry.queries("ticket", "tickets", container.queries(), wire.item, wire.listing)
+    return registry
+
+
 def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, ...]:
     definitions = subscription_definitions("preparation")
     return complete_subscriptions(
         "preparation",
         definitions,
-        command_subscription(
+        container.commands().subscription(
             container.codec(),
             definitions,
             ORDER_PLACED,
             lambda event: derived_id("ticket", event["orderId"]),
             container.accepted().handle,
-            container.accept().execute,
+            AcceptOrderCommandHandler,
         )
         + publication_subscription(
             "preparation",

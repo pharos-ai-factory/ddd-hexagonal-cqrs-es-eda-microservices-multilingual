@@ -7,10 +7,12 @@ from operations.adaptors.persistence.postgres_database import PostgresContextDat
 from operations.apps.composition.preparation import (
     PreparationContainer,
     subscriptions as preparation_subscriptions,
+    requests as preparation_requests,
 )
 from operations.apps.composition.collection import (
     CollectionContainer,
     subscriptions as collection_subscriptions,
+    requests as collection_requests,
 )
 
 
@@ -36,6 +38,13 @@ def test_context_graphs_and_resources_are_independent() -> None:
         assert container.database() is container.database()
     assert len(preparation_subscriptions(preparation)) == 3
     assert len(collection_subscriptions(collection)) == 4
+    assert set(preparation_requests(preparation).handlers) == {
+        "startPreparation",
+        "completePreparation",
+        "getTicket",
+        "listTickets",
+    }
+    assert set(collection_requests(collection).handlers) == {"collectOrder", "getPickup", "listPickups"}
     assert closed == []
     preparation.shutdown_resources()
     assert closed == ["preparation"]

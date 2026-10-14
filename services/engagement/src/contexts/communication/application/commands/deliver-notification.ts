@@ -4,7 +4,7 @@ import { Rejection } from '../../../../foundation/domain.js';
 
 export type DeliverNotificationCommand = { notificationId: string };
 
-/** Records provider acceptance through the notification aggregate; the executor obtains the receipt before the transaction. */
+/** Records provider acceptance through the notification aggregate; delivery preparation obtains the receipt before the transaction. */
 export class DeliverNotificationCommandHandler {
   constructor(
     private repository: NotificationWriteRepository,

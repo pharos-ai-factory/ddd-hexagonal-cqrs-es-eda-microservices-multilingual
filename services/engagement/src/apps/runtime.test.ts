@@ -1,6 +1,8 @@
+import { CreditCollectionCommandHandler } from '../contexts/loyalty/application/commands/credit-collection.js';
+import { derivedId } from '../foundation/identity.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { completeSubscriptions, commandSubscription } from './runtime.js';
+import { completeSubscriptions } from './runtime.js';
 import { createLoyaltyContainer } from './composition/loyalty.js';
 const definitions = [
   { consumer: 'loyalty.credit-collection', event: 'collection.order-collected', command: 'creditCollection' },
@@ -9,13 +11,13 @@ void test('manifest completeness rejects missing, duplicate and mislabelled cons
   const container = createLoyaltyContainer('postgresql://unused@127.0.0.1:1/unused');
   const c = container.cradle;
   try {
-    const pair = commandSubscription(
+    const pair = c.accountCommands.subscription(
       'collection.order-collected',
       c.creditCodec,
       definitions,
       (e) => e.customerId,
       c.collected,
-      c.credit,
+      (repository) => new CreditCollectionCommandHandler(repository, derivedId),
     );
     assert.equal(completeSubscriptions('loyalty', definitions, pair).length, 2);
     for (const workers of [
@@ -27,13 +29,13 @@ void test('manifest completeness rejects missing, duplicate and mislabelled cons
       assert.throws(() => completeSubscriptions('loyalty', definitions, workers));
     assert.throws(() => completeSubscriptions('loyalty', [...definitions, ...definitions], pair));
     assert.throws(() =>
-      commandSubscription(
+      c.accountCommands.subscription(
         'collection.order-collected',
         c.creditCodec,
         [{ ...definitions[0]!, event: 'incorrect' }],
         (e) => e.customerId,
         c.collected,
-        c.credit,
+        (repository) => new CreditCollectionCommandHandler(repository, derivedId),
       ),
     );
   } finally {
@@ -50,14 +52,14 @@ function incompatibleHandler(container: ReturnType<typeof createLoyaltyContainer
       event: import('../contracts/events/generated/loyalty.js').RewardIssuedIntegrationEvent,
     ) => ({ aggregateId: event.rewardId, version: 0, status: 'queued' }),
   };
-  commandSubscription(
+  c.accountCommands.subscription(
     'collection.order-collected',
     c.creditCodec,
     definitions,
     (e) => e.customerId,
     // @ts-expect-error RewardIssuedIntegrationEvent cannot handle an OrderCollectedIntegrationEvent subscription.
     wrong,
-    c.credit,
+    (repository) => new CreditCollectionCommandHandler(repository, derivedId),
   );
 }
 void incompatibleHandler;

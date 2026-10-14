@@ -83,6 +83,9 @@ and a dedicated topology credential.
   Framework imports, container resolution and registrations belong under `apps/`.
   Handlers receive plain constructor ports. Resolve graphs before workers start;
   drain workers before disposal and clean up resources after partial startup failure.
+- Register commands directly with their owner parser or codec and plain handler
+  factory through the shared command registration API. Configure its transaction
+  once per aggregate; shared helpers construct executors internally. See decision 0023.
 - Register each durable event/command consumer pair through the shared runtime
   helper. Keep stable typed subscription IDs aligned with owner `subscriptions.json`
   and validate the complete set. Go's current reactions update projections; a new
