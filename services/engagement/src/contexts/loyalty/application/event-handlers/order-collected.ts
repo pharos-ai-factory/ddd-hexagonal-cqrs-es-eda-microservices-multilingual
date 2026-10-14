@@ -1,5 +1,5 @@
 import type { DurableCommandPort, Metadata } from '../../../../foundation/application.js';
-import type { OrderCollected } from '../../../../contracts/events/collection.js';
+import type { OrderCollected } from '../../../../contracts/events/generated/collection.js';
 import type { CreditCollectionCommand } from '../commands/credit-collection.js';
 
 /** Maps Collection's fact into a durable intent owned by Loyalty. */

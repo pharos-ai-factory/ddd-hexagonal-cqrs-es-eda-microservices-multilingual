@@ -18,7 +18,7 @@ from operations.contexts.preparation.application.commands.complete_preparation i
     CompletePreparationCommandHandler,
 )
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
-from operations.contracts.events.ordering import OrderPlaced
+from operations.contracts.events.generated.ordering import OrderPlaced
 from operations.foundation.application import Metadata, Outcome
 from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe
 

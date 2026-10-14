@@ -6,7 +6,8 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
-from migration_catalogue import CONTEXTS, ROOT, manifests, metadata
+from migration_catalogue import CONTEXTS, ROOT, LEGACY, OUTPUTS, generate, manifests, metadata
+from generated_files import clear_location
 from migrate import migration_sql
 
 
@@ -38,6 +39,18 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(len(generated["storefront"]["menu"]), 2)
         self.assertEqual(set(generated["engagement"]), {"loyalty", "communication"})
         self.assertIn("test_next", migration_sql("ordering", self.root))
+
+    def test_generated_metadata_and_embedded_copies_have_clear_paths(self):
+        generate(self.root)
+        for service, relative in OUTPUTS.items():
+            self.assertTrue(clear_location(relative))
+            self.assertEqual(json.loads((self.root / relative).read_text()), metadata(self.root)[service])
+        for name in LEGACY:
+            output = (self.root / OUTPUTS["storefront"]).parent / name
+            self.assertTrue(clear_location(output.relative_to(self.root)))
+            self.assertEqual(
+                output.read_bytes(), (self.root / "devops/postgres/bootstrap" / name).read_bytes()
+            )
 
     def test_changed_source_needs_reviewed_manifest(self):
         (self.owner() / "0001_lifecycle_indexes.sql").write_text("SELECT 1;")

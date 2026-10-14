@@ -2,7 +2,7 @@
 
 from typing import Final
 from operations.adaptors.generated.event_preparation import decode_DrinksReady
-from operations.contracts.events.preparation import DrinksReady
+from operations.contracts.events.generated.preparation import DrinksReady
 from operations.adaptors.incoming_event import IncomingEvent
 
 DRINKS_READY: Final[IncomingEvent[DrinksReady]] = IncomingEvent(

@@ -20,8 +20,8 @@ from operations.adaptors.generated.cafe.v1.contexts.ordering.ordering_integratio
 from operations.adaptors.delivery import EventSubscription, binary, broker_connection, consume
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.foundation.identity import derived_id, new_id
-from operations.contracts.events.preparation import DrinksReady
-from operations.contracts.events.ordering import OrderPlaced
+from operations.contracts.events.generated.preparation import DrinksReady
+from operations.contracts.events.generated.ordering import OrderPlaced
 from operations.foundation.application import Metadata, Outcome
 from operations.adaptors.postgres import fingerprint
 

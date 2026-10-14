@@ -2,7 +2,7 @@
 
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.adaptors.generated.event_ordering import decode_OrderPlaced
-from operations.contracts.events.ordering import OrderPlaced
+from operations.contracts.events.generated.ordering import OrderPlaced
 
 
 def order_placed(event: Event) -> OrderPlaced:

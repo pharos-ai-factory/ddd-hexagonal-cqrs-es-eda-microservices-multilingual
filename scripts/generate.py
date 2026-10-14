@@ -111,10 +111,6 @@ shutil.copyfile(
     ROOT / "services/storefront/apps/topology/generated.json",
     ROOT / "services/storefront/apps/replay/generated.json",
 )
-shutil.copyfile(
-    ROOT / "devops/postgres/bootstrap/0002_realtime.sql",
-    ROOT / "services/storefront/foundation/persistence/postgres/migrations/0002_realtime.sql",
-)
 checksums = {
     str(version): sha256((ROOT / f"devops/postgres/bootstrap/{name}").read_bytes()).hexdigest()
     for version, name in ((1, "0001_initial.sql"), (2, "0002_realtime.sql"))

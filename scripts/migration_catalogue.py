@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import re
+import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTEXTS = {
@@ -16,7 +17,7 @@ LEGACY = {
     "0002_realtime.sql": "91307774de1e1254578913bb9e5523f8bc05dd9ef497e46bd4b6b62a4d5a45e1",
 }
 OUTPUTS = {
-    "storefront": "services/storefront/foundation/persistence/postgres/migrations/contexts.json",
+    "storefront": "services/storefront/foundation/persistence/postgres/migrations/generated/contexts.json",
     "operations": "services/operations/src/operations/adaptors/generated/context-persistence.json",
     "engagement": "services/engagement/src/adaptors/generated/context-persistence.json",
 }
@@ -61,7 +62,13 @@ def metadata(root=ROOT):
 
 def generate(root=ROOT):
     for service, data in metadata(root).items():
-        (root / OUTPUTS[service]).write_text(json.dumps(data, indent=2) + "\n")
+        output = root / OUTPUTS[service]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(data, indent=2) + "\n")
+    for name in LEGACY:
+        shutil.copyfile(
+            root / "devops/postgres/bootstrap" / name, (root / OUTPUTS["storefront"]).parent / name
+        )
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """Map private domain facts to the messages this context has chosen to deliver."""
 
 from operations.contexts.collection.domain.pickup import Pickup, PickupOpened, OrderCollected
-from operations.contracts.events import collection as events
+from operations.contracts.events.generated import collection as events
 from operations.foundation.application import Publication
 from operations.adaptors.generated.event_collection import publish_PickupOpened, publish_OrderCollected
 

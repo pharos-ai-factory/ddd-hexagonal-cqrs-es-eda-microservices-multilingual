@@ -1,5 +1,5 @@
 import type { DurableCommandPort, Metadata } from '../../../../foundation/application.js';
-import type { RewardIssued } from '../../../../contracts/events/loyalty.js';
+import type { RewardIssued } from '../../../../contracts/events/generated/loyalty.js';
 import type { RequestNotificationCommand } from '../commands/request-notification.js';
 
 /** Translates a published reward into Communication's durable notification intent. */

@@ -1,7 +1,7 @@
 """Map private domain facts to the messages this context has chosen to deliver."""
 
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, DrinksReady
-from operations.contracts.events import preparation as events
+from operations.contracts.events.generated import preparation as events
 from operations.foundation.application import Publication
 from operations.adaptors.generated.event_preparation import publish_DrinksReady
 

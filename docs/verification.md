@@ -1,5 +1,9 @@
 # Executed verification
 
+## Generated-file locations, 14 October 2026
+
+[Placement rule, moved outputs and executed checks](verification/2026-10-14-generated-file-layout.md).
+
 ## Static checks and formatting, 14 October 2026
 
 Added `pnpm check`, service/changed-file selection and continuous edit checks.

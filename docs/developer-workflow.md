@@ -70,7 +70,9 @@ Use `pnpm format --all` to apply the baseline or `pnpm format:check --all` to
 check every handwritten file, including on a clean checkout. `--service web`
 selects one complete service. Go uses gofmt, Python uses pinned Ruff, and
 TypeScript/JSON/YAML/CSS/Markdown use pinned Prettier. Generators own generated
-outputs. Keep the 450-line responsibility limit when formatting source.
+outputs. Generated filenames include `generated`, or live under a `generated`
+folder; dependency lockfiles and Next.js' required `next-env.d.ts` retain their
+standard names. Keep the 450-line responsibility limit when formatting source.
 
 VS Code recommends the corresponding extensions and enables formatting on save,
 Mypy/ESLint diagnostics and gopls analysis. The task list includes changed-project

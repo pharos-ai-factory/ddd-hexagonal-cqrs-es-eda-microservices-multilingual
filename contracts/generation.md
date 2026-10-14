@@ -45,6 +45,20 @@ replay metadata and persistence checksums retain their existing behaviour.
 
 ## Changing and checking a target
 
+Generated output filenames must include `generated`, or live beneath a folder
+named exactly `generated`. Names such as `subscriptions_generated.go` and
+`generated.json` already identify their ownership. Python and TypeScript plain
+event DTOs live in their service's `contracts/events/generated/` folder. Go's
+embedded migration copies and checksum metadata live in
+`foundation/persistence/postgres/migrations/generated/`.
+
+`pnpm check` enforces this rule for classified outputs and generated-code headers,
+including misplaced files outside the generator inventory. Dependency lockfiles
+and Next.js' required `next-env.d.ts` retain their standard names. Temporary
+compiler staging, local scaffolds and build artefacts remain outside checked-in
+generated source. Application handlers may import service-local plain generated
+DTOs; transport bindings remain in adaptors.
+
 Add the schema in its owning context, and declare the producing/consuming services in the appropriate
 category. New languages or OpenAPI output formats also need an explicit generator
 target. Unknown services, categories, contract names and duplicate entries fail

@@ -15,7 +15,7 @@ from operations.contexts.collection.application.event_handlers.drinks_ready impo
 )
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain.pickup import PickupSnapshot
-from operations.contracts.events.preparation import DrinksReady
+from operations.contracts.events.generated.preparation import DrinksReady
 from operations.foundation.application import Metadata, Outcome
 from operations.foundation.identity import derived_id
 from tests.bdd.conftest import SPECIFICATIONS, CUSTOMER, ORDER, ROOT, CommandProbe

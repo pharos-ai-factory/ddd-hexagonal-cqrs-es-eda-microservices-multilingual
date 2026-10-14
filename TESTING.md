@@ -3,7 +3,7 @@
 `pnpm verify` is the deterministic gate for every application:
 
 - Service/context ownership and inward imports across Go, Python and TypeScript;
-  policy negative fixtures and large-file responsibility checks.
+  policy negative fixtures, generated-output placement and large-file responsibility checks.
 - Whole-repository handwritten formatting; vet, Staticcheck, errcheck and race-enabled tests for both Go modules.
 - Reproducible OpenAPI bundles, complete Go route registration and schema
   conformance for every Go HTTP operation; negative wire-drift examples.

@@ -13,10 +13,10 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
-//go:embed migrations/0001_initial.sql
+//go:embed migrations/generated/0001_initial.sql
 var schemaSQL []byte
 
-//go:embed migrations/0002_realtime.sql
+//go:embed migrations/generated/0002_realtime.sql
 var realtimeSchemaSQL []byte
 
 // ContextDatabase owns a context PostgreSQL pool and its verified persistence codecs.

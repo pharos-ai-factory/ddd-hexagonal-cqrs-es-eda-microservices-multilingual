@@ -1,1 +1,1 @@
-"""Generated plain published event contracts, grouped by producer."""
+"""Service-local published event contracts."""

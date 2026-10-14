@@ -118,7 +118,10 @@ facts have no published contract version. RabbitMQ delivery alone does not make
 them a public contract. Database bootstrap lives under `devops/postgres/bootstrap/`.
 
 Commit the generated outputs and review their diffs. Edit their sources rather
-than generated files. Required command/query Protobuf scalars have explicit
+than generated files. Each output filename must include `generated`, or sit
+beneath a `generated` folder. This covers code, descriptors and migration assets;
+dependency lockfiles and Next.js' required `next-env.d.ts` retain their standard
+names. Required command/query Protobuf scalars have explicit
 presence and the `required_input` annotation; optional additions stay optional
 and zero remains a valid supplied value. Generated Protobuf bindings stay in
 adaptors. The API-to-owner transport is RabbitMQ, with anti-corruption mapping at

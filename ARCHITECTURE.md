@@ -41,7 +41,11 @@ the source under `tests/contexts/<context>/`; Python and TypeScript Gherkin bind
 live under their service's `tests` directory.
 Go Gherkin bindings sit beside the owning application handlers.
 Generated Protobuf bindings stay in transport/adaptor rings; generated plain
-published DTOs live in service-local contract modules.
+published DTOs live in service-local contract modules. Generated output filenames
+include `generated`, or sit beneath a `generated` folder. Python and TypeScript
+plain event DTOs use `contracts/events/generated/`; their application-facing role
+is preserved. Dependency lockfiles and Next.js' required `next-env.d.ts` retain
+their standard names.
 Each context has `application/commands/` and `application/queries/`, with one
 named DTO and its matching handler per business use-case file. Go/Python filenames
 use snake_case; TypeScript uses kebab-case. Callers import those packages/modules

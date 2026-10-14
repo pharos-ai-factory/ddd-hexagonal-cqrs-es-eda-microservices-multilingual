@@ -14,7 +14,6 @@ export default tseslint.config(
       '.local/**',
       '.tools/**',
       '**/next-env.d.ts',
-      'services/engagement/src/contracts/events/**',
     ],
   },
   {

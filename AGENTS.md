@@ -92,6 +92,9 @@ generated event boundaries.
 - Generate with `pnpm generate:contracts` after Protobuf/private-message changes,
   or `pnpm generate:http` for OpenAPI alone. Commit generated outputs and preserve
   historical wire identities/fixtures. Compare compatibility as well as generated drift.
+- Generated output filenames include `generated`, or live beneath a `generated`
+  folder. Dependency lockfiles and Next.js' required `next-env.d.ts` retain their
+  standard names. Plain generated event DTOs remain in service-local contracts.
 - Browser updates use server-authorised Centrifugo subscriptions and the separate
   Protobuf projection contract. No browser polling or client-selected channels.
 - Persist exact realtime bytes atomically with the root transition. Test recovery,

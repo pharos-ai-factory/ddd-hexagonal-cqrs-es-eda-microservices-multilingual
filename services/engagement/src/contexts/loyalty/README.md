@@ -6,6 +6,7 @@ A loyalty account earns each third-collection grant; a reward independently cont
 
 ## Find the code
 
+- [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)

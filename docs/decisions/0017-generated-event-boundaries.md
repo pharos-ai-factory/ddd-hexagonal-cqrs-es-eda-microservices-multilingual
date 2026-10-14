@@ -25,6 +25,14 @@ supplies mechanical conversions and typed publication factories. Owner publicati
 mappers still choose which domain facts to publish. Consumer reactions still map
 published facts into durable owner commands.
 
+Generated output paths identify their ownership: the filename includes
+`generated`, or an ancestor folder is named exactly `generated`. Python and
+TypeScript plain DTOs use `contracts/events/generated/`; Go's existing
+`*_generated.go` files retain their locations. The same convention covers generated
+descriptors and migration assets. Dependency lockfiles and Next.js' required
+`next-env.d.ts` retain their standard names. Architecture checks enforce placement
+while allowing applications to use their service's plain generated contracts.
+
 Consumer-owned `adaptors/messaging/subscriptions.json` declarations supply event
 bindings. Go projection subscriptions omit `command`; Python and TypeScript
 aggregate reactions name their queued command. Topology and replay metadata join

@@ -4,6 +4,7 @@
 import ast
 from request_contracts import OWNED
 from event_boundaries import violation as event_boundary_violation
+from generated_files import violation as generated_file_violation
 from contract_sources import sources, catalogue, command_subscriptions
 from migration_catalogue import metadata, OUTPUTS
 from owner_http_boundary import violation as owner_http_violation
@@ -52,7 +53,9 @@ GENERATED = {
     "services/web/src/adaptors/generated/realtime.json",
     "services/web/src/adaptors/generated/http.ts",
     "services/api/adaptors/http/backend/generated/mapping.go",
-    "services/storefront/foundation/persistence/postgres/migrations/contexts.json",
+    "services/storefront/foundation/persistence/postgres/migrations/generated/contexts.json",
+    "services/storefront/foundation/persistence/postgres/migrations/generated/0001_initial.sql",
+    "services/storefront/foundation/persistence/postgres/migrations/generated/0002_realtime.sql",
     "services/operations/src/operations/adaptors/generated/context-persistence.json",
     "services/engagement/src/adaptors/generated/context-persistence.json",
     "services/api/adaptors/openapi/generated/api.openapi.json",
@@ -119,9 +122,9 @@ for pattern in (
     "services/storefront/contracts/events/model/*_generated.go",
     "services/storefront/contracts/events/protobuf/*_generated.go",
     "services/storefront/contexts/*/adaptors/messaging/subscriptions_generated.go",
-    "services/operations/src/operations/contracts/events/*.py",
+    "services/operations/src/operations/contracts/events/generated/*.py",
     "services/operations/src/operations/adaptors/generated/event_*.py",
-    "services/engagement/src/contracts/events/*.ts",
+    "services/engagement/src/contracts/events/generated/*.ts",
     "services/engagement/src/adaptors/generated/event-*",
     "services/engagement/src/adaptors/generated/private-event-registry.ts",
 ):
@@ -214,7 +217,20 @@ def core_violation(path, target):
     ):
         return "query capabilities must use application read models"
     if ring in {"domain", "application"}:
-        if any(p in target.split("/") for p in ("adaptors", "apps", "generated")):
+        service = parts[1] if parts[0] == "services" else ""
+        plain_contract_roots = {
+            "operations": (
+                "operations/contracts/events/generated",
+                "services/operations/src/operations/contracts/events/generated",
+            ),
+            "engagement": ("services/engagement/src/contracts/events/generated",),
+        }
+        plain_contract = any(
+            target == root or target.startswith(root + "/") for root in plain_contract_roots.get(service, ())
+        )
+        if any(p in target.split("/") for p in ("adaptors", "apps")) or (
+            "generated" in target.split("/") and not plain_contract
+        ):
             return "outward core dependency"
         if ring == "domain" and any(p in target.split("/") for p in ("application", "contracts")):
             return "outward domain dependency"
@@ -310,6 +326,8 @@ def check():
         }:
             continue
         content = path.read_text()
+        if reason := generated_file_violation(relative, content, relative in GENERATED):
+            errors.append(f"{relative}: {reason}")
         if len(content.splitlines()) > 450 and relative not in GENERATED:
             errors.append(f"{relative} exceeds 450 lines without a responsibility review")
         if (
@@ -368,7 +386,7 @@ def check():
     if (
         baseline.read_bytes()
         != (
-            ROOT / "services/storefront/foundation/persistence/postgres/migrations/0001_initial.sql"
+            ROOT / "services/storefront/foundation/persistence/postgres/migrations/generated/0001_initial.sql"
         ).read_bytes()
     ):
         errors.append("Go embedded migration differs from the shared persistence contract")
@@ -392,7 +410,7 @@ def check():
         if json.loads((ROOT / folder / "persistence.json").read_text()) != checksums:
             errors.append(folder + ": migration checksum drift")
     if (ROOT / "devops/postgres/bootstrap/0002_realtime.sql").read_bytes() != (
-        ROOT / "services/storefront/foundation/persistence/postgres/migrations/0002_realtime.sql"
+        ROOT / "services/storefront/foundation/persistence/postgres/migrations/generated/0002_realtime.sql"
     ).read_bytes():
         errors.append("Go realtime migration drift")
     for name in ("events", "realtime", "requests"):

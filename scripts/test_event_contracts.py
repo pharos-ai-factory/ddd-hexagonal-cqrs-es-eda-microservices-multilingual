@@ -9,6 +9,7 @@ import unittest
 from contract_sources import ROOT, CONTEXT_PATHS, PRIVATE, catalogue
 from event_contracts import load
 from generate_events import generate
+from generated_files import clear_location
 
 
 class EventContractTests(unittest.TestCase):
@@ -69,6 +70,23 @@ message MenuArchived {
             {"ordering.menu-directory", "ordering.menu-audit"},
         )
         self.assertTrue(all("consumer" not in item for item in catalogue(root=self.root)))
+
+    def test_generated_outputs_have_clear_paths_and_prune_stale_producers(self):
+        before = {p for p in self.root.rglob("*") if p.is_file()}
+        generate(self.root)
+        outputs = {p for p in self.root.rglob("*") if p.is_file()} - before
+        self.assertTrue(outputs)
+        self.assertTrue(all(clear_location(p.relative_to(self.root)) for p in outputs))
+        for directory, suffix, expected in (
+            ("services/operations/src/operations/contracts/events", ".py", "ordering.py"),
+            ("services/engagement/src/contracts/events", ".ts", "collection.ts"),
+        ):
+            base = self.root / directory
+            self.assertTrue((base / "generated" / expected).is_file())
+            self.assertEqual(list(base.glob("*" + suffix)), [])
+            (base / "generated" / ("obsolete" + suffix)).write_text("stale output\n")
+        generate(self.root)
+        self.assertFalse(list(self.root.rglob("obsolete.*")))
 
     def test_invalid_schema_declarations_fail_generation(self):
         source = self.schema.read_text()

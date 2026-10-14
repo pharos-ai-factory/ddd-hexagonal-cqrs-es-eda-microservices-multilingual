@@ -6,6 +6,7 @@ A pickup verifies its collection code and permits one handover.
 
 ## Find the code
 
+- [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)

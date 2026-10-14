@@ -1,4 +1,4 @@
-from operations.contracts.events import ordering as events
+from operations.contracts.events.generated import ordering as events
 from operations.foundation.application import DurableCommandPort, Metadata, Outcome
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
 

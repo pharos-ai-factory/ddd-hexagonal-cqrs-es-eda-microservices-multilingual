@@ -82,8 +82,8 @@ locations are:
 | Browser               | `services/web/src/adaptors/generated/{http.ts,realtime.json}`                                                                        |
 
 Plain event DTOs are also generated in Storefront's `contracts/events/model/`,
-Operations' `src/operations/contracts/events/` and Engagement's
-`src/contracts/events/`. Storefront's typed payload conversions live in
+Operations' `src/operations/contracts/events/generated/` and Engagement's
+`src/contracts/events/generated/`. Storefront's typed payload conversions live in
 `contracts/events/protobuf/*_generated.go`; its consumer bindings live beside
 their context subscription manifests.
 
@@ -91,6 +91,9 @@ Go/Python bindings and generated TypeScript source carry generated-file headers.
 Descriptor JSON is identified by its `generated/` directory and the explicit
 classification in the architecture checker. Generated messages describe transport;
 application commands, queries and read models remain independently owned types.
+All generated output filenames include `generated`, or live beneath a folder
+named exactly `generated`. Dependency lockfiles and Next.js' required
+`next-env.d.ts` retain their standard names.
 
 A `fixtures/` directory stores known encoded messages or their expected meaning
 for compatibility tests. The public RewardIssued fixture is decoded across

@@ -11,7 +11,7 @@ import (
 
 // Generated technical metadata contains only this service's context checksums.
 //
-//go:embed migrations/contexts.json
+//go:embed migrations/generated/contexts.json
 var contextSchemas []byte
 
 func verifyContextSchema(ctx context.Context, pool *pgxpool.Pool, owner string) error {
