@@ -11,15 +11,11 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "status"
-                ],
+                "required": ["status"],
                 "properties": {
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "ok"
-                    ]
+                    "enum": ["ok"]
                   }
                 }
               }
@@ -37,12 +33,12 @@
           "description": "Successful response",
           "content": {
             "application/json": {
-              "schema": {"$ref": "operational.schemas.json#/schemas/StorefrontDiagnostics"}
+              "schema": { "$ref": "operational.schemas.json#/schemas/StorefrontDiagnostics" }
             }
           }
         },
-        "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"},
-        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+        "401": { "$ref": "../../../shared/http_api/responses.json#/responses/401" },
+        "503": { "$ref": "../../../shared/http_api/responses.json#/responses/503" }
       }
     }
   }

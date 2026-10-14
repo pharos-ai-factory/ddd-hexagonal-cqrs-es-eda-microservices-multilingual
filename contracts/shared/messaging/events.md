@@ -6,13 +6,13 @@ Find a producer's payloads under
 owns its `catalogue.json`, including the published name, producer aggregate and
 consumer binding. The technical envelope is [v1/events.proto](v1/events.proto).
 
-| Producer | Published events |
-| --- | --- |
-| Menu | `menu.edition-published` |
-| Ordering | `ordering.order-placed` |
-| Preparation | `preparation.drinks-ready` |
-| Collection | `collection.pickup-opened`, `collection.order-collected` |
-| Loyalty | `loyalty.reward-issued` |
+| Producer    | Published events                                         |
+| ----------- | -------------------------------------------------------- |
+| Menu        | `menu.edition-published`                                 |
+| Ordering    | `ordering.order-placed`                                  |
+| Preparation | `preparation.drinks-ready`                               |
+| Collection  | `collection.pickup-opened`, `collection.order-collected` |
+| Loyalty     | `loyalty.reward-issued`                                  |
 
 Communication currently publishes no integration event. Its notification delivery
 work is private to Communication.

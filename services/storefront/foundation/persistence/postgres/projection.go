@@ -36,7 +36,7 @@ func (p *ProjectionStore[S]) Record(ctx context.Context, m a.Metadata, key strin
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(context.Background())
+	defer func() { _ = tx.Rollback(context.Background()) }()
 	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, p.name+":"+key); err != nil {
 		return err
 	}

@@ -7,14 +7,14 @@ context, separately from delivered domain and integration events.
 Use this contract when changing the update applied by a browser after a root
 transition. Context ownership follows the HTTP contract:
 
-| Context | Source | Snapshot messages |
-| --- | --- | --- |
-| Menu | [menu_snapshots.proto](../../menu/realtime/v1/menu_snapshots.proto) | `Drink`, `Edition`, `Offer` |
-| Ordering | [ordering_snapshots.proto](../../ordering/realtime/v1/ordering_snapshots.proto) | `Order`, `Line`, `Selection` |
-| Preparation | [preparation_snapshots.proto](../../preparation/realtime/v1/preparation_snapshots.proto) | `Ticket` |
-| Collection | [collection_snapshots.proto](../../collection/realtime/v1/collection_snapshots.proto) | `Pickup` |
-| Loyalty | [loyalty_snapshots.proto](../../loyalty/realtime/v1/loyalty_snapshots.proto) | `Account`, `Grant`, `Reward` |
-| Customer Communication | [communication_snapshots.proto](../../communication/realtime/v1/communication_snapshots.proto) | `Notification` |
+| Context                | Source                                                                                         | Snapshot messages            |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------- |
+| Menu                   | [menu_snapshots.proto](../../menu/realtime/v1/menu_snapshots.proto)                            | `Drink`, `Edition`, `Offer`  |
+| Ordering               | [ordering_snapshots.proto](../../ordering/realtime/v1/ordering_snapshots.proto)                | `Order`, `Line`, `Selection` |
+| Preparation            | [preparation_snapshots.proto](../../preparation/realtime/v1/preparation_snapshots.proto)       | `Ticket`                     |
+| Collection             | [collection_snapshots.proto](../../collection/realtime/v1/collection_snapshots.proto)          | `Pickup`                     |
+| Loyalty                | [loyalty_snapshots.proto](../../loyalty/realtime/v1/loyalty_snapshots.proto)                   | `Account`, `Grant`, `Reward` |
+| Customer Communication | [communication_snapshots.proto](../../communication/realtime/v1/communication_snapshots.proto) | `Notification`               |
 
 The filename includes its owning context and snapshot purpose. The files retain
 the existing `cafe.realtime.v1` package, field numbers and message names.

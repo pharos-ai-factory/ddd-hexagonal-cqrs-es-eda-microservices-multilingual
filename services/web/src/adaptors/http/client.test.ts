@@ -1,19 +1,28 @@
-import {test} from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {request, commandRequest} from './client';
+import { request, commandRequest } from './client';
 
-test('typed headers, query values and command bodies reach the HTTP boundary', async () => {
+void test('typed headers, query values and command bodies reach the HTTP boundary', async () => {
   const original = globalThis.fetch;
-  const sent: Array<{url: string; init: RequestInit}> = [];
+  const sent: Array<{ url: string; init: RequestInit }> = [];
   globalThis.fetch = async (url, init) => {
-    sent.push({url: String(url), init: init ?? {}});
+    sent.push({ url: url instanceof Request ? url.url : url.toString(), init: init ?? {} });
     return new Response('{}');
   };
   try {
-    await request('listDrinks', {query: {limit: 2, cursor: 'a/b+c'}});
-    await commandRequest('createDrink', {name: 'Tea'}, {path: {id: 'drink-id'}, headers: {
-      'Idempotency-Key': 'command-id', 'If-Match': '0', 'X-Correlation-ID': 'correlation-id',
-    }});
+    await request('listDrinks', { query: { limit: 2, cursor: 'a/b+c' } });
+    await commandRequest(
+      'createDrink',
+      { name: 'Tea' },
+      {
+        path: { id: 'drink-id' },
+        headers: {
+          'Idempotency-Key': 'command-id',
+          'If-Match': '0',
+          'X-Correlation-ID': 'correlation-id',
+        },
+      },
+    );
     assert.equal(sent[0]?.url, '/api/v1/menu/drinks?limit=2&cursor=a%2Fb%2Bc');
     assert.equal(sent[1]?.url, '/api/v1/menu/drinks/drink-id');
     assert.equal(sent[1]?.init.method, 'POST');
@@ -22,6 +31,10 @@ test('typed headers, query values and command bodies reach the HTTP boundary', a
     assert.equal(headers.get('If-Match'), '0');
     assert.equal(headers.get('X-Correlation-ID'), 'correlation-id');
     assert.equal(headers.get('Content-Type'), 'application/json');
-    assert.deepEqual(JSON.parse(String(sent[1]?.init.body)), {name: 'Tea'});
-  } finally { globalThis.fetch = original; }
+    const body = sent[1]?.init.body;
+    assert.equal(typeof body, 'string');
+    assert.deepEqual(JSON.parse(body as string), { name: 'Tea' });
+  } finally {
+    globalThis.fetch = original;
+  }
 });

@@ -32,7 +32,7 @@ func Consume(ctx context.Context, url string, sub Subscription, decode a.Decoder
 	if err != nil {
 		return err
 	}
-	defer channel.Close()
+	defer func() { _ = channel.Close() }()
 	if err = channel.Qos(1, 0, false); err != nil {
 		return err
 	}

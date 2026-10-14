@@ -25,11 +25,11 @@ func Connect(url string) (*ConfirmedPublisher, error) {
 	}
 	channel, err := conn.Channel()
 	if err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, err
 	}
 	if err = channel.Confirm(false); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, err
 	}
 	return &ConfirmedPublisher{conn: conn, channel: channel, returns: channel.NotifyReturn(make(chan rabbit.Return, 1))}, nil

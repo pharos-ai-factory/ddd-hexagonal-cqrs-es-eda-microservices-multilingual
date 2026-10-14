@@ -28,12 +28,12 @@ its own payload files and shared technical definitions.
 
 Under `contracts/<context>/messaging/`, each owner publishes these sources:
 
-| File | Responsibility |
-| --- | --- |
-| `v1/<owner>_requests.proto` | Owner envelopes and their payload tags |
+| File                                 | Responsibility                                                                               |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `v1/<owner>_requests.proto`          | Owner envelopes and their payload tags                                                       |
 | `commands/v1/<owner>_commands.proto` | Explicit command input messages; present only for contexts with externally callable commands |
-| `queries/v1/<owner>_queries.proto` | Named list and item queries; optional page input |
-| `queries/v1/<owner>_replies.proto` | Owner query DTOs, loaded versions and list/page results |
+| `queries/v1/<owner>_queries.proto`   | Named list and item queries; optional page input                                             |
+| `queries/v1/<owner>_replies.proto`   | Owner query DTOs, loaded versions and list/page results                                      |
 
 For example, Menu owns `CreateDrink`, `PublishEdition`, `GetDrink` and `ListEditions`.
 Communication currently exposes queries; its event-triggered application commands

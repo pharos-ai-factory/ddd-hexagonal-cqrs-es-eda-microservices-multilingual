@@ -3,13 +3,7 @@
     "Ticket": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "orderId",
-        "customerId",
-        "instructions",
-        "status"
-      ],
+      "required": ["id", "orderId", "customerId", "instructions", "status"],
       "properties": {
         "id": {
           "type": "string",
@@ -28,11 +22,7 @@
         },
         "status": {
           "type": "string",
-          "enum": [
-            "queued",
-            "preparing",
-            "ready"
-          ]
+          "enum": ["queued", "preparing", "ready"]
         }
       }
     }

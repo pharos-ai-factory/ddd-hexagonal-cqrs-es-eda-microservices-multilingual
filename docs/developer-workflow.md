@@ -18,17 +18,21 @@ Read the [current rules](../CONTRIBUTING.md) and the affected entries in the
 invariant, aggregate owner, use-case role and any eventual downstream step.
 Use a nearby implementation as the starting point:
 
-| Role | Go | Python | TypeScript |
-| --- | --- | --- | --- |
-| Command and handler | [PlaceOrder](../services/storefront/contexts/ordering/application/commands/place_order.go) | [AcceptOrder](../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py) | [CreditCollection](../services/engagement/src/contexts/loyalty/application/commands/credit-collection.ts) |
-| Query and handler | [GetOrder](../services/storefront/contexts/ordering/application/queries/get_order.go) | [GetTicket](../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py) | [GetAccount](../services/engagement/src/contexts/loyalty/application/queries/get-account.ts) |
-| Event/projection reaction | [MenuPublished projection](../services/storefront/contexts/ordering/application/projections/menu_published.go) | [OrderPlaced reaction](../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py) | [RewardEarned reaction](../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts) |
-| Read persistence mapping | [Order read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go) | [Ticket read repository](../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) | [Account read repository](../services/engagement/src/contexts/loyalty/adaptors/persistence/account-read-repository.ts) |
-| DI composition | [Ordering Fx module](../services/storefront/apps/storefront/di/ordering.go) | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py) | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts) |
+| Role                      | Go                                                                                                             | Python                                                                                                                              | TypeScript                                                                                                             |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Command and handler       | [PlaceOrder](../services/storefront/contexts/ordering/application/commands/place_order.go)                     | [AcceptOrder](../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py)                      | [CreditCollection](../services/engagement/src/contexts/loyalty/application/commands/credit-collection.ts)              |
+| Query and handler         | [GetOrder](../services/storefront/contexts/ordering/application/queries/get_order.go)                          | [GetTicket](../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py)                           | [GetAccount](../services/engagement/src/contexts/loyalty/application/queries/get-account.ts)                           |
+| Event/projection reaction | [MenuPublished projection](../services/storefront/contexts/ordering/application/projections/menu_published.go) | [OrderPlaced reaction](../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py)       | [RewardEarned reaction](../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts)       |
+| Read persistence mapping  | [Order read repository](../services/storefront/contexts/ordering/adaptors/postgres/order_read_repository.go)   | [Ticket read repository](../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) | [Account read repository](../services/engagement/src/contexts/loyalty/adaptors/persistence/account-read-repository.ts) |
+| DI composition            | [Ordering Fx module](../services/storefront/apps/storefront/di/ordering.go)                                    | [Preparation providers](../services/operations/src/operations/apps/composition/preparation.py)                                      | [Loyalty Awilix container](../services/engagement/src/apps/composition/loyalty.ts)                                     |
 
 ## The edit/test loop
 
 ```sh
+pnpm check                           # All static checks; no live services
+pnpm check operations                # Complete owning project and boundaries
+pnpm check --changed                 # Edited owners, including new/deleted files
+pnpm check:watch                      # Initial checks, then checks after edits
 pnpm test:focused storefront --context ordering
 pnpm test:focused operations --context preparation
 pnpm test:focused engagement --context loyalty
@@ -38,6 +42,11 @@ pnpm test:unit                       # Native tests across all services
 pnpm dev:watch operations engagement # Rebuild/restart only changed services
 pnpm dev:status                      # Database/session, broker and realtime readiness
 ```
+
+Focused tests first run the owning service's static checks. Shared contracts or
+tooling edits select every service with `pnpm check --changed`. The watcher
+debounces changes and continues after failures, including edits made during a run.
+`dev:watch` runs the same watcher beside Compose and stops it on exit.
 
 Compose Watch requires a version supporting `develop.watch` (Compose 2.22+).
 The overlay rebuilds affected services and preserves the ordinary ingress and
@@ -56,11 +65,17 @@ pnpm format path/to/changed-file.ts path/to/changed-file.py
 pnpm format:check path/to/changed-file.go
 ```
 
-Without paths, formatting selects tracked changes relative to HEAD. Add new files
-explicitly. Go uses gofmt, Python uses pinned Ruff, and TypeScript/JSON/YAML/CSS/
-Markdown use pinned Prettier. Generated folders are excluded. Existing files can
-have older formatting; review formatting separately from business changes and
-keep the 450-line responsibility limit.
+Without paths, formatting selects tracked changes and new untracked files.
+Use `pnpm format --all` to apply the baseline or `pnpm format:check --all` to
+check every handwritten file, including on a clean checkout. `--service web`
+selects one complete service. Go uses gofmt, Python uses pinned Ruff, and
+TypeScript/JSON/YAML/CSS/Markdown use pinned Prettier. Generators own generated
+outputs. Keep the 450-line responsibility limit when formatting source.
+
+VS Code recommends the corresponding extensions and enables formatting on save,
+Mypy/ESLint diagnostics and gopls analysis. The task list includes changed-project
+checks and the continuous watcher. CLI checks are authoritative for every editor.
+See [decision 0018](decisions/0018-static-checks-and-formatting.md).
 
 ## Choose the owning aggregate
 

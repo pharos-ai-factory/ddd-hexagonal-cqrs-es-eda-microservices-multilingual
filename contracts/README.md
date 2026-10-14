@@ -32,14 +32,14 @@ Each of the six contexts follows the same structure. Create a category when the
 context publishes that interface; Communication currently publishes queries but
 no integration events or externally callable commands.
 
-| Boundary | Context-owned content | Guide |
-| --- | --- | --- |
-| `messaging/v1` | Owner request/reply envelopes and packages | [Commands and queries](shared/messaging/requests.md) |
-| `messaging/commands` | Published command input messages | [Commands and queries](shared/messaging/requests.md) |
-| `messaging/queries` | Query inputs, published result DTOs and replies | [Commands and queries](shared/messaging/requests.md) |
-| `messaging/integration_events` | Events published to other contexts and ownership metadata | [Integration events](shared/messaging/events.md) |
-| `realtime` | Browser projection snapshots | [Browser updates](shared/realtime/README.md) |
-| `http_api` | OpenAPI resource paths and JSON schemas | [HTTP APIs](shared/http_api/README.md) |
+| Boundary                       | Context-owned content                                     | Guide                                                |
+| ------------------------------ | --------------------------------------------------------- | ---------------------------------------------------- |
+| `messaging/v1`                 | Owner request/reply envelopes and packages                | [Commands and queries](shared/messaging/requests.md) |
+| `messaging/commands`           | Published command input messages                          | [Commands and queries](shared/messaging/requests.md) |
+| `messaging/queries`            | Query inputs, published result DTOs and replies           | [Commands and queries](shared/messaging/requests.md) |
+| `messaging/integration_events` | Events published to other contexts and ownership metadata | [Integration events](shared/messaging/events.md)     |
+| `realtime`                     | Browser projection snapshots                              | [Browser updates](shared/realtime/README.md)         |
+| `http_api`                     | OpenAPI resource paths and JSON schemas                   | [HTTP APIs](shared/http_api/README.md)               |
 
 `shared/` contains technical envelopes, headers and reusable HTTP components.
 `services/` contains complete assembled OpenAPI documents and service-owned
@@ -70,13 +70,13 @@ Generated code is committed so consumers can build without invoking the compiler
 Edit the sources above, regenerate, and review the generated diff. The main output
 locations are:
 
-| Consumer | Generated output |
-| --- | --- |
-| Go API | `services/api/adaptors/messaging/generated/`, `adaptors/openapi/generated/` and `adaptors/http/backend/generated/` |
-| Go Storefront | `services/storefront/contracts/{events,requests,realtime}/generated/` and `foundation/transport/openapi/generated/` |
-| Python Operations | `services/operations/src/operations/adaptors/generated/`; Protobuf `.py` and `.pyi` files, including private owner command bindings |
+| Consumer              | Generated output                                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Go API                | `services/api/adaptors/messaging/generated/`, `adaptors/openapi/generated/` and `adaptors/http/backend/generated/`                   |
+| Go Storefront         | `services/storefront/contracts/{events,requests,realtime}/generated/` and `foundation/transport/openapi/generated/`                  |
+| Python Operations     | `services/operations/src/operations/adaptors/generated/`; Protobuf `.py` and `.pyi` files, including private owner command bindings  |
 | TypeScript Engagement | `services/engagement/src/adaptors/generated/`; owner-private descriptors also live in each context's `adaptors/messaging/generated/` |
-| Browser | `services/web/src/adaptors/generated/{http.ts,realtime.json}` |
+| Browser               | `services/web/src/adaptors/generated/{http.ts,realtime.json}`                                                                        |
 
 Go/Python bindings and generated TypeScript source carry generated-file headers.
 Descriptor JSON is identified by its `generated/` directory and the explicit

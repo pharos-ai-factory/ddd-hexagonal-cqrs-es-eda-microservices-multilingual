@@ -6,5 +6,3 @@ func config() Config {
 	return Config{Sessions: test.Sessions{}, OperatorPassword: "code", CLIKey: "cli",
 		ProxySecret: "proxy", Origins: []string{"http://cafe.local"}}
 }
-
-var request = test.Request

@@ -34,11 +34,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "channel",
-                  "b64data",
-                  "idempotency_key"
-                ],
+                "required": ["channel", "b64data", "idempotency_key"],
                 "properties": {
                   "channel": {
                     "type": "string"
@@ -62,9 +58,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": [
-                    "result"
-                  ],
+                  "required": ["result"],
                   "properties": {
                     "result": {
                       "type": "object",
@@ -185,9 +179,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "user"
-                ],
+                "required": ["user"],
                 "properties": {
                   "user": {
                     "type": "string",
@@ -206,9 +198,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": [
-                    "result"
-                  ],
+                  "required": ["result"],
                   "properties": {
                     "result": {
                       "type": "object",

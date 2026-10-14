@@ -21,9 +21,7 @@
             "schema": {
               "type": "object",
               "additionalProperties": false,
-              "required": [
-                "password"
-              ],
+              "required": ["password"],
               "properties": {
                 "password": {
                   "type": "string"
@@ -44,15 +42,11 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "authenticated"
-                ],
+                "required": ["authenticated"],
                 "properties": {
                   "authenticated": {
                     "type": "boolean",
-                    "enum": [
-                      true
-                    ]
+                    "enum": [true]
                   }
                 }
               }
@@ -67,10 +61,10 @@
             }
           }
         },
-        "400": {"$ref": "../../../shared/http_api/responses.json#/responses/400"},
-        "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"},
-        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"},
-        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+        "400": { "$ref": "../../../shared/http_api/responses.json#/responses/400" },
+        "401": { "$ref": "../../../shared/http_api/responses.json#/responses/401" },
+        "403": { "$ref": "../../../shared/http_api/responses.json#/responses/403" },
+        "503": { "$ref": "../../../shared/http_api/responses.json#/responses/503" }
       }
     }
   },
@@ -90,11 +84,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "subject",
-                  "name",
-                  "role"
-                ],
+                "required": ["subject", "name", "role"],
                 "properties": {
                   "subject": {
                     "type": "string",
@@ -105,9 +95,7 @@
                   },
                   "role": {
                     "type": "string",
-                    "enum": [
-                      "operator"
-                    ]
+                    "enum": ["operator"]
                   }
                 }
               }
@@ -121,22 +109,18 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "authenticated"
-                ],
+                "required": ["authenticated"],
                 "properties": {
                   "authenticated": {
                     "type": "boolean",
-                    "enum": [
-                      false
-                    ]
+                    "enum": [false]
                   }
                 }
               }
             }
           }
         },
-        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+        "503": { "$ref": "../../../shared/http_api/responses.json#/responses/503" }
       }
     }
   },
@@ -162,23 +146,19 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "authenticated"
-                ],
+                "required": ["authenticated"],
                 "properties": {
                   "authenticated": {
                     "type": "boolean",
-                    "enum": [
-                      false
-                    ]
+                    "enum": [false]
                   }
                 }
               }
             }
           }
         },
-        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"},
-        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+        "403": { "$ref": "../../../shared/http_api/responses.json#/responses/403" },
+        "503": { "$ref": "../../../shared/http_api/responses.json#/responses/503" }
       }
     }
   }

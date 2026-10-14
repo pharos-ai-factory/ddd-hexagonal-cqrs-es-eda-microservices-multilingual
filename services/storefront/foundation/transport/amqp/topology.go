@@ -20,12 +20,12 @@ func Declare(url string, bindings []Binding) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	channel, err := conn.Channel()
 	if err != nil {
 		return err
 	}
-	defer channel.Close()
+	defer func() { _ = channel.Close() }()
 	if err = channel.ExchangeDeclare(Exchange, "topic", true, false, false, false, nil); err != nil {
 		return err
 	}

@@ -60,16 +60,16 @@ different target.
 
 ## Crash windows
 
-| Failure | Committed evidence | Recovery |
-| --- | --- | --- |
-| Before producer commit | No state, receipt or outgoing event | Retry the command |
-| Commit succeeds but response is lost | State, receipt and outbox together | Retry the same command identity |
-| Relay crashes before publishing | Pending dispatch remains | Lease expires and another relay claims it |
-| Broker confirms but dispatch completion is lost | Broker copy plus pending source dispatch | Republish; consumer receipt prevents a second effect |
-| Consumer fails before database commit | No receiving transition or receipt | Retry delivery |
-| Consumer commits then loses its ACK | Receiving transition and receipt | Redelivery returns the stored outcome |
-| Provider accepts then its response is lost | Provider receipt under notification identity | Retry the identical provider request |
-| Handler keeps failing | Original message in its dead-letter queue | Repair the cause and explicitly replay |
+| Failure                                         | Committed evidence                           | Recovery                                             |
+| ----------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Before producer commit                          | No state, receipt or outgoing event          | Retry the command                                    |
+| Commit succeeds but response is lost            | State, receipt and outbox together           | Retry the same command identity                      |
+| Relay crashes before publishing                 | Pending dispatch remains                     | Lease expires and another relay claims it            |
+| Broker confirms but dispatch completion is lost | Broker copy plus pending source dispatch     | Republish; consumer receipt prevents a second effect |
+| Consumer fails before database commit           | No receiving transition or receipt           | Retry delivery                                       |
+| Consumer commits then loses its ACK             | Receiving transition and receipt             | Redelivery returns the stored outcome                |
+| Provider accepts then its response is lost      | Provider receipt under notification identity | Retry the identical provider request                 |
+| Handler keeps failing                           | Original message in its dead-letter queue    | Repair the cause and explicitly replay               |
 
 Delivery is at least once. Idempotency controls duplicate effects; there is no
 claim of exactly-once network delivery or a distributed transaction.

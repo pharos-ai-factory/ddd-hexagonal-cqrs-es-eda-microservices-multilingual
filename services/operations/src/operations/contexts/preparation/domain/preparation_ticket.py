@@ -7,6 +7,7 @@ type TicketStatus = Literal["queued", "preparing", "ready"]
 
 class TicketSnapshot(TypedDict):
     """Represents a persisted PreparationTicket snapshot validated during restoration."""
+
     id: str
     orderId: str
     customerId: str
@@ -17,6 +18,7 @@ class TicketSnapshot(TypedDict):
 @dataclass(frozen=True)
 class TicketState:
     """Stores the private state restored and changed by a PreparationTicket."""
+
     id: str
     order_id: str
     customer_id: str
@@ -27,6 +29,7 @@ class TicketState:
 @dataclass(frozen=True)
 class PreparationStarted:
     """Records the private domain fact that preparation began for a ticket."""
+
     name: ClassVar[str] = "PreparationStarted"
     state: TicketState
 
@@ -34,6 +37,7 @@ class PreparationStarted:
 @dataclass(frozen=True)
 class DrinksReady:
     """Private fact raised when this context completes a preparation ticket."""
+
     name: ClassVar[str] = "DrinksReady"
     order_id: str
     customer_id: str
@@ -44,11 +48,15 @@ type TicketFact = PreparationStarted | DrinksReady
 
 class PreparationTicket:
     """Owns preparation lifecycle transitions and the immutable accepted order instructions."""
+
     def __init__(self, state: TicketState) -> None:
         for value in (state.id, state.order_id, state.customer_id):
             identifier(value)
-        if (not isinstance(state.instructions, str) or not state.instructions
-            or state.status not in ("queued", "preparing", "ready")):
+        if (
+            not isinstance(state.instructions, str)
+            or not state.instructions
+            or state.status not in ("queued", "preparing", "ready")
+        ):
             raise ValueError("Invalid preparation ticket state")
         self._state = state
         self._facts: list[TicketFact] = []
@@ -59,8 +67,15 @@ class PreparationTicket:
             fields = record(value)
             match fields["status"]:
                 case "queued" | "preparing" | "ready" as status:
-                    return cls(TicketState(identifier(fields["id"]), identifier(fields["orderId"]),
-                        identifier(fields["customerId"]), text(fields["instructions"]), status))
+                    return cls(
+                        TicketState(
+                            identifier(fields["id"]),
+                            identifier(fields["orderId"]),
+                            identifier(fields["customerId"]),
+                            text(fields["instructions"]),
+                            status,
+                        )
+                    )
                 case _:
                     raise ValueError("Invalid preparation status")
         except (Rejection, KeyError, TypeError, ValueError) as error:
@@ -80,8 +95,13 @@ class PreparationTicket:
 
     def snapshot(self) -> TicketSnapshot:
         s = self._state
-        return {"id": s.id, "orderId": s.order_id, "customerId": s.customer_id,
-                "instructions": s.instructions, "status": s.status}
+        return {
+            "id": s.id,
+            "orderId": s.order_id,
+            "customerId": s.customer_id,
+            "instructions": s.instructions,
+            "status": s.status,
+        }
 
     def events(self) -> tuple[TicketFact, ...]:
         return tuple(self._facts)

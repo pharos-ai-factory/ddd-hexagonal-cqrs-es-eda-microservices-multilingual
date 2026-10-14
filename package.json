@@ -6,15 +6,19 @@
     "@cucumber/cucumber": "13.2.1",
     "@cucumber/gherkin": "42.0.0",
     "@cucumber/messages": "34.2.0",
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
+    "@types/amqplib": "0.10.8",
     "@types/node": "24.5.2",
     "@types/pg": "8.15.5",
     "amqplib": "2.0.1",
+    "eslint": "10.12.0",
     "pg": "8.23.0",
     "prettier": "3.6.2",
     "protobufjs": "8.8.0",
     "tsx": "4.20.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.71.2"
   },
   "scripts": {
     "verify": "python3 scripts/verify.py",
@@ -44,6 +48,8 @@
     "scaffold": "python3 scripts/scaffold.py",
     "format": "python3 scripts/format.py",
     "format:check": "python3 scripts/format.py --check",
-    "context": "python3 scripts/context_catalogue.py"
+    "context": "python3 scripts/context_catalogue.py",
+    "check": "python3 scripts/check.py",
+    "check:watch": "python3 scripts/check.py --watch"
   }
 }

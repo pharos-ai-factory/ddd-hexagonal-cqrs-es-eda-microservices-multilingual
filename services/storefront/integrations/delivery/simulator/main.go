@@ -141,13 +141,13 @@ func persist(root, path string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(file.Name())
+	defer func() { _ = os.Remove(file.Name()) }()
 	if _, err = file.Write(data); err != nil {
-		file.Close()
+		_ = file.Close()
 		return err
 	}
 	if err = file.Sync(); err != nil {
-		file.Close()
+		_ = file.Close()
 		return err
 	}
 	if err = file.Close(); err != nil {
@@ -160,7 +160,7 @@ func persist(root, path string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	defer directory.Close()
+	defer func() { _ = directory.Close() }()
 	if err = directory.Sync(); err != nil {
 		return fmt.Errorf("sync mailbox directory: %w", err)
 	}

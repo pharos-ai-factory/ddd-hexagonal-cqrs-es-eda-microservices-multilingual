@@ -16,13 +16,13 @@ preserved upstream notice.
 **One command changes one aggregate. Required asynchronous reactions use durable
 handoffs, including private domain events within a context.**
 
-| Application | Language | Responsibility |
-| --- | --- | --- |
-| `services/storefront` | Go | Menu and Ordering contexts |
-| `services/operations` | Python | Preparation and Collection contexts |
-| `services/engagement` | TypeScript | Loyalty and Customer Communication contexts |
-| `services/api` | Go | Browser sessions, API routing and realtime authorisation |
-| `services/web` | Next.js / TypeScript | Operator screens and Centrifugo projections |
+| Application           | Language             | Responsibility                                           |
+| --------------------- | -------------------- | -------------------------------------------------------- |
+| `services/storefront` | Go                   | Menu and Ordering contexts                               |
+| `services/operations` | Python               | Preparation and Collection contexts                      |
+| `services/engagement` | TypeScript           | Loyalty and Customer Communication contexts              |
+| `services/api`        | Go                   | Browser sessions, API routing and realtime authorisation |
+| `services/web`        | Next.js / TypeScript | Operator screens and Centrifugo projections              |
 
 The monorepo is organised by service. Contexts remain inside their owning
 service, with idiomatic language layouts. Services exchange versioned Protobuf
@@ -71,21 +71,23 @@ explicit retry with the same command identity.
 ```sh
 pnpm demo                 # Scripted six-context journey through the Go API
 pnpm test:bdd             # 51 fast Gherkin scenarios across all six contexts
-pnpm verify               # Architecture, both Go modules, Python and TypeScript
+pnpm check                # Formatting, strict types, lint and architecture
+pnpm check:watch          # Recheck affected projects after edits
+pnpm verify               # Static checks, contracts, compatibility and fast tests
 pnpm test:integration     # 12 infrastructure Gherkin scenarios, recovery and Chromium
 pnpm test:browser         # Browser tests against the existing development stack
 pnpm dev:down             # Stop development containers; preserve their data
 ```
 
-| Local endpoint | Purpose |
-| --- | --- |
-| 28000 | Browser ingress: static Next.js assets, API and WebSocket routes |
-| 28080 | Separate Go API |
-| 28081 / 28082 / 28083 | Storefront / Operations / Engagement diagnostics |
-| 25432 | PostgreSQL, six private databases |
-| 25673 / 25674 | RabbitMQ / management |
-| 28084 | Notification simulator |
-| 28090 | Centrifugo administrative API, local test access only |
+| Local endpoint        | Purpose                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| 28000                 | Browser ingress: static Next.js assets, API and WebSocket routes |
+| 28080                 | Separate Go API                                                  |
+| 28081 / 28082 / 28083 | Storefront / Operations / Engagement diagnostics                 |
+| 25432                 | PostgreSQL, six private databases                                |
+| 25673 / 25674         | RabbitMQ / management                                            |
+| 28084                 | Notification simulator                                           |
+| 28090                 | Centrifugo administrative API, local test access only            |
 
 Published ports bind to loopback. Change ports in `.local/dev.env` before
 starting if necessary.
@@ -173,15 +175,15 @@ The original guide emphasises three principles:
 Strategic design identifies which models are needed, where each model applies
 and how they collaborate.
 
-| Concept | Meaning | Café example |
-| --- | --- | --- |
-| Domain and subdomains | The business problem and its distinct areas of responsibility | Selling drinks, preparing orders, handing them over and recognising repeat customers |
-| Core subdomain | A capability that differentiates the business and deserves focused modelling | For this teaching scenario, accepting and fulfilling drink orders |
-| Supporting subdomain | A capability that supports the core and may need business-specific rules | The three-collection loyalty scheme |
-| Generic subdomain | A capability that can often use a standard solution | Authentication and message transport |
-| Ubiquitous language | Terms used consistently by domain experts, developers, tests and code within a context | “Published edition”, “placed order”, “ready pickup” and “earned grant” have precise meanings |
-| Bounded context | The boundary within which a particular model and language apply | Ordering owns the commercial Order; Preparation owns a PreparationTicket describing work to perform |
-| Context map | The relationships, contracts and ownership between contexts | Ordering publishes OrderPlaced; Preparation translates it into its own ticket model |
+| Concept               | Meaning                                                                                | Café example                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Domain and subdomains | The business problem and its distinct areas of responsibility                          | Selling drinks, preparing orders, handing them over and recognising repeat customers                |
+| Core subdomain        | A capability that differentiates the business and deserves focused modelling           | For this teaching scenario, accepting and fulfilling drink orders                                   |
+| Supporting subdomain  | A capability that supports the core and may need business-specific rules               | The three-collection loyalty scheme                                                                 |
+| Generic subdomain     | A capability that can often use a standard solution                                    | Authentication and message transport                                                                |
+| Ubiquitous language   | Terms used consistently by domain experts, developers, tests and code within a context | “Published edition”, “placed order”, “ready pickup” and “earned grant” have precise meanings        |
+| Bounded context       | The boundary within which a particular model and language apply                        | Ordering owns the commercial Order; Preparation owns a PreparationTicket describing work to perform |
+| Context map           | The relationships, contracts and ownership between contexts                            | Ordering publishes OrderPlaced; Preparation translates it into its own ticket model                 |
 
 Subdomain classification depends on business strategy; these classifications
 serve the example. A subdomain describes a business problem, whereas a bounded
@@ -193,18 +195,18 @@ microservice without merging their models or database authority.
 
 Tactical patterns express the model and enforce its rules inside a context.
 
-| Pattern | Meaning and application here |
-| --- | --- |
-| Entity | An object with a stable identity and lifecycle. An OrderLine keeps its identity when its quantity changes. |
-| Value object | An immutable value defined by its attributes rather than independent identity. A MenuOffer freezes a drink revision and price inside an edition. |
-| Aggregate and root | A consistency boundary controlled through one root. Order owns all OrderLine edits and the combined quantity rule. Children have no independent write repository. |
-| Invariant | A condition that must hold at the relevant business transition. A MenuEdition cannot be published empty; a placed Order contains 1–5 drinks and its contents are frozen. |
-| Factory | A creation operation that establishes valid initial state. Named operations such as `Pickup.open` and `Reward.issue` make creation rules explicit. |
-| Domain service | Business behaviour that does not naturally belong to one entity or value object. Introduce one when the model needs it; it is not a reason to synchronously update several aggregates. |
-| Domain error | An explicit business rejection, such as an incorrect collection code or expired reward. It is distinct from a database outage. |
-| Repository | An abstraction for retrieving and persisting aggregate state. Here, command ports bind persistence to one aggregate kind and target, including the atomic receipt/outbox boundary. |
-| Domain event | A fact expressed in the context's own language. RewardEarned permits a later reaction inside Loyalty without making Reward part of LoyaltyAccount. |
-| Integration event | A versioned published contract for other contexts. RewardIssued carries interoperable data rather than a live domain object. |
+| Pattern            | Meaning and application here                                                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entity             | An object with a stable identity and lifecycle. An OrderLine keeps its identity when its quantity changes.                                                                             |
+| Value object       | An immutable value defined by its attributes rather than independent identity. A MenuOffer freezes a drink revision and price inside an edition.                                       |
+| Aggregate and root | A consistency boundary controlled through one root. Order owns all OrderLine edits and the combined quantity rule. Children have no independent write repository.                      |
+| Invariant          | A condition that must hold at the relevant business transition. A MenuEdition cannot be published empty; a placed Order contains 1–5 drinks and its contents are frozen.               |
+| Factory            | A creation operation that establishes valid initial state. Named operations such as `Pickup.open` and `Reward.issue` make creation rules explicit.                                     |
+| Domain service     | Business behaviour that does not naturally belong to one entity or value object. Introduce one when the model needs it; it is not a reason to synchronously update several aggregates. |
+| Domain error       | An explicit business rejection, such as an incorrect collection code or expired reward. It is distinct from a database outage.                                                         |
+| Repository         | An abstraction for retrieving and persisting aggregate state. Here, command ports bind persistence to one aggregate kind and target, including the atomic receipt/outbox boundary.     |
+| Domain event       | A fact expressed in the context's own language. RewardEarned permits a later reaction inside Loyalty without making Reward part of LoyaltyAccount.                                     |
+| Integration event  | A versioned published contract for other contexts. RewardIssued carries interoperable data rather than a live domain object.                                                           |
 
 The application layer connects the model to use cases:
 

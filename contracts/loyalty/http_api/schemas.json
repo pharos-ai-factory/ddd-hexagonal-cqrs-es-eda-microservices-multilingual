@@ -3,12 +3,7 @@
     "Grant": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "accountId",
-        "benefit",
-        "validDays"
-      ],
+      "required": ["id", "accountId", "benefit", "validDays"],
       "properties": {
         "id": {
           "type": "string",
@@ -30,12 +25,7 @@
     "Account": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "stampBalance",
-        "collections",
-        "grantsEarned"
-      ],
+      "required": ["id", "stampBalance", "collections", "grantsEarned"],
       "properties": {
         "id": {
           "type": "string",
@@ -53,20 +43,13 @@
           "type": "integer",
           "minimum": 0
         },
-        "lastGrant": {"$ref": "#/schemas/Grant"}
+        "lastGrant": { "$ref": "#/schemas/Grant" }
       }
     },
     "Reward": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "grantId",
-        "customerId",
-        "benefit",
-        "status",
-        "expiresAt"
-      ],
+      "required": ["id", "grantId", "customerId", "benefit", "status", "expiresAt"],
       "properties": {
         "id": {
           "type": "string",
@@ -85,11 +68,7 @@
         },
         "status": {
           "type": "string",
-          "enum": [
-            "issued",
-            "redeemed",
-            "expired"
-          ]
+          "enum": ["issued", "redeemed", "expired"]
         },
         "expiresAt": {
           "type": "string",
@@ -104,9 +83,7 @@
     "RedeemCommand": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "orderId"
-      ],
+      "required": ["orderId"],
       "properties": {
         "orderId": {
           "type": "string",

@@ -34,7 +34,7 @@ jobs:
         run: |
           npm install --global pnpm@10.34.5
           pnpm install --frozen-lockfile
-      - name: Verify all five applications and fast Gherkin scenarios
+      - name: Verify static checks, all five applications and fast Gherkin scenarios
         run: pnpm verify
   infrastructure:
     runs-on: ubuntu-24.04

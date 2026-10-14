@@ -109,16 +109,16 @@ command succeeds, and preparation converges after Operations restarts.
 
 ## 6. Explore the failure evidence
 
-| Test file | Question it answers |
-| --- | --- |
-| `services/storefront/foundation/persistence/postgres/command_integration_test.go` | Can state escape without its receipt/outbox? What if the database connection is terminated before commit? |
+| Test file                                                                           | Question it answers                                                                                                  |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `services/storefront/foundation/persistence/postgres/command_integration_test.go`   | Can state escape without its receipt/outbox? What if the database connection is terminated before commit?            |
 | `services/storefront/foundation/persistence/postgres/ownership_integration_test.go` | Can one transaction write a second root, a runtime role rewrite history, or an expired relay complete another lease? |
-| `services/storefront/foundation/persistence/postgres/receipt_integration_test.go` | Can concurrent conflicting copies of one event change two targets? |
-| `services/storefront/foundation/transport/amqp/recovery_integration_test.go` | What happens after commit but before ACK, on unroutable publication, or after retry exhaustion? |
-| `services/operations/tests/persistence_integration.py` | Can a Python transaction leak state on encoder failure or complete an expired realtime lease? |
-| `services/engagement/src/adaptors/postgres.integration.ts` | Does TypeScript preserve receipts, concurrency and atomic browser intent? |
-| `scripts/browser/cafe.spec.ts` | Do independent windows recover without polling and revalidate revoked sessions? |
-| `scripts/journey.py` | Does the full business workflow converge, including a lost provider response? |
+| `services/storefront/foundation/persistence/postgres/receipt_integration_test.go`   | Can concurrent conflicting copies of one event change two targets?                                                   |
+| `services/storefront/foundation/transport/amqp/recovery_integration_test.go`        | What happens after commit but before ACK, on unroutable publication, or after retry exhaustion?                      |
+| `services/operations/tests/persistence_integration.py`                              | Can a Python transaction leak state on encoder failure or complete an expired realtime lease?                        |
+| `services/engagement/src/adaptors/postgres.integration.ts`                          | Does TypeScript preserve receipts, concurrency and atomic browser intent?                                            |
+| `scripts/browser/cafe.spec.ts`                                                      | Do independent windows recover without polling and revalidate revoked sessions?                                      |
+| `scripts/journey.py`                                                                | Does the full business workflow converge, including a lost provider response?                                        |
 
 The provider simulator accepts one notification and deliberately loses the
 response. Communication retries the same notification identity and records the

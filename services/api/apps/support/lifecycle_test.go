@@ -21,7 +21,10 @@ func TestWorkerDrainsBeforeStopReturns(t *testing.T) {
 	stopped := make(chan error, 1)
 	go func() { stopped <- app.Stop(t.Context()) }()
 	select {
-	case <-stopped:
+	case err := <-stopped:
+		if err != nil {
+			t.Fatal(err)
+		}
 		t.Fatal("returned before in-flight work completed")
 	default:
 	}

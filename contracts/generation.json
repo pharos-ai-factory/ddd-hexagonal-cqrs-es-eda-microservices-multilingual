@@ -1,138 +1,66 @@
 {
   "events": {
     "storefront": {
-      "produces": [
-        "menu",
-        "ordering"
-      ],
-      "consumes": [
-        "menu"
-      ]
+      "produces": ["menu", "ordering"],
+      "consumes": ["menu"]
     },
     "operations": {
-      "produces": [
-        "preparation",
-        "collection"
-      ],
-      "consumes": [
-        "ordering",
-        "preparation"
-      ]
+      "produces": ["preparation", "collection"],
+      "consumes": ["ordering", "preparation"]
     },
     "engagement": {
-      "produces": [
-        "loyalty"
-      ],
-      "consumes": [
-        "collection",
-        "loyalty"
-      ]
+      "produces": ["loyalty"],
+      "consumes": ["collection", "loyalty"]
     }
   },
   "requests": {
     "storefront": {
-      "produces": [
-        "menu",
-        "ordering"
-      ],
-      "consumes": [
-        "menu",
-        "ordering"
-      ]
+      "produces": ["menu", "ordering"],
+      "consumes": ["menu", "ordering"]
     },
     "operations": {
-      "produces": [
-        "preparation",
-        "collection"
-      ],
-      "consumes": [
-        "preparation",
-        "collection"
-      ]
+      "produces": ["preparation", "collection"],
+      "consumes": ["preparation", "collection"]
     },
     "engagement": {
-      "produces": [
-        "loyalty",
-        "communication"
-      ],
-      "consumes": [
-        "loyalty",
-        "communication"
-      ]
+      "produces": ["loyalty", "communication"],
+      "consumes": ["loyalty", "communication"]
     },
     "api": {
-      "produces": [
-        "menu",
-        "ordering",
-        "preparation",
-        "collection",
-        "loyalty",
-        "communication"
-      ],
-      "consumes": [
-        "menu",
-        "ordering",
-        "preparation",
-        "collection",
-        "loyalty",
-        "communication"
-      ]
+      "produces": ["menu", "ordering", "preparation", "collection", "loyalty", "communication"],
+      "consumes": ["menu", "ordering", "preparation", "collection", "loyalty", "communication"]
     }
   },
   "realtime": {
     "storefront": {
-      "produces": [
-        "menu",
-        "ordering"
-      ],
+      "produces": ["menu", "ordering"],
       "consumes": []
     },
     "operations": {
-      "produces": [
-        "preparation",
-        "collection"
-      ],
+      "produces": ["preparation", "collection"],
       "consumes": []
     },
     "engagement": {
-      "produces": [
-        "loyalty",
-        "communication"
-      ],
+      "produces": ["loyalty", "communication"],
       "consumes": []
     },
     "web": {
       "produces": [],
-      "consumes": [
-        "menu",
-        "ordering",
-        "preparation",
-        "collection",
-        "loyalty",
-        "communication"
-      ]
+      "consumes": ["menu", "ordering", "preparation", "collection", "loyalty", "communication"]
     }
   },
   "openapi": {
     "api": {
-      "produces": [
-        "api",
-        "gateway"
-      ],
+      "produces": ["api", "gateway"],
       "consumes": []
     },
     "storefront": {
-      "produces": [
-        "storefront",
-        "provider"
-      ],
+      "produces": ["storefront", "provider"],
       "consumes": []
     },
     "web": {
       "produces": [],
-      "consumes": [
-        "api"
-      ]
+      "consumes": ["api"]
     }
   }
 }

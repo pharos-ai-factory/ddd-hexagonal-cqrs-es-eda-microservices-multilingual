@@ -5,8 +5,8 @@
       "operationId": "listNotifications",
       "summary": "List notifications",
       "parameters": [
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/Limit"},
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/Cursor"}
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/Cursor" }
       ],
       "responses": {
         "200": {
@@ -20,56 +20,41 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "exists",
-                        "version",
-                        "state"
-                      ],
+                      "required": ["exists", "version", "state"],
                       "properties": {
                         "exists": {
                           "type": "boolean",
-                          "enum": [
-                            true
-                          ]
+                          "enum": [true]
                         },
                         "version": {
                           "type": "integer",
                           "minimum": 0
                         },
-                        "state": {"$ref": "schemas.json#/schemas/Notification"}
+                        "state": { "$ref": "schemas.json#/schemas/Notification" }
                       }
                     }
                   },
                   {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "items",
-                      "nextCursor"
-                    ],
+                    "required": ["items", "nextCursor"],
                     "properties": {
                       "items": {
                         "type": "array",
                         "items": {
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "exists",
-                            "version",
-                            "state"
-                          ],
+                          "required": ["exists", "version", "state"],
                           "properties": {
                             "exists": {
                               "type": "boolean",
-                              "enum": [
-                                true
-                              ]
+                              "enum": [true]
                             },
                             "version": {
                               "type": "integer",
                               "minimum": 0
                             },
-                            "state": {"$ref": "schemas.json#/schemas/Notification"}
+                            "state": { "$ref": "schemas.json#/schemas/Notification" }
                           }
                         }
                       },
@@ -97,18 +82,16 @@
             }
           }
         },
-        "400": {"$ref": "../../shared/http_api/responses.json#/responses/400"},
-        "401": {"$ref": "../../shared/http_api/responses.json#/responses/401"},
-        "403": {"$ref": "../../shared/http_api/responses.json#/responses/403"},
-        "503": {"$ref": "../../shared/http_api/responses.json#/responses/503"}
+        "400": { "$ref": "../../shared/http_api/responses.json#/responses/400" },
+        "401": { "$ref": "../../shared/http_api/responses.json#/responses/401" },
+        "403": { "$ref": "../../shared/http_api/responses.json#/responses/403" },
+        "503": { "$ref": "../../shared/http_api/responses.json#/responses/503" }
       }
     }
   },
   "item": {
     "x-owner": "communication",
-    "parameters": [
-      {"$ref": "../../shared/http_api/parameters.json#/parameters/ID"}
-    ],
+    "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getNotification",
       "summary": "Get Notification",
@@ -120,23 +103,17 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "exists",
-                  "version",
-                  "state"
-                ],
+                "required": ["exists", "version", "state"],
                 "properties": {
                   "exists": {
                     "type": "boolean",
-                    "enum": [
-                      true
-                    ]
+                    "enum": [true]
                   },
                   "version": {
                     "type": "integer",
                     "minimum": 0
                   },
-                  "state": {"$ref": "schemas.json#/schemas/Notification"}
+                  "state": { "$ref": "schemas.json#/schemas/Notification" }
                 }
               },
               "example": {
@@ -153,11 +130,11 @@
             }
           }
         },
-        "400": {"$ref": "../../shared/http_api/responses.json#/responses/400"},
-        "401": {"$ref": "../../shared/http_api/responses.json#/responses/401"},
-        "403": {"$ref": "../../shared/http_api/responses.json#/responses/403"},
-        "404": {"$ref": "../../shared/http_api/responses.json#/responses/404"},
-        "503": {"$ref": "../../shared/http_api/responses.json#/responses/503"}
+        "400": { "$ref": "../../shared/http_api/responses.json#/responses/400" },
+        "401": { "$ref": "../../shared/http_api/responses.json#/responses/401" },
+        "403": { "$ref": "../../shared/http_api/responses.json#/responses/403" },
+        "404": { "$ref": "../../shared/http_api/responses.json#/responses/404" },
+        "503": { "$ref": "../../shared/http_api/responses.json#/responses/503" }
       }
     }
   }

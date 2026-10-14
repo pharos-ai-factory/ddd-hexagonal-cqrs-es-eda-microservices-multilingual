@@ -19,7 +19,7 @@ func Request(t *testing.T, document *openapi3.T, request *http.Request) {
 
 func Response(t *testing.T, document *openapi3.T, request *http.Request, response *http.Response) {
 	t.Helper()
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	if err := ResponseError(document, request, response); err != nil {
 		t.Fatal(err)
 	}

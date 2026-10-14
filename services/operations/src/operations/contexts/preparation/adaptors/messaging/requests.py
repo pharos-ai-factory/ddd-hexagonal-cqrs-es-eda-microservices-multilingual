@@ -1,12 +1,22 @@
 """Explicit mapping between preparation wire contracts and application types."""
+
 from google.protobuf.message import Message
 from operations.foundation.application import Loaded
 from operations.contexts.preparation.application.read_models.ticket import TicketView
-from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_replies_pb2 import Ticket, LoadedTicket, Tickets
+from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_replies_pb2 import (
+    Ticket,
+    LoadedTicket,
+    Tickets,
+)
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_requests_pb2 import Reply
 from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommand
-from operations.contexts.preparation.application.commands.complete_preparation import CompletePreparationCommand
-from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_commands_pb2 import StartPreparation, CompletePreparation
+from operations.contexts.preparation.application.commands.complete_preparation import (
+    CompletePreparationCommand,
+)
+from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_commands_pb2 import (
+    StartPreparation,
+    CompletePreparation,
+)
 
 
 def start(value: Message) -> StartPreparationCommand:
@@ -23,7 +33,17 @@ def complete(value: Message) -> CompletePreparationCommand:
 
 def item(loaded: Loaded[TicketView]) -> LoadedTicket:
     s = loaded["state"]
-    return LoadedTicket(exists=loaded["exists"], version=loaded["version"], state=Ticket(id=s["id"], order_id=s["orderId"], customer_id=s["customerId"], instructions=s["instructions"], status=s["status"]))
+    return LoadedTicket(
+        exists=loaded["exists"],
+        version=loaded["version"],
+        state=Ticket(
+            id=s["id"],
+            order_id=s["orderId"],
+            customer_id=s["customerId"],
+            instructions=s["instructions"],
+            status=s["status"],
+        ),
+    )
 
 
 def listing(items: list[Loaded[TicketView]], paged: bool, next_id: str | None) -> Reply:

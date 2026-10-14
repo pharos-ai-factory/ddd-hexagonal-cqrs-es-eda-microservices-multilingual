@@ -37,7 +37,7 @@ func (c *HTTPNotificationDeliveryClient) Deliver(ctx context.Context, delivery a
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.StatusCode != 200 {
 		return "", fmt.Errorf("delivery provider returned HTTP %d", res.StatusCode)
 	}

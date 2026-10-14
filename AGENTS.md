@@ -107,6 +107,8 @@ enforcement, the source layout and persistence role names.
 - Put Go/TypeScript tests beside their subjects. Mirror Python context tests under
   `tests/contexts/<context>/`; retain native Gherkin bindings. Use deterministic
   identities/timestamps; real infrastructure proves transaction and delivery claims.
+- Run `pnpm check --changed` after each completed edit batch. Use `pnpm check:watch`
+  for continuous feedback; fix type, lint and formatting failures before hand-off.
 - Start with `pnpm test:focused <service> --context <context>`. Scaffolds under
   `.local/scaffolds` require reviewed policy, registration and behaviour tests.
 - Update the affected guides, accepted decision, context navigation and executable

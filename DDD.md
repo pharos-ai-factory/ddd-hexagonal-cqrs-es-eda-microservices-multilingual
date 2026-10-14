@@ -6,16 +6,16 @@ An entity has continuity of identity. A value object compares by value.
 An aggregate root controls a complete immediate consistency boundary and owns
 all mutation of its children. A database row does not define an aggregate.
 
-| Context | Aggregate | Invariants and independent lifecycle |
-| --- | --- | --- |
-| Menu | Drink | Published definitions have stable identity and immutable revisions |
-| Menu | MenuEdition | Unique offer codes, one currency, non-empty publication and an immutable complete published snapshot |
-| Ordering | Order | Stable child OrderLine identities; one edition; quantities total 1–5 at placement; placed contents are immutable |
-| Preparation | PreparationTicket | Queued → Preparing → Ready |
-| Collection | Pickup | Ready before handover, correct collection code, at most one collection |
-| Loyalty | LoyaltyAccount | Credit each collection once; three credits atomically earn one stable grant |
-| Loyalty | Reward | One voucher per grant; at most one redemption; fixed validity |
-| Customer Communication | Notification | One intent per business occasion; delivery outcome follows an idempotent provider request |
+| Context                | Aggregate         | Invariants and independent lifecycle                                                                             |
+| ---------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Menu                   | Drink             | Published definitions have stable identity and immutable revisions                                               |
+| Menu                   | MenuEdition       | Unique offer codes, one currency, non-empty publication and an immutable complete published snapshot             |
+| Ordering               | Order             | Stable child OrderLine identities; one edition; quantities total 1–5 at placement; placed contents are immutable |
+| Preparation            | PreparationTicket | Queued → Preparing → Ready                                                                                       |
+| Collection             | Pickup            | Ready before handover, correct collection code, at most one collection                                           |
+| Loyalty                | LoyaltyAccount    | Credit each collection once; three credits atomically earn one stable grant                                      |
+| Loyalty                | Reward            | One voucher per grant; at most one redemption; fixed validity                                                    |
+| Customer Communication | Notification      | One intent per business occasion; delivery outcome follows an idempotent provider request                        |
 
 MenuOffer is an immutable value inside an edition. It references a published
 Drink revision and freezes that offer's terms. Drink has its own lifecycle.

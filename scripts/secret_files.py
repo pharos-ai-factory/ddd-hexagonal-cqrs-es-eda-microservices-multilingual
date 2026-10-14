@@ -1,4 +1,5 @@
 """Protected development configuration and per-developer secret-file references."""
+
 import os
 from pathlib import Path
 import stat
@@ -28,8 +29,9 @@ def atomic_private_write(path, text):
 def read_configuration(path):
     if path.is_symlink():
         raise ValueError("Configuration target must be a regular file")
-    return dict(line.split("=", 1) for line in path.read_text().splitlines()
-                if line and not line.startswith("#"))
+    return dict(
+        line.split("=", 1) for line in path.read_text().splitlines() if line and not line.startswith("#")
+    )
 
 
 def resolve_files(values, directory):
@@ -64,7 +66,8 @@ def compose_environment(values, owners):
         prefix = owner.upper()
         password = quote(values[prefix + "_DB_PASSWORD"], safe="")
         result[prefix + "_DATABASE_URL"] = (
-            f"postgres://cafe_{owner}:{password}@postgres:5432/cafe_{owner}?sslmode=disable")
+            f"postgres://cafe_{owner}:{password}@postgres:5432/cafe_{owner}?sslmode=disable"
+        )
         password = quote(values[prefix + "_BROKER_PASSWORD"], safe="")
         result[prefix + "_BROKER_URL"] = f"amqp://cafe_{owner}:{password}@rabbitmq:5672/reference"
     password = quote(values["API_BROKER_PASSWORD"], safe="")

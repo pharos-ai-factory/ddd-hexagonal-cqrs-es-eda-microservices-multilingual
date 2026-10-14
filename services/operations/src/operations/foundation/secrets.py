@@ -1,4 +1,5 @@
 """Resolve runtime credentials, with redacted configuration failures."""
+
 import os
 from pathlib import Path
 

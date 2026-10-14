@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Check edited services",
+      "type": "shell",
+      "command": "pnpm check --changed",
+      "problemMatcher": []
+    },
+    {
+      "label": "Watch static checks",
+      "type": "shell",
+      "command": "pnpm check:watch",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

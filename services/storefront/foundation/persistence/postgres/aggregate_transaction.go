@@ -45,7 +45,7 @@ func (s *AggregateTransaction[S, A]) Execute(ctx context.Context, m a.Metadata, 
 	if err != nil {
 		return a.Outcome{}, err
 	}
-	defer tx.Rollback(context.Background())
+	defer func() { _ = tx.Rollback(context.Background()) }()
 	// Serialise creation and receipt ownership even before an aggregate row exists.
 	target := s.kind + ":" + m.AggregateID
 	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, target); err != nil {

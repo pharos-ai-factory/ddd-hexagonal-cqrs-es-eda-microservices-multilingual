@@ -1,10 +1,9 @@
-import type {CommandContext} from '../../../../foundation/write-repository.js';
-import type {NotificationWriteRepository} from '../ports/notification-write-repository.js';
-import type {Metadata} from '../../../../foundation/application.js';
-import {Notification} from '../../domain/notification.js';
+import type { CommandContext } from '../../../../foundation/write-repository.js';
+import type { NotificationWriteRepository } from '../ports/notification-write-repository.js';
+import { Notification } from '../../domain/notification.js';
 
 /** Owner-local notification content, prepared before the durable hand-off. */
-export type RequestNotificationCommand = {recipient: string; subject: string; body: string};
+export type RequestNotificationCommand = { recipient: string; subject: string; body: string };
 
 /** Creates one notification and records its private delivery-requested fact atomically. */
 export class RequestNotificationCommandHandler {
@@ -13,10 +12,15 @@ export class RequestNotificationCommandHandler {
     const loaded = await this.repository.get(context.target);
     if (loaded) {
       const state = loaded.state.snapshot();
-      return {status: state.status};
+      return { status: state.status };
     }
-    const notification = Notification.request(context.target, command.recipient, command.subject, command.body);
+    const notification = Notification.request(
+      context.target,
+      command.recipient,
+      command.subject,
+      command.body,
+    );
     await this.repository.save(notification);
-    return {status: 'requested'};
+    return { status: 'requested' };
   }
 }

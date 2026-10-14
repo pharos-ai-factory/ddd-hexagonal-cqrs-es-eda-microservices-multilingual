@@ -1,8 +1,15 @@
-import {EventRecordingWriteRepository} from '../../src/adaptors/command-execution.js';
-import type {AggregateTransaction} from '../../src/adaptors/command-execution.js';
+import { EventRecordingWriteRepository } from '../../src/adaptors/command-execution.js';
+import type { AggregateTransaction } from '../../src/adaptors/command-execution.js';
 import assert from 'node:assert/strict';
-import type {Change, Loaded, Metadata, Outcome, Publication, QueryPort} from '../../src/foundation/application.js';
-import {Rejection} from '../../src/foundation/domain.js';
+import type {
+  Change,
+  Loaded,
+  Metadata,
+  Outcome,
+  Publication,
+  QueryPort,
+} from '../../src/foundation/application.js';
+import { Rejection } from '../../src/foundation/domain.js';
 
 // A decision probe calls the real handler. It deliberately does not implement
 // durable receipts, transactions or delivery; the integration lane proves those.
@@ -17,41 +24,78 @@ export class CommandProbe<S> implements QueryPort<S> {
     this.calls++;
     this.before = structuredClone(this.loaded);
     this.publications = [];
-    this.outcome = {aggregateId: m.target, version: this.loaded?.version ?? 0, status: ''};
+    this.outcome = { aggregateId: m.target, version: this.loaded?.version ?? 0, status: '' };
     try {
       const change = decide(structuredClone(this.loaded));
       this.publications = structuredClone(change.publications ?? []);
-      if (change.changed) this.loaded = {exists: true, version: (this.loaded?.version ?? 0) + 1, state: structuredClone(change.state)};
-      this.outcome = {...this.outcome, version: this.loaded?.version ?? 0, status: change.status};
+      if (change.changed)
+        this.loaded = {
+          exists: true,
+          version: (this.loaded?.version ?? 0) + 1,
+          state: structuredClone(change.state),
+        };
+      this.outcome = { ...this.outcome, version: this.loaded?.version ?? 0, status: change.status };
     } catch (error) {
       if (!(error instanceof Rejection)) throw error;
-      this.outcome.rejection = {code: error.code, message: error.message};
+      this.outcome.rejection = { code: error.code, message: error.message };
     }
     return this.outcome;
   }
-  transaction<A>(restore: (state: S) => A, snapshot: (aggregate: A) => S, publications: (aggregate: A) => Publication[]): AggregateTransaction<A> {
-    return {execute: async (metadata, work) => {
-      let saved: S | undefined;
-      const loaded = structuredClone(this.loaded);
-      const repository = new EventRecordingWriteRepository<A>({
-        get: async id => { assert.equal(id, metadata.target); return loaded ? {...loaded, state: restore(loaded.state)} : undefined; },
-        save: async aggregate => { saved = snapshot(aggregate); },
-      }, publications);
-      const result = await work(repository).catch(error => this.execute(metadata, () => { throw error; }));
-      if ('aggregateId' in result) return result;
-      return this.execute(metadata, () => ({state: saved ?? loaded?.state as S, changed: saved !== undefined,
-        status: result.status, publications: [...result.publications ?? [], ...repository.publications]}));
-    }};
+  transaction<A>(
+    restore: (state: S) => A,
+    snapshot: (aggregate: A) => S,
+    publications: (aggregate: A) => Publication[],
+  ): AggregateTransaction<A> {
+    return {
+      execute: async (metadata, work) => {
+        let saved: S | undefined;
+        const loaded = structuredClone(this.loaded);
+        const repository = new EventRecordingWriteRepository<A>(
+          {
+            get: async (id) => {
+              assert.equal(id, metadata.target);
+              return loaded ? { ...loaded, state: restore(loaded.state) } : undefined;
+            },
+            save: async (aggregate) => {
+              saved = snapshot(aggregate);
+            },
+          },
+          publications,
+        );
+        const result = await work(repository).catch((error) =>
+          this.execute(metadata, () => {
+            throw error;
+          }),
+        );
+        if ('aggregateId' in result) return result;
+        return this.execute(metadata, () => ({
+          state: saved ?? (loaded?.state as S),
+          changed: saved !== undefined,
+          status: result.status,
+          publications: [...(result.publications ?? []), ...repository.publications],
+        }));
+      },
+    };
   }
-  async get(_id: string) { return structuredClone(this.loaded); }
-  async list() { return this.loaded ? [structuredClone(this.loaded)] : []; }
-  succeeded() { assert.ok(this.outcome); assert.equal(this.outcome.rejection, undefined); }
-  unchanged() { assert.deepEqual(this.loaded, this.before); assert.deepEqual(this.publications, []); }
+  async get(_id: string) {
+    return structuredClone(this.loaded);
+  }
+  async list() {
+    return this.loaded ? [structuredClone(this.loaded)] : [];
+  }
+  succeeded() {
+    assert.ok(this.outcome);
+    assert.equal(this.outcome.rejection, undefined);
+  }
+  unchanged() {
+    assert.deepEqual(this.loaded, this.before);
+    assert.deepEqual(this.publications, []);
+  }
 }
 
 export const customer = '00000000-0000-4000-8000-000000000001';
 export const selectedOrder = '00000000-0000-4000-8000-000000000002';
 export const notification = '00000000-0000-4000-8000-000000000003';
 export function metadata(target: string): Metadata {
-  return {id: customer, target, name: 'scenario-command', correlation: customer, input: {}};
+  return { id: customer, target, name: 'scenario-command', correlation: customer, input: {} };
 }

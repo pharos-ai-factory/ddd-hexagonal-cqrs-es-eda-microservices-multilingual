@@ -1,4 +1,5 @@
 """Exercise persistence permissions, migration and developer file indirection."""
+
 from pathlib import Path
 import stat
 import tempfile
@@ -65,7 +66,12 @@ class SecretFilesTest(unittest.TestCase):
                 self.assertNotIn("value", str(failure.exception))
 
     def test_derived_urls_encode_passwords(self):
-        values = {"MENU_DB_PASSWORD": "a/b@c", "MENU_BROKER_PASSWORD": "x:y", "BROKER_PASSWORD": "p@ss", "API_BROKER_PASSWORD": "r:p"}
+        values = {
+            "MENU_DB_PASSWORD": "a/b@c",
+            "MENU_BROKER_PASSWORD": "x:y",
+            "BROKER_PASSWORD": "p@ss",
+            "API_BROKER_PASSWORD": "r:p",
+        }
         environment = compose_environment(values, ["menu"])
         self.assertIn(":a%2Fb%40c@postgres:", environment["MENU_DATABASE_URL"])
         self.assertIn(":x%3Ay@rabbitmq:", environment["MENU_BROKER_URL"])

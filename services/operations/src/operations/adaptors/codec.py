@@ -1,4 +1,5 @@
 """Versioned wire mapping. Generated messages never enter domain packages."""
+
 from datetime import datetime, timezone
 from collections.abc import Mapping
 import json
@@ -12,22 +13,31 @@ from operations.foundation.application import Metadata, Publication
 from operations.foundation.domain import identifier, record
 from operations.foundation.identity import new_id
 
-CATALOGUE = {item["name"]: item for item in json.loads(
-    (Path(__file__).parent/"generated/catalogue.json").read_text())}
+CATALOGUE = {
+    item["name"]: item
+    for item in json.loads((Path(__file__).parent / "generated/catalogue.json").read_text())
+}
 PAYLOADS = {
-    "ordering.order-placed": "order_placed", "preparation.drinks-ready": "drinks_ready",
-    "collection.pickup-opened": "pickup_opened", "collection.order-collected": "order_collected",
+    "ordering.order-placed": "order_placed",
+    "preparation.drinks-ready": "drinks_ready",
+    "collection.pickup-opened": "pickup_opened",
+    "collection.order-collected": "order_collected",
 }
 SOURCE_IDENTITIES = {
-    "ordering.order-placed": "order_id", "collection.pickup-opened": "pickup_id",
+    "ordering.order-placed": "order_id",
+    "collection.pickup-opened": "pickup_id",
 }
 
 
 def validate(event: Event) -> None:
     definition = CATALOGUE.get(event.name)
-    if not definition or event.name not in PAYLOADS or (event.context, event.visibility, event.aggregate_kind) != (
-        definition["owner"], definition["visibility"], definition["kind"]
-    ) or event.contract_version != 1:
+    if (
+        not definition
+        or event.name not in PAYLOADS
+        or (event.context, event.visibility, event.aggregate_kind)
+        != (definition["owner"], definition["visibility"], definition["kind"])
+        or event.contract_version != 1
+    ):
         raise ValueError("Unknown event contract or owner")
     for value in (event.id, event.aggregate_id, event.correlation_id, event.causation_id):
         identifier(value)
@@ -57,7 +67,7 @@ def validate(event: Event) -> None:
 
 
 def decode(body: bytes) -> tuple[Event, dict[str, object]]:
-    if len(body) > 256*1024:
+    if len(body) > 256 * 1024:
         raise ValueError("Event exceeds its wire limit")
     event = Event.FromString(body)
     validate(event)
@@ -69,9 +79,22 @@ def order_placed(event: Event) -> OrderPlaced:
     if event.name != "ordering.order-placed":
         raise ValueError("Expected OrderPlaced")
     order = event.order_placed
-    return OrderPlaced(orderId=order.order_id, customerId=order.customer_id, editionId=order.edition_id,
-        currency=order.currency, lines=[OrderLine(id=line.id, offerCode=line.offer_code, name=line.name,
-            quantity=line.quantity, minor=line.minor) for line in order.lines])
+    return OrderPlaced(
+        orderId=order.order_id,
+        customerId=order.customer_id,
+        editionId=order.edition_id,
+        currency=order.currency,
+        lines=[
+            OrderLine(
+                id=line.id,
+                offerCode=line.offer_code,
+                name=line.name,
+                quantity=line.quantity,
+                minor=line.minor,
+            )
+            for line in order.lines
+        ],
+    )
 
 
 def drinks_ready(event: Event) -> DrinksReady:
@@ -80,21 +103,38 @@ def drinks_ready(event: Event) -> DrinksReady:
     return DrinksReady(orderId=event.drinks_ready.order_id, customerId=event.drinks_ready.customer_id)
 
 
-def encode(owner: str, kind: str, identity: str, version: int, metadata: Metadata,
-           publication: Publication) -> tuple[Event, bytes]:
+def encode(
+    owner: str, kind: str, identity: str, version: int, metadata: Metadata, publication: Publication
+) -> tuple[Event, bytes]:
     definition = CATALOGUE[publication.name]
-    event = Event(id=new_id(), name=publication.name, context=owner,
-                  visibility=definition["visibility"], contract_version=1,
-                  aggregate_kind=kind, aggregate_id=identity, aggregate_version=version,
-                  correlation_id=metadata.correlation, causation_id=metadata.id,
-                  occurred_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+    event = Event(
+        id=new_id(),
+        name=publication.name,
+        context=owner,
+        visibility=definition["visibility"],
+        contract_version=1,
+        aggregate_kind=kind,
+        aggregate_id=identity,
+        aggregate_version=version,
+        correlation_id=metadata.correlation,
+        causation_id=metadata.id,
+        occurred_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    )
     ParseDict(dict(publication.payload), getattr(event, PAYLOADS[publication.name]))
     validate(event)
     return event, event.SerializeToString(deterministic=True)
 
 
-def realtime(owner: str, kind: str, identity: str, version: int, state: Mapping[str, object]) -> tuple[str, bytes]:
-    event = Realtime(event_id=new_id(), contract_version=1, context=owner,
-                     aggregate_kind=kind, aggregate_id=identity, revision=version)
+def realtime(
+    owner: str, kind: str, identity: str, version: int, state: Mapping[str, object]
+) -> tuple[str, bytes]:
+    event = Realtime(
+        event_id=new_id(),
+        contract_version=1,
+        context=owner,
+        aggregate_kind=kind,
+        aggregate_id=identity,
+        revision=version,
+    )
     ParseDict(dict(state), getattr(event, kind))
     return event.event_id, event.SerializeToString(deterministic=True)

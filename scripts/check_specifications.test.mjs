@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {inspectFeature, catalogue} from './check_specifications.mjs';
+import { inspectFeature, catalogue } from './check_specifications.mjs';
 
 const feature = `@fast @menu
 Feature: A publishable menu
@@ -10,7 +10,7 @@ Feature: A publishable menu
     Then publication is rejected
 `;
 test('the catalogue covers every owner with unique executable scenario identities', () => {
-  assert.equal(new Set(catalogue().map(row => row.owner)).size, 7);
+  assert.equal(new Set(catalogue().map((row) => row.owner)).size, 7);
 });
 test('unrunnable and silently filtered specifications are rejected', () => {
   for (const invalid of [
@@ -21,5 +21,6 @@ test('unrunnable and silently filtered specifications are rejected', () => {
     feature.replace('Scenario:', 'Scenario Outline:'),
     '@fast @menu\nFeature: Empty\n',
     feature.replace('Feature:', 'Not Gherkin:'),
-  ]) assert.throws(() => inspectFeature(invalid, 'specifications/menu/example.feature'));
+  ])
+    assert.throws(() => inspectFeature(invalid, 'specifications/menu/example.feature'));
 });

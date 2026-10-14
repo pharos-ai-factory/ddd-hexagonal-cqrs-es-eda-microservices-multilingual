@@ -3,13 +3,7 @@
     "Notification": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "recipient",
-        "subject",
-        "body",
-        "status"
-      ],
+      "required": ["id", "recipient", "subject", "body", "status"],
       "properties": {
         "id": {
           "type": "string",
@@ -27,10 +21,7 @@
         },
         "status": {
           "type": "string",
-          "enum": [
-            "requested",
-            "sent"
-          ]
+          "enum": ["requested", "sent"]
         },
         "providerReceipt": {
           "type": "string"

@@ -1,4 +1,5 @@
 """Validate persisted pickup state for both command and query adaptors."""
+
 from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 
 

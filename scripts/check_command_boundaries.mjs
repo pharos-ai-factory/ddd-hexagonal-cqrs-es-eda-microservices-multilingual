@@ -1,24 +1,46 @@
 /** Compiler-resolved checks for aggregate behaviour and unit-of-work access. */
 import ts from 'typescript';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const readMethods = new Set(['snapshot', 'events']);
 export function commandLayout(file) {
-  const names = file.statements.filter(node => ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
-    .map(node => node.name?.text ?? '');
+  const names = file.statements
+    .filter(
+      (node) =>
+        ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node),
+    )
+    .map((node) => node.name?.text ?? '');
   const errors = [];
-  for (const [role, folder] of [['Command', 'commands'], ['Query', 'queries']]) {
-    const inputs = names.filter(name => name.endsWith(role));
-    const handlers = names.filter(name => name.endsWith(role+'Handler'));
+  for (const [role, folder] of [
+    ['Command', 'commands'],
+    ['Query', 'queries'],
+  ]) {
+    const inputs = names.filter((name) => name.endsWith(role));
+    const handlers = names.filter((name) => name.endsWith(role + 'Handler'));
     if (!inputs.length && !handlers.length) continue;
-    if (!(path.dirname(file.fileName).replaceAll('\\', '/').endsWith('/application/'+folder) && inputs.length === 1 &&
-      handlers.length === 1 && handlers[0] === inputs[0]+'Handler'))
-      errors.push(`${file.fileName}: keep one ${role.toLowerCase()} and its handler together in application/${folder}`);
+    if (
+      !(
+        path
+          .dirname(file.fileName)
+          .replaceAll('\\', '/')
+          .endsWith('/application/' + folder) &&
+        inputs.length === 1 &&
+        handlers.length === 1 &&
+        handlers[0] === inputs[0] + 'Handler'
+      )
+    )
+      errors.push(
+        `${file.fileName}: keep one ${role.toLowerCase()} and its handler together in application/${folder}`,
+      );
   }
-  const reactions = names.filter(name => /(?:Event|Projection)Handler$/.test(name));
-  if (reactions.length && (reactions.length !== 1 || !['event-handlers', 'projections'].includes(path.basename(path.dirname(file.fileName)))))
+  const reactions = names.filter((name) => /(?:Event|Projection)Handler$/.test(name));
+  if (
+    reactions.length &&
+    (reactions.length !== 1 ||
+      !['event-handlers', 'projections'].includes(path.basename(path.dirname(file.fileName))))
+  )
     errors.push(`${file.fileName}: keep each event reaction in its own event-handlers or projections module`);
   return errors;
 }
@@ -26,18 +48,25 @@ function enclosing(node, predicate) {
   for (let parent = node.parent; parent; parent = parent.parent) if (predicate(parent)) return parent;
 }
 function aggregateClass(node) {
-  return ts.isClassDeclaration(node) && node.members.some(member => member.name?.getText() === 'snapshot') &&
+  return (
+    ts.isClassDeclaration(node) &&
+    node.members.some((member) => member.name?.getText() === 'snapshot') &&
     node.getSourceFile().fileName.replaceAll('\\', '/').includes('/contexts/') &&
-    node.getSourceFile().fileName.replaceAll('\\', '/').includes('/domain/');
+    node.getSourceFile().fileName.replaceAll('\\', '/').includes('/domain/')
+  );
 }
 function commandExecution(node) {
   const method = enclosing(node, ts.isMethodDeclaration);
   const owner = enclosing(node, ts.isClassDeclaration);
-  return owner?.name?.text.endsWith('CommandHandler') && method?.name?.getText() === 'execute' &&
-    owner.getSourceFile().fileName.replaceAll('\\', '/').includes('/application/');
+  return (
+    owner?.name?.text.endsWith('CommandHandler') &&
+    method?.name?.getText() === 'execute' &&
+    owner.getSourceFile().fileName.replaceAll('\\', '/').includes('/application/')
+  );
 }
 export function violations(program, selected) {
-  const checker = program.getTypeChecker(), errors = [];
+  const checker = program.getTypeChecker(),
+    errors = [];
   function symbolAt(node) {
     let symbol = checker.getSymbolAtLocation(node);
     if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol);
@@ -46,12 +75,17 @@ export function violations(program, selected) {
   for (const file of program.getSourceFiles()) {
     if (!selected(file.fileName)) continue;
     const stores = new Map();
-    const report = (node, message) => errors.push(`${file.fileName}:${file.getLineAndCharacterOfPosition(node.getStart()).line+1}: ${message}`);
+    const report = (node, message) =>
+      errors.push(
+        `${file.fileName}:${file.getLineAndCharacterOfPosition(node.getStart()).line + 1}: ${message}`,
+      );
     function visit(node) {
       let forbidden = false;
       if (ts.isNewExpression(node)) {
         const declarations = symbolAt(node.expression)?.declarations ?? [];
-        const restoring = /\/contexts\/[^/]+\/adaptors\/persistence\//.test(file.fileName.replaceAll('\\', '/'));
+        const restoring = /\/contexts\/[^/]+\/adaptors\/persistence\//.test(
+          file.fileName.replaceAll('\\', '/'),
+        );
         forbidden = declarations.some(aggregateClass) && !restoring;
       }
       if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
@@ -62,13 +96,31 @@ export function violations(program, selected) {
           symbol = checker.getPropertyOfType(checker.getTypeAtLocation(node.expression), key.text);
         const declarations = symbol?.declarations ?? [];
         const core = file.fileName.replaceAll('\\', '/').includes('/application/');
-        if (core && declarations.some(d => ts.isClassDeclaration(d.parent) && d.parent.name?.text.endsWith('CommandHandler')))
-          report(node, 'application handlers must use durable commands; direct command-handler capabilities are forbidden');
-        const repositorySave = name === 'save' && declarations.some(d =>
-          ['WriteRepository', 'MappedWriteRepository', 'PostgresSnapshotWriteRepository'].includes(d.parent.name?.text));
-        if (repositorySave && core && !commandExecution(node)) report(node, 'aggregate save outside CommandHandler.execute');
-        const store = declarations.some(d => (ts.isInterfaceDeclaration(d.parent) || ts.isClassDeclaration(d.parent)) &&
-          ['AggregateTransaction', 'PostgresAggregateTransaction'].includes(d.parent.name?.text) && name === 'execute');
+        if (
+          core &&
+          declarations.some(
+            (d) => ts.isClassDeclaration(d.parent) && d.parent.name?.text.endsWith('CommandHandler'),
+          )
+        )
+          report(
+            node,
+            'application handlers must use durable commands; direct command-handler capabilities are forbidden',
+          );
+        const repositorySave =
+          name === 'save' &&
+          declarations.some((d) =>
+            ['WriteRepository', 'MappedWriteRepository', 'PostgresSnapshotWriteRepository'].includes(
+              d.parent.name?.text,
+            ),
+          );
+        if (repositorySave && core && !commandExecution(node))
+          report(node, 'aggregate save outside CommandHandler.execute');
+        const store = declarations.some(
+          (d) =>
+            (ts.isInterfaceDeclaration(d.parent) || ts.isClassDeclaration(d.parent)) &&
+            ['AggregateTransaction', 'PostgresAggregateTransaction'].includes(d.parent.name?.text) &&
+            name === 'execute',
+        );
         if (store && core) report(node, 'transaction coordination belongs in command infrastructure');
         if (store && commandExecution(node)) {
           const method = enclosing(node, ts.isMethodDeclaration);
@@ -79,21 +131,28 @@ export function violations(program, selected) {
           if (!ts.isCallExpression(node.parent) || node.parent.expression !== node || repeated)
             report(node, 'unit of work execution must be one direct, non-repeated call');
         }
-        forbidden ||= declarations.some(declaration => {
+        forbidden ||= declarations.some((declaration) => {
           const owner = declaration.parent;
-          return (aggregateClass(owner) && !readMethods.has(name)) ||
+          return (
+            (aggregateClass(owner) && !readMethods.has(name)) ||
             ((ts.isInterfaceDeclaration(owner) || ts.isClassDeclaration(owner)) &&
-              ['AggregateTransaction', 'PostgresAggregateTransaction'].includes(owner.name?.text) && name === 'execute' && core);
+              ['AggregateTransaction', 'PostgresAggregateTransaction'].includes(owner.name?.text) &&
+              name === 'execute' &&
+              core)
+          );
         });
       }
       if (forbidden && !commandExecution(node)) {
         const position = file.getLineAndCharacterOfPosition(node.getStart());
-        errors.push(`${file.fileName}:${position.line+1}: aggregate mutation capability outside CommandHandler.execute`);
+        errors.push(
+          `${file.fileName}:${position.line + 1}: aggregate mutation capability outside CommandHandler.execute`,
+        );
       }
       ts.forEachChild(node, visit);
     }
     visit(file);
-    for (const [method, count] of stores) if (count > 1) report(method, 'a command handler may invoke the unit of work once');
+    for (const [method, count] of stores)
+      if (count > 1) report(method, 'a command handler may invoke the unit of work once');
   }
   return errors;
 }
@@ -104,11 +163,15 @@ export function productionProgram() {
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const program = productionProgram();
-  const selected = name => name.startsWith(path.join(root, 'services/engagement/src')) &&
+  const selected = (name) =>
+    name.startsWith(path.join(root, 'services/engagement/src')) &&
     !/\/(generated|domain)\/|\.(test|integration|test-support)\.ts$/.test(name);
   const errors = violations(program, selected);
   for (const file of program.getSourceFiles())
-    if (selected(file.fileName) && file.fileName.includes('/application/')) errors.push(...commandLayout(file));
-  if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
-  else console.info('TypeScript command mutation boundaries verified');
+    if (selected(file.fileName) && file.fileName.includes('/application/'))
+      errors.push(...commandLayout(file));
+  if (errors.length) {
+    console.error(errors.join('\n'));
+    process.exitCode = 1;
+  } else console.info('TypeScript command mutation boundaries verified');
 }

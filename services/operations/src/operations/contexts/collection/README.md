@@ -38,7 +38,13 @@ pnpm context collection
 pnpm test:focused operations --context collection
 ```
 
-The focused lane includes this context's native tests and behavioural scenarios.
+The focused lane first checks the owning service, then runs this context's native
+tests and behavioural scenarios. Use `pnpm check:watch` for checks after edits.
 Run `pnpm verify` and `pnpm test:integration` for the complete hand-off checks.
 
 Browser features: [collection](../../../../../web/src/features/collection).
+
+Published event schemas own their identities and boundary constraints. Contract
+generation supplies plain DTOs and adaptor conversions. This context's messaging
+subscription manifest declares its consumers; composition binds their reactions.
+Keep semantic evidence checks and domain-to-publication mappings in its adaptors.

@@ -51,7 +51,7 @@ func main() {
 			return nil
 		}
 		body, err := io.ReadAll(response.Body)
-		response.Body.Close()
+		_ = response.Body.Close()
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func main() {
 	go store.Run(ctx)
 	client := redis.NewClient(&redis.Options{Addr: required("VALKEY_ADDRESS"), Username: "sessions",
 		Password: required("SESSION_PASSWORD")})
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	api := (web.Config{Sessions: store, OperatorPassword: required("OPERATOR_PASSWORD"),
 		CLIKey: required("API_KEY"), ProxySecret: required("CONNECT_PROXY_SECRET"),
 		Origins: []string{required("WEB_ORIGIN")}}).Handler()

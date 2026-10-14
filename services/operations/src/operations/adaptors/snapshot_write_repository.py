@@ -1,4 +1,5 @@
 """Transaction-scoped persistence of one authoritative aggregate snapshot."""
+
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from psycopg import Connection
@@ -10,10 +11,15 @@ from operations.foundation.domain import integer
 
 class PostgresSnapshotWriteRepository[S: Mapping[str, object]]:
     """Own aggregate SQL and stage one root until the command transaction flushes it."""
-    def __init__(self, connection: Connection[Row], kind: str, target: str, restore: Callable[[object], S]) -> None:
+
+    def __init__(
+        self, connection: Connection[Row], kind: str, target: str, restore: Callable[[object], S]
+    ) -> None:
         self._connection, self._kind, self._target = connection, kind, target
         self._active = True
-        row = connection.execute("SELECT version,state FROM cafe.aggregates WHERE kind=%s AND id=%s FOR UPDATE", (kind, target)).fetchone()
+        row = connection.execute(
+            "SELECT version,state FROM cafe.aggregates WHERE kind=%s AND id=%s FOR UPDATE", (kind, target)
+        ).fetchone()
         self.version = integer(row["version"]) if row else 0
         self._exists = row is not None
         self._state = restore(row["state"]) if row else None
@@ -46,11 +52,16 @@ class PostgresSnapshotWriteRepository[S: Mapping[str, object]]:
             return self.version
         version = self.version + 1
         if self._exists:
-            result = self._connection.execute("""UPDATE cafe.aggregates SET version=%s,state=%s
-                WHERE kind=%s AND id=%s AND version=%s""", (version, Jsonb(dict(self.pending)), self._kind, self._target, self.version))
+            result = self._connection.execute(
+                """UPDATE cafe.aggregates SET version=%s,state=%s
+                WHERE kind=%s AND id=%s AND version=%s""",
+                (version, Jsonb(dict(self.pending)), self._kind, self._target, self.version),
+            )
             if result.rowcount != 1:
                 raise RuntimeError("Optimistic update lost its owner version")
         else:
-            self._connection.execute("INSERT INTO cafe.aggregates(kind,id,version,state) VALUES(%s,%s,%s,%s)",
-                                     (self._kind, self._target, version, Jsonb(dict(self.pending))))
+            self._connection.execute(
+                "INSERT INTO cafe.aggregates(kind,id,version,state) VALUES(%s,%s,%s,%s)",
+                (self._kind, self._target, version, Jsonb(dict(self.pending))),
+            )
         return version

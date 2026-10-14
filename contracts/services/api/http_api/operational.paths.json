@@ -11,22 +11,15 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "status",
-                  "role"
-                ],
+                "required": ["status", "role"],
                 "properties": {
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "ok"
-                    ]
+                    "enum": ["ok"]
                   },
                   "role": {
                     "type": "string",
-                    "enum": [
-                      "client-api"
-                    ]
+                    "enum": ["client-api"]
                   }
                 }
               }
@@ -49,12 +42,12 @@
           "description": "Successful response",
           "content": {
             "application/json": {
-              "schema": {"$ref": "operational.schemas.json#/schemas/SessionDiagnostics"}
+              "schema": { "$ref": "operational.schemas.json#/schemas/SessionDiagnostics" }
             }
           }
         },
-        "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"},
-        "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"}
+        "401": { "$ref": "../../../shared/http_api/responses.json#/responses/401" },
+        "503": { "$ref": "../../../shared/http_api/responses.json#/responses/503" }
       }
     }
   }

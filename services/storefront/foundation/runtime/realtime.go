@@ -53,7 +53,7 @@ func publishRealtime(ctx context.Context, client *http.Client, url, key string, 
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	var result struct {
 		Error json.RawMessage `json:"error"`
 	}

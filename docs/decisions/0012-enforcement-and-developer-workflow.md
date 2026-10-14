@@ -81,3 +81,6 @@ The generator cannot infer invariants, event mappings or safe Protobuf field tag
 Debug configurations target native tests without opening public debug listeners.
 Formatting operates on explicit files or changed tracked files and leaves generated
 bindings to their generators. All runtime tooling remains development-only.
+
+[Decision 0018](0018-static-checks-and-formatting.md) extends the edit workflow with
+shared static checks, continuous feedback and complete formatting enforcement.

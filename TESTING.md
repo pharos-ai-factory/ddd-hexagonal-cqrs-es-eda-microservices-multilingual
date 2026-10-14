@@ -4,12 +4,12 @@
 
 - Service/context ownership and inward imports across Go, Python and TypeScript;
   policy negative fixtures and large-file responsibility checks.
-- Formatting, race-enabled unit tests and vet for both Go modules.
+- Whole-repository handwritten formatting; vet, Staticcheck, errcheck and race-enabled tests for both Go modules.
 - Reproducible OpenAPI bundles, complete Go route registration and schema
   conformance for every Go HTTP operation; negative wire-drift examples.
 - Frozen Python dependencies, Ruff, strict Mypy over handwritten source/tests,
   type-gate negative examples and domain/contract tests.
-- Engagement and web TypeScript checks and behaviour tests.
+- Strict TypeScript checks and typed ESLint across services, native/Gherkin tests and browser fixtures.
 - Owner HTTP boundary guards, operational endpoint authentication and rejection of
   every public business path on each owner service.
 - 51 executable Gherkin scenarios through native Go/Python/TypeScript handlers;
@@ -23,18 +23,22 @@ that the live workflows passed.
 
 ## Choose the right feedback loop
 
-| Check | Command | What failure means |
-| --- | --- | --- |
-| One context's native tests and scenarios | `pnpm test:focused <service> --context <context>` | Owned behaviour or its bindings failed; this lane omits full architecture/type/infrastructure checks |
-| Every service's native tests | `pnpm test:unit` | A native test failed; standalone Engagement Gherkin scenarios are covered by `pnpm test:bdd`/`pnpm verify` |
-| Imports, Python use-case rules, navigation and file size | `pnpm check:architecture` | Ownership, an inward dependency, Python mutation/layout, context navigation or responsibility limit was violated |
-| TypeScript mutation and use-case layout | `node scripts/check_command_boundaries.mjs` | A compiler-resolved aggregate/store capability or command/query/reaction layout was violated |
-| Go mutation and use-case layout | `python3 scripts/go.py test ./tests/architecture` | A typed Go capability or application package/file layout was violated |
-| Generated HTTP outputs | `pnpm check:http` | Embedded bundles, frontend types or API mappings differ from OpenAPI sources |
-| All generated outputs | `pnpm check:contracts` | A generated file changed, disappeared or needs adding |
-| Historical public/private compatibility | `pnpm check:compatibility --against <commit>` | A published interface or accepted stored-message fixture is incompatible with that revision |
-| Complete deterministic gate | `pnpm verify` | At least one generation, compatibility, architecture, type, native or fast-scenario check failed |
-| Real infrastructure and browser | `pnpm test:integration` | A real authority, transaction, delivery, workflow or browser boundary failed |
+| Check                                                    | Command                                           | What failure means                                                                                               |
+| -------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| All static checks                                        | `pnpm check`                                      | Formatting, types, lint or an architectural boundary failed                                                      |
+| Edited projects                                          | `pnpm check --changed`                            | A changed owner or shared consumer failed static checks                                                          |
+| Continuous edit feedback                                 | `pnpm check:watch [service ...]`                  | Initial or subsequent debounced project checks failed                                                            |
+| Complete formatting baseline                             | `pnpm format:check --all`                         | A handwritten file differs from its formatter                                                                    |
+| One context's native tests and scenarios                 | `pnpm test:focused <service> --context <context>` | Owned static checks, behaviour or bindings failed; infrastructure remains separate                               |
+| Every service's native tests                             | `pnpm test:unit`                                  | A native test failed; standalone Engagement Gherkin scenarios are covered by `pnpm test:bdd`/`pnpm verify`       |
+| Imports, Python use-case rules, navigation and file size | `pnpm check:architecture`                         | Ownership, an inward dependency, Python mutation/layout, context navigation or responsibility limit was violated |
+| TypeScript mutation and use-case layout                  | `node scripts/check_command_boundaries.mjs`       | A compiler-resolved aggregate/store capability or command/query/reaction layout was violated                     |
+| Go mutation and use-case layout                          | `python3 scripts/go.py test ./tests/architecture` | A typed Go capability or application package/file layout was violated                                            |
+| Generated HTTP outputs                                   | `pnpm check:http`                                 | Embedded bundles, frontend types or API mappings differ from OpenAPI sources                                     |
+| All generated outputs                                    | `pnpm check:contracts`                            | A generated file changed, disappeared or needs adding                                                            |
+| Historical public/private compatibility                  | `pnpm check:compatibility --against <commit>`     | A published interface or accepted stored-message fixture is incompatible with that revision                      |
+| Complete deterministic gate                              | `pnpm verify`                                     | At least one generation, compatibility, architecture, type, native or fast-scenario check failed                 |
+| Real infrastructure and browser                          | `pnpm test:integration`                           | A real authority, transaction, delivery, workflow or browser boundary failed                                     |
 
 The compatibility gate permits only the 17 direct Storefront business operation
 removals recorded by [decision 0016](docs/decisions/0016-owner-messaging-boundary.md).
@@ -46,6 +50,11 @@ needs no pre-existing `.tools/bin` installation. The first run installs the
 compiler; later runs reuse it after checking its version. Installation or version
 validation failures stop generation. Generated-drift checks keep their temporary
 checkout isolated, so standalone tests initialise their own required tools.
+
+Static checks run without live services. `pnpm verify` invokes `pnpm check` first;
+CI therefore shares the same configuration and pinned tools.
+See [decision 0018](docs/decisions/0018-static-checks-and-formatting.md) for scopes
+and the narrow asynchronous-test and named-port lint exceptions.
 
 Run commands from the repository root unless a service directory is specified.
 The Go wrapper defaults to Storefront; `CAFE_GO_PROJECT=services/api` selects the
@@ -71,24 +80,24 @@ Both full hand-off gates are required, and their observed results belong in
 and separate credentials. It builds all applications, including the Next.js
 static export served by the ingress, and runs:
 
-| Boundary | Required evidence |
-| --- | --- |
-| Go PostgreSQL | State/receipt/outbox atomicity, terminated connection, concurrent commands, conflicting consumer identities, restricted roles, immutable evidence and fenced leases |
-| Python and TypeScript PostgreSQL | Repository scope/lifetime, rejected staged saves, encoder-failure rollback, recorded retry outcomes, conflicting input, expected-version races, atomic browser publications and realtime lease fencing |
-| RabbitMQ | Protobuf metadata, confirmed mandatory publication, commit-before-ACK redelivery, bounded retry, dead-letter preservation, replay, private-topic restrictions and denial of runtime topology mutation |
-| Context migrations | Independent owner ledgers, additive upgrade preserving roots, idempotent reapplication, checksum/owner rejection and rollback |
-| Query completeness | More than 100 roots in each language; complete unpaginated arrays and cursor traversal without omissions or duplicates |
-| Cross-language workflow | Menu → order → preparation → collection → account → reward → notifications; Operations outage and paused private Reward consumer |
-| RabbitMQ requests | Restricted API/owner authority, commands and queries across all three runtimes, independent command/query consumers, exact committed reply recovery after an unroutable publication, atomic rollback and stable receipts/outgoing intent |
-| HTTP contracts | Authenticated probes reject direct business HTTP on all owner processes; live OpenAPI response validation through the Go API for all six contexts, complete/paginated reads, item DTOs, missing versions, missing roots and conflicting command identities |
-| Gherkin PostgreSQL | Recorded `menu_pending` after projection arrival, new-attempt success and conflicting key reuse; atomic browser intent |
-| Gherkin live workflows | Ten focused scenarios: repeated business facts with new event IDs, duplicate grants/notifications, concurrent collections/redemptions, customer isolation, lost provider response and recorded completion rejection |
-| Provider | Acceptance followed by a lost response creates one provider effect |
-| Browser / Centrifugo | Two independent windows, more than 100 drinks, persisted uncertain command retry across authentication loss, typed live updates, no business polling, recovered history, missing-history reconciliation, mobile layout and logout |
-| Realtime authority | Context credentials cannot publish another channel, disconnect sessions or use administrative APIs |
-| Workflow diagnostics | Authenticated owned backlog metrics in all runtimes, pending-work age, redacted pre-claim failures and session revocation counters |
-| Valkey authority | Realtime credentials cannot authenticate to session Valkey, write session keys or administer ACL users; permission probes require a disposable project |
-| In-flight authentication | A held successful connect response cannot restore access after the real Go session worker has completed logout disconnection |
+| Boundary                         | Required evidence                                                                                                                                                                                                                                          |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Go PostgreSQL                    | State/receipt/outbox atomicity, terminated connection, concurrent commands, conflicting consumer identities, restricted roles, immutable evidence and fenced leases                                                                                        |
+| Python and TypeScript PostgreSQL | Repository scope/lifetime, rejected staged saves, encoder-failure rollback, recorded retry outcomes, conflicting input, expected-version races, atomic browser publications and realtime lease fencing                                                     |
+| RabbitMQ                         | Protobuf metadata, confirmed mandatory publication, commit-before-ACK redelivery, bounded retry, dead-letter preservation, replay, private-topic restrictions and denial of runtime topology mutation                                                      |
+| Context migrations               | Independent owner ledgers, additive upgrade preserving roots, idempotent reapplication, checksum/owner rejection and rollback                                                                                                                              |
+| Query completeness               | More than 100 roots in each language; complete unpaginated arrays and cursor traversal without omissions or duplicates                                                                                                                                     |
+| Cross-language workflow          | Menu → order → preparation → collection → account → reward → notifications; Operations outage and paused private Reward consumer                                                                                                                           |
+| RabbitMQ requests                | Restricted API/owner authority, commands and queries across all three runtimes, independent command/query consumers, exact committed reply recovery after an unroutable publication, atomic rollback and stable receipts/outgoing intent                   |
+| HTTP contracts                   | Authenticated probes reject direct business HTTP on all owner processes; live OpenAPI response validation through the Go API for all six contexts, complete/paginated reads, item DTOs, missing versions, missing roots and conflicting command identities |
+| Gherkin PostgreSQL               | Recorded `menu_pending` after projection arrival, new-attempt success and conflicting key reuse; atomic browser intent                                                                                                                                     |
+| Gherkin live workflows           | Ten focused scenarios: repeated business facts with new event IDs, duplicate grants/notifications, concurrent collections/redemptions, customer isolation, lost provider response and recorded completion rejection                                        |
+| Provider                         | Acceptance followed by a lost response creates one provider effect                                                                                                                                                                                         |
+| Browser / Centrifugo             | Two independent windows, more than 100 drinks, persisted uncertain command retry across authentication loss, typed live updates, no business polling, recovered history, missing-history reconciliation, mobile layout and logout                          |
+| Realtime authority               | Context credentials cannot publish another channel, disconnect sessions or use administrative APIs                                                                                                                                                         |
+| Workflow diagnostics             | Authenticated owned backlog metrics in all runtimes, pending-work age, redacted pre-claim failures and session revocation counters                                                                                                                         |
+| Valkey authority                 | Realtime credentials cannot authenticate to session Valkey, write session keys or administer ACL users; permission probes require a disposable project                                                                                                     |
+| In-flight authentication         | A held successful connect response cannot restore access after the real Go session worker has completed logout disconnection                                                                                                                               |
 
 Fixtures use real PostgreSQL and RabbitMQ. Missing infrastructure is a failure,
 not a skipped pass. Component fixtures are cleared only in the guarded disposable
@@ -213,3 +222,9 @@ adaptors importing business implementations and queries importing domain types.
 Read-boundary tests preserve missing rows, revisions and continuations and reject
 corrupt stored state. Python focused discovery recursively includes the owner's
 `tests/contexts/<context>/` tree and its Gherkin binding.
+
+Published-event generator tests add an event schema without editing the shared
+envelope or registry and reject invalid ownership, constraints and subscriptions.
+Consumer boundary tests cover semantic evidence checks. The generic public envelope
+transition and newly declared constraints are accepted explicitly by decision 0017;
+comparisons against a current-format baseline retain ordinary compatibility checks.

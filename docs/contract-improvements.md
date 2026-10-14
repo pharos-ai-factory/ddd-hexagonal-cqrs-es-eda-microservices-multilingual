@@ -3,21 +3,20 @@
 The six agreed improvements are tracked here. Published sources retain the
 context-first layout; domain facts and private delivery formats remain owner-local.
 
-| Issue | Intended result | Status |
-| --- | --- | --- |
-| 1. Explicit required input fields | Protobuf contracts distinguish mandatory inputs from future optional additions; validators preserve explicit zero values | Complete |
-| 2. Typed boundary translation | API and owner adaptors use explicit mappings into plain application types; business payload mapping has no reflection or JSON bridge | Complete |
-| 3. Independent command/query delivery | Each owner has separate command and query queues and consumers | Complete |
-| 4. Durable command replies | Exact command reply bytes commit with the aggregate, receipt, outcome and outgoing intent; recovery publishes committed replies | Complete |
-| 5. Context-owned request packages | Each context owns its Protobuf request/reply envelopes and package; shared messages contain technical metadata only | Complete |
-| 6. Frontend OpenAPI enforcement | Generated operation/request/response types are used by frontend calls; contract drift and incompatible usage fail verification | Complete |
+| Issue                                 | Intended result                                                                                                                      | Status   |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 1. Explicit required input fields     | Protobuf contracts distinguish mandatory inputs from future optional additions; validators preserve explicit zero values             | Complete |
+| 2. Typed boundary translation         | API and owner adaptors use explicit mappings into plain application types; business payload mapping has no reflection or JSON bridge | Complete |
+| 3. Independent command/query delivery | Each owner has separate command and query queues and consumers                                                                       | Complete |
+| 4. Durable command replies            | Exact command reply bytes commit with the aggregate, receipt, outcome and outgoing intent; recovery publishes committed replies      | Complete |
+| 5. Context-owned request packages     | Each context owns its Protobuf request/reply envelopes and package; shared messages contain technical metadata only                  | Complete |
+| 6. Frontend OpenAPI enforcement       | Generated operation/request/response types are used by frontend calls; contract drift and incompatible usage fail verification       | Complete |
 
 Verification must cover omitted optional inputs, zero values, complete operation
 mapping, queue isolation, commit/reply-loss recovery and a frontend compilation
 failure after an incompatible specification change. `pnpm verify` and
 `pnpm test:integration` remain the hand-off gates. Generated-file drift checks
 must detect changed, missing and newly generated files.
-
 
 Issue 6 records the frontend enforcement gap added to the original five items.
 Review follow-ups strengthen these guarantees: native owner envelopes allow

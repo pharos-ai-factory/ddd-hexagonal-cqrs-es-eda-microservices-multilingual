@@ -4,6 +4,8 @@
     "ms-python.python",
     "ms-python.debugpy",
     "esbenp.prettier-vscode",
-    "charliermarsh.ruff"
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker",
+    "dbaeumer.vscode-eslint"
   ]
 }

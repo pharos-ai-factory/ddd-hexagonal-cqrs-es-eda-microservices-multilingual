@@ -1,4 +1,5 @@
 """Validate persisted ticket state for both command and query adaptors."""
+
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketSnapshot
 
 

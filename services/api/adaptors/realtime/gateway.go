@@ -131,7 +131,7 @@ func (c Config) forward(w http.ResponseWriter, r *http.Request, client *http.Cli
 		http.Error(w, "upstream unavailable", http.StatusBadGateway)
 		return
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(response.StatusCode)
 	_, _ = io.Copy(w, io.LimitReader(response.Body, MaxRequestBytes))

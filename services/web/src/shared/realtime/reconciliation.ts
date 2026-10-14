@@ -1,7 +1,8 @@
 // A history gap during an in-flight query requires another query afterwards.
 // Coalesce repeated requests, but never discard the need for a fresh snapshot.
 export function reconciliationQueue(reconcile: () => Promise<void>) {
-  let requested = false, closed = false;
+  let requested = false,
+    closed = false;
   let running: Promise<void> | undefined;
   return {
     request(): Promise<void> {
@@ -14,11 +15,16 @@ export function reconciliationQueue(reconcile: () => Promise<void>) {
               requested = false;
               await reconcile();
             }
-          } finally { running = undefined; }
+          } finally {
+            running = undefined;
+          }
         })();
       }
       return running;
     },
-    close() { closed = true; requested = false; },
+    close() {
+      closed = true;
+      requested = false;
+    },
   };
 }

@@ -1,4 +1,5 @@
 """Native transport translation checks; delivery claims use real RabbitMQ."""
+
 import pytest
 from operations.contexts.collection.adaptors.messaging import requests as collection_wire
 from operations.adaptors.requests import RabbitMQRequestRegistry, validate
@@ -21,10 +22,12 @@ def command() -> Request:
 
 def test_wire_command_maps_to_plain_input_and_preserves_zero_version() -> None:
     captured: list[Metadata] = []
+
     def execute(metadata: Metadata, value: CollectOrderCommand) -> Outcome:
         assert value == {"code": "1234"}
         captured.append(metadata)
         return Outcome(aggregateId=ID, version=1, status="collected")
+
     registry = RabbitMQRequestRegistry("collection")
     registry.command("collectOrder", collection_wire.collect, execute)
     reply = registry.handle(Request.FromString(command().SerializeToString()))
@@ -51,12 +54,21 @@ def test_future_optional_input_is_not_required_and_explicit_zero_is_present() ->
     from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
     from operations.adaptors.generated.cafe.requests.v1.validation_pb2 import required_input
     from operations.adaptors.requests import required_inputs
-    source = descriptor_pb2.FileDescriptorProto(name="future_python_input.proto", package="test", syntax="proto3")
+
+    source = descriptor_pb2.FileDescriptorProto(
+        name="future_python_input.proto", package="test", syntax="proto3"
+    )
     message = source.message_type.add(name="Input")
     for index, name in enumerate(("price", "note")):
-        message.oneof_decl.add(name="_"+name)
-        field = message.field.add(name=name, number=index+1, type=5 if index == 0 else 9,
-                                  label=1, oneof_index=index, proto3_optional=True)
+        message.oneof_decl.add(name="_" + name)
+        field = message.field.add(
+            name=name,
+            number=index + 1,
+            type=5 if index == 0 else 9,
+            label=1,
+            oneof_index=index,
+            proto3_optional=True,
+        )
         if index == 0:
             field.options.Extensions[required_input] = True  # type: ignore[index]
     descriptor_pool.Default().Add(source)

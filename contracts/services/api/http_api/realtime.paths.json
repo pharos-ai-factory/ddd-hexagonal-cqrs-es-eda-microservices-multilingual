@@ -29,18 +29,12 @@
                   {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "result"
-                    ],
+                    "required": ["result"],
                     "properties": {
                       "result": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": [
-                          "user",
-                          "subs",
-                          "expire_at"
-                        ],
+                        "required": ["user", "subs", "expire_at"],
                         "properties": {
                           "user": {
                             "type": "string"
@@ -65,17 +59,12 @@
                   {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "disconnect"
-                    ],
+                    "required": ["disconnect"],
                     "properties": {
                       "disconnect": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": [
-                          "code",
-                          "reason"
-                        ],
+                        "required": ["code", "reason"],
                         "properties": {
                           "code": {
                             "type": "integer"
@@ -92,7 +81,7 @@
             }
           }
         },
-        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"}
+        "403": { "$ref": "../../../shared/http_api/responses.json#/responses/403" }
       }
     }
   },
@@ -126,16 +115,12 @@
                   {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "result"
-                    ],
+                    "required": ["result"],
                     "properties": {
                       "result": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": [
-                          "expire_at"
-                        ],
+                        "required": ["expire_at"],
                         "properties": {
                           "expire_at": {
                             "type": "integer",
@@ -148,22 +133,16 @@
                   {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "result"
-                    ],
+                    "required": ["result"],
                     "properties": {
                       "result": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": [
-                          "expired"
-                        ],
+                        "required": ["expired"],
                         "properties": {
                           "expired": {
                             "type": "boolean",
-                            "enum": [
-                              true
-                            ]
+                            "enum": [true]
                           }
                         }
                       }
@@ -174,7 +153,7 @@
             }
           }
         },
-        "403": {"$ref": "../../../shared/http_api/responses.json#/responses/403"}
+        "403": { "$ref": "../../../shared/http_api/responses.json#/responses/403" }
       }
     }
   }

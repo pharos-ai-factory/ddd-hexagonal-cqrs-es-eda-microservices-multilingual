@@ -3,12 +3,7 @@
     "Drink": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "revision",
-        "published"
-      ],
+      "required": ["id", "name", "revision", "published"],
       "properties": {
         "id": {
           "type": "string",
@@ -31,14 +26,7 @@
     "Offer": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "code",
-        "drinkId",
-        "drinkRevision",
-        "name",
-        "minor",
-        "currency"
-      ],
+      "required": ["code", "drinkId", "drinkRevision", "name", "minor", "currency"],
       "properties": {
         "code": {
           "type": "string"
@@ -66,12 +54,7 @@
     "Edition": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "currency",
-        "status",
-        "offers"
-      ],
+      "required": ["id", "currency", "status", "offers"],
       "properties": {
         "id": {
           "type": "string",
@@ -82,14 +65,11 @@
         },
         "status": {
           "type": "string",
-          "enum": [
-            "draft",
-            "published"
-          ]
+          "enum": ["draft", "published"]
         },
         "offers": {
           "type": "array",
-          "items": {"$ref": "#/schemas/Offer"},
+          "items": { "$ref": "#/schemas/Offer" },
           "nullable": true
         }
       }
@@ -97,9 +77,7 @@
     "DrinkCommand": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "name": {
           "type": "string"
@@ -109,9 +87,7 @@
     "EditionCommand": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "currency"
-      ],
+      "required": ["currency"],
       "properties": {
         "currency": {
           "type": "string"
@@ -121,12 +97,7 @@
     "OfferCommand": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "code",
-        "drinkId",
-        "drinkRevision",
-        "minor"
-      ],
+      "required": ["code", "drinkId", "drinkRevision", "minor"],
       "properties": {
         "code": {
           "type": "string"
@@ -147,10 +118,7 @@
     "PriceCommand": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "code",
-        "minor"
-      ],
+      "required": ["code", "minor"],
       "properties": {
         "code": {
           "type": "string"

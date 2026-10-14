@@ -6,17 +6,20 @@ from operations.foundation.application import ApplicationError
 
 class CollectOrderCommand(TypedDict):
     """Requests collection using the supplied collection code."""
+
     code: str
 
 
 class PickupNotFoundApplicationError(ApplicationError):
     """Reports the expected rejection when the targeted pickup has no stored state."""
+
     def __init__(self) -> None:
         super().__init__("not_found", "The pickup does not exist")
 
 
 class CollectOrderCommandHandler:
     """Checks the collection code through the aggregate and commits its collection fact."""
+
     def __init__(self, repository: PickupWriteRepository) -> None:
         self.repository = repository
 

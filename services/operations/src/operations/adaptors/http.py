@@ -1,4 +1,5 @@
 """Authentication and error responses for the operational HTTP surface."""
+
 from operations.foundation.secrets import secret
 import hmac
 from collections.abc import Awaitable, Callable
@@ -18,7 +19,7 @@ def authenticate(app: FastAPI) -> None:
     @app.middleware("http")
     async def auth(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         if request.url.path != "/healthz" and not hmac.compare_digest(
-            request.headers.get("authorization", ""), "Bearer "+key
+            request.headers.get("authorization", ""), "Bearer " + key
         ):
             return JSONResponse({"code": "unauthorised"}, 401)
         return await call_next(request)

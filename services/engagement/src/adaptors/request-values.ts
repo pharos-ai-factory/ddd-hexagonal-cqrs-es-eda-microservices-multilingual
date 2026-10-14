@@ -8,6 +8,7 @@ export function text(value: unknown): string {
   return value;
 }
 export function integer(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isSafeInteger(value)) throw new Error('A safe integer is required');
+  if (typeof value !== 'number' || !Number.isSafeInteger(value))
+    throw new Error('A safe integer is required');
   return value;
 }

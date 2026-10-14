@@ -6,11 +6,13 @@ from operations.foundation.domain import Rejection
 
 class StartPreparationCommand(TypedDict):
     """Requests the queued-to-preparing transition for the targeted ticket."""
+
     pass
 
 
 class StartPreparationCommandHandler:
     """Loads one ticket and applies its start rule within a command transaction."""
+
     def __init__(self, repository: TicketWriteRepository) -> None:
         self.repository = repository
 

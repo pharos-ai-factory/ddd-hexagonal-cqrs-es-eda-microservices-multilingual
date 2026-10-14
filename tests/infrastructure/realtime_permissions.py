@@ -1,4 +1,5 @@
 """Prove a running publisher cannot cross the gateway's authority boundary."""
+
 import os
 from pathlib import Path
 import sys
@@ -8,7 +9,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from dev import compose, load
 
 
-PROBE = '''
+PROBE = """
 import json
 import os
 import urllib.error
@@ -35,7 +36,7 @@ for owner in ("preparation", "collection"):
             status = error.code
         assert status == expected, f"{owner} {path}: expected {expected}, received {status}"
 print("Realtime gateway validates own publications and denies foreign publication and administration")
-'''
+"""
 
 
 def main():
@@ -44,8 +45,7 @@ def main():
         raise RuntimeError("Permission probes require the disposable integration project")
     # Secrets are read inside the authorised workload and never returned to the host.
     # Invalid own bytes prove authentication reached validation without publishing.
-    compose(env_file, "exec", "-T", "operations", "/app/.venv/bin/python", "-",
-            input=PROBE, text=True)
+    compose(env_file, "exec", "-T", "operations", "/app/.venv/bin/python", "-", input=PROBE, text=True)
 
 
 if __name__ == "__main__":

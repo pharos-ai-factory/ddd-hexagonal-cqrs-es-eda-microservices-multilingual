@@ -7,9 +7,7 @@
     "Error": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "code"
-      ],
+      "required": ["code"],
       "properties": {
         "code": {
           "type": "string"
@@ -22,11 +20,7 @@
     "Outcome": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "aggregateId",
-        "version",
-        "status"
-      ],
+      "required": ["aggregateId", "version", "status"],
       "properties": {
         "aggregateId": {
           "type": "string",
@@ -44,12 +38,7 @@
     "RejectedOutcome": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "aggregateId",
-        "version",
-        "status",
-        "rejection"
-      ],
+      "required": ["aggregateId", "version", "status", "rejection"],
       "properties": {
         "aggregateId": {
           "type": "string",
@@ -65,10 +54,7 @@
         "rejection": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "code",
-            "message"
-          ],
+          "required": ["code", "message"],
           "properties": {
             "code": {
               "type": "string"

@@ -1,7 +1,14 @@
 /** Represents an expected business refusal whose stable code and message can be recorded. */
 export class Rejection extends Error {
-  constructor(readonly code: string, message: string) { super(message); }
-  outcome() { return {code: this.code, message: this.message}; }
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+  }
+  outcome() {
+    return { code: this.code, message: this.message };
+  }
 }
 
 // Contexts define named subclasses for rules callers need to identify.

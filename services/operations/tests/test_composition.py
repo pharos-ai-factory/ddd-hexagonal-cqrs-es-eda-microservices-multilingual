@@ -1,10 +1,17 @@
 """Resolve all application providers without opening infrastructure."""
+
 from collections.abc import Iterator
 from unittest.mock import Mock
 from dependency_injector import providers
 from operations.adaptors.postgres import PostgresContextDatabase
-from operations.apps.composition.preparation import PreparationContainer, subscriptions as preparation_subscriptions
-from operations.apps.composition.collection import CollectionContainer, subscriptions as collection_subscriptions
+from operations.apps.composition.preparation import (
+    PreparationContainer,
+    subscriptions as preparation_subscriptions,
+)
+from operations.apps.composition.collection import (
+    CollectionContainer,
+    subscriptions as collection_subscriptions,
+)
 
 
 def database_resource(owner: str, closed: list[str]) -> Iterator[PostgresContextDatabase]:

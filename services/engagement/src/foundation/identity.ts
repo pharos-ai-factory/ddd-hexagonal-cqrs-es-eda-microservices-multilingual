@@ -1,4 +1,4 @@
-import {createHash, randomUUID} from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 export const newId = () => randomUUID();
 export function derivedId(purpose: string, key: string): string {
   const bytes = createHash('sha256').update(`cafe-reference/v1\0${purpose}\0${key}`).digest().subarray(0, 16);

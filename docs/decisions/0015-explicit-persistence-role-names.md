@@ -9,10 +9,10 @@ three languages. They expose application read models with missing-row, version
 and pagination semantics. The complete `Repository` suffix makes this role
 recognisable in navigation, imports and dependency composition.
 
-| Language | Application port file/type | PostgreSQL implementation |
-| --- | --- | --- |
-| Go | `ports/order_read_repository.go`: `OrderReadRepository` | `postgres/order_read_repository.go`: `postgres.NewOrderReadRepository` |
-| Python | `ports/ticket_read_repository.py`: `TicketReadRepository` | `persistence/ticket_read_repository.py`: `PostgresTicketReadRepository` |
+| Language   | Application port file/type                                  | PostgreSQL implementation                                                 |
+| ---------- | ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Go         | `ports/order_read_repository.go`: `OrderReadRepository`     | `postgres/order_read_repository.go`: `postgres.NewOrderReadRepository`    |
+| Python     | `ports/ticket_read_repository.py`: `TicketReadRepository`   | `persistence/ticket_read_repository.py`: `PostgresTicketReadRepository`   |
 | TypeScript | `ports/account-read-repository.ts`: `AccountReadRepository` | `persistence/account-read-repository.ts`: `PostgresAccountReadRepository` |
 
 Go factory functions use `New`. Python and TypeScript concrete classes include

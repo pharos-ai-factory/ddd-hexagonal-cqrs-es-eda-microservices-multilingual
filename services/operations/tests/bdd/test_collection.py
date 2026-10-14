@@ -6,8 +6,13 @@ import pytest
 
 from pytest_bdd import given, when, then, parsers, scenarios
 
-from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand, OpenPickupCommandHandler
-from operations.contexts.collection.application.event_handlers.drinks_ready import DrinksReadyIntegrationEventHandler
+from operations.contexts.collection.application.commands.open_pickup import (
+    OpenPickupCommand,
+    OpenPickupCommandHandler,
+)
+from operations.contexts.collection.application.event_handlers.drinks_ready import (
+    DrinksReadyIntegrationEventHandler,
+)
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain.pickup import PickupSnapshot
 from operations.contracts.events import DrinksReady
@@ -33,12 +38,17 @@ def ready(probe: CollectionProbe) -> None:
 @when("Collection handles the ready drinks")
 def open_pickup(probe: CollectionProbe, metadata: Metadata) -> None:
     commands: list[OpenPickupCommand] = []
+
     class QueueProbe:
         def enqueue(self, incoming: Metadata, command: OpenPickupCommand) -> Outcome:
             commands.append(command)
             return Outcome(aggregateId=incoming.target, version=0, status="queued")
+
     DrinksReadyIntegrationEventHandler(QueueProbe()).handle(metadata, probe.incoming())
-    CommandExecutor(probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications), lambda repository: OpenPickupCommandHandler(repository, derived_id)).execute(metadata, commands[0])
+    CommandExecutor(
+        probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications),
+        lambda repository: OpenPickupCommandHandler(repository, derived_id),
+    ).execute(metadata, commands[0])
 
 
 @given("the pickup has been opened")
@@ -49,7 +59,10 @@ def opened(probe: CollectionProbe, metadata: Metadata) -> None:
 
 @when("the customer presents the correct collection code")
 def collect(probe: CollectionProbe, metadata: Metadata) -> None:
-    CommandExecutor(probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications), lambda repository: CollectOrderCommandHandler(repository)).execute(metadata, {"code": probe.current()["code"]})
+    CommandExecutor(
+        probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications),
+        lambda repository: CollectOrderCommandHandler(repository),
+    ).execute(metadata, {"code": probe.current()["code"]})
 
 
 @given("the pickup has been collected")
@@ -62,7 +75,10 @@ def collected(probe: CollectionProbe, metadata: Metadata) -> None:
 @when("the customer presents the wrong collection code")
 def wrong_code(probe: CollectionProbe, metadata: Metadata) -> None:
     assert probe.current()["code"] != "WRONG1"
-    CommandExecutor(probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications), lambda repository: CollectOrderCommandHandler(repository)).execute(metadata, {"code": "WRONG1"})
+    CommandExecutor(
+        probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications),
+        lambda repository: CollectOrderCommandHandler(repository),
+    ).execute(metadata, {"code": "WRONG1"})
 
 
 @then("the pickup is ready with a six-character collection code")
@@ -79,7 +95,11 @@ def opened_event(probe: CollectionProbe) -> None:
     event = probe.publications[0]
     assert event.name == "collection.pickup-opened"
     assert event.payload == {
-        "pickupId": ROOT, "orderId": ORDER, "customerId": CUSTOMER, "collectionCode": probe.current()["code"]}
+        "pickupId": ROOT,
+        "orderId": ORDER,
+        "customerId": CUSTOMER,
+        "collectionCode": probe.current()["code"],
+    }
 
 
 @then(parsers.parse('Collection rejects the command with "{code}"'))

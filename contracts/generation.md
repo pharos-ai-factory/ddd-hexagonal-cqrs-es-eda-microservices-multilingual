@@ -5,12 +5,12 @@ Each target lists `produces` and `consumes`; an omitted service receives no outp
 for that category. Names identify the owning context for Protobuf and the assembled
 service document for OpenAPI. Both roles select one copy of the required bindings.
 
-| Category | Selection and outputs |
-| --- | --- |
-| `events` | Context-owned integration payloads and the technical event envelope. Storefront uses Menu/Ordering; Operations uses Ordering/Preparation/Collection; Engagement uses Collection/Loyalty. |
+| Category   | Selection and outputs                                                                                                                                                                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `events`   | Context-owned integration payloads and the technical event envelope. Storefront uses Menu/Ordering; Operations uses Ordering/Preparation/Collection; Engagement uses Collection/Loyalty.                                                                                       |
 | `requests` | Context-owned command/query/request/reply schema families. Each owner service receives its own families; the API receives all six. A family covers both directions: owners consume commands/queries and produce replies, while the API produces requests and consumes replies. |
-| `realtime` | Context-owned Protobuf snapshots and the publication envelope. Each domain service produces its own snapshots; Web consumes all six contexts. |
-| `openapi` | Assembled HTTP documents. API and Storefront generate their existing server/technical bundles; Web generates its HTTP operation client from the API document. API field mappings retain their Protobuf request dependencies. |
+| `realtime` | Context-owned Protobuf snapshots and the publication envelope. Each domain service produces its own snapshots; Web consumes all six contexts.                                                                                                                                  |
+| `openapi`  | Assembled HTTP documents. API and Storefront generate their existing server/technical bundles; Web generates its HTTP operation client from the API document. API field mappings retain their Protobuf request dependencies.                                                   |
 
 The browser's OpenAPI client serves HTTP commands and queries. Its separate
 realtime Protobuf descriptor decodes Centrifugo publications. Backend integration

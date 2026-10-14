@@ -50,7 +50,7 @@ func config() Config {
 }
 
 var request = test.Request
-var unavailable = errors.New("broker credential: private-secret")
+var errUnavailable = errors.New("broker credential: private-secret")
 
 func backendHandler(c Config) http.Handler {
 	mux := contract.NewMux("api", map[string]bool{"menu": true})

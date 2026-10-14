@@ -65,7 +65,7 @@ func (c client) exchange(method, path string, body []byte, key, version string, 
 	if err != nil {
 		return nil, fmt.Errorf("%s %s unavailable", method, path)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	allowed := false
 	for _, status := range want {
 		if response.StatusCode == status {

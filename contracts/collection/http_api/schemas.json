@@ -3,13 +3,7 @@
     "Pickup": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "orderId",
-        "customerId",
-        "code",
-        "status"
-      ],
+      "required": ["id", "orderId", "customerId", "code", "status"],
       "properties": {
         "id": {
           "type": "string",
@@ -28,19 +22,14 @@
         },
         "status": {
           "type": "string",
-          "enum": [
-            "ready",
-            "collected"
-          ]
+          "enum": ["ready", "collected"]
         }
       }
     },
     "CollectCommand": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "code"
-      ],
+      "required": ["code"],
       "properties": {
         "code": {
           "type": "string"

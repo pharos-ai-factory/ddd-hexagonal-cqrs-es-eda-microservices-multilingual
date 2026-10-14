@@ -3,30 +3,19 @@
     "StorefrontDiagnostics": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "databases",
-        "processWorkers",
-        "counterScope"
-      ],
+      "required": ["databases", "processWorkers", "counterScope"],
       "properties": {
         "databases": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "outbox",
-              "realtime"
-            ],
+            "required": ["outbox", "realtime"],
             "properties": {
               "outbox": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "pending",
-                  "oldestAgeSeconds",
-                  "failed"
-                ],
+                "required": ["pending", "oldestAgeSeconds", "failed"],
                 "properties": {
                   "pending": {
                     "type": "integer",
@@ -44,11 +33,7 @@
               "realtime": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "pending",
-                  "oldestAgeSeconds",
-                  "failed"
-                ],
+                "required": ["pending", "oldestAgeSeconds", "failed"],
                 "properties": {
                   "pending": {
                     "type": "integer",
@@ -71,13 +56,7 @@
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "owner",
-              "name",
-              "failures",
-              "deadLetterTransfers",
-              "lastFailure"
-            ],
+            "required": ["owner", "name", "failures", "deadLetterTransfers", "lastFailure"],
             "properties": {
               "owner": {
                 "type": "string"
@@ -96,10 +75,7 @@
               "lastFailure": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "at",
-                  "class"
-                ],
+                "required": ["at", "class"],
                 "properties": {
                   "at": {
                     "type": "string",

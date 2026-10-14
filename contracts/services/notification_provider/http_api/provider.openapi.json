@@ -19,11 +19,7 @@
                   "items": {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "receipt",
-                      "fingerprint",
-                      "message"
-                    ],
+                    "required": ["receipt", "fingerprint", "message"],
                     "properties": {
                       "receipt": {
                         "type": "string"
@@ -35,12 +31,7 @@
                       "message": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": [
-                          "id",
-                          "recipient",
-                          "subject",
-                          "body"
-                        ],
+                        "required": ["id", "recipient", "subject", "body"],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -64,12 +55,12 @@
               }
             }
           },
-          "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"},
+          "401": { "$ref": "../../../shared/http_api/responses.json#/responses/401" },
           "500": {
             "description": "Successful response",
             "content": {
               "application/json": {
-                "schema": {"$ref": "../../../shared/http_api/schemas.json#/schemas/Error"}
+                "schema": { "$ref": "../../../shared/http_api/schemas.json#/schemas/Error" }
               }
             }
           }
@@ -77,9 +68,7 @@
       },
       "post": {
         "operationId": "acceptMessage",
-        "parameters": [
-          {"$ref": "../../../shared/http_api/parameters.json#/parameters/CommandID"}
-        ],
+        "parameters": [{ "$ref": "../../../shared/http_api/parameters.json#/parameters/CommandID" }],
         "requestBody": {
           "required": true,
           "content": {
@@ -87,12 +76,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "id",
-                  "recipient",
-                  "subject",
-                  "body"
-                ],
+                "required": ["id", "recipient", "subject", "body"],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -127,11 +111,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": [
-                    "receipt",
-                    "fingerprint",
-                    "message"
-                  ],
+                  "required": ["receipt", "fingerprint", "message"],
                   "properties": {
                     "receipt": {
                       "type": "string"
@@ -143,12 +123,7 @@
                     "message": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "id",
-                        "recipient",
-                        "subject",
-                        "body"
-                      ],
+                      "required": ["id", "recipient", "subject", "body"],
                       "properties": {
                         "id": {
                           "type": "string",
@@ -171,14 +146,14 @@
               }
             }
           },
-          "400": {"$ref": "../../../shared/http_api/responses.json#/responses/400"},
-          "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"},
-          "503": {"$ref": "../../../shared/http_api/responses.json#/responses/503"},
+          "400": { "$ref": "../../../shared/http_api/responses.json#/responses/400" },
+          "401": { "$ref": "../../../shared/http_api/responses.json#/responses/401" },
+          "503": { "$ref": "../../../shared/http_api/responses.json#/responses/503" },
           "409": {
             "description": "Successful response",
             "content": {
               "application/json": {
-                "schema": {"$ref": "../../../shared/http_api/schemas.json#/schemas/Error"}
+                "schema": { "$ref": "../../../shared/http_api/schemas.json#/schemas/Error" }
               }
             }
           },
@@ -186,7 +161,7 @@
             "description": "Successful response",
             "content": {
               "application/json": {
-                "schema": {"$ref": "../../../shared/http_api/schemas.json#/schemas/Error"}
+                "schema": { "$ref": "../../../shared/http_api/schemas.json#/schemas/Error" }
               }
             }
           }
@@ -204,10 +179,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "count",
-                  "lostResponses"
-                ],
+                "required": ["count", "lostResponses"],
                 "properties": {
                   "count": {
                     "type": "integer"
@@ -228,10 +200,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": [
-                    "count",
-                    "lostResponses"
-                  ],
+                  "required": ["count", "lostResponses"],
                   "properties": {
                     "count": {
                       "type": "integer"
@@ -244,8 +213,8 @@
               }
             }
           },
-          "400": {"$ref": "../../../shared/http_api/responses.json#/responses/400"},
-          "401": {"$ref": "../../../shared/http_api/responses.json#/responses/401"}
+          "400": { "$ref": "../../../shared/http_api/responses.json#/responses/400" },
+          "401": { "$ref": "../../../shared/http_api/responses.json#/responses/401" }
         }
       }
     }

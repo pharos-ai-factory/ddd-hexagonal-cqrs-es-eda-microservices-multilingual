@@ -1,26 +1,38 @@
 import protobuf from 'protobufjs';
-import {writeFile, mkdir, rm} from 'node:fs/promises';
-import {execFileSync} from 'node:child_process';
+import { writeFile, mkdir, rm } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-const groups = JSON.parse(execFileSync('python3', ['scripts/contract_sources.py'], {encoding: 'utf8'}));
+const groups = JSON.parse(execFileSync('python3', ['scripts/contract_sources.py'], { encoding: 'utf8' }));
 for (const [name, group] of Object.entries(groups)) {
   if (['menu_private', 'events', 'realtime'].includes(name)) continue;
   const schema = new protobuf.Root();
-  const files = Object.fromEntries(Object.entries(group.sources).map(([logical, physical]) => [logical, path.resolve(physical)]));
+  const files = Object.fromEntries(
+    Object.entries(group.sources).map(([logical, physical]) => [logical, path.resolve(physical)]),
+  );
   const physical = new Set(Object.values(files));
-  schema.resolvePath = (_origin, target) => physical.has(target) ? target : (files[target] ?? path.resolve("node_modules/protobufjs", target));
+  schema.resolvePath = (_origin, target) =>
+    physical.has(target) ? target : (files[target] ?? path.resolve('node_modules/protobufjs', target));
   // Synchronous imports keep descriptor definition order reproducible.
-  const roots = name === 'requests'
-    ? Object.entries(files).filter(([logical]) => logical.endsWith('_requests.proto') && group.owners.engagement.includes(logical.split('/contexts/')[1].split('/')[0])).map(([, physical]) => physical)
-    : [files[group.entrypoint]];
+  const roots =
+    name === 'requests'
+      ? Object.entries(files)
+          .filter(
+            ([logical]) =>
+              logical.endsWith('_requests.proto') &&
+              group.owners.engagement.includes(logical.split('/contexts/')[1].split('/')[0]),
+          )
+          .map(([, physical]) => physical)
+      : [files[group.entrypoint]];
   if (roots.length) schema.loadSync(roots);
   schema.resolveAll();
   const root = schema.toJSON();
   const outputs = name.endsWith('_private')
-    ? [`services/engagement/src/contexts/${name.replace('_private', '')}/adaptors/messaging/generated/private_messages.json`]
+    ? [
+        `services/engagement/src/contexts/${name.replace('_private', '')}/adaptors/messaging/generated/private_messages.json`,
+      ]
     : [`services/engagement/src/adaptors/generated/${name}.json`];
   for (const output of outputs) {
-    await mkdir(path.dirname(output), {recursive: true});
+    await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, `${JSON.stringify(root, null, 2)}\n`);
   }
 }
@@ -28,33 +40,59 @@ for (const [name, group] of Object.entries(groups)) {
 // Wire interfaces make owner ACL mappings fail compilation when published fields change.
 const requestOwners = groups.requests.owners.engagement;
 if (requestOwners.length) {
-  const requestSchema = protobuf.Root.fromJSON(JSON.parse(await (await import('node:fs/promises')).readFile('services/engagement/src/adaptors/generated/requests.json', 'utf8')));
+  const requestSchema = protobuf.Root.fromJSON(
+    JSON.parse(
+      await (
+        await import('node:fs/promises')
+      ).readFile('services/engagement/src/adaptors/generated/requests.json', 'utf8'),
+    ),
+  );
   requestSchema.resolveAll();
   const interfaces = ['// Code generated from Protobuf request contracts. DO NOT EDIT.'];
-  const scalar = type => ['string','bytes'].includes(type) ? (type === 'bytes' ? 'Uint8Array' : 'string') : type === 'bool' ? 'boolean' : 'number';
+  const scalar = (type) =>
+    ['string', 'bytes'].includes(type)
+      ? type === 'bytes'
+        ? 'Uint8Array'
+        : 'string'
+      : type === 'bool'
+        ? 'boolean'
+        : 'number';
   for (const owner of ['shared', ...requestOwners]) {
-    const namespace = requestSchema.lookup(owner === 'shared' ? 'cafe.requests.v1' : 'cafe.'+owner+'.requests.v1');
+    const namespace = requestSchema.lookup(
+      owner === 'shared' ? 'cafe.requests.v1' : 'cafe.' + owner + '.requests.v1',
+    );
     interfaces.push(`export namespace ${owner} {`);
     for (const type of namespace.nestedArray) {
-      if (!(type instanceof protobuf.Type) || ['Request','Reply','Command','Query'].includes(type.name)) continue;
+      if (!(type instanceof protobuf.Type) || ['Request', 'Reply', 'Command', 'Query'].includes(type.name))
+        continue;
       interfaces.push(`export interface ${type.name} {`);
       for (const field of type.fieldsArray) {
-        const optional = field.options?.proto3_optional || (field.resolvedType instanceof protobuf.Type && !field.repeated);
-        const value = field.resolvedType instanceof protobuf.Type
-          ? (field.resolvedType.parent === namespace ? '' : 'shared.')+field.resolvedType.name : scalar(field.type);
+        const optional =
+          field.options?.proto3_optional || (field.resolvedType instanceof protobuf.Type && !field.repeated);
+        const value =
+          field.resolvedType instanceof protobuf.Type
+            ? (field.resolvedType.parent === namespace ? '' : 'shared.') + field.resolvedType.name
+            : scalar(field.type);
         interfaces.push(`  ${field.name}${optional ? '?' : ''}: ${value}${field.repeated ? '[]' : ''};`);
       }
       interfaces.push('}');
     }
     interfaces.push('}');
   }
-  await writeFile('services/engagement/src/adaptors/generated/request-types.ts', interfaces.join('\n')+'\n');
+  await writeFile(
+    'services/engagement/src/adaptors/generated/request-types.ts',
+    interfaces.join('\n') + '\n',
+  );
 } else {
-  for (const file of ['requests.json', 'request-types.ts']) await rm('services/engagement/src/adaptors/generated/'+file, {force: true});
+  for (const file of ['requests.json', 'request-types.ts'])
+    await rm('services/engagement/src/adaptors/generated/' + file, { force: true });
 }
 
 for (const owner of ['loyalty', 'communication']) {
   const base = `services/engagement/src/contexts/${owner}/adaptors/messaging`;
   const schema = new protobuf.Root().loadSync(`${base}/internal_commands.proto`).resolveAll();
-  await writeFile(`${base}/generated/internal_commands.json`, JSON.stringify(schema.toJSON(), null, 2)+'\n');
+  await writeFile(
+    `${base}/generated/internal_commands.json`,
+    JSON.stringify(schema.toJSON(), null, 2) + '\n',
+  );
 }

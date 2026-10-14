@@ -7,12 +7,14 @@ from operations.contexts.collection.domain.pickup import Pickup
 
 class OpenPickupCommand(TypedDict):
     """Owner instruction to open collection for a prepared order."""
+
     orderId: str
     customerId: str
 
 
 class OpenPickupCommandHandler:
     """Create one Pickup and its collection code in the command transaction."""
+
     def __init__(self, repository: PickupWriteRepository, identities: Callable[[str, str], str]) -> None:
         self.repository, self.identities = repository, identities
 

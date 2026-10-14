@@ -13,8 +13,13 @@ ID = "00000000-0000-4000-8000-000000000001"
 
 
 def test_query_boundary_preserves_missing_rows_revisions_and_continuations() -> None:
-    row = Loaded(exists=True, version=7, state=restore_ticket_snapshot({"id": ID, "orderId": ID,
-        "customerId": ID, "instructions": "Coffee", "status": "queued"}))
+    row = Loaded(
+        exists=True,
+        version=7,
+        state=restore_ticket_snapshot(
+            {"id": ID, "orderId": ID, "customerId": ID, "instructions": "Coffee", "status": "queued"}
+        ),
+    )
     request = PageRequest(2, ID)
 
     class Reader:
@@ -42,5 +47,8 @@ def test_query_boundary_preserves_missing_rows_revisions_and_continuations() -> 
 
 def test_persistence_reader_validates_before_selecting_view_fields() -> None:
     with pytest.raises(ValueError):
-        ticket_view(restore_ticket_snapshot({"id": ID, "orderId": ID, "customerId": ID,
-                      "instructions": "Coffee", "status": "unknown"}))
+        ticket_view(
+            restore_ticket_snapshot(
+                {"id": ID, "orderId": ID, "customerId": ID, "instructions": "Coffee", "status": "unknown"}
+            )
+        )

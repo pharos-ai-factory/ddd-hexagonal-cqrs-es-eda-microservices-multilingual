@@ -4,7 +4,7 @@
       "description": "Malformed request",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/Error"}
+          "schema": { "$ref": "schemas.json#/schemas/Error" }
         }
       }
     },
@@ -12,7 +12,7 @@
       "description": "Missing or invalid credentials",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/Error"}
+          "schema": { "$ref": "schemas.json#/schemas/Error" }
         }
       }
     },
@@ -20,7 +20,7 @@
       "description": "Origin or authority denied",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/Error"}
+          "schema": { "$ref": "schemas.json#/schemas/Error" }
         }
       }
     },
@@ -28,7 +28,7 @@
       "description": "Root not found",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/Error"}
+          "schema": { "$ref": "schemas.json#/schemas/Error" }
         }
       }
     },
@@ -36,7 +36,7 @@
       "description": "Expected aggregate version required",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/Error"}
+          "schema": { "$ref": "schemas.json#/schemas/Error" }
         }
       }
     },
@@ -44,7 +44,7 @@
       "description": "Infrastructure unavailable; retry the same identity",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/Error"}
+          "schema": { "$ref": "schemas.json#/schemas/Error" }
         }
       }
     },
@@ -52,7 +52,7 @@
       "description": "Conflicting version or command identity",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/RejectedOutcome"}
+          "schema": { "$ref": "schemas.json#/schemas/RejectedOutcome" }
         }
       }
     },
@@ -60,7 +60,7 @@
       "description": "Recorded business rejection",
       "content": {
         "application/json": {
-          "schema": {"$ref": "schemas.json#/schemas/RejectedOutcome"}
+          "schema": { "$ref": "schemas.json#/schemas/RejectedOutcome" }
         }
       }
     }

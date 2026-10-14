@@ -12,7 +12,7 @@ import (
 func TestUnavailableBackendRetainsItsPublicError(t *testing.T) {
 	c := config()
 	c.Owners = []string{"menu"}
-	c.Requests = caller(func(context.Context, pb.Request) (pb.Reply, error) { return nil, unavailable })
+	c.Requests = caller(func(context.Context, pb.Request) (pb.Reply, error) { return nil, errUnavailable })
 	w := request(t, backendHandler(c), "GET", "/api/v1/menu/drinks", "", map[string]string{"Authorization": "Bearer cli"})
 	if w.Code != 503 || w.Body.String() != "{\"code\":\"temporarily_unavailable\"}\n" {
 		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())

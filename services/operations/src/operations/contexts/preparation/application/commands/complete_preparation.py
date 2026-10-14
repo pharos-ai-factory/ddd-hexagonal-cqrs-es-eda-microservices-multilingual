@@ -6,11 +6,13 @@ from operations.foundation.domain import Rejection
 
 class CompletePreparationCommand(TypedDict):
     """Requests completion of the targeted preparation ticket."""
+
     pass
 
 
 class CompletePreparationCommandHandler:
     """Completes one ticket and records the outgoing preparation fact atomically."""
+
     def __init__(self, repository: TicketWriteRepository) -> None:
         self.repository = repository
 

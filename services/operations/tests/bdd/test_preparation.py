@@ -4,10 +4,19 @@ from operations.contexts.preparation.domain.preparation_ticket import Preparatio
 import pytest
 from pytest_bdd import given, when, then, parsers, scenarios
 
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand, AcceptOrderCommandHandler
-from operations.contexts.preparation.application.event_handlers.order_placed import OrderPlacedIntegrationEventHandler
-from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommandHandler
-from operations.contexts.preparation.application.commands.complete_preparation import CompletePreparationCommandHandler
+from operations.contexts.preparation.application.commands.accept_order import (
+    AcceptOrderCommand,
+    AcceptOrderCommandHandler,
+)
+from operations.contexts.preparation.application.event_handlers.order_placed import (
+    OrderPlacedIntegrationEventHandler,
+)
+from operations.contexts.preparation.application.commands.start_preparation import (
+    StartPreparationCommandHandler,
+)
+from operations.contexts.preparation.application.commands.complete_preparation import (
+    CompletePreparationCommandHandler,
+)
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
 from operations.contracts.events import OrderPlaced
 from operations.foundation.application import Metadata, Outcome
@@ -25,19 +34,29 @@ def probe() -> PreparationProbe:
 
 @given(parsers.parse('an order for {quantity:d} "{name}" drinks has been placed'))
 def placed(probe: PreparationProbe, quantity: int, name: str) -> None:
-    probe.event = {"orderId": ORDER, "customerId": CUSTOMER, "editionId": ROOT, "currency": "EUR",
-        "lines": [{"id": ROOT, "offerCode": "C1", "quantity": quantity, "name": name, "minor": 300}]}
+    probe.event = {
+        "orderId": ORDER,
+        "customerId": CUSTOMER,
+        "editionId": ROOT,
+        "currency": "EUR",
+        "lines": [{"id": ROOT, "offerCode": "C1", "quantity": quantity, "name": name, "minor": 300}],
+    }
 
 
 @when("Preparation accepts the placed order")
 def accept(probe: PreparationProbe, metadata: Metadata) -> None:
     commands: list[AcceptOrderCommand] = []
+
     class QueueProbe:
         def enqueue(self, incoming: Metadata, command: AcceptOrderCommand) -> Outcome:
             commands.append(command)
             return Outcome(aggregateId=incoming.target, version=0, status="queued")
+
     OrderPlacedIntegrationEventHandler(QueueProbe()).handle(metadata, probe.incoming())
-    CommandExecutor(probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications), lambda repository: AcceptOrderCommandHandler(repository)).execute(metadata, commands[0])
+    CommandExecutor(
+        probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications),
+        lambda repository: AcceptOrderCommandHandler(repository),
+    ).execute(metadata, commands[0])
 
 
 @given("Preparation has accepted the placed order")
@@ -48,7 +67,10 @@ def accepted(probe: PreparationProbe, metadata: Metadata) -> None:
 
 @when("the barista starts the ticket")
 def start(probe: PreparationProbe, metadata: Metadata) -> None:
-    CommandExecutor(probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications), lambda repository: StartPreparationCommandHandler(repository)).execute(metadata, {})
+    CommandExecutor(
+        probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications),
+        lambda repository: StartPreparationCommandHandler(repository),
+    ).execute(metadata, {})
 
 
 @given("the ticket is being prepared")
@@ -60,7 +82,10 @@ def preparing(probe: PreparationProbe, metadata: Metadata) -> None:
 
 @when("the barista completes the ticket")
 def complete(probe: PreparationProbe, metadata: Metadata) -> None:
-    CommandExecutor(probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications), lambda repository: CompletePreparationCommandHandler(repository)).execute(metadata, {})
+    CommandExecutor(
+        probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications),
+        lambda repository: CompletePreparationCommandHandler(repository),
+    ).execute(metadata, {})
 
 
 @given("the ticket has been completed")

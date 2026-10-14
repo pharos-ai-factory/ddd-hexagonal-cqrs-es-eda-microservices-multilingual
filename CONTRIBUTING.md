@@ -27,18 +27,18 @@ Next.js translate and present business operations; domain policy stays with its 
 
 Paths in this table are relative to the owning context.
 
-| Responsibility | Location and rule |
-| --- | --- |
-| Aggregate and its invariants | `domain/<business-name>`; children have no independent repositories |
-| Command | `application/commands/<action>`; one named DTO and matching `CommandHandler` together |
-| Query | `application/queries/<question>`; one named DTO and matching `QueryHandler` together |
-| Read repository | `application/ports/<resource>_read_repository` (Go/Python) or `<resource>-read-repository` (TypeScript); name the interface/protocol `<Resource>ReadRepository` |
-| Read representation | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript) |
-| Event reaction | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript) |
-| Projection update | Go's current reactions live in `application/projections/` |
-| Protobuf input mapping | `adaptors/messaging/`; HTTP mapping lives in `services/api/adaptors/http/backend/` relative to the repository root |
-| Stored-state restoration and view mapping | `adaptors/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript) |
-| DI bindings and worker/resource lifetime | Owning service's `apps/` composition module |
+| Responsibility                            | Location and rule                                                                                                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aggregate and its invariants              | `domain/<business-name>`; children have no independent repositories                                                                                             |
+| Command                                   | `application/commands/<action>`; one named DTO and matching `CommandHandler` together                                                                           |
+| Query                                     | `application/queries/<question>`; one named DTO and matching `QueryHandler` together                                                                            |
+| Read repository                           | `application/ports/<resource>_read_repository` (Go/Python) or `<resource>-read-repository` (TypeScript); name the interface/protocol `<Resource>ReadRepository` |
+| Read representation                       | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript)                                                                            |
+| Event reaction                            | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript)                                                                            |
+| Projection update                         | Go's current reactions live in `application/projections/`                                                                                                       |
+| Protobuf input mapping                    | `adaptors/messaging/`; HTTP mapping lives in `services/api/adaptors/http/backend/` relative to the repository root                                              |
+| Stored-state restoration and view mapping | `adaptors/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript)                                                                                        |
+| DI bindings and worker/resource lifetime  | Owning service's `apps/` composition module                                                                                                                     |
 
 Use snake_case filenames in Go/Python and kebab-case in TypeScript. Import the
 specific use-case package/module directly. Python package initialisers contain
@@ -104,13 +104,13 @@ receipt identities survive class or file renames.
 
 ## Evolve sources, then generate and check
 
-| Change | Source of truth | Required follow-through |
-| --- | --- | --- |
-| HTTP operation | `contracts/<context>/http_api/` | Update API HTTP translation, owner messaging mappings and frontend calls; run `pnpm generate:http` |
-| Published command/query/event | `contracts/<context>/messaging/{commands,queries,integration_events}/` and owner envelopes in `messaging/v1/` | Update boundary decoders/mappings and run `pnpm generate:contracts` |
-| Browser projection | `contracts/<context>/realtime/` | Update atomic publication and browser mapping; run `pnpm generate:contracts` |
-| Private queued command/event | Owning context's `adaptors/messaging/` | Preserve stored-byte compatibility, codec tests and historical fixtures; run `pnpm generate:contracts` |
-| Database evolution | Owning persistence adaptor's migration manifest and SQL | Append a checksummed migration and run `pnpm generate:contracts`; use administrative migration tooling |
+| Change                        | Source of truth                                                                                               | Required follow-through                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| HTTP operation                | `contracts/<context>/http_api/`                                                                               | Update API HTTP translation, owner messaging mappings and frontend calls; run `pnpm generate:http`     |
+| Published command/query/event | `contracts/<context>/messaging/{commands,queries,integration_events}/` and owner envelopes in `messaging/v1/` | Update boundary decoders/mappings and run `pnpm generate:contracts`                                    |
+| Browser projection            | `contracts/<context>/realtime/`                                                                               | Update atomic publication and browser mapping; run `pnpm generate:contracts`                           |
+| Private queued command/event  | Owning context's `adaptors/messaging/`                                                                        | Preserve stored-byte compatibility, codec tests and historical fixtures; run `pnpm generate:contracts` |
+| Database evolution            | Owning persistence adaptor's migration manifest and SQL                                                       | Append a checksummed migration and run `pnpm generate:contracts`; use administrative migration tooling |
 
 Service/technical OpenAPI sources live under `contracts/services/<service>/http_api/`;
 shared HTTP components live under `contracts/shared/http_api/`. Private domain
@@ -141,9 +141,11 @@ tree. Business-rule changes need named examples in `specifications/<context>/`
 and their native bindings. Use deterministic values in unit tests; prove delivery,
 receipts, concurrency and crash recovery with real infrastructure.
 
-Run focused tests during editing, then both hand-off gates:
+Run `pnpm check --changed` after edits, or keep `pnpm check:watch` running.
+Focused tests first check their owning service. Run both hand-off gates:
 
 ```sh
+pnpm check --changed
 pnpm test:focused <service> --context <context>
 pnpm verify
 pnpm test:integration

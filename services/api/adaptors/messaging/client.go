@@ -134,12 +134,12 @@ func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owner
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	channel, err := conn.Channel()
 	if err != nil {
 		return err
 	}
-	defer channel.Close()
+	defer func() { _ = channel.Close() }()
 	if err = channel.Confirm(false); err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owner
 	if err != nil {
 		return err
 	}
-	defer receiver.Close()
+	defer func() { _ = receiver.Close() }()
 	if err = receiver.Qos(128, 0, false); err != nil {
 		return err
 	}
@@ -183,9 +183,18 @@ func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owner
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case <-closed:
-	case <-channelClosed:
-	case <-receiverClosed:
+	case err := <-closed:
+		if err != nil {
+			return err
+		}
+	case err := <-channelClosed:
+		if err != nil {
+			return err
+		}
+	case err := <-receiverClosed:
+		if err != nil {
+			return err
+		}
 	}
 	return fmt.Errorf("request connection closed")
 }

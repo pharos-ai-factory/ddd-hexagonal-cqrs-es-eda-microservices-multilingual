@@ -7,10 +7,10 @@ wire contracts and behavioural scenarios connect their independent builds.
 
 ## Ownership and deployment
 
-| Service | Contexts | Authority |
-| --- | --- | --- |
-| Storefront (Go) | Menu, Ordering | Published drink/menu revisions and accepted orders |
-| Operations (Python) | Preparation, Collection | Production work and physical handover |
+| Service                 | Contexts                        | Authority                                               |
+| ----------------------- | ------------------------------- | ------------------------------------------------------- |
+| Storefront (Go)         | Menu, Ordering                  | Published drink/menu revisions and accepted orders      |
+| Operations (Python)     | Preparation, Collection         | Production work and physical handover                   |
 | Engagement (TypeScript) | Loyalty, Customer Communication | Earned grants, usable rewards and notification delivery |
 
 Each context owns a PostgreSQL database and a distinct runtime login. A shared
@@ -252,7 +252,6 @@ optionally with `--owner ordering` to advance one context only.
 Only local/development configurations are supported. Runtime processes reject
 staging and production environment values. Schema administration is a separate
 bootstrap responsibility; application startup cannot migrate a database.
-
 
 Frontend HTTP calls use OpenAPI-generated operation/request/response types through
 the HTTP adaptor. Verification rejects generated drift and incompatible feature

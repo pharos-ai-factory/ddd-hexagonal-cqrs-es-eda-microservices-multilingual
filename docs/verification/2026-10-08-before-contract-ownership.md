@@ -193,17 +193,17 @@ query and migration changes in decision 0004. No environment-dependent check was
 omitted. All 51 fast and 12 infrastructure Gherkin scenarios passed; the workflow
 binding dry run remains separate from the executed infrastructure scenarios.
 
-| Change | Executed evidence |
-| --- | --- |
-| Optional pagination | More than 100 roots in each language; complete ordinary arrays and keyset traversal without omissions or duplicates; invalid cursor/limit cases and ordinary query helpers |
-| Browser reconciliation | Both Chromium scenarios pass with 105 seeded drinks, independent windows, all subscriptions attached before page traversal, live revision guards, history recovery and no business polling |
-| Realtime authority | Gateway unit tests preserve original publication bytes; live context credentials cannot publish foreign channels, disconnect sessions or invoke administration |
-| RabbitMQ authority | All six runtime users can publish/consume/acknowledge but cannot declare/delete topology or publish another context's private events; recovery/replay suites pass |
-| Valkey separation | Five permission checks pass, including rejected realtime authentication to the separate session instance; delayed-connect revocation regression passes |
-| Context migrations | Seven real PostgreSQL migration tests cover additive upgrade, retained state, independent versions, rollback and authority checks; runtime rejects schema identity and ledger drift |
-| Diagnostics | Four live authenticated endpoints expose owned backlog/revocation metrics; exact backlog increments, redaction, pre-claim failure retention and unavailable authority are tested |
-| Secret delivery | File-input ambiguity/error tests and atomic private configuration tests pass; real Compose services start with protected secret mounts, and the existing development env file is mode `0600` |
-| Static frontend | The final ingress image serves the Next.js static export; full browser workflows pass without a frontend Node server |
+| Change                 | Executed evidence                                                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Optional pagination    | More than 100 roots in each language; complete ordinary arrays and keyset traversal without omissions or duplicates; invalid cursor/limit cases and ordinary query helpers                   |
+| Browser reconciliation | Both Chromium scenarios pass with 105 seeded drinks, independent windows, all subscriptions attached before page traversal, live revision guards, history recovery and no business polling   |
+| Realtime authority     | Gateway unit tests preserve original publication bytes; live context credentials cannot publish foreign channels, disconnect sessions or invoke administration                               |
+| RabbitMQ authority     | All six runtime users can publish/consume/acknowledge but cannot declare/delete topology or publish another context's private events; recovery/replay suites pass                            |
+| Valkey separation      | Five permission checks pass, including rejected realtime authentication to the separate session instance; delayed-connect revocation regression passes                                       |
+| Context migrations     | Seven real PostgreSQL migration tests cover additive upgrade, retained state, independent versions, rollback and authority checks; runtime rejects schema identity and ledger drift          |
+| Diagnostics            | Four live authenticated endpoints expose owned backlog/revocation metrics; exact backlog increments, redaction, pre-claim failure retention and unavailable authority are tested             |
+| Secret delivery        | File-input ambiguity/error tests and atomic private configuration tests pass; real Compose services start with protected secret mounts, and the existing development env file is mode `0600` |
+| Static frontend        | The final ingress image serves the Next.js static export; full browser workflows pass without a frontend Node server                                                                         |
 
 The final local logs are `.local/hardening-verify.log` and
 `.local/hardening-integration.log`. Disposable infrastructure and revocation
@@ -222,14 +222,14 @@ in-flight authentication regressions enabled. No environment-dependent check
 was omitted. The browser specifications also passed a focused strict TypeScript
 check.
 
-| Correction | Executed evidence |
-| --- | --- |
-| Required stored Go fields | Missing/null order prices fail without changing state, receipts or either outbox; explicit zero and paid prices work, and the original command succeeds after repair |
-| Root identity | Go, Python and TypeScript reject mismatched stored identities and proposed changes; corrupt queries fail and administrative repair preserves the original attempt |
-| Saved receipts | All six command/consumer corruption cases pass in both Go and TypeScript; repair returns the original outcome without rerunning the decision or duplicating intent |
-| Pending connection revocation | The real worker completes its disconnect before the held response is released; Centrifugo rejects the expired grant and the revoked session receives no publication |
-| Established connections | The healthy control revalidates its original session through the refresh proxy and receives a publication |
-| Browser prerequisites | The host waits for committed Drink/Menu projections before dependent commands, preserving all browser request-count assertions |
+| Correction                    | Executed evidence                                                                                                                                                    |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Required stored Go fields     | Missing/null order prices fail without changing state, receipts or either outbox; explicit zero and paid prices work, and the original command succeeds after repair |
+| Root identity                 | Go, Python and TypeScript reject mismatched stored identities and proposed changes; corrupt queries fail and administrative repair preserves the original attempt    |
+| Saved receipts                | All six command/consumer corruption cases pass in both Go and TypeScript; repair returns the original outcome without rerunning the decision or duplicating intent   |
+| Pending connection revocation | The real worker completes its disconnect before the held response is released; Centrifugo rejects the expired grant and the revoked session receives no publication  |
+| Established connections       | The healthy control revalidates its original session through the refresh proxy and receives a publication                                                            |
+| Browser prerequisites         | The host waits for committed Drink/Menu projections before dependent commands, preserving all browser request-count assertions                                       |
 
 The Go PostgreSQL/RabbitMQ suites, all 12 Python infrastructure tests, all
 TypeScript infrastructure tests, two PostgreSQL and ten live Gherkin scenarios,
@@ -250,13 +250,13 @@ The regression additions deliberately assert the required behaviour while leavin
 the application defects in place. `pnpm verify` passes. `pnpm test:integration`
 executes every infrastructure lane and fails on the newly captured defects:
 
-| Regression | Observed result |
-| --- | --- |
-| Go missing/null stored order prices | Both cases fail: placement commits a zero price, state, receipts and outgoing publications |
-| Go corrupt command/consumer receipts | Six cases fail: empty, null and incomplete rejection outcomes are accepted; command outcomes can be copied into consumer receipts |
-| Python mismatched Pickup identity | Fails because collection succeeds for a snapshot identifying another root |
-| TypeScript corrupt command/consumer receipts | Five cases fail; the null command outcome already rolls back through the database constraint when copied into a consumer receipt |
-| Logout during connection authentication | Fails after the real Go worker completes disconnection: releasing the captured response permits a publication to reach the revoked session |
+| Regression                                   | Observed result                                                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Go missing/null stored order prices          | Both cases fail: placement commits a zero price, state, receipts and outgoing publications                                                 |
+| Go corrupt command/consumer receipts         | Six cases fail: empty, null and incomplete rejection outcomes are accepted; command outcomes can be copied into consumer receipts          |
+| Python mismatched Pickup identity            | Fails because collection succeeds for a snapshot identifying another root                                                                  |
+| TypeScript corrupt command/consumer receipts | Five cases fail; the null command outcome already rolls back through the database constraint when copied into a consumer receipt           |
+| Logout during connection authentication      | Fails after the real Go worker completes disconnection: releasing the captured response permits a publication to reach the revoked session |
 
 Explicit zero/paid prices, a matching Pickup identity and the healthy realtime
 connection control pass. Repair-and-retry assertions are included after corruption
@@ -292,13 +292,13 @@ Both required gates pass, including regression coverage for real
 PostgreSQL/RabbitMQ failures, Chromium authentication recovery and Valkey
 permission checks. No environment-dependent check in either gate was omitted.
 
-| Command / check | Executed result |
-| --- | --- |
-| `pnpm verify` | Passed service/context dependency rules, relative-import negative fixtures, large-file checks, formatting, both Go modules' race tests/vet, Python Ruff/strict Mypy/tests, Engagement and web type checks/tests, all 51 fast Gherkin scenarios and catalogue/report checks |
-| `pnpm test:integration` | Passed the isolated PostgreSQL/RabbitMQ/Valkey/Centrifugo stack, all application image builds, two PostgreSQL and ten live Gherkin scenarios, recovery journey, both Chromium scenarios and four Valkey permission checks |
-| `pnpm generate:contracts` | Passed with new Python `.pyi` declarations; existing generated bindings, descriptors, fixture bytes and migration checksum metadata were unchanged |
-| Native Gherkin runners | Passed 23 Godog, 11 pytest-bdd and 17 Cucumber fast scenarios through `pnpm verify` |
-| Browser layout | Chromium passed the horizontal-overflow assertion at a 390px mobile viewport |
+| Command / check           | Executed result                                                                                                                                                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm verify`             | Passed service/context dependency rules, relative-import negative fixtures, large-file checks, formatting, both Go modules' race tests/vet, Python Ruff/strict Mypy/tests, Engagement and web type checks/tests, all 51 fast Gherkin scenarios and catalogue/report checks |
+| `pnpm test:integration`   | Passed the isolated PostgreSQL/RabbitMQ/Valkey/Centrifugo stack, all application image builds, two PostgreSQL and ten live Gherkin scenarios, recovery journey, both Chromium scenarios and four Valkey permission checks                                                  |
+| `pnpm generate:contracts` | Passed with new Python `.pyi` declarations; existing generated bindings, descriptors, fixture bytes and migration checksum metadata were unchanged                                                                                                                         |
+| Native Gherkin runners    | Passed 23 Godog, 11 pytest-bdd and 17 Cucumber fast scenarios through `pnpm verify`                                                                                                                                                                                        |
+| Browser layout            | Chromium passed the horizontal-overflow assertion at a 390px mobile viewport                                                                                                                                                                                               |
 
 ## Python type boundaries
 

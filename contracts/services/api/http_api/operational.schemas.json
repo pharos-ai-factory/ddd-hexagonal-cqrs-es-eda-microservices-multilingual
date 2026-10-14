@@ -3,11 +3,7 @@
     "SessionDiagnostics": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "pendingRevocations",
-        "expiredSessionsAwaitingRevocation",
-        "processFailures"
-      ],
+      "required": ["pendingRevocations", "expiredSessionsAwaitingRevocation", "processFailures"],
       "properties": {
         "pendingRevocations": {
           "type": "integer",
@@ -24,11 +20,7 @@
         "lastFailure": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "at",
-            "operation",
-            "class"
-          ],
+          "required": ["at", "operation", "class"],
           "properties": {
             "at": {
               "type": "string",

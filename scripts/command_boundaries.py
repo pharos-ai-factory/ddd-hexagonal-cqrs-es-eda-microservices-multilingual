@@ -1,81 +1,87 @@
 """AST checks for Python aggregate capabilities and DI isolation."""
+
 import ast
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-READ_METHODS = {'restore', 'snapshot', 'events'}
+READ_METHODS = {"restore", "snapshot", "events"}
 
 
 def aggregate_methods(root=ROOT):
     result = {}
-    for path in (root/'services/operations/src/operations/contexts').glob('*/domain/*.py'):
+    for path in (root / "services/operations/src/operations/contexts").glob("*/domain/*.py"):
         for node in ast.parse(path.read_text()).body:
             if isinstance(node, ast.ClassDef):
                 methods = {item.name for item in node.body if isinstance(item, ast.FunctionDef)}
-                if 'snapshot' in methods:
-                    result[node.name] = methods - READ_METHODS - {'__init__'}
+                if "snapshot" in methods:
+                    result[node.name] = methods - READ_METHODS - {"__init__"}
     return result
 
 
-def violations(source, aggregates, path='contexts/example/application.py'):
+def violations(source, aggregates, path="contexts/example/application.py"):
     tree = ast.parse(source)
     parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     symbols = {}
-    ports = {'AggregateTransaction', 'PostgresAggregateTransaction'}
-    repositories = {'WriteRepository': '@repository'}
+    ports = {"AggregateTransaction", "PostgresAggregateTransaction"}
+    repositories = {"WriteRepository": "@repository"}
     for name in aggregates:
-        resource = {'PreparationTicket': 'Ticket', 'LoyaltyAccount': 'Account'}.get(name, name)
-        repositories[resource+'WriteRepository'] = '@repository:'+name
+        resource = {"PreparationTicket": "Ticket", "LoyaltyAccount": "Account"}.get(name, name)
+        repositories[resource + "WriteRepository"] = "@repository:" + name
     for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef) and node.name.endswith('CommandHandler'):
-            symbols[node.name] = '@handler'
+        if isinstance(node, ast.ClassDef) and node.name.endswith("CommandHandler"):
+            symbols[node.name] = "@handler"
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             for item in node.names:
-                if item.name in aggregates and '.domain' in (node.module or ''):
+                if item.name in aggregates and ".domain" in (node.module or ""):
                     symbols[item.asname or item.name] = item.name
-                if item.name in {'AggregateTransaction', 'PostgresAggregateTransaction'}:
+                if item.name in {"AggregateTransaction", "PostgresAggregateTransaction"}:
                     ports.add(item.asname or item.name)
                 if item.name in repositories:
                     repositories[item.asname or item.name] = repositories[item.name]
-                if item.name.endswith('CommandHandler'):
-                    symbols[item.asname or item.name] = '@handler'
+                if item.name.endswith("CommandHandler"):
+                    symbols[item.asname or item.name] = "@handler"
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for item in node.names:
-                if '.domain' in item.name:
+                if ".domain" in item.name:
                     for name in aggregates:
-                        symbols[(item.asname or item.name)+'.'+name] = name
+                        symbols[(item.asname or item.name) + "." + name] = name
         if isinstance(node, ast.ImportFrom):
             for item in node.names:
-                if item.name == 'domain':
+                if item.name == "domain":
                     for name in aggregates:
-                        symbols[(item.asname or item.name)+'.'+name] = name
+                        symbols[(item.asname or item.name) + "." + name] = name
 
     def resolve(node):
         if isinstance(node, ast.IfExp):
             return resolve(node.body) or resolve(node.orelse)
         if isinstance(node, ast.Subscript):
             identity = resolve(node.value)
-            if identity == '@repository':
-                return '@repository:'+str(resolve(node.slice))
-            if identity and identity.startswith('@loaded:') and isinstance(node.slice, ast.Constant) and node.slice.value == 'state':
-                return identity.removeprefix('@loaded:')
+            if identity == "@repository":
+                return "@repository:" + str(resolve(node.slice))
+            if (
+                identity
+                and identity.startswith("@loaded:")
+                and isinstance(node.slice, ast.Constant)
+                and node.slice.value == "state"
+            ):
+                return identity.removeprefix("@loaded:")
             return identity
         if isinstance(node, ast.Name) and node.id in repositories:
             return repositories[node.id]
         if isinstance(node, ast.Name) and node.id in ports:
-            return '@transaction'
+            return "@transaction"
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             return symbols.get(node.value)
         if isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Attribute) and node.func.attr == 'get':
+            if isinstance(node.func, ast.Attribute) and node.func.attr == "get":
                 identity = resolve(node.func.value)
-                if identity and identity.startswith('@repository:'):
-                    return '@loaded:'+identity.removeprefix('@repository:')
+                if identity and identity.startswith("@repository:"):
+                    return "@loaded:" + identity.removeprefix("@repository:")
             return resolve(node.func)
-        if isinstance(node, ast.Attribute) and node.attr in READ_METHODS | {'open'}:
+        if isinstance(node, ast.Attribute) and node.attr in READ_METHODS | {"open"}:
             return resolve(node.value)
         return symbols.get(ast.unparse(node))
 
@@ -112,7 +118,12 @@ def violations(source, aggregates, path='contexts/example/application.py'):
                 owner = parent.name
                 break
             parent = parents.get(parent)
-        return owner and owner.endswith('CommandHandler') and method == 'execute' and '/application' in '/'+path
+        return (
+            owner
+            and owner.endswith("CommandHandler")
+            and method == "execute"
+            and "/application" in "/" + path
+        )
 
     errors = []
     stores = {}
@@ -120,11 +131,13 @@ def violations(source, aggregates, path='contexts/example/application.py'):
         mutation = False
         if isinstance(node, ast.Attribute):
             identity = resolve(node.value)
-            if identity == '@handler' and '/application' in '/'+path:
-                errors.append(f'{path}:{node.lineno}: direct command-handler capability in application')
-            if identity == '@transaction' and node.attr == 'execute' and '/application' in '/'+path:
-                errors.append(f'{path}:{node.lineno}: transaction coordination belongs in command infrastructure')
-            if identity == '@transaction' and node.attr == 'execute' and allowed(node):
+            if identity == "@handler" and "/application" in "/" + path:
+                errors.append(f"{path}:{node.lineno}: direct command-handler capability in application")
+            if identity == "@transaction" and node.attr == "execute" and "/application" in "/" + path:
+                errors.append(
+                    f"{path}:{node.lineno}: transaction coordination belongs in command infrastructure"
+                )
+            if identity == "@transaction" and node.attr == "execute" and allowed(node):
                 parent, repeated = parents.get(node), False
                 if not isinstance(parent, ast.Call) or parent.func is not node:
                     repeated = True
@@ -132,45 +145,60 @@ def violations(source, aggregates, path='contexts/example/application.py'):
                     if isinstance(parent, (ast.For, ast.AsyncFor, ast.While, ast.Lambda, ast.comprehension)):
                         repeated = True
                     if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        if parent.name == 'execute' and isinstance(parents.get(parent), ast.ClassDef):
+                        if parent.name == "execute" and isinstance(parents.get(parent), ast.ClassDef):
                             stores[parent] = stores.get(parent, 0) + 1
                             break
                         repeated = True
                     parent = parents.get(parent)
                 if repeated:
-                    errors.append(f'{path}:{node.lineno}: unit of work execution must be one direct, non-repeated call')
-            if identity in aggregates and node.attr.startswith('_'):
-                errors.append(f'{path}:{node.lineno}: aggregate internals accessed outside its domain')
+                    errors.append(
+                        f"{path}:{node.lineno}: unit of work execution must be one direct, non-repeated call"
+                    )
+            if identity in aggregates and node.attr.startswith("_"):
+                errors.append(f"{path}:{node.lineno}: aggregate internals accessed outside its domain")
                 continue
-            mutation = (bool(identity and identity.startswith('@repository')) and node.attr == 'save' and '/application' in '/'+path) or (identity in aggregates and node.attr in aggregates[identity]) or (identity == '@transaction' and node.attr == 'execute' and '/contexts/' in '/'+path)
+            mutation = (
+                (
+                    bool(identity and identity.startswith("@repository"))
+                    and node.attr == "save"
+                    and "/application" in "/" + path
+                )
+                or (identity in aggregates and node.attr in aggregates[identity])
+                or (identity == "@transaction" and node.attr == "execute" and "/contexts/" in "/" + path)
+            )
         if isinstance(node, ast.Call):
             mutation |= symbols.get(ast.unparse(node.func)) in aggregates
         # Restrict the write-port capability to command handler classes. This also
         # rejects indirect calls through a stored execute alias in event handlers.
-        if isinstance(node, ast.Name) and node.id in ports and '/application' in '/'+path and '/ports/' not in path:
+        if (
+            isinstance(node, ast.Name)
+            and node.id in ports
+            and "/application" in "/" + path
+            and "/ports/" not in path
+        ):
             parent = parents.get(node)
             while parent and not isinstance(parent, ast.ClassDef):
                 parent = parents.get(parent)
-            mutation |= parent is None or not parent.name.endswith('CommandHandler')
+            mutation |= parent is None or not parent.name.endswith("CommandHandler")
             if mutation:
-                errors.append(f'{path}:{node.lineno}: aggregate write port outside command handler')
+                errors.append(f"{path}:{node.lineno}: aggregate write port outside command handler")
                 continue
         if mutation and not allowed(node):
-            errors.append(f'{path}:{node.lineno}: aggregate mutation outside CommandHandler.execute')
+            errors.append(f"{path}:{node.lineno}: aggregate mutation outside CommandHandler.execute")
     for method, count in stores.items():
         if count > 1:
-            errors.append(f'{path}:{method.lineno}: a command handler may invoke the unit of work once')
+            errors.append(f"{path}:{method.lineno}: a command handler may invoke the unit of work once")
     return errors
 
 
 def check(root=ROOT):
     errors = []
     aggregates = aggregate_methods(root)
-    for path in (root/'services/operations/src/operations').rglob('*.py'):
-        if 'generated' in path.parts or 'foundation' in path.parts or 'domain' in path.parts:
+    for path in (root / "services/operations/src/operations").rglob("*.py"):
+        if "generated" in path.parts or "foundation" in path.parts or "domain" in path.parts:
             continue
         errors.extend(violations(path.read_text(), aggregates, path.relative_to(root).as_posix()))
-        if 'application' in path.parts or path.name == 'application.py':
+        if "application" in path.parts or path.name == "application.py":
             errors.extend(layout_violations(path.read_text(), path.relative_to(root).as_posix()))
     return errors
 
@@ -179,15 +207,18 @@ def layout_violations(source, path):
     """Keep each command DTO and its handler in one discoverable use-case module."""
     names = [node.name for node in ast.parse(source).body if isinstance(node, ast.ClassDef)]
     errors = []
-    for role, folder in (('Command', 'commands'), ('Query', 'queries')):
+    for role, folder in (("Command", "commands"), ("Query", "queries")):
         inputs = [name for name in names if name.endswith(role)]
-        handlers = [name for name in names if name.endswith(role+'Handler')]
+        handlers = [name for name in names if name.endswith(role + "Handler")]
         if not inputs and not handlers:
             continue
-        if not (Path(path).parent.as_posix().endswith('/application/'+folder)
-                and len(inputs) == 1 and handlers == [inputs[0]+'Handler']):
-            errors.append(f'{path}: keep one {role.lower()} and its handler together in application/{folder}')
-    reactions = [name for name in names if name.endswith(('EventHandler', 'ProjectionHandler'))]
-    if reactions and (len(reactions) != 1 or Path(path).parent.name not in ('event_handlers', 'projections')):
-        errors.append(f'{path}: keep each event reaction in its own event_handlers or projections module')
+        if not (
+            Path(path).parent.as_posix().endswith("/application/" + folder)
+            and len(inputs) == 1
+            and handlers == [inputs[0] + "Handler"]
+        ):
+            errors.append(f"{path}: keep one {role.lower()} and its handler together in application/{folder}")
+    reactions = [name for name in names if name.endswith(("EventHandler", "ProjectionHandler"))]
+    if reactions and (len(reactions) != 1 or Path(path).parent.name not in ("event_handlers", "projections")):
+        errors.append(f"{path}: keep each event reaction in its own event_handlers or projections module")
     return errors

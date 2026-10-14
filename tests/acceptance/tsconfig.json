@@ -1,10 +1,9 @@
 {
+  "extends": "../../tsconfig.strict.json",
   "compilerOptions": {
     "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "noEmit": true,

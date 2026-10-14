@@ -38,12 +38,12 @@ than a permanent ranking. GitHub stars indicate visibility; package downloads
 include CI and transitive installations. Direct dependencies exclude development
 and optional integrations; transitive dependencies still enter the lockfile.
 
-| TypeScript option | Ease and fit | Maintenance / adoption at assessment | Runtime dependencies |
-| --- | --- | --- | --- |
-| **Awilix 13.0.5** | Explicit factories, plain constructors, resource disposers; small registration API | Recent 2026 release/activity; about 4.2k stars and 616k weekly npm downloads | One direct dependency, `fast-glob`, plus its transitives |
-| TSyringe 4.10.0 | Compact decorator syntax; factories also support plain handlers; factory resource disposal needs explicit care | Repository active in October 2026; about 6k stars and 14m weekly downloads | `tslib`; runtime `reflect-metadata` polyfill required |
-| Inversify 8.2.3 | Rich bindings and lifecycle features; more concepts and configuration | Active 2026 monorepo; original repository about 12k stars; 2.45m weekly downloads | Three direct internal packages and their transitives; documented metadata setup |
-| Typed Inject 5.0.0 | Explicit typed factories, compile-time graph checking; more type declarations | Smaller, quieter project; about 628 stars and 3.38m weekly downloads | Zero external runtime dependencies |
+| TypeScript option  | Ease and fit                                                                                                   | Maintenance / adoption at assessment                                              | Runtime dependencies                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Awilix 13.0.5**  | Explicit factories, plain constructors, resource disposers; small registration API                             | Recent 2026 release/activity; about 4.2k stars and 616k weekly npm downloads      | One direct dependency, `fast-glob`, plus its transitives                        |
+| TSyringe 4.10.0    | Compact decorator syntax; factories also support plain handlers; factory resource disposal needs explicit care | Repository active in October 2026; about 6k stars and 14m weekly downloads        | `tslib`; runtime `reflect-metadata` polyfill required                           |
+| Inversify 8.2.3    | Rich bindings and lifecycle features; more concepts and configuration                                          | Active 2026 monorepo; original repository about 12k stars; 2.45m weekly downloads | Three direct internal packages and their transitives; documented metadata setup |
+| Typed Inject 5.0.0 | Explicit typed factories, compile-time graph checking; more type declarations                                  | Smaller, quieter project; about 628 stars and 3.38m weekly downloads              | Zero external runtime dependencies                                              |
 
 Awilix makes the binding graph visible while keeping classes independent of
 framework syntax. TSyringe remains a reasonable option: decorators are its usual
@@ -56,12 +56,12 @@ Sources: [Awilix](https://github.com/jeffijoe/awilix),
 [Typed Inject](https://github.com/nicojs/typed-inject).
 The download observation uses the npm statistics window 1–7 October 2026.
 
-| Python option | Ease and fit | Maintenance / adoption at assessment | Runtime dependencies on Python ≥3.13 |
-| --- | --- | --- | --- |
-| **Dependency Injector 4.49.1** | Explicit providers, resource cleanup, overrides and typing support | Active October 2026; about 4.9k stars; largest project of this shortlist | Zero mandatory external packages; Cython extension with published wheels |
-| Dishka 1.10.1 | Typed providers, explicit scopes and graph validation | Active October 2026; about 1.3k stars; growing community | Zero mandatory external packages |
-| Injector 0.24.0 | Familiar Guice-style modules; resource ownership requires application code | Active October 2026; about 1.5k stars; established project | Zero mandatory external packages |
-| Lagom 2.7.7 | Convenient autowiring and explicit-container alternative | Smaller, quieter project; about 356 stars | Zero mandatory external packages |
+| Python option                  | Ease and fit                                                               | Maintenance / adoption at assessment                                     | Runtime dependencies on Python ≥3.13                                     |
+| ------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| **Dependency Injector 4.49.1** | Explicit providers, resource cleanup, overrides and typing support         | Active October 2026; about 4.9k stars; largest project of this shortlist | Zero mandatory external packages; Cython extension with published wheels |
+| Dishka 1.10.1                  | Typed providers, explicit scopes and graph validation                      | Active October 2026; about 1.3k stars; growing community                 | Zero mandatory external packages                                         |
+| Injector 0.24.0                | Familiar Guice-style modules; resource ownership requires application code | Active October 2026; about 1.5k stars; established project               | Zero mandatory external packages                                         |
+| Lagom 2.7.7                    | Convenient autowiring and explicit-container alternative                   | Smaller, quieter project; about 356 stars                                | Zero mandatory external packages                                         |
 
 Dependency Injector's explicit resource providers fit context pools and the
 threaded Pika workers. We avoid decorator wiring and container access in handlers.
@@ -74,12 +74,12 @@ Sources: [Dependency Injector](https://python-dependency-injector.ets-labs.org/)
 [Lagom](https://github.com/meadsteve/lagom). Versions are published package versions;
 conditional dependencies for older Python versions and optional extras differ.
 
-| Go option | Ease and fit | Maintenance / adoption at assessment | Runtime dependencies |
-| --- | --- | --- | --- |
-| **Fx 1.24.0** | Modules, graph validation and ordered start/stop hooks; runtime reflection | Mature Uber project; about 7.7k stars | Dig, multierr, zap and x/sys |
-| samber/do v2.1.0 | Generic typed registration/resolution, scopes and shutdown | Active October 2026; about 2.8k stars | Published v2.1.0 imports `go-type-to-string` |
-| Dig 1.19.0 | Small container API; application lifecycle must be supplied separately | Mature Uber project; about 4.5k stars | Zero external runtime dependencies |
-| Wire 0.7.0 | Generated construction with compile-time errors; generation step required | Archived August 2025; about 14.4k stars | Zero generated runtime dependencies; generator has dependencies |
+| Go option        | Ease and fit                                                               | Maintenance / adoption at assessment    | Runtime dependencies                                            |
+| ---------------- | -------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------- |
+| **Fx 1.24.0**    | Modules, graph validation and ordered start/stop hooks; runtime reflection | Mature Uber project; about 7.7k stars   | Dig, multierr, zap and x/sys                                    |
+| samber/do v2.1.0 | Generic typed registration/resolution, scopes and shutdown                 | Active October 2026; about 2.8k stars   | Published v2.1.0 imports `go-type-to-string`                    |
+| Dig 1.19.0       | Small container API; application lifecycle must be supplied separately     | Mature Uber project; about 4.5k stars   | Zero external runtime dependencies                              |
+| Wire 0.7.0       | Generated construction with compile-time errors; generation step required  | Archived August 2025; about 14.4k stars | Zero generated runtime dependencies; generator has dependencies |
 
 Fx's lifecycle support covers the HTTP servers, database pools and delivery
 workers. Wire's archived status excludes it from a new reference implementation.

@@ -17,6 +17,7 @@ services:
             path: ../services/engagement/src,
             ignore: ['**/*.test.ts', '**/*.integration.ts'],
           }
+        - { action: rebuild, path: ../tsconfig.strict.json }
         - { action: rebuild, path: ../pnpm-lock.yaml }
   api:
     develop:
@@ -25,5 +26,6 @@ services:
   ingress:
     develop:
       watch:
+        - { action: rebuild, path: ../tsconfig.strict.json }
         - { action: rebuild, path: ../services/web/src }
         - { action: rebuild, path: ../pnpm-lock.yaml }

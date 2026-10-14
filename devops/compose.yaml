@@ -1,5 +1,5 @@
-x-runtime-secret: &runtime-secret {uid: "10001", gid: "10001", mode: 0400}
-x-node-secret: &node-secret {uid: "1000", gid: "1000", mode: 0400}
+x-runtime-secret: &runtime-secret { uid: '10001', gid: '10001', mode: 0400 }
+x-node-secret: &node-secret { uid: '1000', gid: '1000', mode: 0400 }
 services:
   postgres:
     image: postgres:18.0-alpine
@@ -20,14 +20,14 @@ services:
       - COLLECTION_DB_PASSWORD
       - LOYALTY_DB_PASSWORD
       - COMMUNICATION_DB_PASSWORD
-    ports: ["127.0.0.1:${PG_PORT}:5432"]
+    ports: ['127.0.0.1:${PG_PORT}:5432']
     volumes:
       - postgres-data:/var/lib/postgresql
       - ./postgres/init.sh:/docker-entrypoint-initdb.d/01-reference.sh:ro
       - ./postgres/bootstrap:/reference:ro
       - ./read-secret.sh:/read-secret.sh:ro
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U postgres -d cafe_communication"]
+      test: [CMD-SHELL, 'pg_isready -U postgres -d cafe_communication']
       interval: 2s
       timeout: 2s
       retries: 40
@@ -39,7 +39,7 @@ services:
       BROKER_PASSWORD_FILE: /run/secrets/BROKER_PASSWORD
       RABBITMQ_DEFAULT_VHOST: reference
     secrets: [BROKER_PASSWORD]
-    ports: ["127.0.0.1:${AMQP_PORT}:5672", "127.0.0.1:${BROKER_HTTP_PORT}:15672"]
+    ports: ['127.0.0.1:${AMQP_PORT}:5672', '127.0.0.1:${BROKER_HTTP_PORT}:15672']
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - ./rabbitmq/start.sh:/reference/start.sh:ro
@@ -61,7 +61,11 @@ services:
       - ./valkey/start.sh:/reference/start.sh:ro
       - ./read-secret.sh:/reference/read-secret.sh:ro
     healthcheck:
-      test: [CMD-SHELL, 'REDISCLI_AUTH=$$(cat /run/secrets/SESSION_PASSWORD) valkey-cli -e --user sessions --no-auth-warning ping']
+      test:
+        [
+          CMD-SHELL,
+          'REDISCLI_AUTH=$$(cat /run/secrets/SESSION_PASSWORD) valkey-cli -e --user sessions --no-auth-warning ping',
+        ]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -77,7 +81,11 @@ services:
       - ./read-secret.sh:/reference/read-secret.sh:ro
     tmpfs: [/data]
     healthcheck:
-      test: [CMD-SHELL, 'REDISCLI_AUTH=$$(cat /run/secrets/REALTIME_REDIS_PASSWORD) valkey-cli -e --user realtime --no-auth-warning ping']
+      test:
+        [
+          CMD-SHELL,
+          'REDISCLI_AUTH=$$(cat /run/secrets/REALTIME_REDIS_PASSWORD) valkey-cli -e --user realtime --no-auth-warning ping',
+        ]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -88,20 +96,20 @@ services:
       CENTRIFUGO_API_KEY_FILE: /run/secrets/CENTRIFUGO_API_KEY
       CONNECT_PROXY_SECRET_FILE: /run/secrets/CONNECT_PROXY_SECRET
       REALTIME_REDIS_PASSWORD_FILE: /run/secrets/REALTIME_REDIS_PASSWORD
-      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: "http://localhost:${WEB_PORT} http://127.0.0.1:${WEB_PORT}"
+      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: 'http://localhost:${WEB_PORT} http://127.0.0.1:${WEB_PORT}'
     secrets:
-      - {source: CENTRIFUGO_API_KEY, <<: *node-secret}
-      - {source: CONNECT_PROXY_SECRET, <<: *node-secret}
-      - {source: REALTIME_REDIS_PASSWORD, <<: *node-secret}
-    ports: ["127.0.0.1:${REALTIME_ADMIN_PORT}:9000"]
+      - { source: CENTRIFUGO_API_KEY, <<: *node-secret }
+      - { source: CONNECT_PROXY_SECRET, <<: *node-secret }
+      - { source: REALTIME_REDIS_PASSWORD, <<: *node-secret }
+    ports: ['127.0.0.1:${REALTIME_ADMIN_PORT}:9000']
     volumes:
       - ./centrifugo/config.json:/etc/centrifugo/config.json:ro
       - ./centrifugo/start.sh:/reference/start.sh:ro
       - ./read-secret.sh:/reference/read-secret.sh:ro
     depends_on:
-      realtime-history: {condition: service_healthy}
+      realtime-history: { condition: service_healthy }
   realtime-gateway:
-    build: {context: .., dockerfile: services/api/Dockerfile, args: {APP: realtime-gateway}}
+    build: { context: .., dockerfile: services/api/Dockerfile, args: { APP: realtime-gateway } }
     environment:
       APP_ENV: development
       CENTRIFUGO_API_URL: http://centrifugo:9000
@@ -114,33 +122,33 @@ services:
       LOYALTY_REALTIME_KEY_FILE: /run/secrets/LOYALTY_REALTIME_KEY
       COMMUNICATION_REALTIME_KEY_FILE: /run/secrets/COMMUNICATION_REALTIME_KEY
     secrets:
-      - {source: CENTRIFUGO_API_KEY, <<: *runtime-secret}
-      - {source: SESSION_REALTIME_KEY, <<: *runtime-secret}
-      - {source: MENU_REALTIME_KEY, <<: *runtime-secret}
-      - {source: ORDERING_REALTIME_KEY, <<: *runtime-secret}
-      - {source: PREPARATION_REALTIME_KEY, <<: *runtime-secret}
-      - {source: COLLECTION_REALTIME_KEY, <<: *runtime-secret}
-      - {source: LOYALTY_REALTIME_KEY, <<: *runtime-secret}
-      - {source: COMMUNICATION_REALTIME_KEY, <<: *runtime-secret}
+      - { source: CENTRIFUGO_API_KEY, <<: *runtime-secret }
+      - { source: SESSION_REALTIME_KEY, <<: *runtime-secret }
+      - { source: MENU_REALTIME_KEY, <<: *runtime-secret }
+      - { source: ORDERING_REALTIME_KEY, <<: *runtime-secret }
+      - { source: PREPARATION_REALTIME_KEY, <<: *runtime-secret }
+      - { source: COLLECTION_REALTIME_KEY, <<: *runtime-secret }
+      - { source: LOYALTY_REALTIME_KEY, <<: *runtime-secret }
+      - { source: COMMUNICATION_REALTIME_KEY, <<: *runtime-secret }
     depends_on: [centrifugo]
   topology:
-    build: {context: .., dockerfile: devops/Dockerfile, args: {SERVICE: topology}}
+    build: { context: .., dockerfile: devops/Dockerfile, args: { SERVICE: topology } }
     environment:
       APP_ENV: development
       BROKER_ADMIN_URL_FILE: /run/secrets/BROKER_ADMIN_URL
     secrets:
-      - {source: BROKER_ADMIN_URL, <<: *runtime-secret}
+      - { source: BROKER_ADMIN_URL, <<: *runtime-secret }
     depends_on:
-      rabbitmq: {condition: service_healthy}
+      rabbitmq: { condition: service_healthy }
   delivery-simulator:
-    build: {context: .., dockerfile: devops/Dockerfile, args: {SERVICE: simulator}}
-    environment: {APP_ENV: development, API_KEY_FILE: /run/secrets/DELIVERY_KEY, DATA_DIR: /data}
+    build: { context: .., dockerfile: devops/Dockerfile, args: { SERVICE: simulator } }
+    environment: { APP_ENV: development, API_KEY_FILE: /run/secrets/DELIVERY_KEY, DATA_DIR: /data }
     secrets:
-      - {source: DELIVERY_KEY, <<: *runtime-secret}
-    ports: ["127.0.0.1:${DELIVERY_PORT}:8080"]
-    volumes: ["delivery-data:/data"]
+      - { source: DELIVERY_KEY, <<: *runtime-secret }
+    ports: ['127.0.0.1:${DELIVERY_PORT}:8080']
+    volumes: ['delivery-data:/data']
   storefront:
-    build: {context: .., dockerfile: devops/Dockerfile, args: {SERVICE: storefront}}
+    build: { context: .., dockerfile: devops/Dockerfile, args: { SERVICE: storefront } }
     environment:
       APP_ENV: development
       API_KEY_FILE: /run/secrets/STOREFRONT_API_KEY
@@ -152,20 +160,20 @@ services:
       ORDERING_BROKER_URL_FILE: /run/secrets/ORDERING_BROKER_URL
       ORDERING_REALTIME_KEY_FILE: /run/secrets/ORDERING_REALTIME_KEY
     secrets:
-      - {source: STOREFRONT_API_KEY, <<: *runtime-secret}
-      - {source: MENU_DATABASE_URL, <<: *runtime-secret}
-      - {source: MENU_BROKER_URL, <<: *runtime-secret}
-      - {source: MENU_REALTIME_KEY, <<: *runtime-secret}
-      - {source: ORDERING_DATABASE_URL, <<: *runtime-secret}
-      - {source: ORDERING_BROKER_URL, <<: *runtime-secret}
-      - {source: ORDERING_REALTIME_KEY, <<: *runtime-secret}
-    ports: ["127.0.0.1:${STOREFRONT_PORT}:8080"]
+      - { source: STOREFRONT_API_KEY, <<: *runtime-secret }
+      - { source: MENU_DATABASE_URL, <<: *runtime-secret }
+      - { source: MENU_BROKER_URL, <<: *runtime-secret }
+      - { source: MENU_REALTIME_KEY, <<: *runtime-secret }
+      - { source: ORDERING_DATABASE_URL, <<: *runtime-secret }
+      - { source: ORDERING_BROKER_URL, <<: *runtime-secret }
+      - { source: ORDERING_REALTIME_KEY, <<: *runtime-secret }
+    ports: ['127.0.0.1:${STOREFRONT_PORT}:8080']
     depends_on:
-      postgres: {condition: service_healthy}
-      topology: {condition: service_completed_successfully}
-      realtime-gateway: {condition: service_started}
+      postgres: { condition: service_healthy }
+      topology: { condition: service_completed_successfully }
+      realtime-gateway: { condition: service_started }
   operations:
-    build: {context: .., dockerfile: services/operations/Dockerfile}
+    build: { context: .., dockerfile: services/operations/Dockerfile }
     environment:
       APP_ENV: development
       API_KEY_FILE: /run/secrets/OPERATIONS_API_KEY
@@ -177,20 +185,20 @@ services:
       COLLECTION_BROKER_URL_FILE: /run/secrets/COLLECTION_BROKER_URL
       COLLECTION_REALTIME_KEY_FILE: /run/secrets/COLLECTION_REALTIME_KEY
     secrets:
-      - {source: OPERATIONS_API_KEY, <<: *runtime-secret}
-      - {source: PREPARATION_DATABASE_URL, <<: *runtime-secret}
-      - {source: PREPARATION_BROKER_URL, <<: *runtime-secret}
-      - {source: PREPARATION_REALTIME_KEY, <<: *runtime-secret}
-      - {source: COLLECTION_DATABASE_URL, <<: *runtime-secret}
-      - {source: COLLECTION_BROKER_URL, <<: *runtime-secret}
-      - {source: COLLECTION_REALTIME_KEY, <<: *runtime-secret}
-    ports: ["127.0.0.1:${OPERATIONS_PORT}:8080"]
+      - { source: OPERATIONS_API_KEY, <<: *runtime-secret }
+      - { source: PREPARATION_DATABASE_URL, <<: *runtime-secret }
+      - { source: PREPARATION_BROKER_URL, <<: *runtime-secret }
+      - { source: PREPARATION_REALTIME_KEY, <<: *runtime-secret }
+      - { source: COLLECTION_DATABASE_URL, <<: *runtime-secret }
+      - { source: COLLECTION_BROKER_URL, <<: *runtime-secret }
+      - { source: COLLECTION_REALTIME_KEY, <<: *runtime-secret }
+    ports: ['127.0.0.1:${OPERATIONS_PORT}:8080']
     depends_on:
-      postgres: {condition: service_healthy}
-      topology: {condition: service_completed_successfully}
-      realtime-gateway: {condition: service_started}
+      postgres: { condition: service_healthy }
+      topology: { condition: service_completed_successfully }
+      realtime-gateway: { condition: service_started }
   engagement:
-    build: {context: .., dockerfile: services/engagement/Dockerfile}
+    build: { context: .., dockerfile: services/engagement/Dockerfile }
     environment:
       APP_ENV: development
       API_KEY_FILE: /run/secrets/ENGAGEMENT_API_KEY
@@ -205,26 +213,26 @@ services:
       DELIVERY_KEY_FILE: /run/secrets/DELIVERY_KEY
       PAUSED_CONSUMERS: ${PAUSED_CONSUMERS:-}
     secrets:
-      - {source: ENGAGEMENT_API_KEY, <<: *node-secret}
-      - {source: LOYALTY_DATABASE_URL, <<: *node-secret}
-      - {source: LOYALTY_BROKER_URL, <<: *node-secret}
-      - {source: LOYALTY_REALTIME_KEY, <<: *node-secret}
-      - {source: COMMUNICATION_DATABASE_URL, <<: *node-secret}
-      - {source: COMMUNICATION_BROKER_URL, <<: *node-secret}
-      - {source: COMMUNICATION_REALTIME_KEY, <<: *node-secret}
-      - {source: DELIVERY_KEY, <<: *node-secret}
-    ports: ["127.0.0.1:${ENGAGEMENT_PORT}:8080"]
+      - { source: ENGAGEMENT_API_KEY, <<: *node-secret }
+      - { source: LOYALTY_DATABASE_URL, <<: *node-secret }
+      - { source: LOYALTY_BROKER_URL, <<: *node-secret }
+      - { source: LOYALTY_REALTIME_KEY, <<: *node-secret }
+      - { source: COMMUNICATION_DATABASE_URL, <<: *node-secret }
+      - { source: COMMUNICATION_BROKER_URL, <<: *node-secret }
+      - { source: COMMUNICATION_REALTIME_KEY, <<: *node-secret }
+      - { source: DELIVERY_KEY, <<: *node-secret }
+    ports: ['127.0.0.1:${ENGAGEMENT_PORT}:8080']
     depends_on:
-      postgres: {condition: service_healthy}
-      topology: {condition: service_completed_successfully}
-      realtime-gateway: {condition: service_started}
+      postgres: { condition: service_healthy }
+      topology: { condition: service_completed_successfully }
+      realtime-gateway: { condition: service_started }
   api:
-    build: {context: .., dockerfile: services/api/Dockerfile}
+    build: { context: .., dockerfile: services/api/Dockerfile }
     environment:
       APP_ENV: development
       REALTIME_GATEWAY_URL: http://realtime-gateway:8080
       VALKEY_ADDRESS: valkey:6379
-      WEB_ORIGINS: "http://localhost:${WEB_PORT},http://127.0.0.1:${WEB_PORT}"
+      WEB_ORIGINS: 'http://localhost:${WEB_PORT},http://127.0.0.1:${WEB_PORT}'
       API_BROKER_URL_FILE: /run/secrets/API_BROKER_URL
       API_KEY_FILE: /run/secrets/API_KEY
       OPERATOR_PASSWORD_FILE: /run/secrets/OPERATOR_PASSWORD
@@ -232,21 +240,21 @@ services:
       SESSION_PASSWORD_FILE: /run/secrets/SESSION_PASSWORD
       SESSION_REALTIME_KEY_FILE: /run/secrets/SESSION_REALTIME_KEY
     secrets:
-      - {source: API_BROKER_URL, <<: *runtime-secret}
-      - {source: API_KEY, <<: *runtime-secret}
-      - {source: OPERATOR_PASSWORD, <<: *runtime-secret}
-      - {source: CONNECT_PROXY_SECRET, <<: *runtime-secret}
-      - {source: SESSION_PASSWORD, <<: *runtime-secret}
-      - {source: SESSION_REALTIME_KEY, <<: *runtime-secret}
-    ports: ["127.0.0.1:${API_PORT}:8080"]
+      - { source: API_BROKER_URL, <<: *runtime-secret }
+      - { source: API_KEY, <<: *runtime-secret }
+      - { source: OPERATOR_PASSWORD, <<: *runtime-secret }
+      - { source: CONNECT_PROXY_SECRET, <<: *runtime-secret }
+      - { source: SESSION_PASSWORD, <<: *runtime-secret }
+      - { source: SESSION_REALTIME_KEY, <<: *runtime-secret }
+    ports: ['127.0.0.1:${API_PORT}:8080']
     depends_on:
-      topology: {condition: service_completed_successfully}
-      valkey: {condition: service_healthy}
-      realtime-gateway: {condition: service_started}
+      topology: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+      realtime-gateway: { condition: service_started }
   ingress:
-    build: {context: .., dockerfile: services/web/Dockerfile}
-    ports: ["127.0.0.1:${WEB_PORT}:8080"]
-    volumes: ["./ingress/default.conf:/etc/nginx/conf.d/default.conf:ro"]
+    build: { context: .., dockerfile: services/web/Dockerfile }
+    ports: ['127.0.0.1:${WEB_PORT}:8080']
+    volumes: ['./ingress/default.conf:/etc/nginx/conf.d/default.conf:ro']
     depends_on: [api, centrifugo]
 volumes:
   postgres-data:
@@ -254,48 +262,48 @@ volumes:
   delivery-data:
   valkey-data:
 secrets:
-  POSTGRES_PASSWORD: {environment: POSTGRES_PASSWORD}
-  BROKER_PASSWORD: {environment: BROKER_PASSWORD}
-  API_KEY: {environment: API_KEY}
-  DELIVERY_KEY: {environment: DELIVERY_KEY}
-  OPERATOR_PASSWORD: {environment: OPERATOR_PASSWORD}
-  SESSION_PASSWORD: {environment: SESSION_PASSWORD}
-  REALTIME_REDIS_PASSWORD: {environment: REALTIME_REDIS_PASSWORD}
-  CENTRIFUGO_API_KEY: {environment: CENTRIFUGO_API_KEY}
-  CONNECT_PROXY_SECRET: {environment: CONNECT_PROXY_SECRET}
-  STOREFRONT_API_KEY: {environment: STOREFRONT_API_KEY}
-  OPERATIONS_API_KEY: {environment: OPERATIONS_API_KEY}
-  ENGAGEMENT_API_KEY: {environment: ENGAGEMENT_API_KEY}
-  SESSION_REALTIME_KEY: {environment: SESSION_REALTIME_KEY}
-  BROKER_ADMIN_URL: {environment: BROKER_ADMIN_URL}
-  API_BROKER_URL: {environment: API_BROKER_URL}
-  MENU_DB_PASSWORD: {environment: MENU_DB_PASSWORD}
-  MENU_BROKER_PASSWORD: {environment: MENU_BROKER_PASSWORD}
-  MENU_DATABASE_URL: {environment: MENU_DATABASE_URL}
-  MENU_BROKER_URL: {environment: MENU_BROKER_URL}
-  MENU_REALTIME_KEY: {environment: MENU_REALTIME_KEY}
-  ORDERING_DB_PASSWORD: {environment: ORDERING_DB_PASSWORD}
-  ORDERING_BROKER_PASSWORD: {environment: ORDERING_BROKER_PASSWORD}
-  ORDERING_DATABASE_URL: {environment: ORDERING_DATABASE_URL}
-  ORDERING_BROKER_URL: {environment: ORDERING_BROKER_URL}
-  ORDERING_REALTIME_KEY: {environment: ORDERING_REALTIME_KEY}
-  PREPARATION_DB_PASSWORD: {environment: PREPARATION_DB_PASSWORD}
-  PREPARATION_BROKER_PASSWORD: {environment: PREPARATION_BROKER_PASSWORD}
-  PREPARATION_DATABASE_URL: {environment: PREPARATION_DATABASE_URL}
-  PREPARATION_BROKER_URL: {environment: PREPARATION_BROKER_URL}
-  PREPARATION_REALTIME_KEY: {environment: PREPARATION_REALTIME_KEY}
-  COLLECTION_DB_PASSWORD: {environment: COLLECTION_DB_PASSWORD}
-  COLLECTION_BROKER_PASSWORD: {environment: COLLECTION_BROKER_PASSWORD}
-  COLLECTION_DATABASE_URL: {environment: COLLECTION_DATABASE_URL}
-  COLLECTION_BROKER_URL: {environment: COLLECTION_BROKER_URL}
-  COLLECTION_REALTIME_KEY: {environment: COLLECTION_REALTIME_KEY}
-  LOYALTY_DB_PASSWORD: {environment: LOYALTY_DB_PASSWORD}
-  LOYALTY_BROKER_PASSWORD: {environment: LOYALTY_BROKER_PASSWORD}
-  LOYALTY_DATABASE_URL: {environment: LOYALTY_DATABASE_URL}
-  LOYALTY_BROKER_URL: {environment: LOYALTY_BROKER_URL}
-  LOYALTY_REALTIME_KEY: {environment: LOYALTY_REALTIME_KEY}
-  COMMUNICATION_DB_PASSWORD: {environment: COMMUNICATION_DB_PASSWORD}
-  COMMUNICATION_BROKER_PASSWORD: {environment: COMMUNICATION_BROKER_PASSWORD}
-  COMMUNICATION_DATABASE_URL: {environment: COMMUNICATION_DATABASE_URL}
-  COMMUNICATION_BROKER_URL: {environment: COMMUNICATION_BROKER_URL}
-  COMMUNICATION_REALTIME_KEY: {environment: COMMUNICATION_REALTIME_KEY}
+  POSTGRES_PASSWORD: { environment: POSTGRES_PASSWORD }
+  BROKER_PASSWORD: { environment: BROKER_PASSWORD }
+  API_KEY: { environment: API_KEY }
+  DELIVERY_KEY: { environment: DELIVERY_KEY }
+  OPERATOR_PASSWORD: { environment: OPERATOR_PASSWORD }
+  SESSION_PASSWORD: { environment: SESSION_PASSWORD }
+  REALTIME_REDIS_PASSWORD: { environment: REALTIME_REDIS_PASSWORD }
+  CENTRIFUGO_API_KEY: { environment: CENTRIFUGO_API_KEY }
+  CONNECT_PROXY_SECRET: { environment: CONNECT_PROXY_SECRET }
+  STOREFRONT_API_KEY: { environment: STOREFRONT_API_KEY }
+  OPERATIONS_API_KEY: { environment: OPERATIONS_API_KEY }
+  ENGAGEMENT_API_KEY: { environment: ENGAGEMENT_API_KEY }
+  SESSION_REALTIME_KEY: { environment: SESSION_REALTIME_KEY }
+  BROKER_ADMIN_URL: { environment: BROKER_ADMIN_URL }
+  API_BROKER_URL: { environment: API_BROKER_URL }
+  MENU_DB_PASSWORD: { environment: MENU_DB_PASSWORD }
+  MENU_BROKER_PASSWORD: { environment: MENU_BROKER_PASSWORD }
+  MENU_DATABASE_URL: { environment: MENU_DATABASE_URL }
+  MENU_BROKER_URL: { environment: MENU_BROKER_URL }
+  MENU_REALTIME_KEY: { environment: MENU_REALTIME_KEY }
+  ORDERING_DB_PASSWORD: { environment: ORDERING_DB_PASSWORD }
+  ORDERING_BROKER_PASSWORD: { environment: ORDERING_BROKER_PASSWORD }
+  ORDERING_DATABASE_URL: { environment: ORDERING_DATABASE_URL }
+  ORDERING_BROKER_URL: { environment: ORDERING_BROKER_URL }
+  ORDERING_REALTIME_KEY: { environment: ORDERING_REALTIME_KEY }
+  PREPARATION_DB_PASSWORD: { environment: PREPARATION_DB_PASSWORD }
+  PREPARATION_BROKER_PASSWORD: { environment: PREPARATION_BROKER_PASSWORD }
+  PREPARATION_DATABASE_URL: { environment: PREPARATION_DATABASE_URL }
+  PREPARATION_BROKER_URL: { environment: PREPARATION_BROKER_URL }
+  PREPARATION_REALTIME_KEY: { environment: PREPARATION_REALTIME_KEY }
+  COLLECTION_DB_PASSWORD: { environment: COLLECTION_DB_PASSWORD }
+  COLLECTION_BROKER_PASSWORD: { environment: COLLECTION_BROKER_PASSWORD }
+  COLLECTION_DATABASE_URL: { environment: COLLECTION_DATABASE_URL }
+  COLLECTION_BROKER_URL: { environment: COLLECTION_BROKER_URL }
+  COLLECTION_REALTIME_KEY: { environment: COLLECTION_REALTIME_KEY }
+  LOYALTY_DB_PASSWORD: { environment: LOYALTY_DB_PASSWORD }
+  LOYALTY_BROKER_PASSWORD: { environment: LOYALTY_BROKER_PASSWORD }
+  LOYALTY_DATABASE_URL: { environment: LOYALTY_DATABASE_URL }
+  LOYALTY_BROKER_URL: { environment: LOYALTY_BROKER_URL }
+  LOYALTY_REALTIME_KEY: { environment: LOYALTY_REALTIME_KEY }
+  COMMUNICATION_DB_PASSWORD: { environment: COMMUNICATION_DB_PASSWORD }
+  COMMUNICATION_BROKER_PASSWORD: { environment: COMMUNICATION_BROKER_PASSWORD }
+  COMMUNICATION_DATABASE_URL: { environment: COMMUNICATION_DATABASE_URL }
+  COMMUNICATION_BROKER_URL: { environment: COMMUNICATION_BROKER_URL }
+  COMMUNICATION_REALTIME_KEY: { environment: COMMUNICATION_REALTIME_KEY }

@@ -1,4 +1,5 @@
 """Bundle authoritative OpenAPI documents into each owning Go module."""
+
 import argparse
 import copy
 import json
@@ -66,44 +67,51 @@ def bundle(path: Path) -> dict:
 
 
 def generated() -> dict[Path, str]:
-    usage = declarations(ROOT)['openapi']
-    supported = {'api': {'produces': {'api', 'gateway'}, 'consumes': set()},
-                 'storefront': {'produces': {'storefront', 'provider'}, 'consumes': set()},
-                 'web': {'produces': set(), 'consumes': {'api'}}}
+    usage = declarations(ROOT)["openapi"]
+    supported = {
+        "api": {"produces": {"api", "gateway"}, "consumes": set()},
+        "storefront": {"produces": {"storefront", "provider"}, "consumes": set()},
+        "web": {"produces": set(), "consumes": {"api"}},
+    }
     for service, roles in usage.items():
         for role, names in roles.items():
             if set(names) - supported.get(service, {}).get(role, set()):
-                raise ValueError(f'No OpenAPI generation target for {service}.{role}: {names}')
-    produced = {name for roles in usage.values() for name in roles['produces']}
+                raise ValueError(f"No OpenAPI generation target for {service}.{role}: {names}")
+    produced = {name for roles in usage.values() for name in roles["produces"]}
     outputs = {
-        ROOT / directory / (name + ".openapi.json"):
-        json.dumps(bundle(SOURCE / DOCUMENTS[name]), indent=2, ensure_ascii=False) + "\n"
-        for name, directory in OUTPUTS.items() if name in produced
+        ROOT / directory / (name + ".openapi.json"): json.dumps(
+            bundle(SOURCE / DOCUMENTS[name]), indent=2, ensure_ascii=False
+        )
+        + "\n"
+        for name, directory in OUTPUTS.items()
+        if name in produced
     }
-    if 'api' in usage.get('web', {}).get('consumes', []):
-        outputs[ROOT/FRONTEND_OUTPUT] = frontend_generated(bundle(SOURCE/DOCUMENTS["api"]))
-    if 'api' not in produced:
+    if "api" in usage.get("web", {}).get("consumes", []):
+        outputs[ROOT / FRONTEND_OUTPUT] = frontend_generated(bundle(SOURCE / DOCUMENTS["api"]))
+    if "api" not in produced:
         return outputs
-    mapping = mapping_generated(ROOT, bundle(SOURCE/DOCUMENTS["api"]))
+    mapping = mapping_generated(ROOT, bundle(SOURCE / DOCUMENTS["api"]))
     import subprocess
-    gofmt = ROOT/".tools/go/bin/gofmt"
+
+    gofmt = ROOT / ".tools/go/bin/gofmt"
     if not gofmt.exists():
         import shutil
+
         gofmt = Path(shutil.which("gofmt") or "gofmt")
     mapping = subprocess.check_output([str(gofmt)], input=mapping, text=True)
-    outputs[ROOT/MAPPING_OUTPUT] = mapping
+    outputs[ROOT / MAPPING_OUTPUT] = mapping
     return outputs
 
 
 def generate(check=False):
     expected_outputs = generated()
-    managed = {ROOT/FRONTEND_OUTPUT, ROOT/MAPPING_OUTPUT}
+    managed = {ROOT / FRONTEND_OUTPUT, ROOT / MAPPING_OUTPUT}
     for directory in set(OUTPUTS.values()):
-        managed.update((ROOT/directory).glob('*.openapi.json'))
+        managed.update((ROOT / directory).glob("*.openapi.json"))
     for path in managed - expected_outputs.keys():
         if path.exists():
             if check:
-                raise ValueError(f'Stale OpenAPI output: {path.relative_to(ROOT)}')
+                raise ValueError(f"Stale OpenAPI output: {path.relative_to(ROOT)}")
             path.unlink()
     for path, expected in expected_outputs.items():
         if check:

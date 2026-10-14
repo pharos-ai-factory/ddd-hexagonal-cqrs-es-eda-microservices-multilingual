@@ -1,4 +1,5 @@
 """Map validated stored snapshots into an application-owned read model."""
+
 from collections.abc import Callable
 from operations.foundation.application import Loaded
 from operations.foundation.pagination import Page, PageRequest, PagedQueryPort
@@ -6,6 +7,7 @@ from operations.foundation.pagination import Page, PageRequest, PagedQueryPort
 
 class MappedReadRepository[S, V]:
     """Preserve revision, missing rows and pagination while translating read values."""
+
     def __init__(self, source: PagedQueryPort[S], view: Callable[[S], V]) -> None:
         self.source, self.view = source, view
 

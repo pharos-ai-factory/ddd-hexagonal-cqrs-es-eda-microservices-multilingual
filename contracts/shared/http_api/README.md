@@ -2,30 +2,30 @@
 
 The OpenAPI 3.0.3 documents are the authoritative HTTP wire contracts:
 
-| Document | Surface |
-| --- | --- |
-| [api.openapi.json](../../services/api/http_api/api.openapi.json) | Go API: all six contexts' HTTP commands and queries, sessions, health, diagnostics and internal Centrifugo proxies |
-| [storefront.openapi.json](../../services/storefront/http_api/storefront.openapi.json) | Go Storefront operational health and diagnostics |
-| [gateway.openapi.json](../../services/realtime_gateway/http_api/gateway.openapi.json) | Internal Go realtime publication and disconnection gateway |
-| [provider.openapi.json](../../services/notification_provider/http_api/provider.openapi.json) | Go development notification provider and its failure controls |
+| Document                                                                                     | Surface                                                                                                            |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [api.openapi.json](../../services/api/http_api/api.openapi.json)                             | Go API: all six contexts' HTTP commands and queries, sessions, health, diagnostics and internal Centrifugo proxies |
+| [storefront.openapi.json](../../services/storefront/http_api/storefront.openapi.json)        | Go Storefront operational health and diagnostics                                                                   |
+| [gateway.openapi.json](../../services/realtime_gateway/http_api/gateway.openapi.json)        | Internal Go realtime publication and disconnection gateway                                                         |
+| [provider.openapi.json](../../services/notification_provider/http_api/provider.openapi.json) | Go development notification provider and its failure controls                                                      |
 
 Start with a complete document above to inspect an API. To change a contract,
 find its owner below. Resource paths and their schemas sit together:
 
-| Change | Edit |
-| --- | --- |
-| Drinks and menu editions | [menu/http_api](../../menu/http_api/) |
-| Orders and order lines | [ordering/http_api](../../ordering/http_api/) |
-| Preparation tickets | [preparation/http_api](../../preparation/http_api/) |
-| Pickups and collection | [collection/http_api](../../collection/http_api/) |
-| Loyalty accounts and rewards | [loyalty/http_api](../../loyalty/http_api/) |
-| Notifications | [communication/http_api](../../communication/http_api/) |
-| API health and diagnostics | [operational.paths.json](../../services/api/http_api/operational.paths.json) and [operational.schemas.json](../../services/api/http_api/operational.schemas.json) |
-| Login, session and logout | [session.paths.json](../../services/api/http_api/session.paths.json) |
-| Centrifugo connect and refresh | [realtime.paths.json](../../services/api/http_api/realtime.paths.json) |
-| Storefront health and diagnostics | [operational.paths.json](../../services/storefront/http_api/operational.paths.json) and [operational.schemas.json](../../services/storefront/http_api/operational.schemas.json) |
-| Common errors and outcomes | [schemas.json](schemas.json) and [responses.json](responses.json) |
-| Command headers and pagination parameters | [parameters.json](parameters.json) |
+| Change                                    | Edit                                                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Drinks and menu editions                  | [menu/http_api](../../menu/http_api/)                                                                                                                                           |
+| Orders and order lines                    | [ordering/http_api](../../ordering/http_api/)                                                                                                                                   |
+| Preparation tickets                       | [preparation/http_api](../../preparation/http_api/)                                                                                                                             |
+| Pickups and collection                    | [collection/http_api](../../collection/http_api/)                                                                                                                               |
+| Loyalty accounts and rewards              | [loyalty/http_api](../../loyalty/http_api/)                                                                                                                                     |
+| Notifications                             | [communication/http_api](../../communication/http_api/)                                                                                                                         |
+| API health and diagnostics                | [operational.paths.json](../../services/api/http_api/operational.paths.json) and [operational.schemas.json](../../services/api/http_api/operational.schemas.json)               |
+| Login, session and logout                 | [session.paths.json](../../services/api/http_api/session.paths.json)                                                                                                            |
+| Centrifugo connect and refresh            | [realtime.paths.json](../../services/api/http_api/realtime.paths.json)                                                                                                          |
+| Storefront health and diagnostics         | [operational.paths.json](../../services/storefront/http_api/operational.paths.json) and [operational.schemas.json](../../services/storefront/http_api/operational.schemas.json) |
+| Common errors and outcomes                | [schemas.json](schemas.json) and [responses.json](responses.json)                                                                                                               |
+| Command headers and pagination parameters | [parameters.json](parameters.json)                                                                                                                                              |
 
 Each `<resource>.paths.json` defines that resource's operations; `schemas.json`
 defines its context's published request and response shapes. A complete document
@@ -97,10 +97,10 @@ fields, trailing JSON and bodies larger than 64 KiB are rejected.
 
 Every command requires:
 
-| Header | Meaning |
-| --- | --- |
-| `Idempotency-Key` | Canonical lowercase UUID for this command attempt |
-| `If-Match` | Expected aggregate version; `0` creates a new aggregate |
+| Header             | Meaning                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| `Idempotency-Key`  | Canonical lowercase UUID for this command attempt           |
+| `If-Match`         | Expected aggregate version; `0` creates a new aggregate     |
 | `X-Correlation-ID` | Optional UUID for the workflow; defaults to the command key |
 
 The URL identifies the aggregate root. An OrderLine ID in the body never changes
@@ -121,15 +121,15 @@ Successful responses are HTTP 200:
 }
 ```
 
-| Status | Interpretation |
-| --- | --- |
-| 400 | Invalid body or identifier; no command decision |
-| 401 | Missing or incorrect development key |
-| 404 | Requested aggregate does not exist |
-| 409 | Stale expected version or conflicting command identity |
-| 422 | Typed business rejection in `rejection.code` and `rejection.message` |
-| 428 | Missing or invalid expected version |
-| 503 | Infrastructure unavailable; retry the same command identity |
+| Status | Interpretation                                                       |
+| ------ | -------------------------------------------------------------------- |
+| 400    | Invalid body or identifier; no command decision                      |
+| 401    | Missing or incorrect development key                                 |
+| 404    | Requested aggregate does not exist                                   |
+| 409    | Stale expected version or conflicting command identity               |
+| 422    | Typed business rejection in `rejection.code` and `rejection.message` |
+| 428    | Missing or invalid expected version                                  |
+| 503    | Infrastructure unavailable; retry the same command identity          |
 
 Recorded business rejections do not change state/version or emit events.
 For `menu_pending` and `drink_revision_pending`, allow the projection to arrive,
@@ -140,19 +140,19 @@ identity does not re-evaluate its decision.
 
 All paths below begin with `/v1`.
 
-| POST path | Body |
-| --- | --- |
-| `/menu/drinks/{id}` | `{"name":"Cappuccino"}` |
-| `/menu/drinks/{id}/revise` | `{"name":"Large cappuccino"}` |
-| `/menu/drinks/{id}/publish` | `{}` |
-| `/menu/editions/{id}` | `{"currency":"EUR"}` |
-| `/menu/editions/{id}/offers` | `{"code":"C1","drinkId":"<uuid>","drinkRevision":1,"minor":300}` |
-| `/menu/editions/{id}/prices` | `{"code":"C1","minor":350}` |
-| `/menu/editions/{id}/publish` | `{}` |
-| `/ordering/orders/{id}` | `{"customerId":"<uuid>","editionId":"<uuid>"}` |
-| `/ordering/orders/{id}/lines` | `{"lineId":"<uuid>","editionId":"<uuid>","offerCode":"C1","quantity":2}` |
-| `/ordering/orders/{id}/quantities` | `{"lineId":"<uuid>","quantity":3}` |
-| `/ordering/orders/{id}/place` | `{}` |
+| POST path                          | Body                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| `/menu/drinks/{id}`                | `{"name":"Cappuccino"}`                                                  |
+| `/menu/drinks/{id}/revise`         | `{"name":"Large cappuccino"}`                                            |
+| `/menu/drinks/{id}/publish`        | `{}`                                                                     |
+| `/menu/editions/{id}`              | `{"currency":"EUR"}`                                                     |
+| `/menu/editions/{id}/offers`       | `{"code":"C1","drinkId":"<uuid>","drinkRevision":1,"minor":300}`         |
+| `/menu/editions/{id}/prices`       | `{"code":"C1","minor":350}`                                              |
+| `/menu/editions/{id}/publish`      | `{}`                                                                     |
+| `/ordering/orders/{id}`            | `{"customerId":"<uuid>","editionId":"<uuid>"}`                           |
+| `/ordering/orders/{id}/lines`      | `{"lineId":"<uuid>","editionId":"<uuid>","offerCode":"C1","quantity":2}` |
+| `/ordering/orders/{id}/quantities` | `{"lineId":"<uuid>","quantity":3}`                                       |
+| `/ordering/orders/{id}/place`      | `{}`                                                                     |
 
 Money uses integer minor units. Adding an offer or changing its price requires
 an explicit non-null `minor` field; zero is valid. Drink names contain 1–80
@@ -162,19 +162,19 @@ Draft Orders may be empty; placed Orders contain 1–5 drinks in total.
 
 ## Operations, port 28082
 
-| POST path | Body |
-| --- | --- |
-| `/v1/preparation/tickets/{id}/start` | `{}` |
-| `/v1/preparation/tickets/{id}/complete` | `{}` |
-| `/v1/collection/pickups/{id}/collect` | `{"code":"ABC123"}` |
+| POST path                               | Body                |
+| --------------------------------------- | ------------------- |
+| `/v1/preparation/tickets/{id}/start`    | `{}`                |
+| `/v1/preparation/tickets/{id}/complete` | `{}`                |
+| `/v1/collection/pickups/{id}/collect`   | `{"code":"ABC123"}` |
 
 Tickets and pickups are created by event consumers. Their IDs differ from the
 Order ID. The read DTOs expose `orderId` for the operator and test observer.
 
 ## Engagement, port 28083
 
-| POST path | Body |
-| --- | --- |
+| POST path                         | Body                   |
+| --------------------------------- | ---------------------- |
 | `/v1/loyalty/rewards/{id}/redeem` | `{"orderId":"<uuid>"}` |
 
 Accounts, rewards and notification intents are created by event consumers.
@@ -224,7 +224,6 @@ every queue has drained or every workflow has completed.
 contract. Implementations must preserve endpoint shapes, typed rejections,
 versions, recorded retry outcomes and eventual workflow results. They need not
 share SQL table layouts or Go struct names.
-
 
 ## Enforcement commands
 

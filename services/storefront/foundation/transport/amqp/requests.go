@@ -29,12 +29,12 @@ func DeclareRequests(url string, owners []string) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	channel, err := conn.Channel()
 	if err != nil {
 		return err
 	}
-	defer channel.Close()
+	defer func() { _ = channel.Close() }()
 	for _, name := range []string{RequestsExchange, RepliesExchange} {
 		if err = channel.ExchangeDeclare(name, "topic", true, false, false, false, nil); err != nil {
 			return err
@@ -87,7 +87,7 @@ func ServeRequests(ctx context.Context, url, owner, kind string, handle RequestH
 	if err != nil {
 		return err
 	}
-	defer channel.Close()
+	defer func() { _ = channel.Close() }()
 	if err = channel.Qos(1, 0, false); err != nil {
 		return err
 	}

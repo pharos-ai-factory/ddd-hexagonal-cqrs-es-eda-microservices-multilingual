@@ -6,6 +6,7 @@ from operations.contexts.preparation.domain.preparation_ticket import Preparatio
 
 class AcceptOrderCommand(TypedDict):
     """Owner instruction to create a preparation ticket with immutable instructions."""
+
     orderId: str
     customerId: str
     instructions: str
@@ -13,6 +14,7 @@ class AcceptOrderCommand(TypedDict):
 
 class AcceptOrderCommandHandler:
     """Create one PreparationTicket; redelivery preserves the existing ticket."""
+
     def __init__(self, repository: TicketWriteRepository) -> None:
         self.repository = repository
 
@@ -22,7 +24,8 @@ class AcceptOrderCommandHandler:
         if state is not None:
             restored = state.snapshot()
             return CommandResult(restored["status"])
-        ticket = PreparationTicket(TicketState(
-            context.target, command["orderId"], command["customerId"], command["instructions"]))
+        ticket = PreparationTicket(
+            TicketState(context.target, command["orderId"], command["customerId"], command["instructions"])
+        )
         self.repository.save(ticket)
         return CommandResult("queued")

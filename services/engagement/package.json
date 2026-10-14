@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/apps/service.js",
     "test": "tsx --test 'src/**/*.test.ts'",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --project tsconfig.check.json",
     "test:bdd": "node --import tsx ../../node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.mjs"
   },
   "dependencies": {

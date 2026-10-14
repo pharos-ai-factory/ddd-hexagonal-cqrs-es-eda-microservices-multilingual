@@ -4,16 +4,16 @@ The feature files are the language-neutral description of the café's behaviour.
 Step definitions call each service's actual application handlers, or exercise the
 running system through its Go API and published contracts.
 
-| Specification | Runner | Boundary | Expanded scenarios |
-| --- | --- | --- | --- |
-| [Menu](menu/menu.feature) | Godog | Go application decisions | 12 |
-| [Ordering](ordering/ordering.feature) | Godog | Go application decisions | 11 |
-| [Projection recovery](ordering/projection-recovery.feature) | Godog | Go handlers and real PostgreSQL | 2 |
-| [Preparation](preparation/preparation.feature) | pytest-bdd | Python application decisions | 6 |
-| [Collection](collection/collection.feature) | pytest-bdd | Python application decisions | 5 |
-| [Loyalty](loyalty/loyalty.feature) | Cucumber | TypeScript application decisions | 11 |
-| [Communication](communication/communication.feature) | Cucumber | TypeScript application decisions | 6 |
-| [Durable workflows](workflows/durable-workflows.feature) | Cucumber | Go API, three services, PostgreSQL, RabbitMQ and provider | 10 |
+| Specification                                               | Runner     | Boundary                                                  | Expanded scenarios |
+| ----------------------------------------------------------- | ---------- | --------------------------------------------------------- | ------------------ |
+| [Menu](menu/menu.feature)                                   | Godog      | Go application decisions                                  | 12                 |
+| [Ordering](ordering/ordering.feature)                       | Godog      | Go application decisions                                  | 11                 |
+| [Projection recovery](ordering/projection-recovery.feature) | Godog      | Go handlers and real PostgreSQL                           | 2                  |
+| [Preparation](preparation/preparation.feature)              | pytest-bdd | Python application decisions                              | 6                  |
+| [Collection](collection/collection.feature)                 | pytest-bdd | Python application decisions                              | 5                  |
+| [Loyalty](loyalty/loyalty.feature)                          | Cucumber   | TypeScript application decisions                          | 11                 |
+| [Communication](communication/communication.feature)        | Cucumber   | TypeScript application decisions                          | 6                  |
+| [Durable workflows](workflows/durable-workflows.feature)    | Cucumber   | Go API, three services, PostgreSQL, RabbitMQ and provider | 10                 |
 
 There are **63 executable scenarios**, counting each Scenario Outline example:
 51 fast, two PostgreSQL and ten cross-service. `pnpm check:specifications`

@@ -5,8 +5,8 @@
       "operationId": "listRewards",
       "summary": "List rewards",
       "parameters": [
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/Limit"},
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/Cursor"}
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/Cursor" }
       ],
       "responses": {
         "200": {
@@ -20,56 +20,41 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": [
-                        "exists",
-                        "version",
-                        "state"
-                      ],
+                      "required": ["exists", "version", "state"],
                       "properties": {
                         "exists": {
                           "type": "boolean",
-                          "enum": [
-                            true
-                          ]
+                          "enum": [true]
                         },
                         "version": {
                           "type": "integer",
                           "minimum": 0
                         },
-                        "state": {"$ref": "schemas.json#/schemas/Reward"}
+                        "state": { "$ref": "schemas.json#/schemas/Reward" }
                       }
                     }
                   },
                   {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": [
-                      "items",
-                      "nextCursor"
-                    ],
+                    "required": ["items", "nextCursor"],
                     "properties": {
                       "items": {
                         "type": "array",
                         "items": {
                           "type": "object",
                           "additionalProperties": false,
-                          "required": [
-                            "exists",
-                            "version",
-                            "state"
-                          ],
+                          "required": ["exists", "version", "state"],
                           "properties": {
                             "exists": {
                               "type": "boolean",
-                              "enum": [
-                                true
-                              ]
+                              "enum": [true]
                             },
                             "version": {
                               "type": "integer",
                               "minimum": 0
                             },
-                            "state": {"$ref": "schemas.json#/schemas/Reward"}
+                            "state": { "$ref": "schemas.json#/schemas/Reward" }
                           }
                         }
                       },
@@ -98,18 +83,16 @@
             }
           }
         },
-        "400": {"$ref": "../../shared/http_api/responses.json#/responses/400"},
-        "401": {"$ref": "../../shared/http_api/responses.json#/responses/401"},
-        "403": {"$ref": "../../shared/http_api/responses.json#/responses/403"},
-        "503": {"$ref": "../../shared/http_api/responses.json#/responses/503"}
+        "400": { "$ref": "../../shared/http_api/responses.json#/responses/400" },
+        "401": { "$ref": "../../shared/http_api/responses.json#/responses/401" },
+        "403": { "$ref": "../../shared/http_api/responses.json#/responses/403" },
+        "503": { "$ref": "../../shared/http_api/responses.json#/responses/503" }
       }
     }
   },
   "item": {
     "x-owner": "loyalty",
-    "parameters": [
-      {"$ref": "../../shared/http_api/parameters.json#/parameters/ID"}
-    ],
+    "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getReward",
       "summary": "Get Reward",
@@ -121,23 +104,17 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": [
-                  "exists",
-                  "version",
-                  "state"
-                ],
+                "required": ["exists", "version", "state"],
                 "properties": {
                   "exists": {
                     "type": "boolean",
-                    "enum": [
-                      true
-                    ]
+                    "enum": [true]
                   },
                   "version": {
                     "type": "integer",
                     "minimum": 0
                   },
-                  "state": {"$ref": "schemas.json#/schemas/Reward"}
+                  "state": { "$ref": "schemas.json#/schemas/Reward" }
                 }
               },
               "example": {
@@ -155,33 +132,31 @@
             }
           }
         },
-        "400": {"$ref": "../../shared/http_api/responses.json#/responses/400"},
-        "401": {"$ref": "../../shared/http_api/responses.json#/responses/401"},
-        "403": {"$ref": "../../shared/http_api/responses.json#/responses/403"},
-        "404": {"$ref": "../../shared/http_api/responses.json#/responses/404"},
-        "503": {"$ref": "../../shared/http_api/responses.json#/responses/503"}
+        "400": { "$ref": "../../shared/http_api/responses.json#/responses/400" },
+        "401": { "$ref": "../../shared/http_api/responses.json#/responses/401" },
+        "403": { "$ref": "../../shared/http_api/responses.json#/responses/403" },
+        "404": { "$ref": "../../shared/http_api/responses.json#/responses/404" },
+        "503": { "$ref": "../../shared/http_api/responses.json#/responses/503" }
       }
     }
   },
   "redeem": {
     "x-owner": "loyalty",
-    "parameters": [
-      {"$ref": "../../shared/http_api/parameters.json#/parameters/ID"}
-    ],
+    "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "redeemReward",
       "summary": "redeemReward",
       "parameters": [
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/CommandID"},
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/Version"},
-        {"$ref": "../../shared/http_api/parameters.json#/parameters/Correlation"}
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/Version" },
+        { "$ref": "../../shared/http_api/parameters.json#/parameters/Correlation" }
       ],
       "requestBody": {
         "required": true,
         "description": "One JSON object, at most 64 KiB. Business terms are decided and recorded by the owner.",
         "content": {
           "application/json": {
-            "schema": {"$ref": "schemas.json#/schemas/RedeemCommand"},
+            "schema": { "$ref": "schemas.json#/schemas/RedeemCommand" },
             "example": {
               "orderId": "22222222-2222-4222-8222-222222222222"
             }
@@ -193,7 +168,7 @@
           "description": "Successful response",
           "content": {
             "application/json": {
-              "schema": {"$ref": "../../shared/http_api/schemas.json#/schemas/Outcome"},
+              "schema": { "$ref": "../../shared/http_api/schemas.json#/schemas/Outcome" },
               "example": {
                 "aggregateId": "11111111-1111-4111-8111-111111111111",
                 "version": 1,
@@ -202,21 +177,21 @@
             }
           }
         },
-        "400": {"$ref": "../../shared/http_api/responses.json#/responses/400"},
-        "401": {"$ref": "../../shared/http_api/responses.json#/responses/401"},
-        "403": {"$ref": "../../shared/http_api/responses.json#/responses/403"},
+        "400": { "$ref": "../../shared/http_api/responses.json#/responses/400" },
+        "401": { "$ref": "../../shared/http_api/responses.json#/responses/401" },
+        "403": { "$ref": "../../shared/http_api/responses.json#/responses/403" },
         "404": {
           "description": "Recorded missing-root rejection",
           "content": {
             "application/json": {
-              "schema": {"$ref": "../../shared/http_api/schemas.json#/schemas/RejectedOutcome"}
+              "schema": { "$ref": "../../shared/http_api/schemas.json#/schemas/RejectedOutcome" }
             }
           }
         },
-        "409": {"$ref": "../../shared/http_api/responses.json#/responses/409"},
-        "422": {"$ref": "../../shared/http_api/responses.json#/responses/422"},
-        "428": {"$ref": "../../shared/http_api/responses.json#/responses/428"},
-        "503": {"$ref": "../../shared/http_api/responses.json#/responses/503"}
+        "409": { "$ref": "../../shared/http_api/responses.json#/responses/409" },
+        "422": { "$ref": "../../shared/http_api/responses.json#/responses/422" },
+        "428": { "$ref": "../../shared/http_api/responses.json#/responses/428" },
+        "503": { "$ref": "../../shared/http_api/responses.json#/responses/503" }
       }
     }
   }

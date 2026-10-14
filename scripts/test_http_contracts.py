@@ -1,4 +1,5 @@
 """Prove the source contracts bundle reproducibly and cannot escape their root."""
+
 import json
 from pathlib import Path
 import tempfile
@@ -21,6 +22,7 @@ class HTTPContractsTests(unittest.TestCase):
             elif isinstance(value, list):
                 for child in value:
                     visit(child)
+
         for path, content in http_contracts.generated().items():
             if path.suffix == ".json":
                 visit(json.loads(content))
@@ -29,8 +31,9 @@ class HTTPContractsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "api.openapi.json"
             path.write_text("outdated")
-            with patch.object(http_contracts, "ROOT", Path(directory)), patch.object(
-                http_contracts, "generated", return_value={path: "current"}
+            with (
+                patch.object(http_contracts, "ROOT", Path(directory)),
+                patch.object(http_contracts, "generated", return_value={path: "current"}),
             ):
                 with self.assertRaisesRegex(ValueError, "bundle drift"):
                     http_contracts.generate(check=True)
@@ -52,21 +55,37 @@ class HTTPContractsTests(unittest.TestCase):
             for owner, field_type in (("menu", "string"), ("ordering", "integer")):
                 source = root / "contexts" / owner / "schemas.json"
                 source.parent.mkdir(parents=True)
-                source.write_text(json.dumps({"schemas": {"State": {
-                    "type": "object", "properties": {"value": {"type": field_type}}
-                }}}))
-                paths["/" + owner] = {"get": {"responses": {"200": {"content": {
-                    "application/json": {"schema": {
-                        "$ref": f"contexts/{owner}/schemas.json#/schemas/State"
-                    }}
-                }}}}}
+                source.write_text(
+                    json.dumps(
+                        {
+                            "schemas": {
+                                "State": {"type": "object", "properties": {"value": {"type": field_type}}}
+                            }
+                        }
+                    )
+                )
+                paths["/" + owner] = {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": f"contexts/{owner}/schemas.json#/schemas/State"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             path = root / "api.openapi.json"
             path.write_text(json.dumps({"paths": paths}))
             with patch.object(http_contracts, "SOURCE", root):
                 document = http_contracts.bundle(path)
             references = []
             for owner, field_type in (("menu", "string"), ("ordering", "integer")):
-                reference = document["paths"]["/" + owner]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+                reference = document["paths"]["/" + owner]["get"]["responses"]["200"]["content"][
+                    "application/json"
+                ]["schema"]["$ref"]
                 references.append(reference)
                 schema = document["components"]["schemas"][reference.rsplit("/", 1)[1]]
                 self.assertEqual(schema["properties"]["value"]["type"], field_type)

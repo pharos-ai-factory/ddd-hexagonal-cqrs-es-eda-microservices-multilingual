@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.strict.json",
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["*.ts"]
+}

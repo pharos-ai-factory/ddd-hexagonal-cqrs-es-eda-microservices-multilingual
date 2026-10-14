@@ -4,6 +4,15 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Add `pnpm check` as the shared static gate for local verification and CI, with
+  service selection, changed-file selection and continuous edit watching.
+- Retain strict Python Mypy, extend Ruff to repository tooling, strengthen
+  TypeScript checks across source and tests, and add typed ESLint plus pinned Go
+  Staticcheck/errcheck alongside vet.
+- Enforce and normalise handwritten formatting with gofmt, Ruff and Prettier.
+  Run static checks before focused tests and during development watch; configure
+  editor diagnostics and formatting on save. Document the workflow in decision 0018.
+
 - Group Storefront's Fx composition, context modules and lifecycle hooks under
   `apps/storefront/di`, with a small executable entry point.
 
@@ -50,7 +59,6 @@ Notable changes to this development reference are recorded here, newest first.
 - Add focused tests, readiness, prerequisite checks, Compose Watch, test debugger profiles,
   role-based scaffolding, formatting and read-only workflow inspection.
 - Update the command/event walkthrough and per-language extension guide.
-
 
 - Adopt Awilix, Python Dependency Injector and Go Fx with explicit context
   bindings, framework-free application constructors and owned resource cleanup.

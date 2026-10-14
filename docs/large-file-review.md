@@ -5,22 +5,22 @@ There are no handwritten exceptions.
 
 The following exact paths are classified as generated source or dependency locks:
 
-| Path | Responsibility |
-| --- | --- |
-| `services/storefront/contracts/events/generated/cafe/v1/events.pb.go` | Go event bindings |
-| `services/storefront/contracts/realtime/generated/cafe/realtime/v1/realtime.pb.go` | Go browser bindings |
-| `services/operations/src/operations/adaptors/generated/cafe/v1/events_pb2.py` | Python event bindings |
-| `services/operations/src/operations/adaptors/generated/cafe/realtime/v1/realtime_pb2.py` | Python browser bindings |
-| `services/operations/src/operations/adaptors/generated/cafe/v1/events_pb2.pyi` | Generated Python event type declarations |
+| Path                                                                                      | Responsibility                             |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `services/storefront/contracts/events/generated/cafe/v1/events.pb.go`                     | Go event bindings                          |
+| `services/storefront/contracts/realtime/generated/cafe/realtime/v1/realtime.pb.go`        | Go browser bindings                        |
+| `services/operations/src/operations/adaptors/generated/cafe/v1/events_pb2.py`             | Python event bindings                      |
+| `services/operations/src/operations/adaptors/generated/cafe/realtime/v1/realtime_pb2.py`  | Python browser bindings                    |
+| `services/operations/src/operations/adaptors/generated/cafe/v1/events_pb2.pyi`            | Generated Python event type declarations   |
 | `services/operations/src/operations/adaptors/generated/cafe/realtime/v1/realtime_pb2.pyi` | Generated Python browser type declarations |
-| `services/engagement/src/adaptors/generated/events.json` | TypeScript event descriptor |
-| `services/engagement/src/adaptors/generated/realtime.json` | TypeScript browser descriptor |
-| `services/web/src/adaptors/generated/realtime.json` | Browser decoder descriptor |
-| `services/storefront/foundation/persistence/postgres/migrations/contexts.json` | Storefront context migration checksums |
-| `services/operations/src/operations/adaptors/generated/context-persistence.json` | Operations context migration checksums |
-| `services/engagement/src/adaptors/generated/context-persistence.json` | Engagement context migration checksums |
-| `pnpm-lock.yaml` | Reproducible Node dependency resolution |
-| `services/operations/uv.lock` | Reproducible Python dependency resolution |
+| `services/engagement/src/adaptors/generated/events.json`                                  | TypeScript event descriptor                |
+| `services/engagement/src/adaptors/generated/realtime.json`                                | TypeScript browser descriptor              |
+| `services/web/src/adaptors/generated/realtime.json`                                       | Browser decoder descriptor                 |
+| `services/storefront/foundation/persistence/postgres/migrations/contexts.json`            | Storefront context migration checksums     |
+| `services/operations/src/operations/adaptors/generated/context-persistence.json`          | Operations context migration checksums     |
+| `services/engagement/src/adaptors/generated/context-persistence.json`                     | Engagement context migration checksums     |
+| `pnpm-lock.yaml`                                                                          | Reproducible Node dependency resolution    |
+| `services/operations/uv.lock`                                                             | Reproducible Python dependency resolution  |
 
 Generators own these structures. Splitting them by hand would introduce a second
 source of truth. `scripts/check_architecture.py` lists exact exceptions rather

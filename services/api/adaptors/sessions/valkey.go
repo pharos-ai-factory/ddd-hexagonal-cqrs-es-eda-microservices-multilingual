@@ -34,7 +34,7 @@ func Open(ctx context.Context, address, password, centrifugoURL, centrifugoKey s
 	client := redis.NewClient(&redis.Options{Addr: address, Username: "sessions", Password: password,
 		DialTimeout: 3 * time.Second, ReadTimeout: 3 * time.Second, WriteTimeout: 3 * time.Second})
 	if err := client.Ping(ctx).Err(); err != nil {
-		client.Close()
+		_ = client.Close()
 		return nil, err
 	}
 	return &ValkeySessionStore{client: client, url: centrifugoURL, key: centrifugoKey, http: &http.Client{Timeout: 5 * time.Second}}, nil
@@ -96,8 +96,8 @@ func (s *ValkeySessionStore) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			expired, err := s.client.ZRangeByScore(ctx, prefix+"expirations", &redis.ZRangeBy{
-				Min: "-inf", Max: fmt.Sprint(time.Now().Unix()), Count: 100}).Result()
+			expired, err := s.client.ZRangeArgs(ctx, redis.ZRangeArgs{Key: prefix + "expirations",
+				Start: "-inf", Stop: fmt.Sprint(time.Now().Unix()), ByScore: true, Count: 100}).Result()
 			if err != nil {
 				s.record("scan", err)
 				continue
@@ -155,7 +155,7 @@ func (s *ValkeySessionStore) disconnect(ctx context.Context, actor string) error
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	var result struct {
 		Error json.RawMessage `json:"error"`
 	}
