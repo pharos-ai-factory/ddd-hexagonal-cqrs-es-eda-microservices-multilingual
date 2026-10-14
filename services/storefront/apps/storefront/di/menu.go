@@ -15,7 +15,6 @@ import (
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/command"
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/persistence/postgres"
-	broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/amqp"
 	"go.uber.org/fx"
 )
 
@@ -121,7 +120,7 @@ func menuRequestHandlers(p MenuHandlerDependencies) rpc.MenuRequestHandlers {
 }
 func mountMenu(s *support.StorefrontRuntime, handlers rpc.MenuRequestHandlers, directory a.ProjectionPort[app.DrinkPublished]) {
 	s.RequestWorkers["menu"] = rpc.Bind(handlers).Run
-	support.SubscribePrivate(s, broker.Binding{Consumer: string(DrinkDirectorySubscription), Event: "menu.drink-published", Context: "menu", Visibility: "domain"}, func(p app.DrinkPublished) string { return p.DrinkID }, menuprojections.DrinkDirectoryProjectionHandler{Directory: directory}.Handle)
+	support.SubscribePrivate(s, rpc.Subscription(string(DrinkDirectorySubscription)), func(p app.DrinkPublished) string { return p.DrinkID }, menuprojections.DrinkDirectoryProjectionHandler{Directory: directory}.Handle)
 }
 
 // MenuSubscription identifies private projection delivery without untyped routing literals.

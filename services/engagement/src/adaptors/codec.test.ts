@@ -83,7 +83,10 @@ function rewardIssuedBytes(payload: object) {
     causationId: id,
     occurredAt: '2026-09-27T12:00:00Z',
   };
-  return type.encode(type.create({ ...envelope, rewardIssued: payload })).finish();
+  const payloadType = protobuf.Root.fromJSON(schema).lookupType('cafe.v1.RewardIssued');
+  return type
+    .encode(type.create({ ...envelope, payload: payloadType.encode(payloadType.create(payload)).finish() }))
+    .finish();
 }
 const rewardIssued = {
   rewardId: '00000000-0000-4000-8000-000000000001',
@@ -109,3 +112,23 @@ for (const [name, invalid] of [
   void test(`RewardIssued rejects an invalid ${name}`, () =>
     assert.throws(() => decode(rewardIssuedBytes(invalid))));
 }
+
+void test('published timestamps reject impossible calendar dates', () => {
+  assert.throws(() => decode(rewardIssuedBytes({ ...rewardIssued, expiresAt: '2026-02-30T12:00:00Z' })));
+});
+
+void test('oversized publications fail before their bytes can be committed', () => {
+  const id = rewardIssued.rewardId;
+  assert.throws(
+    () =>
+      encode(
+        'loyalty',
+        'reward',
+        id,
+        1,
+        { id, target: id, correlation: id, name: 'issue', input: {} },
+        { name: 'loyalty.reward-issued', payload: { ...rewardIssued, benefit: 'x'.repeat(256 * 1024) } },
+      ),
+    /limit/,
+  );
+});

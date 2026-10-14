@@ -59,8 +59,11 @@ Run `pnpm generate:http` for HTTP changes or `pnpm generate:contracts` for all
 bindings and metadata. [Generation declarations](generation.md) select each service’s
 events, request/reply Protobuf, realtime Protobuf and OpenAPI outputs separately.
 The source inventory in `scripts/contract_sources.py`
-maps these owner-facing locations to stable Protobuf import identities. Owner request packages preserve historical field numbers and wire bytes; their
-qualified package names now identify the owning context (decision 0009).
+discovers published event schema files within each context family. Event annotations
+generate plain DTOs and typed codecs; consumer manifests generate topology. See
+[decision 0017](../docs/decisions/0017-generated-event-boundaries.md).
+Owner request packages preserve historical field numbers and wire bytes; their
+qualified package names identify the owning context (decision 0009).
 `pnpm check:contracts` fails on any generated drift, including newly generated files.
 Run `pnpm verify` and `pnpm test:integration` before hand-off.
 
@@ -78,6 +81,12 @@ locations are:
 | TypeScript Engagement | `services/engagement/src/adaptors/generated/`; owner-private descriptors also live in each context's `adaptors/messaging/generated/` |
 | Browser               | `services/web/src/adaptors/generated/{http.ts,realtime.json}`                                                                        |
 
+Plain event DTOs are also generated in Storefront's `contracts/events/model/`,
+Operations' `src/operations/contracts/events/` and Engagement's
+`src/contracts/events/`. Storefront's typed payload conversions live in
+`contracts/events/protobuf/*_generated.go`; its consumer bindings live beside
+their context subscription manifests.
+
 Go/Python bindings and generated TypeScript source carry generated-file headers.
 Descriptor JSON is identified by its `generated/` directory and the explicit
 classification in the architecture checker. Generated messages describe transport;
@@ -90,6 +99,11 @@ These are fixed test evidence, separate from database seed data. Preserve histor
 bytes when reorganising code; add a fixture for a new format without rewriting an
 accepted one. `pnpm check:compatibility` compares against the accepted Git baseline;
 `--against <commit>` selects another revision.
+
+[Decision 0017](../docs/decisions/0017-generated-event-boundaries.md) records the
+intentional public envelope redesign and replacement RewardIssued fixture.
+Adopting this revision requires fresh development delivery state. Subsequent
+public contract changes and private queued formats retain compatibility checks.
 
 `pnpm verify` combines generated drift, historical compatibility and actual caller
 compilation/conformance. `pnpm test:integration` proves the same boundaries through

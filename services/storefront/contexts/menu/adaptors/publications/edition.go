@@ -4,6 +4,7 @@ package publications
 import (
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
+	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
@@ -17,7 +18,7 @@ func Edition(aggregate *d.MenuEdition) []a.Publication {
 			for _, offer := range s.Offers {
 				payload.Offers = append(payload.Offers, model.Offer{Code: offer.Code, DrinkID: offer.DrinkID, DrinkRevision: offer.DrinkRevision, Name: offer.Name, Minor: offer.Minor, Currency: offer.Currency})
 			}
-			publications = append(publications, a.Publication{Name: "menu.edition-published", Visibility: a.Public, Payload: payload})
+			publications = append(publications, codec.PublishMenuPublished(payload))
 		}
 	}
 	return publications

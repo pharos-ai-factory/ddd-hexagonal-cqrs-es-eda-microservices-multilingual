@@ -4,6 +4,16 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Generate published event DTOs, typed conversions, publication factories and
+  registrations from context-owned Protobuf annotations across Go, Python and
+  TypeScript. Adding an event no longer requires a shared codec edit.
+- Derive event topology from consumer-owned subscription manifests. Keep semantic
+  validation and private codecs in context adaptors; check subscription completeness
+  before workers start.
+- Replace the public event payload union with a technical envelope carrying payload
+  bytes. Record the intentional wire-format redesign and fresh development delivery
+  state requirement in decision 0017, with generator, boundary and live recovery tests.
+
 - Add `pnpm check` as the shared static gate for local verification and CI, with
   service selection, changed-file selection and continuous edit watching.
 - Retain strict Python Mypy, extend Ruff to repository tooling, strengthen

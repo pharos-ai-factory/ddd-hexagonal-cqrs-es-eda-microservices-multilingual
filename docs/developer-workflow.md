@@ -164,7 +164,7 @@ It receives no Pika connection or SQL transaction.
    `apps/composition/loyalty.ts`. Wrap its factory with `bindCommand`.
    Select concrete adaptors in composition; keep
    decoding and restoration in the owning adaptor modules.
-4. For a reaction, add the typed event name/payload association in `EventPayloads`,
+4. For a reaction, use the generated published name/payload association,
    map it in the event handler, and add its private command codec/manifest/fixture.
 5. Register through `commandSubscription` and validate the complete context set.
    The type checker rejects a handler for an incompatible event payload.
@@ -304,3 +304,18 @@ generated diff, new navigation links and any changed architectural assumptions.
 Update the accepted decision, agent/contributor guidance and executable examples
 together whenever a convention changes. Record actual checks and limitations in
 `docs/verification.md`, then describe the concrete behaviour and evidence in the PR.
+
+## Add a published integration event
+
+Define the event once in its producer's Protobuf schema with `cafe.events.event`
+metadata and `cafe.events.rules` constraints. New schema files in an existing
+context family are discovered automatically. Run `pnpm generate:contracts` to
+produce the plain DTO, typed conversion, publication factory and registry.
+Map the owner's domain fact through the generated publication factory.
+
+Declare each consumer in its own `adaptors/messaging/subscriptions.json` and bind
+its handler explicitly. Add a service contract-family dependency when this is its
+first use of another producer. The shared envelope and handwritten codecs require
+no event-specific edits. Keep semantic evidence checks in context adaptors.
+See [the event recipe](../contracts/shared/messaging/events.md) and
+[decision 0017](decisions/0017-generated-event-boundaries.md).

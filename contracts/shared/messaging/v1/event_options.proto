@@ -1,0 +1,28 @@
+syntax = "proto3";
+package cafe.events;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
+import "google/protobuf/descriptor.proto";
+
+// Published identity belongs to the message. Subscribers declare their own bindings.
+message EventContract {
+  string name = 1;
+  string owner = 2;
+  string kind = 3;
+  uint32 version = 4;
+}
+
+// Portable boundary constraints; aggregate behaviour owns lifecycle decisions.
+message FieldRules {
+  bool uuid = 1;
+  bool non_empty = 2;
+  bool source_identity = 3;
+  bool timestamp = 4;
+  string pattern = 5;
+  optional int64 minimum = 6;
+  optional int64 maximum = 7;
+  optional uint32 min_items = 8;
+  optional uint32 max_items = 9;
+}
+
+extend google.protobuf.MessageOptions { EventContract event = 51001; }
+extend google.protobuf.FieldOptions { FieldRules rules = 51002; }

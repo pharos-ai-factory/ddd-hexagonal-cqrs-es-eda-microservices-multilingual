@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import pg from 'pg';
@@ -10,7 +9,14 @@ import { eventually, type Loaded, type State } from './client.js';
 
 const sourceMap = JSON.parse(
   execFileSync('python3', ['scripts/contract_sources.py'], { encoding: 'utf8' }),
-) as Record<string, { entrypoint: string; sources: Record<string, string> }>;
+) as Record<
+  string,
+  {
+    entrypoint: string;
+    sources: Record<string, string>;
+    subscriptions: { name: string; owner: string; consumer: string; visibility: string }[];
+  }
+>;
 const group = sourceMap.events!;
 const eventSchema = new protobuf.Root();
 const files = Object.fromEntries(
@@ -21,25 +27,8 @@ eventSchema.resolvePath = (_origin, target) => (physical.has(target) ? target : 
 eventSchema.loadSync(files[group.entrypoint]!);
 eventSchema.resolveAll();
 const eventType = eventSchema.lookupType('cafe.v1.Event');
-const catalogue = ['menu', 'ordering', 'preparation', 'collection', 'loyalty'].flatMap(
-  (owner) =>
-    JSON.parse(readFileSync(`contracts/${owner}/messaging/integration_events/v1/catalogue.json`, 'utf8')) as {
-      name: string;
-      owner: string;
-      consumer: string;
-      visibility: string;
-    }[],
-);
-// These test controls describe private queue routing; private payloads remain opaque.
-const privateDeliveries = [
-  { name: 'loyalty.reward-earned', owner: 'loyalty', consumer: 'loyalty.issue-reward', visibility: 'domain' },
-  {
-    name: 'communication.notification-requested',
-    owner: 'communication',
-    consumer: 'communication.deliver-notice',
-    visibility: 'domain',
-  },
-];
+// Consumer manifests supply routing metadata. Private payloads remain opaque.
+const catalogue = group.subscriptions;
 // Field 1 is the immutable publication ID in the existing delivery mechanism.
 // Replace only that length-delimited header and preserve every private payload byte.
 function freshIdentity(bytes: Buffer, id: string): Buffer {
@@ -100,7 +89,7 @@ export class Evidence {
     });
   }
   async redeliver(name: string, aggregate: string): Promise<{ id: string; consumer: string }> {
-    const entry = [...catalogue, ...privateDeliveries].find((entry) => entry.name === name);
+    const entry = catalogue.find((entry) => entry.name === name);
     assert.ok(entry, 'Unknown event ' + name);
     const records = await this.events(entry.owner, name, aggregate);
     assert.equal(records.length, 1, 'The scenario must identify exactly one original fact');

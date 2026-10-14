@@ -57,13 +57,14 @@ from contract_selection import roots
 full = compile_descriptors('events')
 selected = select(full, 'events', roots('events', ['menu']))
 files = {f.name: f for f in selected.file}
-assert set(files) == {'cafe/v1/events.proto', 'cafe/v1/contexts/menu/menu_integration_events.proto'}
+assert set(files) == {'cafe/v1/events.proto', 'cafe/v1/event_options.proto', 'google/protobuf/descriptor.proto', 'cafe/v1/contexts/menu/menu_integration_events.proto'}
 event = files['cafe/v1/events.proto'].message_type[0]
-assert {f.name for f in event.field if f.HasField('oneof_index')} == {'menu_published'}
+assert not event.oneof_decl
+assert next(f for f in event.field if f.name == 'payload').type == 12
 original = next(f for f in full.file if f.name == 'cafe/v1/events.proto').message_type[0]
 for field in event.field:
     assert field == next(f for f in original.field if f.name == field.name)
-assert 'reward_issued' in event.reserved_name
+assert all('/contexts/' not in dep for dep in files['cafe/v1/events.proto'].dependency)
 # A selected payload can depend transitively on an unselected schema.
 menu = next(f for f in full.file if '/menu/' in f.name)
 ordering = next(f for f in full.file if '/ordering/' in f.name)
@@ -225,7 +226,8 @@ func TestHistoricalReward(t *testing.T) {
  text, err := os.ReadFile(os.Getenv("REWARD_FIXTURE")); if err != nil { t.Fatal(err) }
  body, err := hex.DecodeString(strings.TrimSpace(string(text))); if err != nil { t.Fatal(err) }
  event := new(Event); if err = proto.Unmarshal(body, event); err != nil { t.Fatal(err) }
- if event.GetRewardIssued().GetBenefit() != "one free drink" { t.Fatal(event) }
+ payload := new(RewardIssued); if err=proto.Unmarshal(event.Payload,payload); err!=nil {t.Fatal(err)}
+ if payload.GetBenefit() != "one free drink" { t.Fatal(event) }
  encoded, err := proto.MarshalOptions{Deterministic:true}.Marshal(event)
  if err != nil || !bytes.Equal(encoded, body) { t.Fatal("historical bytes changed", err) }
 }
@@ -247,7 +249,8 @@ from cafe.v1.events_pb2 import Event
 import sys
 body = bytes.fromhex(Path(sys.argv[1]).read_text())
 event = Event.FromString(body)
-assert event.reward_issued.expires_at == '2026-10-03T12:00:00Z'
+from cafe.v1.contexts.loyalty.loyalty_integration_events_pb2 import RewardIssued
+assert RewardIssued.FromString(event.payload).expires_at == '2026-10-03T12:00:00Z'
 assert event.SerializeToString(deterministic=True) == body
 """
             result = subprocess.run(

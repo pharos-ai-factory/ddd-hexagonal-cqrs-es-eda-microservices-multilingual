@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.v1 import event_options_pb2 as cafe_dot_v1_dot_event__options__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n;cafe/v1/contexts/ordering/ordering_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"{\n\x04Line\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n\noffer_code\x18\x02 \x01(\tR\tofferCode\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x1a\n\x08quantity\x18\x04 \x01(\x05R\x08quantity\x12\x14\n\x05minor\x18\x05 \x01(\x03R\x05minor\"\xa9\x01\n\x0bOrderPlaced\x12\x19\n\x08order_id\x18\x01 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x02 \x01(\tR\ncustomerId\x12\x1d\n\nedition_id\x18\x03 \x01(\tR\teditionId\x12\x1a\n\x08\x63urrency\x18\x04 \x01(\tR\x08\x63urrency\x12#\n\x05lines\x18\x05 \x03(\x0b\x32\r.cafe.v1.LineR\x05linesB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n;cafe/v1/contexts/ordering/ordering_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\x1a\x1b\x63\x61\x66\x65/v1/event_options.proto\"\xb9\x01\n\x04Line\x12\x16\n\x02id\x18\x01 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\x02id\x12\x39\n\noffer_code\x18\x02 \x01(\tB\x1a\xd2\xf3\x18\x16*\x14^[A-Z][A-Z0-9]{0,7}$R\tofferCode\x12\x1a\n\x04name\x18\x03 \x01(\tB\x06\xd2\xf3\x18\x02\x10\x01R\x04name\x12$\n\x08quantity\x18\x04 \x01(\x05\x42\x08\xd2\xf3\x18\x04\x30\x01\x38\x05R\x08quantity\x12\x1c\n\x05minor\x18\x05 \x01(\x03\x42\x06\xd2\xf3\x18\x02\x30\x00R\x05minor\"\x8f\x02\n\x0bOrderPlaced\x12#\n\x08order_id\x18\x01 \x01(\tB\x08\xd2\xf3\x18\x04\x08\x01\x18\x01R\x07orderId\x12\'\n\x0b\x63ustomer_id\x18\x02 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\ncustomerId\x12%\n\nedition_id\x18\x03 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\teditionId\x12,\n\x08\x63urrency\x18\x04 \x01(\tB\x10\xd2\xf3\x18\x0c*\n^[A-Z]{3}$R\x08\x63urrency\x12-\n\x05lines\x18\x05 \x03(\x0b\x32\r.cafe.v1.LineB\x08\xd2\xf3\x18\x04@\x01H\x05R\x05lines:.\xca\xf3\x18*\n\x15ordering.order-placed\x12\x08ordering\x1a\x05order \x01\x42\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,8 +33,30 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.v1.contexts.ordering.o
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\217\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1'
-  _globals['_LINE']._serialized_start=72
-  _globals['_LINE']._serialized_end=195
-  _globals['_ORDERPLACED']._serialized_start=198
-  _globals['_ORDERPLACED']._serialized_end=367
+  _globals['_LINE'].fields_by_name['id']._loaded_options = None
+  _globals['_LINE'].fields_by_name['id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_LINE'].fields_by_name['offer_code']._loaded_options = None
+  _globals['_LINE'].fields_by_name['offer_code']._serialized_options = b'\322\363\030\026*\024^[A-Z][A-Z0-9]{0,7}$'
+  _globals['_LINE'].fields_by_name['name']._loaded_options = None
+  _globals['_LINE'].fields_by_name['name']._serialized_options = b'\322\363\030\002\020\001'
+  _globals['_LINE'].fields_by_name['quantity']._loaded_options = None
+  _globals['_LINE'].fields_by_name['quantity']._serialized_options = b'\322\363\030\0040\0018\005'
+  _globals['_LINE'].fields_by_name['minor']._loaded_options = None
+  _globals['_LINE'].fields_by_name['minor']._serialized_options = b'\322\363\030\0020\000'
+  _globals['_ORDERPLACED'].fields_by_name['order_id']._loaded_options = None
+  _globals['_ORDERPLACED'].fields_by_name['order_id']._serialized_options = b'\322\363\030\004\010\001\030\001'
+  _globals['_ORDERPLACED'].fields_by_name['customer_id']._loaded_options = None
+  _globals['_ORDERPLACED'].fields_by_name['customer_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_ORDERPLACED'].fields_by_name['edition_id']._loaded_options = None
+  _globals['_ORDERPLACED'].fields_by_name['edition_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_ORDERPLACED'].fields_by_name['currency']._loaded_options = None
+  _globals['_ORDERPLACED'].fields_by_name['currency']._serialized_options = b'\322\363\030\014*\n^[A-Z]{3}$'
+  _globals['_ORDERPLACED'].fields_by_name['lines']._loaded_options = None
+  _globals['_ORDERPLACED'].fields_by_name['lines']._serialized_options = b'\322\363\030\004@\001H\005'
+  _globals['_ORDERPLACED']._loaded_options = None
+  _globals['_ORDERPLACED']._serialized_options = b'\312\363\030*\n\025ordering.order-placed\022\010ordering\032\005order \001'
+  _globals['_LINE']._serialized_start=102
+  _globals['_LINE']._serialized_end=287
+  _globals['_ORDERPLACED']._serialized_start=290
+  _globals['_ORDERPLACED']._serialized_end=561
 # @@protoc_insertion_point(module_scope)

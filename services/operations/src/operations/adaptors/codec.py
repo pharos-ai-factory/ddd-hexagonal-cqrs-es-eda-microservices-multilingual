@@ -2,68 +2,32 @@
 
 from datetime import datetime, timezone
 from collections.abc import Mapping
-import json
-from pathlib import Path
-from google.protobuf.json_format import MessageToDict, ParseDict
-from google.protobuf.message import Message
+from google.protobuf.json_format import ParseDict
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event
 from operations.adaptors.generated.cafe.realtime.v1.realtime_pb2 import Publication as Realtime
-from operations.contracts.events import DrinksReady, OrderLine, OrderPlaced
 from operations.foundation.application import Metadata, Publication
-from operations.foundation.domain import identifier, record
+from operations.foundation.domain import identifier
 from operations.foundation.identity import new_id
 
-CATALOGUE = {
-    item["name"]: item
-    for item in json.loads((Path(__file__).parent / "generated/catalogue.json").read_text())
-}
-PAYLOADS = {
-    "ordering.order-placed": "order_placed",
-    "preparation.drinks-ready": "drinks_ready",
-    "collection.pickup-opened": "pickup_opened",
-    "collection.order-collected": "order_collected",
-}
-SOURCE_IDENTITIES = {
-    "ordering.order-placed": "order_id",
-    "collection.pickup-opened": "pickup_id",
-}
+from operations.adaptors.generated.event_registry import PAYLOAD_CODECS
+from operations.adaptors.event_payload import timestamp
 
 
 def validate(event: Event) -> None:
-    definition = CATALOGUE.get(event.name)
+    definition = PAYLOAD_CODECS.get(event.name)
     if (
-        not definition
-        or event.name not in PAYLOADS
-        or (event.context, event.visibility, event.aggregate_kind)
-        != (definition["owner"], definition["visibility"], definition["kind"])
-        or event.contract_version != 1
+        definition is None
+        or event.context != definition.owner
+        or event.visibility != "integration"
+        or event.aggregate_kind != definition.kind
+        or event.contract_version != definition.version
     ):
         raise ValueError("Unknown event contract or owner")
     for value in (event.id, event.aggregate_id, event.correlation_id, event.causation_id):
         identifier(value)
-    if event.aggregate_version < 1 or event.WhichOneof("payload") != PAYLOADS[event.name]:
-        raise ValueError("Missing or mismatched event payload")
-    datetime.fromisoformat(event.occurred_at.replace("Z", "+00:00"))
-    payload: Message = getattr(event, PAYLOADS[event.name])
-    # Proto3 omits default values from ListFields; required IDs must be checked even when absent.
-    for field in payload.DESCRIPTOR.fields:
-        if field.name.endswith("_id"):
-            identifier(getattr(payload, field.name))
-    source = SOURCE_IDENTITIES.get(event.name)
-    if source and getattr(payload, source) != event.aggregate_id:
-        raise ValueError("Payload does not identify its source aggregate")
-    if event.name == "ordering.order-placed":
-        order = event.order_placed
-        count = 0
-        seen = set()
-        for line in order.lines:
-            identifier(line.id)
-            if line.id in seen or not line.name or not 1 <= line.quantity <= 5 or line.minor < 0:
-                raise ValueError("Invalid accepted order line")
-            seen.add(line.id)
-            count += line.quantity
-        if not 1 <= count <= 5 or order.order_id != event.aggregate_id:
-            raise ValueError("Invalid accepted order")
+    if event.aggregate_version < 1 or event.aggregate_version > 2**53 - 1 or not event.payload:
+        raise ValueError("Missing payload or invalid aggregate version")
+    timestamp(event.occurred_at)
 
 
 def decode(body: bytes) -> tuple[Event, dict[str, object]]:
@@ -71,48 +35,19 @@ def decode(body: bytes) -> tuple[Event, dict[str, object]]:
         raise ValueError("Event exceeds its wire limit")
     event = Event.FromString(body)
     validate(event)
-    payload = record(MessageToDict(getattr(event, PAYLOADS[event.name])))
-    return event, payload
-
-
-def order_placed(event: Event) -> OrderPlaced:
-    if event.name != "ordering.order-placed":
-        raise ValueError("Expected OrderPlaced")
-    order = event.order_placed
-    return OrderPlaced(
-        orderId=order.order_id,
-        customerId=order.customer_id,
-        editionId=order.edition_id,
-        currency=order.currency,
-        lines=[
-            OrderLine(
-                id=line.id,
-                offerCode=line.offer_code,
-                name=line.name,
-                quantity=line.quantity,
-                minor=line.minor,
-            )
-            for line in order.lines
-        ],
-    )
-
-
-def drinks_ready(event: Event) -> DrinksReady:
-    if event.name != "preparation.drinks-ready":
-        raise ValueError("Expected DrinksReady")
-    return DrinksReady(orderId=event.drinks_ready.order_id, customerId=event.drinks_ready.customer_id)
+    return event, dict(PAYLOAD_CODECS[event.name].decode(event.payload, event.aggregate_id))
 
 
 def encode(
     owner: str, kind: str, identity: str, version: int, metadata: Metadata, publication: Publication
 ) -> tuple[Event, bytes]:
-    definition = CATALOGUE[publication.name]
+    definition = PAYLOAD_CODECS[publication.name]
     event = Event(
         id=new_id(),
         name=publication.name,
         context=owner,
-        visibility=definition["visibility"],
-        contract_version=1,
+        visibility="integration",
+        contract_version=definition.version,
         aggregate_kind=kind,
         aggregate_id=identity,
         aggregate_version=version,
@@ -120,9 +55,12 @@ def encode(
         causation_id=metadata.id,
         occurred_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     )
-    ParseDict(dict(publication.payload), getattr(event, PAYLOADS[publication.name]))
+    event.payload = definition.encode(publication.payload, identity)
     validate(event)
-    return event, event.SerializeToString(deterministic=True)
+    body = event.SerializeToString(deterministic=True)
+    if len(body) > 256 * 1024:
+        raise ValueError("Event exceeds its wire limit")
+    return event, body
 
 
 def realtime(

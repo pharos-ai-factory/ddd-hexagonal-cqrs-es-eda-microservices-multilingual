@@ -49,7 +49,9 @@ def select(descriptors, kind, selected_roots):
     if not selected:
         result.ClearField("file")
         return result
-    if kind in ("events", "realtime"):
+    if kind == "events":
+        selected.add(ENTRYPOINTS[kind])
+    if kind == "realtime":
         envelope = files[ENTRYPOINTS[kind]]
         message_name, oneof = ("Event", "payload") if kind == "events" else ("Publication", "snapshot")
         message = next(item for item in envelope.message_type if item.name == message_name)

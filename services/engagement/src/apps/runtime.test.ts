@@ -47,7 +47,7 @@ function incompatibleHandler(container: ReturnType<typeof createLoyaltyContainer
   const wrong = {
     handle: async (
       _m: import('../foundation/application.js').Metadata,
-      event: import('../contracts/events.js').RewardIssued,
+      event: import('../contracts/events/loyalty.js').RewardIssued,
     ) => ({ aggregateId: event.rewardId, version: 0, status: 'queued' }),
   };
   commandSubscription(

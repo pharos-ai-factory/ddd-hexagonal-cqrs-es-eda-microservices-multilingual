@@ -1,9 +1,16 @@
 import unittest
+from subprocess import run as run_command
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 import check_architecture
 from check_architecture import MODULE, import_violation, core_violation
+
+
+def go_inventory_only(arguments, *args, **kwargs):
+    if "scripts/go.py" in arguments:
+        return SimpleNamespace(stdout="")
+    return run_command(arguments, *args, **kwargs)
 
 
 class ArchitectureTests(unittest.TestCase):
@@ -100,9 +107,7 @@ class ArchitectureTests(unittest.TestCase):
                 with (
                     patch.object(check_architecture, "files", return_value=[path]),
                     patch.object(Path, "read_text", source_text),
-                    patch.object(
-                        check_architecture.subprocess, "run", return_value=SimpleNamespace(stdout="")
-                    ),
+                    patch.object(check_architecture.subprocess, "run", side_effect=go_inventory_only),
                 ):
                     with self.assertRaisesRegex(SystemExit, "foreign context implementation"):
                         check_architecture.check()
@@ -133,7 +138,7 @@ class ArchitectureTests(unittest.TestCase):
         with (
             patch.object(check_architecture, "files", return_value=[path]),
             patch.object(Path, "read_text", source_text),
-            patch.object(check_architecture.subprocess, "run", return_value=SimpleNamespace(stdout="")),
+            patch.object(check_architecture.subprocess, "run", side_effect=go_inventory_only),
         ):
             with self.assertRaisesRegex(SystemExit, "frontend HTTP calls"):
                 check_architecture.check()

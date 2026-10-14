@@ -406,3 +406,40 @@ remain under `.local/owner-contract-layout-baseline/` for semantic comparison.
 
 Earlier executed results are preserved in the
 [historical record](verification/2026-10-08-before-contract-ownership.md).
+
+## 2026-10-14 — Contract-driven event boundaries
+
+Decision 0017 replaces the public event payload union with a technical envelope
+and context-owned annotated schemas. Generation now supplies plain DTOs, typed
+conversions, publication factories and event registrations for Go, Python and
+TypeScript. Consumer manifests supply topology; context adaptors retain semantic
+checks and private codecs. The public fixture uses the new envelope.
+
+Before editing, all six focused context lanes passed. Final `pnpm verify` passed
+for all five applications, including static checks, generation and compatibility,
+110 tooling tests, Go race tests, 51 Python tests, native TypeScript/web tests and
+51 fast Gherkin scenarios. A subsequent isolated generated-output check and the
+architecture gate passed after the final private payload type associations were
+moved into their owning contexts.
+The pre-commit `pnpm check --changed` gate passed after updating the changelog,
+decision index and generated DTO guidance; `git diff --check` also passed.
+
+The full integration suite passed through its underlying command,
+`python3 scripts/integration.py --env-file .local/event-refactor/integration.env`.
+It used an isolated disposable project and covered context migrations, all three
+persistence/broker lanes, the café recovery journey, 31 live OpenAPI operations,
+request/reply recovery, 10 live workflow scenarios, the 12 combined infrastructure
+scenarios, diagnostics and permissions, both browser recovery tests and session
+revocation. No environment-dependent lane was skipped. Disposable resources were
+removed after completion.
+
+Earlier runs exposed a Go test import cycle and a workflow helper reading retired
+catalogues; both were corrected. Concurrent repository edits temporarily broke
+build/static checks, and concurrent browser runs collided on trace output. Browser
+artefacts now use an environment-specific output directory. The final suites passed.
+
+Logs: `.local/event-refactor/verify-final-result.log`,
+`.local/event-refactor/integration-result.log`,
+`.local/event-refactor/generated-final.log` and
+`.local/event-refactor/architecture-final.log`. Pre-commit static evidence is in
+`.local/event-refactor/precommit-static.log`.

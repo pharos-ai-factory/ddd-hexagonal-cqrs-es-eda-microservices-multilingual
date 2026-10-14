@@ -3,7 +3,6 @@
     "name": "communication.notification-requested",
     "owner": "communication",
     "visibility": "domain",
-    "consumer": "communication.deliver-notice",
     "kind": "notification"
   }
 ]

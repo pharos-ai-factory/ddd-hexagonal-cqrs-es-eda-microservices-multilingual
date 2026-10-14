@@ -2,14 +2,18 @@ syntax = "proto3";
 package cafe.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
 
+import "cafe/v1/event_options.proto";
+
 message PickupOpened {
-  string pickup_id = 1;
-  string order_id = 2;
-  string customer_id = 3;
-  string collection_code = 4;
+  option (cafe.events.event) = { name: "collection.pickup-opened" owner: "collection" kind: "pickup" version: 1 };
+  string pickup_id = 1 [(cafe.events.rules) = { uuid: true source_identity: true }];
+  string order_id = 2 [(cafe.events.rules) = { uuid: true }];
+  string customer_id = 3 [(cafe.events.rules) = { uuid: true }];
+  string collection_code = 4 [(cafe.events.rules) = { pattern: "^[A-Z0-9]{6}$" }];
 }
 
 message OrderCollected {
-  string order_id = 1;
-  string customer_id = 2;
+  option (cafe.events.event) = { name: "collection.order-collected" owner: "collection" kind: "pickup" version: 1 };
+  string order_id = 1 [(cafe.events.rules) = { uuid: true }];
+  string customer_id = 2 [(cafe.events.rules) = { uuid: true }];
 }

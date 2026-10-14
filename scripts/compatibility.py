@@ -147,12 +147,13 @@ def main():
     parser.add_argument("--against", default=os.environ.get("CAFE_CONTRACT_BASE") or BASELINE)
     args = parser.parse_args()
     from http_retirements import compatible_changes
+    from event_redesign import accepted_baseline
 
     with tempfile.TemporaryDirectory() as directory:
         baseline = Path(directory)
         checkout(args.against, baseline)
         old, new = snapshot(baseline), snapshot(ROOT)
-    errors = proto_changes(old["protobuf"], new["protobuf"])
+    errors = proto_changes(accepted_baseline(old["protobuf"], new["protobuf"]), new["protobuf"])
     for name, document in old["http"].items():
         errors += [name + ": " + error for error in compatible_changes(name, document, new["http"][name])]
     for name, data in old["fixtures"].items():

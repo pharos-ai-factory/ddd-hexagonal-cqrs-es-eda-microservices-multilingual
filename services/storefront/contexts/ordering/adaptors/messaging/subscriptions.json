@@ -1,0 +1,6 @@
+[
+  {
+    "consumer": "ordering.menu-directory",
+    "event": "menu.edition-published"
+  }
+]

@@ -1,83 +1,64 @@
 # Integration event contracts
 
-Shared event contracts describe facts published to another bounded context.
-Find a producer's payloads under
-`contracts/<context>/messaging/integration_events/v1/`. Each publishing context
-owns its `catalogue.json`, including the published name, producer aggregate and
-consumer binding. The technical envelope is [v1/events.proto](v1/events.proto).
+Each producing context owns its published Protobuf messages under
+`contracts/<context>/messaging/integration_events/v1/`. A message's
+`cafe.events.event` option declares its name, owner, aggregate kind and version.
+`cafe.events.rules` declares portable field constraints. Those definitions generate
+catalogues, plain DTOs, typed conversions and publication factories.
 
-| Producer    | Published events                                         |
-| ----------- | -------------------------------------------------------- |
-| Menu        | `menu.edition-published`                                 |
-| Ordering    | `ordering.order-placed`                                  |
-| Preparation | `preparation.drinks-ready`                               |
-| Collection  | `collection.pickup-opened`, `collection.order-collected` |
-| Loyalty     | `loyalty.reward-issued`                                  |
+The [technical envelope](v1/events.proto) carries event identity, name, owner,
+version, source aggregate metadata, correlation, causation, occurrence time and
+encoded payload bytes. It imports no business schemas. Generated service-local
+registrations select the payload type. The receiver checks ownership, version,
+identities and schema constraints before exposing plain data to the application.
 
-Communication currently publishes no integration event. Its notification delivery
-work is private to Communication.
+## Add an event
 
-## Private domain facts and delivery
+1. Add a message to an owned schema, or create a new `.proto` file in its existing
+   event directory. Include the event metadata and field constraints. New files
+   need the same package and Go package options as their context's other schemas.
+2. Map the owner's domain fact through the generated typed publication factory.
+3. Each receiver declares its own `adaptors/messaging/subscriptions.json` entry
+   and binds its projection or durable-command reaction in composition. Declare a
+   new contract-family dependency in `contracts/generation.json` when needed.
+4. Run `pnpm generate:contracts`, inspect the generated changes, and test the
+   contract, semantic mapping and observable business outcome.
 
-Domain facts are plain, context-owned types. Their definitions have no public
-contract version. An internal reaction can use RabbitMQ and the transactional
-outbox without becoming an integration contract.
+A new ordinary event requires no handwritten shared-codec or registry changes.
+An event can have zero or many independent consumers. Producer schemas contain
+no consumer names. Deployment topology joins subscription declarations to the
+published contracts and owner-private delivery metadata.
 
-The current internal deliveries are Menu's drink directory, Loyalty's reward
-issuance and Communication's notification dispatch. Their plain application
-values, private Protobuf delivery formats, fixtures and queue metadata live in
-the owning service context. They are excluded from shared payloads and catalogues.
-The deployed format retains its historical metadata field numbers and exact
-payload bytes so stored outbox records and queued work can recover. That local
-storage compatibility does not establish a published interface.
+## Type and validation rules
 
-Private and integration messages retain the same durable delivery mechanism:
-atomic aggregate/receipt/outcome/outbox, publisher confirms, manual acknowledgements,
-bounded retries, dead-letter preservation and explicit replay. Aggregate-changing
-reactions first commit a durable owner command; the command consumer performs the
-root transaction. Projection handlers update only their read data. See
-[the subscription recipe](../../../docs/developer-workflow.md#wire-an-aggregate-changing-subscription).
-Private topics
-remain restricted to owner consumers. The deployment bootstrap gathers internal
-queue metadata independently of the published contract catalogue.
+Generated published DTOs are plain language types with no Protobuf dependency.
+Application commands, domain facts and read models retain their own definitions.
+The generator supports strings, booleans, int32/int64, uint32/uint64, singular
+messages and repeated messages. Integers must fit JavaScript's safe-integer range
+as well as their wire type. Protobuf scalar defaults are retained; repeated
+messages become complete arrays. Required identities are explicit UUID rules.
+Unsupported optional presence, enums, maps, scalar arrays, nested declarations and
+recursive payloads fail generation and need a reviewed extension.
 
-## Public envelope and broker metadata
+Constraints cover UUIDs, source identity, non-empty strings, timestamps with
+explicit offsets, portable regex patterns, numeric bounds and collection bounds.
+Context adaptors retain semantic checks involving multiple fields. Aggregates
+own the business rules governing state transitions.
 
-The envelope identifies the event, producer context, published contract version,
-source aggregate kind/ID/version, correlation, causation and occurrence time.
-The typed payload must agree with the published catalogue. Removed private
-payload numbers and names are reserved in the public envelope.
-
-The event ID identifies one immutable publication. Correlation groups a workflow;
-causation identifies the producing command. A consumer receipt retains the
-original received bytes for its duplicate fingerprint.
+## Delivery
 
 AMQP uses `cafe.events`, routing key `integration.<event-name>`, persistent
-`application/x-protobuf` messages and publisher confirms. Message ID, type,
-application ID and correlation ID match the envelope. The `contract-version`
-header equals its version. Owner-private topics use `domain.<event-name>` as
-an internal delivery convention.
+`application/x-protobuf` messages and publisher confirms. Broker identity, type,
+owner, correlation and contract version agree with the envelope. Each receiving
+subscription has its own receipt; the original bytes supply its fingerprint.
 
-## Evolution and evidence
+Private domain facts remain plain owner types. Private wire schemas, codecs and
+metadata live in context adaptors. Private subscriptions stay inside that owner.
+Both private and published deliveries use the transactional outbox, manual ACK,
+bounded retry, dead-letter and replay path. Aggregate-changing reactions durably
+enqueue an owner command before ACK; projection reactions update consumer reads.
 
-Preserve public message names and field meanings. Never reuse a field number;
-reserve removed numbers and names. A breaking public change needs a reviewed
-version transition. Consumer codecs validate producer authority, expected payload,
-identities and published evidence before invoking application handlers.
-
-The public compatibility fixture is
-[RewardIssued](../../loyalty/messaging/integration_events/v1/fixtures/reward-issued.v1.hex).
-Go verifies exact encoding and round trip; Python and TypeScript decode the same
-published message. Owner-local fixtures separately prove that the relocated
-private Menu and Loyalty formats preserve stored bytes.
-
-The workflow lane exercises every public integration event and every private
-reaction through real PostgreSQL and RabbitMQ. Acceptance tests retain private
-payloads as opaque bytes when introducing a fresh delivery ID; they do not load
-another context's private message schema.
-
-Run `pnpm generate:contracts`, `pnpm verify` and `pnpm test:integration`.
-Bindings stay in each consuming service; domain and application packages use
-plain types. Protobuf import identities are mapped by `scripts/contract_sources.py`.
-Replay restores original delivery identity and bytes after confirmed publication;
-current-state persistence remains authoritative.
+The public envelope was redesigned by [decision 0017](../../../docs/decisions/0017-generated-event-boundaries.md).
+The shared RewardIssued fixture now uses the generic envelope. Private formats,
+API request contracts and realtime projections retain their separate roles.
+Run `pnpm verify` and `pnpm test:integration` before hand-off.

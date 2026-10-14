@@ -1,0 +1,6 @@
+[
+  {
+    "consumer": "menu.drink-directory",
+    "event": "menu.drink-published"
+  }
+]

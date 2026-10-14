@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	realtime "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
@@ -107,6 +106,10 @@ func (s *StorefrontRuntime) Close() {
 	}
 }
 func (s *StorefrontRuntime) Run() error {
+	if err := s.validateSubscriptions(); err != nil {
+		s.Close()
+		return err
+	}
 	defer func() { s.cancel(); s.workers.Wait(); s.Close() }()
 	gatewayURL, err := config.Secret("REALTIME_GATEWAY_URL")
 	if err != nil {
@@ -155,22 +158,10 @@ func (s *StorefrontRuntime) Run() error {
 	}
 	return err
 }
-func Subscribe[P any](s *StorefrontRuntime, consumer string, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
-	var definition model.Definition
-	found := false
-	for _, d := range model.Catalogue {
-		for _, c := range d.Consumers {
-			if c == consumer {
-				definition = d
-				found = true
-			}
-		}
+func Subscribe[P any](s *StorefrontRuntime, binding broker.Binding, target func(P) string, handle func(context.Context, a.Metadata, P) (a.Outcome, error)) {
+	if binding.Visibility != string(a.Public) {
+		panic("expected published subscription")
 	}
-	if !found {
-		panic("unregistered consumer: " + consumer)
-	}
-	owner := strings.SplitN(consumer, ".", 2)[0]
-	binding := broker.Binding{Consumer: consumer, Event: definition.Name, Visibility: string(definition.Visibility), Context: owner}
 	bindSubscription(s, binding, target, handle)
 }
 

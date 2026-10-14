@@ -7,7 +7,7 @@ IMPORTS = """\
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket
-from operations.contracts.events import DrinksReady
+from operations.contracts.events.preparation import DrinksReady
 from operations.foundation.write_repository import CommandContext, WriteRepository
 
 def caller(pickups: WriteRepository[Pickup], tickets: WriteRepository[PreparationTicket], metadata: CommandContext) -> None:

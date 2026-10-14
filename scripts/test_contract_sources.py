@@ -29,7 +29,7 @@ class ContractSourcesTests(unittest.TestCase):
         ):
             private = [item for item in catalogue(service) if item["visibility"] == "domain"]
             self.assertEqual({item["owner"] for item in private}, owners)
-            self.assertTrue(all(item["consumer"].startswith(item["owner"] + ".") for item in private))
+            self.assertTrue(all("consumer" not in item for item in private))
         for owner, directory in PRIVATE.items():
             self.assertEqual(
                 list(sources(owner + "_private").values()), [ROOT / directory / "private_messages.proto"]

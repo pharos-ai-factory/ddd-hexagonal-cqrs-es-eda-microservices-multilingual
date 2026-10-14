@@ -14,8 +14,9 @@ and history; later decisions explicitly refine earlier choices. Start with
 | [0012 — Enforced boundaries and workflow](0012-enforcement-and-developer-workflow.md) | One direct store invocation, no application handler chaining, exhaustive subscriptions, lifecycle cleanup and historical compatibility |
 | [0013 — Command modules](0013-command-module-layout.md)                               | One command DTO and its matching handler per business-action file under `application/commands/`                                        |
 | [0014 — Queries and context navigation](0014-context-navigation-and-query-layout.md)  | Named query pairs, application read models/ports, owned boundary mappings, one reaction per file and checked context navigation        |
-| [0016 — Owner messaging boundary](0016-owner-messaging-boundary.md)                   | Business HTTP lives in the API; owner processes expose health and diagnostics and receive business requests through RabbitMQ           |
 | [0015 — Persistence role names](0015-explicit-persistence-role-names.md)              | Named read/write repositories, aggregate-owned facts and central command execution with infrastructure-owned transactions              |
+| [0016 — Owner messaging boundary](0016-owner-messaging-boundary.md)                   | Business HTTP lives in the API; owner processes expose health and diagnostics and receive business requests through RabbitMQ           |
+| [0017 — Generated event boundaries](0017-generated-event-boundaries.md)               | Owner schema annotations generate plain DTOs and codec registrations; consumer manifests supply topology; adaptors own semantic checks |
 
 0011 narrows earlier event-handling examples: event reactions that change a root
 now persist an owner command first. Projection handlers can update read data
@@ -23,6 +24,9 @@ without a command. 0012 prohibits synchronous command-handler calls from all
 application handlers, including handlers in the same context. 0013–0014 change
 source organisation while preserving published interfaces and durable identities.
 0015 refines persistence names and separates restoration from read repository modules.
+0017 replaces the public event payload union with a technical envelope and records
+the deliberate development wire-format transition; private formats retain their
+compatibility checks.
 
 [0018 — Static checks and formatting](0018-static-checks-and-formatting.md) extends
 0012 with one edit/CI gate, complete typed test coverage and repository formatting.

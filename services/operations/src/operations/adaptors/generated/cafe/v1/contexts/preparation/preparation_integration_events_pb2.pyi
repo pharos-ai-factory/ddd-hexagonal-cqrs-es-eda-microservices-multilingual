@@ -1,3 +1,4 @@
+from operations.adaptors.generated.cafe.v1 import event_options_pb2 as _event_options_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Optional as _Optional

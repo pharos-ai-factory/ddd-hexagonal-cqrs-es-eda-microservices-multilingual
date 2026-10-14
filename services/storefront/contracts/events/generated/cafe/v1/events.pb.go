@@ -34,13 +34,9 @@ type Event struct {
 	CorrelationId    string                 `protobuf:"bytes,9,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
 	CausationId      string                 `protobuf:"bytes,10,opt,name=causation_id,json=causationId,proto3" json:"causation_id,omitempty"`
 	OccurredAt       string                 `protobuf:"bytes,11,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	// Types that are valid to be assigned to Payload:
-	//
-	//	*Event_MenuPublished
-	//	*Event_OrderPlaced
-	Payload       isEvent_Payload `protobuf_oneof:"payload"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Payload          []byte                 `protobuf:"bytes,12,opt,name=payload,proto3" json:"payload,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Event) Reset() {
@@ -150,52 +146,18 @@ func (x *Event) GetOccurredAt() string {
 	return ""
 }
 
-func (x *Event) GetPayload() isEvent_Payload {
+func (x *Event) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-func (x *Event) GetMenuPublished() *MenuPublished {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_MenuPublished); ok {
-			return x.MenuPublished
-		}
-	}
-	return nil
-}
-
-func (x *Event) GetOrderPlaced() *OrderPlaced {
-	if x != nil {
-		if x, ok := x.Payload.(*Event_OrderPlaced); ok {
-			return x.OrderPlaced
-		}
-	}
-	return nil
-}
-
-type isEvent_Payload interface {
-	isEvent_Payload()
-}
-
-type Event_MenuPublished struct {
-	MenuPublished *MenuPublished `protobuf:"bytes,21,opt,name=menu_published,json=menuPublished,proto3,oneof"`
-}
-
-type Event_OrderPlaced struct {
-	OrderPlaced *OrderPlaced `protobuf:"bytes,22,opt,name=order_placed,json=orderPlaced,proto3,oneof"`
-}
-
-func (*Event_MenuPublished) isEvent_Payload() {}
-
-func (*Event_OrderPlaced) isEvent_Payload() {}
-
 var File_cafe_v1_events_proto protoreflect.FileDescriptor
 
 const file_cafe_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"\x14cafe/v1/events.proto\x12\acafe.v1\x1a3cafe/v1/contexts/menu/menu_integration_events.proto\x1a;cafe/v1/contexts/ordering/ordering_integration_events.proto\"\x98\x05\n" +
+	"\x14cafe/v1/events.proto\x12\acafe.v1\"\x8c\x03\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -211,10 +173,8 @@ const file_cafe_v1_events_proto_rawDesc = "" +
 	"\fcausation_id\x18\n" +
 	" \x01(\tR\vcausationId\x12\x1f\n" +
 	"\voccurred_at\x18\v \x01(\tR\n" +
-	"occurredAt\x12?\n" +
-	"\x0emenu_published\x18\x15 \x01(\v2\x16.cafe.v1.MenuPublishedH\x00R\rmenuPublished\x129\n" +
-	"\forder_placed\x18\x16 \x01(\v2\x14.cafe.v1.OrderPlacedH\x00R\vorderPlacedB\t\n" +
-	"\apayloadJ\x04\b\x14\x10\x15J\x04\b\x1a\x10\x1bJ\x04\b\x1c\x10\x1dJ\x04\b\x17\x10\x18J\x04\b\x18\x10\x19J\x04\b\x19\x10\x1aJ\x04\b\x1b\x10\x1cR\x0fdrink_publishedR\rreward_earnedR\x16notification_requestedR\fdrinks_readyR\rpickup_openedR\x0forder_collectedR\rreward_issuedB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
+	"occurredAt\x12\x18\n" +
+	"\apayload\x18\f \x01(\fR\apayloadB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
 
 var (
 	file_cafe_v1_events_proto_rawDescOnce sync.Once
@@ -230,30 +190,20 @@ func file_cafe_v1_events_proto_rawDescGZIP() []byte {
 
 var file_cafe_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cafe_v1_events_proto_goTypes = []any{
-	(*Event)(nil),         // 0: cafe.v1.Event
-	(*MenuPublished)(nil), // 1: cafe.v1.MenuPublished
-	(*OrderPlaced)(nil),   // 2: cafe.v1.OrderPlaced
+	(*Event)(nil), // 0: cafe.v1.Event
 }
 var file_cafe_v1_events_proto_depIdxs = []int32{
-	1, // 0: cafe.v1.Event.menu_published:type_name -> cafe.v1.MenuPublished
-	2, // 1: cafe.v1.Event.order_placed:type_name -> cafe.v1.OrderPlaced
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_cafe_v1_events_proto_init() }
 func file_cafe_v1_events_proto_init() {
 	if File_cafe_v1_events_proto != nil {
 		return
-	}
-	file_cafe_v1_contexts_menu_menu_integration_events_proto_init()
-	file_cafe_v1_contexts_ordering_ordering_integration_events_proto_init()
-	file_cafe_v1_events_proto_msgTypes[0].OneofWrappers = []any{
-		(*Event_MenuPublished)(nil),
-		(*Event_OrderPlaced)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

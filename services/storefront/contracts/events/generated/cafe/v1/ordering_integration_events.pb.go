@@ -177,22 +177,24 @@ var File_cafe_v1_contexts_ordering_ordering_integration_events_proto protoreflec
 
 const file_cafe_v1_contexts_ordering_ordering_integration_events_proto_rawDesc = "" +
 	"\n" +
-	";cafe/v1/contexts/ordering/ordering_integration_events.proto\x12\acafe.v1\"{\n" +
-	"\x04Line\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
+	";cafe/v1/contexts/ordering/ordering_integration_events.proto\x12\acafe.v1\x1a\x1bcafe/v1/event_options.proto\"\xb9\x01\n" +
+	"\x04Line\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\tB\x06\xd2\xf3\x18\x02\b\x01R\x02id\x129\n" +
 	"\n" +
-	"offer_code\x18\x02 \x01(\tR\tofferCode\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1a\n" +
-	"\bquantity\x18\x04 \x01(\x05R\bquantity\x12\x14\n" +
-	"\x05minor\x18\x05 \x01(\x03R\x05minor\"\xa9\x01\n" +
-	"\vOrderPlaced\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
-	"\vcustomer_id\x18\x02 \x01(\tR\n" +
-	"customerId\x12\x1d\n" +
+	"offer_code\x18\x02 \x01(\tB\x1a\xd2\xf3\x18\x16*\x14^[A-Z][A-Z0-9]{0,7}$R\tofferCode\x12\x1a\n" +
+	"\x04name\x18\x03 \x01(\tB\x06\xd2\xf3\x18\x02\x10\x01R\x04name\x12$\n" +
+	"\bquantity\x18\x04 \x01(\x05B\b\xd2\xf3\x18\x040\x018\x05R\bquantity\x12\x1c\n" +
+	"\x05minor\x18\x05 \x01(\x03B\x06\xd2\xf3\x18\x020\x00R\x05minor\"\x8f\x02\n" +
+	"\vOrderPlaced\x12#\n" +
+	"\border_id\x18\x01 \x01(\tB\b\xd2\xf3\x18\x04\b\x01\x18\x01R\aorderId\x12'\n" +
+	"\vcustomer_id\x18\x02 \x01(\tB\x06\xd2\xf3\x18\x02\b\x01R\n" +
+	"customerId\x12%\n" +
 	"\n" +
-	"edition_id\x18\x03 \x01(\tR\teditionId\x12\x1a\n" +
-	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12#\n" +
-	"\x05lines\x18\x05 \x03(\v2\r.cafe.v1.LineR\x05linesB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
+	"edition_id\x18\x03 \x01(\tB\x06\xd2\xf3\x18\x02\b\x01R\teditionId\x12,\n" +
+	"\bcurrency\x18\x04 \x01(\tB\x10\xd2\xf3\x18\f*\n" +
+	"^[A-Z]{3}$R\bcurrency\x12-\n" +
+	"\x05lines\x18\x05 \x03(\v2\r.cafe.v1.LineB\b\xd2\xf3\x18\x04@\x01H\x05R\x05lines:.\xca\xf3\x18*\n" +
+	"\x15ordering.order-placed\x12\bordering\x1a\x05order \x01B\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
 
 var (
 	file_cafe_v1_contexts_ordering_ordering_integration_events_proto_rawDescOnce sync.Once
@@ -225,6 +227,7 @@ func file_cafe_v1_contexts_ordering_ordering_integration_events_proto_init() {
 	if File_cafe_v1_contexts_ordering_ordering_integration_events_proto != nil {
 		return
 	}
+	file_cafe_v1_event_options_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

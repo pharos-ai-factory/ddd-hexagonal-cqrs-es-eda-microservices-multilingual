@@ -6,7 +6,8 @@ Use British English and concise, direct prose. Read [ARCHITECTURE.md](ARCHITECTU
 [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer workflow](docs/developer-workflow.md).
 The [decision index](docs/decisions/README.md) explains which accepted decisions
 refine earlier rules. Decisions 0010–0015 define DI, durable command reactions,
-enforcement, the source layout and persistence role names.
+enforcement, the source layout and persistence role names. Decision 0017 defines
+generated event boundaries.
 
 ## Start with ownership
 
@@ -82,6 +83,9 @@ enforcement, the source layout and persistence role names.
   Register business handlers with messaging adaptors; keep HTTP routes in the API.
 - Published sources use `contracts/<context>/{messaging,realtime,http_api}`.
   Messaging groups published commands, queries and integration events.
+- Define published event identity and constraints in owner Protobuf annotations;
+  generate plain DTOs, codec registrations and typed publication factories.
+  Consumer-owned subscription manifests supply topology. Shared codecs stay technical.
 - Keep domain facts separate from versioned transport envelopes. Domain events
   remain private to their context even when they travel through RabbitMQ.
   Private queued formats and compatibility fixtures live in owner adaptors.

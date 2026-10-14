@@ -2,80 +2,87 @@ package protobuf
 
 import (
 	"fmt"
-	menu "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
+	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1"
+	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"regexp"
 	"strings"
-	"unicode/utf8"
-
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
-	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
-	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
+	"time"
 )
 
-var offerCode = regexp.MustCompile(`^[A-Z][A-Z0-9]{0,7}$`)
-
-// Transport validation protects the application before any handler is invoked.
-// It validates published evidence; it does not reproduce mutable owner policy.
-func validatePayload(m a.Message) error {
-	var ids []string
-	sourceID := ""
-	switch p := m.Payload.(type) {
-	case menu.DrinkPublished:
-		ids = []string{p.DrinkID}
-		sourceID = p.DrinkID
-		if strings.TrimSpace(p.Name) == "" || !utf8.ValidString(p.Name) || utf8.RuneCountInString(p.Name) > 80 || p.Revision == 0 {
-			return fmt.Errorf("invalid published drink")
-		}
-	case model.MenuPublished:
-		ids = []string{p.EditionID}
-		sourceID = p.EditionID
-		if len(p.Offers) == 0 || len(p.Offers) > 20 {
-			return fmt.Errorf("invalid published menu size")
-		}
-		seen := map[string]bool{}
-		for _, offer := range p.Offers {
-			ids = append(ids, offer.DrinkID)
-			if seen[offer.Code] || !offerCode.MatchString(offer.Code) ||
-				offer.DrinkRevision == 0 || offer.Name == "" || offer.Currency != p.Currency {
-				return fmt.Errorf("invalid published menu offer")
-			}
-			if _, err := d.NewMoney(offer.Minor, offer.Currency); err != nil {
-				return err
-			}
-			seen[offer.Code] = true
-		}
-	case model.OrderPlaced:
-		ids = []string{p.OrderID, p.CustomerID, p.EditionID}
-		sourceID = p.OrderID
-		total := 0
-		seen := map[string]bool{}
-		for _, line := range p.Lines {
-			ids = append(ids, line.ID)
-			if seen[line.ID] || !offerCode.MatchString(line.OfferCode) || line.Name == "" {
-				return fmt.Errorf("invalid accepted order line")
-			}
-			if _, err := d.NewQuantity(line.Quantity); err != nil {
-				return err
-			}
-			if _, err := d.NewMoney(line.Minor, p.Currency); err != nil {
-				return err
-			}
-			total += line.Quantity
-			seen[line.ID] = true
-		}
-		if total < 1 || total > 5 {
-			return fmt.Errorf("invalid accepted order quantity")
-		}
-	default:
-		return fmt.Errorf("unknown event payload")
+// validatePayload applies the same declared structural constraints to every payload.
+func validatePayload(value protoreflect.Message, source string) error {
+	if !value.IsValid() {
+		return fmt.Errorf("missing payload message")
 	}
-	for _, id := range ids {
-		if err := d.ValidateID(id); err != nil {
-			return err
+	fields := value.Descriptor().Fields()
+	for i := 0; i < fields.Len(); i++ {
+		field := fields.Get(i)
+		rule, _ := proto.GetExtension(field.Options(), pb.E_Rules).(*pb.FieldRules)
+		if rule == nil {
+			rule = &pb.FieldRules{}
 		}
-	}
-	if sourceID != "" && sourceID != m.AggregateID {
-		return fmt.Errorf("payload does not identify its source aggregate")
+		item := value.Get(field)
+		if field.IsList() {
+			list := item.List()
+			if rule.MinItems != nil && uint32(list.Len()) < *rule.MinItems || rule.MaxItems != nil && uint32(list.Len()) > *rule.MaxItems {
+				return fmt.Errorf("invalid collection size: %s", field.Name())
+			}
+			for j := 0; j < list.Len(); j++ {
+				if err := validatePayload(list.Get(j).Message(), source); err != nil {
+					return err
+				}
+			}
+			continue
+		}
+		switch field.Kind() {
+		case protoreflect.MessageKind:
+			if !value.Has(field) {
+				return fmt.Errorf("missing message: %s", field.Name())
+			}
+			if err := validatePayload(item.Message(), source); err != nil {
+				return err
+			}
+		case protoreflect.StringKind:
+			text := item.String()
+			if rule.Uuid {
+				if err := core.ValidateID(text); err != nil {
+					return err
+				}
+			}
+			if rule.SourceIdentity && text != source {
+				return fmt.Errorf("payload does not identify its source aggregate")
+			}
+			if rule.NonEmpty && strings.TrimSpace(text) == "" {
+				return fmt.Errorf("empty string: %s", field.Name())
+			}
+			if rule.Pattern != "" {
+				matched, err := regexp.MatchString(rule.Pattern, text)
+				if err != nil || !matched {
+					return fmt.Errorf("invalid string: %s", field.Name())
+				}
+			}
+			if rule.Timestamp {
+				if _, err := time.Parse(time.RFC3339Nano, text); err != nil {
+					return err
+				}
+			}
+		case protoreflect.BoolKind:
+		default:
+			var number int64
+			if field.Kind() == protoreflect.Uint64Kind || field.Kind() == protoreflect.Uint32Kind {
+				if item.Uint() > 9007199254740991 {
+					return fmt.Errorf("integer outside portable range")
+				}
+				number = int64(item.Uint())
+			} else {
+				number = item.Int()
+			}
+			if number < -9007199254740991 || number > 9007199254740991 || rule.Minimum != nil && number < *rule.Minimum || rule.Maximum != nil && number > *rule.Maximum {
+				return fmt.Errorf("invalid integer: %s", field.Name())
+			}
+		}
 	}
 	return nil
 }

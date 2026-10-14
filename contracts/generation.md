@@ -28,13 +28,16 @@ inventory in `scripts/contract_sources.py` preserves their stable logical import
 names. Compiler descriptors supply the transitive import graph, including shared
 request metadata, validation options and nested payload dependencies.
 
-The shared event and realtime schemas each contain a typed oneof covering every
-published context. `scripts/protobuf_selection.py` derives a local envelope view
-with only the declared payload alternatives. Retained fields keep their original
-names, numbers, types and options. Omitted alternatives are reserved in the local
-view. Their published definitions remain available to their declared consumers.
-Imported payload dependencies remain generated even when they are not separate
-envelope alternatives. Runtime decoders reject unsupported payloads.
+The event envelope contains technical metadata and payload bytes. Selected owned
+schemas supply generated event registrations, plain DTOs and typed conversions.
+The generator reads their `cafe.events.event` and `cafe.events.rules` annotations
+through compiler descriptors. No handwritten event registry or payload field list
+is required. Consumer-owned subscription manifests supply topology bindings.
+
+The realtime envelope retains its typed snapshot oneof. Selection preserves each
+retained field's identity and reserves omitted alternatives. Imported payload
+dependencies remain available through compiler-derived dependency closure.
+Runtime decoders reject unsupported event contracts or realtime payloads.
 
 Private event/command formats stay in owner adaptors and retain their existing
 generation paths. OpenAPI `$ref` dependencies, private subscriptions, topology,
@@ -42,8 +45,7 @@ replay metadata and persistence checksums retain their existing behaviour.
 
 ## Changing and checking a target
 
-Add the schema in its owning context, register its logical import in the source
-inventory, and declare the producing/consuming services in the appropriate
+Add the schema in its owning context, and declare the producing/consuming services in the appropriate
 category. New languages or OpenAPI output formats also need an explicit generator
 target. Unknown services, categories, contract names and duplicate entries fail
 validation. Generate with `pnpm generate:contracts`, or `pnpm generate:http` for

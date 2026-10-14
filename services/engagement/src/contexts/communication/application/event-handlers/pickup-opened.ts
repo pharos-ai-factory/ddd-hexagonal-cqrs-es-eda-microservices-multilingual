@@ -1,5 +1,5 @@
 import type { DurableCommandPort, Metadata } from '../../../../foundation/application.js';
-import type { PickupOpened } from '../../../../contracts/events.js';
+import type { PickupOpened } from '../../../../contracts/events/collection.js';
 import type { RequestNotificationCommand } from '../commands/request-notification.js';
 
 /** Owns notification wording and durably requests a notification aggregate. */

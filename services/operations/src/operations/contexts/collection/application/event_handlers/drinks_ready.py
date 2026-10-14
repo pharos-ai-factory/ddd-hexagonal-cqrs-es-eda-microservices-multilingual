@@ -1,4 +1,4 @@
-from operations.contracts import events
+from operations.contracts.events import preparation as events
 from operations.foundation.application import DurableCommandPort, Metadata, Outcome
 from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
 

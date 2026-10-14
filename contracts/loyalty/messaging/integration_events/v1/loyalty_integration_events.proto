@@ -2,9 +2,12 @@ syntax = "proto3";
 package cafe.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
 
+import "cafe/v1/event_options.proto";
+
 message RewardIssued {
-  string reward_id = 1;
-  string customer_id = 2;
-  string benefit = 3;
-  string expires_at = 4;
+  option (cafe.events.event) = { name: "loyalty.reward-issued" owner: "loyalty" kind: "reward" version: 1 };
+  string reward_id = 1 [(cafe.events.rules) = { uuid: true source_identity: true }];
+  string customer_id = 2 [(cafe.events.rules) = { uuid: true }];
+  string benefit = 3 [(cafe.events.rules) = { non_empty: true }];
+  string expires_at = 4 [(cafe.events.rules) = { timestamp: true }];
 }

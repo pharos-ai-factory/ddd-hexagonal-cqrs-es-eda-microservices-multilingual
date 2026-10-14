@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.v1 import event_options_pb2 as cafe_dot_v1_dot_event__options__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\nAcafe/v1/contexts/preparation/preparation_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"I\n\x0b\x44rinksReady\x12\x19\n\x08order_id\x18\x01 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x02 \x01(\tR\ncustomerIdB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\nAcafe/v1/contexts/preparation/preparation_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\x1a\x1b\x63\x61\x66\x65/v1/event_options.proto\"\x90\x01\n\x0b\x44rinksReady\x12!\n\x08order_id\x18\x01 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\x07orderId\x12\'\n\x0b\x63ustomer_id\x18\x02 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\ncustomerId:5\xca\xf3\x18\x31\n\x18preparation.drinks-ready\x12\x0bpreparation\x1a\x06ticket \x01\x42\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,6 +33,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.v1.contexts.preparatio
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\217\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1'
-  _globals['_DRINKSREADY']._serialized_start=78
-  _globals['_DRINKSREADY']._serialized_end=151
+  _globals['_DRINKSREADY'].fields_by_name['order_id']._loaded_options = None
+  _globals['_DRINKSREADY'].fields_by_name['order_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_DRINKSREADY'].fields_by_name['customer_id']._loaded_options = None
+  _globals['_DRINKSREADY'].fields_by_name['customer_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_DRINKSREADY']._loaded_options = None
+  _globals['_DRINKSREADY']._serialized_options = b'\312\363\0301\n\030preparation.drinks-ready\022\013preparation\032\006ticket \001'
+  _globals['_DRINKSREADY']._serialized_start=108
+  _globals['_DRINKSREADY']._serialized_end=252
 # @@protoc_insertion_point(module_scope)

@@ -3,6 +3,7 @@
 
 import ast
 from request_contracts import OWNED
+from event_boundaries import violation as event_boundary_violation
 from contract_sources import sources, catalogue, command_subscriptions
 from migration_catalogue import metadata, OUTPUTS
 from owner_http_boundary import violation as owner_http_violation
@@ -109,6 +110,22 @@ for owner in ("loyalty", "communication"):
     GENERATED.add(
         f"services/engagement/src/contexts/{owner}/adaptors/messaging/generated/internal_commands.json"
     )
+
+
+# These paths are exclusively managed by the published-event generator. Drift is
+# checked by isolated regeneration before architecture verification.
+for pattern in (
+    "services/storefront/apps/support/subscriptions_generated.go",
+    "services/storefront/contracts/events/model/*_generated.go",
+    "services/storefront/contracts/events/protobuf/*_generated.go",
+    "services/storefront/contexts/*/adaptors/messaging/subscriptions_generated.go",
+    "services/operations/src/operations/contracts/events/*.py",
+    "services/operations/src/operations/adaptors/generated/event_*.py",
+    "services/engagement/src/contracts/events/*.ts",
+    "services/engagement/src/adaptors/generated/event-*",
+    "services/engagement/src/adaptors/generated/private-event-registry.ts",
+):
+    GENERATED.update(path.relative_to(ROOT).as_posix() for path in ROOT.glob(pattern))
 
 
 def import_violation(package, imported):
@@ -254,6 +271,7 @@ def python_imports(path, content):
 
 def check():
     errors, packages = [], []
+    event_names = {item["name"] for item in catalogue()}
     for service in ("storefront", "api"):
         result = subprocess.run(
             [sys.executable, "scripts/go.py", "list", "-json", "./..."],
@@ -309,6 +327,8 @@ def check():
                 )
                 if reason := core_violation(relative, normal):
                     errors.append(f"{relative}: {reason}: {target}")
+        if reason := event_boundary_violation(relative, content, event_names):
+            errors.append(f"{relative}: {reason}")
         if reason := owner_http_violation(relative, content):
             errors.append(f"{relative}: {reason}")
         if relative.startswith("services/"):
@@ -358,23 +378,6 @@ def check():
                 errors.append(service + ": context migration metadata drift; run pnpm generate:contracts")
     except (ValueError, KeyError, OSError) as error:
         errors.append(str(error))
-    published = catalogue()
-    go_catalogue = (ROOT / "services/storefront/contracts/events/model/catalogue.go").read_text()
-    parsed = [
-        {
-            "name": name,
-            "owner": owner,
-            "visibility": "domain" if visibility == "Private" else "integration",
-            "consumer": consumer,
-            "kind": kind,
-        }
-        for name, owner, visibility, consumer, kind in re.findall(
-            r'\{"([^"]+)", "([^"]+)", application\.(Private|Public), \[\]string\{"([^"]+)"\}, "([^"]+)"\}',
-            go_catalogue,
-        )
-    ]
-    if sorted(parsed, key=lambda item: item["name"]) != published:
-        errors.append("Go event catalogue differs from the canonical wire catalogue")
     checksums = {
         str(version): sha256((ROOT / f"devops/postgres/bootstrap/{name}").read_bytes()).hexdigest()
         for version, name in ((1, "0001_initial.sql"), (2, "0002_realtime.sql"))

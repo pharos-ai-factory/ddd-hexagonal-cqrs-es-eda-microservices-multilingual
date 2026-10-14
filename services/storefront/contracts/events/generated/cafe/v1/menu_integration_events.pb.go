@@ -169,19 +169,22 @@ var File_cafe_v1_contexts_menu_menu_integration_events_proto protoreflect.FileDe
 
 const file_cafe_v1_contexts_menu_menu_integration_events_proto_rawDesc = "" +
 	"\n" +
-	"3cafe/v1/contexts/menu/menu_integration_events.proto\x12\acafe.v1\"\xa3\x01\n" +
-	"\x05Offer\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x19\n" +
-	"\bdrink_id\x18\x02 \x01(\tR\adrinkId\x12%\n" +
-	"\x0edrink_revision\x18\x03 \x01(\x04R\rdrinkRevision\x12\x12\n" +
-	"\x04name\x18\x04 \x01(\tR\x04name\x12\x14\n" +
-	"\x05minor\x18\x05 \x01(\x03R\x05minor\x12\x1a\n" +
-	"\bcurrency\x18\x06 \x01(\tR\bcurrency\"r\n" +
-	"\rMenuPublished\x12\x1d\n" +
+	"3cafe/v1/contexts/menu/menu_integration_events.proto\x12\acafe.v1\x1a\x1bcafe/v1/event_options.proto\"\xf1\x01\n" +
+	"\x05Offer\x12.\n" +
+	"\x04code\x18\x01 \x01(\tB\x1a\xd2\xf3\x18\x16*\x14^[A-Z][A-Z0-9]{0,7}$R\x04code\x12!\n" +
+	"\bdrink_id\x18\x02 \x01(\tB\x06\xd2\xf3\x18\x02\b\x01R\adrinkId\x12-\n" +
+	"\x0edrink_revision\x18\x03 \x01(\x04B\x06\xd2\xf3\x18\x020\x01R\rdrinkRevision\x12\x1a\n" +
+	"\x04name\x18\x04 \x01(\tB\x06\xd2\xf3\x18\x02\x10\x01R\x04name\x12\x1c\n" +
+	"\x05minor\x18\x05 \x01(\x03B\x06\xd2\xf3\x18\x020\x00R\x05minor\x12,\n" +
+	"\bcurrency\x18\x06 \x01(\tB\x10\xd2\xf3\x18\f*\n" +
+	"^[A-Z]{3}$R\bcurrency\"\xc7\x01\n" +
+	"\rMenuPublished\x12'\n" +
 	"\n" +
-	"edition_id\x18\x01 \x01(\tR\teditionId\x12\x1a\n" +
-	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12&\n" +
-	"\x06offers\x18\x03 \x03(\v2\x0e.cafe.v1.OfferR\x06offersB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
+	"edition_id\x18\x01 \x01(\tB\b\xd2\xf3\x18\x04\b\x01\x18\x01R\teditionId\x12,\n" +
+	"\bcurrency\x18\x02 \x01(\tB\x10\xd2\xf3\x18\f*\n" +
+	"^[A-Z]{3}$R\bcurrency\x120\n" +
+	"\x06offers\x18\x03 \x03(\v2\x0e.cafe.v1.OfferB\b\xd2\xf3\x18\x04@\x01H\x14R\x06offers:-\xca\xf3\x18)\n" +
+	"\x16menu.edition-published\x12\x04menu\x1a\aedition \x01B\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3"
 
 var (
 	file_cafe_v1_contexts_menu_menu_integration_events_proto_rawDescOnce sync.Once
@@ -214,6 +217,7 @@ func file_cafe_v1_contexts_menu_menu_integration_events_proto_init() {
 	if File_cafe_v1_contexts_menu_menu_integration_events_proto != nil {
 		return
 	}
+	file_cafe_v1_event_options_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

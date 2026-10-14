@@ -1,15 +1,7 @@
-import type { OrderCollected, PickupOpened, RewardIssued } from '../contracts/events.js';
-import type { RewardEarned } from '../contexts/loyalty/application/events.js';
-import type { NotificationRequested } from '../contexts/communication/application/events.js';
-
-/** Event names determine their application payload at the composition boundary. */
-export type EventPayloads = {
-  'collection.order-collected': OrderCollected;
-  'collection.pickup-opened': PickupOpened;
-  'loyalty.reward-issued': RewardIssued;
-  'loyalty.reward-earned': RewardEarned;
-  'communication.notification-requested': NotificationRequested;
-};
+import type { PublishedEventPayloads } from '../adaptors/generated/event-types.js';
+import type { PrivateEventPayloads } from '../adaptors/generated/private-event-registry.js';
+/** Generated published bindings and owner-declared private payloads compose the graph. */
+export type EventPayloads = PublishedEventPayloads & PrivateEventPayloads;
 import type { Metadata, Outcome } from '../foundation/application.js';
 import type { PostgresContextDatabase } from '../adaptors/postgres.js';
 import type { InternalCommandCodec } from '../adaptors/internal-commands.js';

@@ -5,6 +5,7 @@ from http_contracts import generate as generate_http_contracts
 from contract_sources import PRIVATE, catalogue, command_subscriptions, sources as contract_sources
 from generate_requests import generate_requests
 from generate_selected import generate_selected, qualify_python_imports
+from generate_events import generate as generate_events
 from protobuf_tools import ensure_go_plugin
 from contract_selection import declarations
 import tempfile
@@ -34,6 +35,7 @@ standard_protos = subprocess.check_output(
 python_out = ROOT / "services/operations/src/operations/adaptors/generated"
 python_out.mkdir(parents=True, exist_ok=True)
 generate_selected(plugin)
+generate_events()
 for contract in ("menu_private",):
     definitions = contract_sources(contract)
     if len({Path(name).stem for name in definitions}) != len(definitions):

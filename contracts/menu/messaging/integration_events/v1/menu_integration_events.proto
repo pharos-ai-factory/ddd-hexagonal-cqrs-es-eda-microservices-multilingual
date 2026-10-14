@@ -2,17 +2,20 @@ syntax = "proto3";
 package cafe.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
 
+import "cafe/v1/event_options.proto";
+
 message Offer {
-  string code = 1;
-  string drink_id = 2;
-  uint64 drink_revision = 3;
-  string name = 4;
-  int64 minor = 5;
-  string currency = 6;
+  string code = 1 [(cafe.events.rules) = { pattern: "^[A-Z][A-Z0-9]{0,7}$" }];
+  string drink_id = 2 [(cafe.events.rules) = { uuid: true }];
+  uint64 drink_revision = 3 [(cafe.events.rules) = { minimum: 1 }];
+  string name = 4 [(cafe.events.rules) = { non_empty: true }];
+  int64 minor = 5 [(cafe.events.rules) = { minimum: 0 }];
+  string currency = 6 [(cafe.events.rules) = { pattern: "^[A-Z]{3}$" }];
 }
 
 message MenuPublished {
-  string edition_id = 1;
-  string currency = 2;
-  repeated Offer offers = 3;
+  option (cafe.events.event) = { name: "menu.edition-published" owner: "menu" kind: "edition" version: 1 };
+  string edition_id = 1 [(cafe.events.rules) = { uuid: true source_identity: true }];
+  string currency = 2 [(cafe.events.rules) = { pattern: "^[A-Z]{3}$" }];
+  repeated Offer offers = 3 [(cafe.events.rules) = { min_items: 1 max_items: 20 }];
 }

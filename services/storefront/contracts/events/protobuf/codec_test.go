@@ -25,7 +25,15 @@ func TestDecoderRejectsSemanticallyInvalidWirePayload(t *testing.T) {
 	if err = proto.Unmarshal(body, &event); err != nil {
 		t.Fatal(err)
 	}
-	event.GetMenuPublished().Offers[0].Minor = -1
+	payload := new(pb.MenuPublished)
+	if err = proto.Unmarshal(event.Payload, payload); err != nil {
+		t.Fatal(err)
+	}
+	payload.Offers[0].Minor = -1
+	event.Payload, err = proto.Marshal(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
 	body, err = proto.Marshal(&event)
 	if err != nil {
 		t.Fatal(err)
@@ -112,5 +120,27 @@ func TestPublishedDrinkPreservesAnEightyCharacterUnicodeName(t *testing.T) {
 	}
 	if _, err = Decode(body); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestGeneratedPayloadMappingRejectsIntegerOverflowBeforeConversion(t *testing.T) {
+	message := fixture()
+	message.Name, message.Context, message.AggregateKind = "ordering.order-placed", "ordering", "order"
+	message.Payload = model.OrderPlaced{OrderID: message.AggregateID, CustomerID: message.ID, EditionID: message.ID, Currency: "EUR", Lines: []model.Line{{ID: message.ID, OfferCode: "TEA", Name: "Tea", Quantity: 4294967297, Minor: 0}}}
+	if _, err := Encode(message); err == nil {
+		t.Fatal("quantity overflow wrapped into an accepted value")
+	}
+}
+
+func TestPublicEnvelopeRejectsUnsupportedRevisionAndContract(t *testing.T) {
+	for _, change := range []func(*a.Message){
+		func(m *a.Message) { m.AggregateVersion = 9007199254740992 },
+		func(m *a.Message) { m.Name = "menu.unknown" },
+	} {
+		message := fixture()
+		change(&message)
+		if _, err := Encode(message); err == nil {
+			t.Fatal("unsupported envelope accepted")
+		}
 	}
 }

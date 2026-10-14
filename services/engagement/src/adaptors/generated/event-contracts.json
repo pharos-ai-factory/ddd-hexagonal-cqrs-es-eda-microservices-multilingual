@@ -1,0 +1,156 @@
+{
+  "events": [
+    {
+      "name": "collection.order-collected",
+      "owner": "collection",
+      "kind": "pickup",
+      "version": 1,
+      "visibility": "integration",
+      "type": "cafe.v1.OrderCollected"
+    },
+    {
+      "name": "collection.pickup-opened",
+      "owner": "collection",
+      "kind": "pickup",
+      "version": 1,
+      "visibility": "integration",
+      "type": "cafe.v1.PickupOpened"
+    },
+    {
+      "name": "loyalty.reward-issued",
+      "owner": "loyalty",
+      "kind": "reward",
+      "version": 1,
+      "visibility": "integration",
+      "type": "cafe.v1.RewardIssued"
+    }
+  ],
+  "messages": [
+    {
+      "name": "PickupOpened",
+      "type": "cafe.v1.PickupOpened",
+      "owner": "collection",
+      "source": "cafe/v1/contexts/collection/collection_integration_events.proto",
+      "fields": [
+        {
+          "name": "pickup_id",
+          "json": "pickupId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true,
+            "source_identity": true
+          }
+        },
+        {
+          "name": "order_id",
+          "json": "orderId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true
+          }
+        },
+        {
+          "name": "customer_id",
+          "json": "customerId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true
+          }
+        },
+        {
+          "name": "collection_code",
+          "json": "collectionCode",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "pattern": "^[A-Z0-9]{6}$"
+          }
+        }
+      ]
+    },
+    {
+      "name": "OrderCollected",
+      "type": "cafe.v1.OrderCollected",
+      "owner": "collection",
+      "source": "cafe/v1/contexts/collection/collection_integration_events.proto",
+      "fields": [
+        {
+          "name": "order_id",
+          "json": "orderId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true
+          }
+        },
+        {
+          "name": "customer_id",
+          "json": "customerId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "RewardIssued",
+      "type": "cafe.v1.RewardIssued",
+      "owner": "loyalty",
+      "source": "cafe/v1/contexts/loyalty/loyalty_integration_events.proto",
+      "fields": [
+        {
+          "name": "reward_id",
+          "json": "rewardId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true,
+            "source_identity": true
+          }
+        },
+        {
+          "name": "customer_id",
+          "json": "customerId",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "uuid": true
+          }
+        },
+        {
+          "name": "benefit",
+          "json": "benefit",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "non_empty": true
+          }
+        },
+        {
+          "name": "expires_at",
+          "json": "expiresAt",
+          "type": 9,
+          "message": "",
+          "repeated": false,
+          "rules": {
+            "timestamp": true
+          }
+        }
+      ]
+    }
+  ]
+}

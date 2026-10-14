@@ -118,11 +118,18 @@ facts have no published contract version. RabbitMQ delivery alone does not make
 them a public contract. Database bootstrap lives under `devops/postgres/bootstrap/`.
 
 Commit the generated outputs and review their diffs. Edit their sources rather
-than generated files. Required Protobuf scalars have explicit presence and the
-`required_input` annotation; optional additions stay optional and zero remains a
-valid supplied value. Generated types stay in adaptors; the API-to-owner transport
-is RabbitMQ, with anti-corruption mapping at both ends. Frontend HTTP calls use
-the generated operation client.
+than generated files. Required command/query Protobuf scalars have explicit
+presence and the `required_input` annotation; optional additions stay optional
+and zero remains a valid supplied value. Generated Protobuf bindings stay in
+adaptors. The API-to-owner transport is RabbitMQ, with anti-corruption mapping at
+both ends. Frontend HTTP calls use the generated operation client.
+
+Published events use annotated owner Protobuf schemas and generated plain DTOs,
+typed adaptor codecs and publication factories. Plain DTOs live in service-local
+contract modules and may be used by application handlers. Add receiving
+subscriptions to the consumer's manifest. Shared codecs handle the technical
+envelope; context adaptors retain semantic mappings and checks. See
+[decision 0017](docs/decisions/0017-generated-event-boundaries.md).
 
 `pnpm check:contracts` rejects changed, missing and newly generated outputs.
 `pnpm check:compatibility --against <commit>` separately compares historical

@@ -2,18 +2,21 @@ syntax = "proto3";
 package cafe.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
 
+import "cafe/v1/event_options.proto";
+
 message Line {
-  string id = 1;
-  string offer_code = 2;
-  string name = 3;
-  int32 quantity = 4;
-  int64 minor = 5;
+  string id = 1 [(cafe.events.rules) = { uuid: true }];
+  string offer_code = 2 [(cafe.events.rules) = { pattern: "^[A-Z][A-Z0-9]{0,7}$" }];
+  string name = 3 [(cafe.events.rules) = { non_empty: true }];
+  int32 quantity = 4 [(cafe.events.rules) = { minimum: 1 maximum: 5 }];
+  int64 minor = 5 [(cafe.events.rules) = { minimum: 0 }];
 }
 
 message OrderPlaced {
-  string order_id = 1;
-  string customer_id = 2;
-  string edition_id = 3;
-  string currency = 4;
-  repeated Line lines = 5;
+  option (cafe.events.event) = { name: "ordering.order-placed" owner: "ordering" kind: "order" version: 1 };
+  string order_id = 1 [(cafe.events.rules) = { uuid: true source_identity: true }];
+  string customer_id = 2 [(cafe.events.rules) = { uuid: true }];
+  string edition_id = 3 [(cafe.events.rules) = { uuid: true }];
+  string currency = 4 [(cafe.events.rules) = { pattern: "^[A-Z]{3}$" }];
+  repeated Line lines = 5 [(cafe.events.rules) = { min_items: 1 max_items: 5 }];
 }

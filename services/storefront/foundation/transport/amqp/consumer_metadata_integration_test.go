@@ -1,11 +1,12 @@
 //go:build integration
 
-package amqp
+package amqp_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	transport "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/transport/amqp"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -28,7 +29,7 @@ func TestNegativeRetryMetadataCannotExtendTheDeliveryBudget(t *testing.T) {
 func malformedRetryMetadata(t *testing.T, counter any) {
 	t.Helper()
 	ctx, url, sub, message, body := fixture(t)
-	publisher, err := Connect(url)
+	publisher, err := transport.Connect(url)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +43,7 @@ func malformedRetryMetadata(t *testing.T, counter any) {
 	finished := make(chan struct{})
 	go func() {
 		defer close(finished)
-		_ = Consume(workerCtx, url, sub, codec.Decode, store.DerivedID)
+		_ = transport.Consume(workerCtx, url, sub, codec.Decode, store.DerivedID)
 	}()
 	defer func() {
 		cancel()
@@ -52,7 +53,7 @@ func malformedRetryMetadata(t *testing.T, counter any) {
 			t.Error("consumer did not stop")
 		}
 	}()
-	err = publisher.send(ctx, DeliveryExchange(sub.Binding.Context), Queue(sub.Binding.Consumer), rabbit.Publishing{
+	err = transport.SendForTest(publisher, ctx, transport.DeliveryExchange(sub.Binding.Context), transport.Queue(sub.Binding.Consumer), rabbit.Publishing{
 		ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: message.ID,
 		Type: message.Name, AppId: message.Context, CorrelationId: message.CorrelationID, Body: body,
 		Headers: rabbit.Table{"contract-version": int32(1), "ref-attempt": counter},
@@ -63,7 +64,7 @@ func malformedRetryMetadata(t *testing.T, counter any) {
 	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
 	for {
-		dead, found, err := publisher.channel.Get(Queue(sub.Binding.Consumer)+".dead", false)
+		dead, found, err := transport.GetForTest(publisher, transport.Queue(sub.Binding.Consumer)+".dead", false)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -40,7 +40,8 @@ Go and TypeScript unit tests sit beside their subjects. Python context tests mir
 the source under `tests/contexts/<context>/`; Python and TypeScript Gherkin bindings
 live under their service's `tests` directory.
 Go Gherkin bindings sit beside the owning application handlers.
-Generated contracts stay in transport/adaptor rings.
+Generated Protobuf bindings stay in transport/adaptor rings; generated plain
+published DTOs live in service-local contract modules.
 Each context has `application/commands/` and `application/queries/`, with one
 named DTO and its matching handler per business use-case file. Go/Python filenames
 use snake_case; TypeScript uses kebab-case. Callers import those packages/modules
@@ -54,7 +55,11 @@ Published Protobuf payload sources identify their context and interface category
 Context folders contain `messaging/{commands,queries,integration_events}`,
 `realtime` and `http_api`. Private domain facts are plain application/domain types;
 private RabbitMQ formats and delivery metadata remain in owner service adaptors.
-The public integration envelope excludes private payloads. Private work retains
+The public integration envelope carries technical metadata and encoded payload bytes.
+Context-owned schema annotations generate typed registrations and plain published
+DTOs. Consumer-owned manifests declare subscriptions. The envelope imports no
+business payloads. See [decision 0017](docs/decisions/0017-generated-event-boundaries.md).
+Private work retains
 stored-byte compatibility without becoming a published interface. Commands and
 queries use Protobuf over RabbitMQ between the API and owner services; OpenAPI
 defines the public HTTP boundary. See decision 0008 and `contracts/README.md`.

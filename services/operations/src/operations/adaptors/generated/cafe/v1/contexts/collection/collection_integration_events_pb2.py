@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.v1 import event_options_pb2 as cafe_dot_v1_dot_event__options__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/v1/contexts/collection/collection_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\"\x90\x01\n\x0cPickupOpened\x12\x1b\n\tpickup_id\x18\x01 \x01(\tR\x08pickupId\x12\x19\n\x08order_id\x18\x02 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x03 \x01(\tR\ncustomerId\x12\'\n\x0f\x63ollection_code\x18\x04 \x01(\tR\x0e\x63ollectionCode\"L\n\x0eOrderCollected\x12\x19\n\x08order_id\x18\x01 \x01(\tR\x07orderId\x12\x1f\n\x0b\x63ustomer_id\x18\x02 \x01(\tR\ncustomerIdB\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/v1/contexts/collection/collection_integration_events.proto\x12\x07\x63\x61\x66\x65.v1\x1a\x1b\x63\x61\x66\x65/v1/event_options.proto\"\xf5\x01\n\x0cPickupOpened\x12%\n\tpickup_id\x18\x01 \x01(\tB\x08\xd2\xf3\x18\x04\x08\x01\x18\x01R\x08pickupId\x12!\n\x08order_id\x18\x02 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\x07orderId\x12\'\n\x0b\x63ustomer_id\x18\x03 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\ncustomerId\x12<\n\x0f\x63ollection_code\x18\x04 \x01(\tB\x13\xd2\xf3\x18\x0f*\r^[A-Z0-9]{6}$R\x0e\x63ollectionCode:4\xca\xf3\x18\x30\n\x18\x63ollection.pickup-opened\x12\ncollection\x1a\x06pickup \x01\"\x94\x01\n\x0eOrderCollected\x12!\n\x08order_id\x18\x01 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\x07orderId\x12\'\n\x0b\x63ustomer_id\x18\x02 \x01(\tB\x06\xd2\xf3\x18\x02\x08\x01R\ncustomerId:6\xca\xf3\x18\x32\n\x1a\x63ollection.order-collected\x12\ncollection\x1a\x06pickup \x01\x42\x92\x01Z\x8f\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,8 +33,24 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.v1.contexts.collection
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\217\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1'
-  _globals['_PICKUPOPENED']._serialized_start=77
-  _globals['_PICKUPOPENED']._serialized_end=221
-  _globals['_ORDERCOLLECTED']._serialized_start=223
-  _globals['_ORDERCOLLECTED']._serialized_end=299
+  _globals['_PICKUPOPENED'].fields_by_name['pickup_id']._loaded_options = None
+  _globals['_PICKUPOPENED'].fields_by_name['pickup_id']._serialized_options = b'\322\363\030\004\010\001\030\001'
+  _globals['_PICKUPOPENED'].fields_by_name['order_id']._loaded_options = None
+  _globals['_PICKUPOPENED'].fields_by_name['order_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_PICKUPOPENED'].fields_by_name['customer_id']._loaded_options = None
+  _globals['_PICKUPOPENED'].fields_by_name['customer_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_PICKUPOPENED'].fields_by_name['collection_code']._loaded_options = None
+  _globals['_PICKUPOPENED'].fields_by_name['collection_code']._serialized_options = b'\322\363\030\017*\r^[A-Z0-9]{6}$'
+  _globals['_PICKUPOPENED']._loaded_options = None
+  _globals['_PICKUPOPENED']._serialized_options = b'\312\363\0300\n\030collection.pickup-opened\022\ncollection\032\006pickup \001'
+  _globals['_ORDERCOLLECTED'].fields_by_name['order_id']._loaded_options = None
+  _globals['_ORDERCOLLECTED'].fields_by_name['order_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_ORDERCOLLECTED'].fields_by_name['customer_id']._loaded_options = None
+  _globals['_ORDERCOLLECTED'].fields_by_name['customer_id']._serialized_options = b'\322\363\030\002\010\001'
+  _globals['_ORDERCOLLECTED']._loaded_options = None
+  _globals['_ORDERCOLLECTED']._serialized_options = b'\312\363\0302\n\032collection.order-collected\022\ncollection\032\006pickup \001'
+  _globals['_PICKUPOPENED']._serialized_start=106
+  _globals['_PICKUPOPENED']._serialized_end=351
+  _globals['_ORDERCOLLECTED']._serialized_start=354
+  _globals['_ORDERCOLLECTED']._serialized_end=502
 # @@protoc_insertion_point(module_scope)

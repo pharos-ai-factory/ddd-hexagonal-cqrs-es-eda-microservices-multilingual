@@ -9,11 +9,19 @@ from threading import Event, Thread
 import time
 import pika
 import pytest
-from operations.adaptors.codec import drinks_ready, order_placed
+from operations.contexts.collection.adaptors.messaging.incoming_event import DRINKS_READY
+from operations.contexts.preparation.adaptors.messaging.order_placed_payload import order_placed
+from operations.adaptors.generated.cafe.v1.contexts.preparation.preparation_integration_events_pb2 import (
+    DrinksReady as WireDrinksReady,
+)
+from operations.adaptors.generated.cafe.v1.contexts.ordering.ordering_integration_events_pb2 import (
+    OrderPlaced as WireOrderPlaced,
+)
 from operations.adaptors.delivery import EventSubscription, binary, broker_connection, consume
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
 from operations.foundation.identity import derived_id, new_id
-from operations.contracts.events import DrinksReady, OrderPlaced
+from operations.contracts.events.preparation import DrinksReady
+from operations.contracts.events.ordering import OrderPlaced
 from operations.foundation.application import Metadata, Outcome
 from operations.adaptors.postgres import fingerprint
 
@@ -56,7 +64,7 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
             causation_id=new_id(),
             occurred_at="2026-09-27T12:00:00Z",
         )
-        valid.drinks_ready.order_id, valid.drinks_ready.customer_id = new_id(), new_id()
+        valid.payload = WireDrinksReady(order_id=new_id(), customer_id=new_id()).SerializeToString()
         channel.basic_publish(
             "ref.collection.delivery",
             queue,
@@ -78,7 +86,7 @@ def test_malformed_retry_header_is_quarantined_without_reconnect_livelock(counte
             return {"aggregateId": metadata.target, "version": 1, "status": "ready"}
 
         subscription = EventSubscription[DrinksReady](
-            "collection", consumer, valid.name, drinks_ready, lambda event: event["orderId"], handle
+            "collection", consumer, valid.name, DRINKS_READY.parse, lambda event: event["orderId"], handle
         )
         worker = Thread(
             target=partial(consume, os.environ["COLLECTION_BROKER_URL"], subscription, stop), daemon=True
@@ -125,7 +133,7 @@ def test_typed_order_delivery_preserves_original_receipt_material() -> None:
         causation_id=new_id(),
         occurred_at="2026-09-27T12:00:00Z",
     )
-    order = event.order_placed
+    order = WireOrderPlaced()
     order.order_id, order.customer_id, order.edition_id, order.currency = (
         event.aggregate_id,
         new_id(),
@@ -134,13 +142,14 @@ def test_typed_order_delivery_preserves_original_receipt_material() -> None:
     )
     line_id = new_id()
     order.lines.add(id=line_id, offer_code="C1", name="Coffee", quantity=2, minor=350)
+    event.payload = order.SerializeToString(deterministic=True)
     body = event.SerializeToString(deterministic=True)
     wire_payload = {
         "orderId": order.order_id,
         "customerId": order.customer_id,
         "editionId": order.edition_id,
         "currency": "EUR",
-        "lines": [{"id": line_id, "offerCode": "C1", "name": "Coffee", "quantity": 2, "minor": "350"}],
+        "lines": [{"id": line_id, "offerCode": "C1", "name": "Coffee", "quantity": 2, "minor": 350}],
     }
 
     def handle(metadata: Metadata, payload: OrderPlaced) -> Outcome:

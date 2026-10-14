@@ -4,6 +4,7 @@ package publications
 import (
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
+	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
@@ -17,7 +18,7 @@ func Order(aggregate *d.Order) []a.Publication {
 			for _, line := range s.Lines {
 				payload.Lines = append(payload.Lines, model.Line{ID: line.ID, OfferCode: line.Selection.OfferCode, Name: line.Selection.Name, Quantity: line.Quantity, Minor: line.Selection.Minor})
 			}
-			publications = append(publications, a.Publication{Name: "ordering.order-placed", Visibility: a.Public, Payload: payload})
+			publications = append(publications, codec.PublishOrderPlaced(payload))
 		}
 	}
 	return publications

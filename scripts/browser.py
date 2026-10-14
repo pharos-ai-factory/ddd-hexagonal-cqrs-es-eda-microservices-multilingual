@@ -26,6 +26,7 @@ command += [
     "node",
     "node_modules/@playwright/test/cli.js",
     "test",
+    "--output=" + str(env_path.parent / (env_path.stem + "-browser-results")),
     *sys.argv[1:],
 ]
 subprocess.run(command, cwd=ROOT, check=True)

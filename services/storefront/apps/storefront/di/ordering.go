@@ -81,7 +81,7 @@ func orderingRequestHandlers(p OrderingHandlerDependencies) rpc.OrderingRequestH
 }
 func mountOrdering(s *support.StorefrontRuntime, h rpc.OrderingRequestHandlers, directory a.ProjectionPort[model.MenuPublished]) {
 	s.RequestWorkers["ordering"] = rpc.Bind(h).Run
-	support.Subscribe(s, string(MenuDirectorySubscription), func(p model.MenuPublished) string { return p.EditionID }, orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle)
+	support.Subscribe(s, rpc.Subscription(string(MenuDirectorySubscription)), func(p model.MenuPublished) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))
 }
 
 // OrderingSubscription identifies owner projection delivery.

@@ -2,7 +2,10 @@ syntax = "proto3";
 package cafe.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/cafe/v1;cafev1";
 
+import "cafe/v1/event_options.proto";
+
 message DrinksReady {
-  string order_id = 1;
-  string customer_id = 2;
+  option (cafe.events.event) = { name: "preparation.drinks-ready" owner: "preparation" kind: "ticket" version: 1 };
+  string order_id = 1 [(cafe.events.rules) = { uuid: true }];
+  string customer_id = 2 [(cafe.events.rules) = { uuid: true }];
 }
