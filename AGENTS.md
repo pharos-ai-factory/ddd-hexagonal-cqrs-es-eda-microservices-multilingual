@@ -91,8 +91,8 @@ and a dedicated topology credential.
   repository in DI. See decision 0024.
 - Register each durable event/command consumer pair through the shared runtime
   helper. Keep stable typed subscription IDs aligned with owner `subscriptions.json`
-  and validate the complete set. Go's current reactions update projections; a new
-  aggregate-changing Go reaction needs the explicit durable-command implementation.
+  and validate the complete set. Go uses `registration.Subscribe` with the owner
+  private codec and plain handler factory; follow Ordering's `RecordCollection`.
 
 ## Published boundaries and browser behaviour
 

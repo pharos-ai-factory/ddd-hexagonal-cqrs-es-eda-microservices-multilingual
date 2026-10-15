@@ -152,6 +152,7 @@ services:
     environment:
       APP_ENV: development
       API_KEY_FILE: /run/secrets/STOREFRONT_API_KEY
+      PAUSED_CONSUMERS: ${PAUSED_CONSUMERS:-}
       REALTIME_GATEWAY_URL: http://realtime-gateway:8080
       MENU_DATABASE_URL_FILE: /run/secrets/MENU_DATABASE_URL
       MENU_BROKER_URL_FILE: /run/secrets/MENU_BROKER_URL

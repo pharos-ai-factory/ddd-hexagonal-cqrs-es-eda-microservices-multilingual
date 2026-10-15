@@ -78,14 +78,8 @@ class ContextMigrations(unittest.TestCase):
  SELECT set_config('cafe.command_target','migration_probe:{identity}',true);
  INSERT INTO cafe.aggregates(kind,id,version,state) VALUES('migration_probe','{identity}',1,'{{"kept":true}}');
  COMMIT;
- ALTER TABLE cafe.realtime_publications
-   DROP CONSTRAINT realtime_payload_revision,
-   DROP COLUMN message_kind,
-   ADD CONSTRAINT realtime_publications_revision_check CHECK(revision>0),
-   ADD CONSTRAINT realtime_publications_aggregate_kind_aggregate_id_fkey
-     FOREIGN KEY(aggregate_kind,aggregate_id) REFERENCES cafe.aggregates(kind,id),
-   ADD CONSTRAINT realtime_publications_aggregate_kind_aggregate_id_revision_key
-     UNIQUE(aggregate_kind,aggregate_id,revision);
+ DROP TABLE cafe.internal_command_dispatches;
+ DROP TABLE cafe.internal_commands;
  DELETE FROM cafe.context_migrations WHERE version={self.versions["ordering"]};""")
         self.addCleanup(self.sql, migration_sql("ordering"))
         self.sql(migration_sql("ordering"))

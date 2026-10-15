@@ -41,7 +41,7 @@ def expected_queues(services, paused=()):
         consumer = item["consumer"]
         if consumer.split(".")[0] in owners and consumer not in paused:
             queues.add("ref." + consumer)
-            if consumer in commands:
+            if consumer in commands and consumer + ".command" not in paused:
                 queues.add("ref." + consumer + ".command")
     if "API" in services:
         queues.update("ref.api." + owner + ".replies" for service in OWNERS.values() for owner in service)

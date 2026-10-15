@@ -281,6 +281,11 @@
                       "rule": "repeated",
                       "type": ".cafe.realtime.v1.Line",
                       "id": 6
+                    },
+                    "collectionRecorded": {
+                      "type": "bool",
+                      "id": 7,
+                      "protoName": "collection_recorded"
                     }
                   }
                 },

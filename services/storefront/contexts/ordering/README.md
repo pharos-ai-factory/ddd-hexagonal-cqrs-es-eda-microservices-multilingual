@@ -80,3 +80,20 @@ recorded business rejection.
 
 The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
 producers; composition binds their read repositories and durable realtime buses.
+
+## Record collection through a durable owner command
+
+Collection owns handover. Its published `OrderCollected` fact enters
+[OrderCollectedIntegrationEventHandler](application/eventhandlers/order_collected.go),
+which enqueues [RecordCollection](application/commands/record_collection.go).
+The target is the event's Order ID; the customer must match a placed Order.
+The aggregate records collection once, preserving frozen lines and placement status.
+A collected Pickup whose Order is awaiting its command is a permitted pending state.
+
+[RecordCollectionCodec](adaptors/messaging/record_collection_codec.go) preserves exact
+private bytes and original receipt material. [Composition](../../apps/storefront/di/ordering.go)
+binds its PostgreSQL command bus and registers the event/command consumer pair.
+The command saves through `OrderWriteRepository` and explicitly publishes the
+updated snapshot through `RealtimeBusPort`. Queries and browser messages expose
+`collectionRecorded`; repeated source facts leave the revision unchanged.
+See the [step-by-step recipe](../../../../docs/education/concepts/durable-commands.md).

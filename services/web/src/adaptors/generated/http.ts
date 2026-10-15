@@ -18,7 +18,7 @@ export type Schemas = {
   "ordering.http_api.schemas.CreateCommand": {"customerId": string; "editionId": string};
   "ordering.http_api.schemas.Line": {"id": string; "selection": Schemas["ordering.http_api.schemas.Selection"]; "quantity": number};
   "ordering.http_api.schemas.LineCommand": {"lineId": string; "editionId": string; "offerCode": string; "quantity": number};
-  "ordering.http_api.schemas.Order": {"id": string; "customerId": string; "editionId": string; "currency": string; "status": "draft" | "placed"; "lines": Array<Schemas["ordering.http_api.schemas.Line"]>};
+  "ordering.http_api.schemas.Order": {"id": string; "customerId": string; "editionId": string; "currency": string; "status": "draft" | "placed"; "lines": Array<Schemas["ordering.http_api.schemas.Line"]>; "collectionRecorded"?: boolean};
   "ordering.http_api.schemas.QuantityCommand": {"lineId": string; "quantity": number};
   "ordering.http_api.schemas.Selection": {"offerCode": string; "name": string; "minor": number};
   "preparation.http_api.schemas.Ticket": {"id": string; "orderId": string; "customerId": string; "instructions": string; "status": "queued" | "preparing" | "ready"};

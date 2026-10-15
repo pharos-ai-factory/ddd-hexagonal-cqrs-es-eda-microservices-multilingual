@@ -76,3 +76,27 @@ Feature: Placing an order
     When the customer selects offer "UNKNOWN"
     Then the order command is rejected with "offer_not_found"
     And the order and its outgoing events are unchanged
+
+  @ORDER_013
+  Scenario: Collection records the handover on the placed order
+    Given the order has a line containing 1 drink
+    And the order is placed
+    When Collection reports handover for the customer
+    Then the order records collection
+
+  @ORDER_014
+  Scenario: Repeated collection facts preserve the order revision
+    Given the order has a line containing 1 drink
+    And the order is placed
+    And Collection reports handover for the customer
+    When Collection reports handover for the customer
+    Then the order command succeeds
+    And the order and its outgoing events are unchanged
+
+  @ORDER_015
+  Scenario: Collection requires matching customer evidence
+    Given the order has a line containing 1 drink
+    And the order is placed
+    When Collection reports handover for another customer
+    Then the order command is rejected with "customer_mismatch"
+    And the order and its outgoing events are unchanged

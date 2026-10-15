@@ -9,6 +9,34 @@ import (
 )
 
 var payloadCodecs = map[string]payloadCodec{
+	"collection.order-collected": {owner: "collection", kind: "pickup", version: 1,
+		encode: func(value any) (proto.Message, error) {
+			payload, ok := value.(model.OrderCollectedIntegrationEvent)
+			if !ok {
+				return nil, fmt.Errorf("event name and typed payload disagree")
+			}
+			if err := checkOrderCollectedInput(payload); err != nil {
+				return nil, err
+			}
+			return toOrderCollected(payload), nil
+		},
+		decode:     func(value proto.Message) any { return fromOrderCollected(value.(*pb.OrderCollected)) },
+		newMessage: func() proto.Message { return &pb.OrderCollected{} },
+	},
+	"collection.pickup-opened": {owner: "collection", kind: "pickup", version: 1,
+		encode: func(value any) (proto.Message, error) {
+			payload, ok := value.(model.PickupOpenedIntegrationEvent)
+			if !ok {
+				return nil, fmt.Errorf("event name and typed payload disagree")
+			}
+			if err := checkPickupOpenedInput(payload); err != nil {
+				return nil, err
+			}
+			return toPickupOpened(payload), nil
+		},
+		decode:     func(value proto.Message) any { return fromPickupOpened(value.(*pb.PickupOpened)) },
+		newMessage: func() proto.Message { return &pb.PickupOpened{} },
+	},
 	"menu.edition-published": {owner: "menu", kind: "edition", version: 1,
 		encode: func(value any) (proto.Message, error) {
 			payload, ok := value.(model.MenuPublishedIntegrationEvent)

@@ -11,6 +11,7 @@ type Backlog struct {
 
 // Diagnostics reports owned backlog and worker recovery evidence.
 type Diagnostics struct {
+	Commands Backlog `json:"commands"`
 	Outbox   Backlog `json:"outbox"`
 	Realtime Backlog `json:"realtime"`
 }
@@ -18,10 +19,13 @@ type Diagnostics struct {
 func (db *ContextDatabase) Owner() string { return db.owner }
 func (db *ContextDatabase) Diagnostics(ctx context.Context) (Diagnostics, error) {
 	var result Diagnostics
-	for index, tables := range [][2]string{{"dispatches", "outbox_events"}, {"realtime_dispatches", "realtime_publications"}} {
+	for index, tables := range [][2]string{{"dispatches", "outbox_events"}, {"realtime_dispatches", "realtime_publications"}, {"internal_command_dispatches", "internal_commands"}} {
 		backlog := &result.Outbox
 		if index == 1 {
 			backlog = &result.Realtime
+		}
+		if index == 2 {
+			backlog = &result.Commands
 		}
 		err := db.pool.QueryRow(ctx, `SELECT count(*),COALESCE(EXTRACT(EPOCH FROM clock_timestamp()-min(o.created_at)),0)::float8,
    count(*) FILTER (WHERE d.last_error IS NOT NULL) FROM cafe.`+tables[0]+` d JOIN cafe.`+tables[1]+` o ON o.id=d.event_id

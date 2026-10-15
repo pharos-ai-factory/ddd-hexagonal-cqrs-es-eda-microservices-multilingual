@@ -16,10 +16,11 @@ type LineView struct {
 
 // OrderView is the application-owned read representation.
 type OrderView struct {
-	ID         string     `json:"id"`
-	CustomerID string     `json:"customerId"`
-	EditionID  string     `json:"editionId"`
-	Currency   string     `json:"currency"`
-	Status     string     `json:"status"`
-	Lines      []LineView `json:"lines"`
+	ID                 string     `json:"id"`
+	CustomerID         string     `json:"customerId"`
+	EditionID          string     `json:"editionId"`
+	Currency           string     `json:"currency"`
+	Status             string     `json:"status"`
+	CollectionRecorded bool       `json:"collectionRecorded"`
+	Lines              []LineView `json:"lines"`
 }

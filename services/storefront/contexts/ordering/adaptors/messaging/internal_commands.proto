@@ -1,0 +1,15 @@
+// Owner-private durable command format; preserve stored bytes across upgrades.
+syntax = "proto3";
+package cafe.ordering.internal;
+option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternal";
+message CommandEnvelope {
+ string id = 1;
+ string consumer = 2;
+ string source_event_id = 3;
+ string source_hash = 4;
+ string target = 5;
+ string correlation_id = 6;
+ bytes receipt_material = 7;
+ oneof command { RecordCollectionCommand record_collection = 10; }
+}
+message RecordCollectionCommand { string customer_id = 1; }

@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
+from inspect_workflow import query
 from dev import ROOT, configure, compose, test_environment, up, wait_ready
 from journey import run
 
@@ -28,7 +30,7 @@ def execute(env_file, keep=False):
 
     previous_pause = os.environ.get("PAUSED_CONSUMERS")
     try:
-        os.environ["PAUSED_CONSUMERS"] = "loyalty.issue-reward"
+        os.environ["PAUSED_CONSUMERS"] = "loyalty.issue-reward,ordering.record-collection.command"
         up(env_file)
         # Foundation fixtures cannot compete with live application relays.
         compose(env_file, "stop", "storefront", "operations", "engagement", "api")
@@ -111,7 +113,7 @@ def execute(env_file, keep=False):
                 "TRUNCATE cafe.realtime_publications,cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections,cafe.command_replies"
                 + (
                     ",cafe.internal_commands"
-                    if owner in ("preparation", "collection", "loyalty", "communication")
+                    if owner in ("menu", "ordering", "preparation", "collection", "loyalty", "communication")
                     else ""
                 )
                 + " CASCADE",
@@ -128,6 +130,25 @@ def execute(env_file, keep=False):
                 assert current["state"]["status"] == "placed"
                 compose(env_file, "start", "operations")
                 wait_ready(values, ("OPERATIONS",))
+            elif stage == "after_collection":
+                deadline = time.monotonic() + 30
+                while True:
+                    accepted = query(
+                        env_file,
+                        "ordering",
+                        f"SELECT c.id FROM cafe.internal_commands c JOIN cafe.internal_command_dispatches d ON d.event_id=c.id WHERE c.target='{order}' AND d.completed_at IS NOT NULL",
+                    )
+                    if accepted:
+                        break
+                    if time.monotonic() > deadline:
+                        raise AssertionError("Go command was not durably accepted and published")
+                    time.sleep(0.1)
+                current = client.request("STOREFRONT", "/v1/ordering/orders/" + order)
+                assert current["version"] == 3 and not current["state"].get("collectionRecorded", False)
+                print("Ordering accepted RecordCollection while its private command consumer was paused")
+                os.environ["PAUSED_CONSUMERS"] = "loyalty.issue-reward"
+                compose(env_file, "up", "-d", "--no-deps", "storefront")
+                wait_ready(values, ("STOREFRONT",))
             elif stage == "after_earning":
                 rewards = client.request("ENGAGEMENT", "/v1/loyalty/rewards")
                 assert not any(item["state"]["customerId"] == customer for item in rewards), (

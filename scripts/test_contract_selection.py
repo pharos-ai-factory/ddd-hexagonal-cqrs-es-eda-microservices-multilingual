@@ -18,7 +18,7 @@ import http_contracts
 
 class ContractSelectionTests(unittest.TestCase):
     def test_categories_keep_browser_and_api_boundaries_explicit(self):
-        self.assertEqual(owners("storefront", "events"), ("menu", "ordering"))
+        self.assertEqual(owners("storefront", "events"), ("menu", "ordering", "collection"))
         self.assertEqual(owners("operations", "events"), ("ordering", "preparation", "collection"))
         self.assertEqual(owners("engagement", "events"), ("collection", "loyalty"))
         self.assertEqual(owners("web", "events"), ())
@@ -107,7 +107,7 @@ assert 'order' not in fields and 'reward' not in fields
     def test_runtime_outputs_exclude_unrelated_payloads(self):
         self.assertFalse((ROOT / "services/web/src/adaptors/generated/events.json").exists())
         self.assertFalse((ROOT / "services/web/src/adaptors/generated/requests.json").exists())
-        for owner in ("preparation", "collection", "loyalty"):
+        for owner in ("preparation", "loyalty"):
             self.assertFalse(
                 (
                     ROOT

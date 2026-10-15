@@ -21,6 +21,17 @@ type PrivateCommandName interface {
 	String() string
 	Owner() string
 }
+type CollectionIntegrationEvent string
+
+const (
+	CollectionIntegrationEventOrderCollected CollectionIntegrationEvent = "collection.order-collected"
+	CollectionIntegrationEventPickupOpened   CollectionIntegrationEvent = "collection.pickup-opened"
+)
+
+func (CollectionIntegrationEvent) integrationEventName() {}
+func (v CollectionIntegrationEvent) String() string      { return string(v) }
+func (CollectionIntegrationEvent) Owner() string         { return "collection" }
+
 type MenuDomainEvent string
 
 const (
@@ -73,12 +84,23 @@ func (OrderingIntegrationEvent) integrationEventName() {}
 func (v OrderingIntegrationEvent) String() string      { return string(v) }
 func (OrderingIntegrationEvent) Owner() string         { return "ordering" }
 
+type OrderingPrivateCommand string
+
+const (
+	OrderingPrivateCommandRecordCollection OrderingPrivateCommand = "recordCollection"
+)
+
+func (OrderingPrivateCommand) privateCommandName() {}
+func (v OrderingPrivateCommand) String() string    { return string(v) }
+func (OrderingPrivateCommand) Owner() string       { return "ordering" }
+
 type OrderingSubscription string
 
 const (
 	OrderingSubscriptionMenuDirectory       OrderingSubscription = "ordering.menu-directory"
 	OrderingSubscriptionPublishOrderPlaced  OrderingSubscription = "ordering.publish-order-placed"
 	OrderingSubscriptionRealtimeOrderPlaced OrderingSubscription = "ordering.realtime-order-placed"
+	OrderingSubscriptionRecordCollection    OrderingSubscription = "ordering.record-collection"
 )
 
 func (OrderingSubscription) subscriptionName() {}

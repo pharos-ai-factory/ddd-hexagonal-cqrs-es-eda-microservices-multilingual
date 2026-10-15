@@ -50,12 +50,13 @@ func (l OrderLine) Snapshot() LineState {
 
 // OrderState represents the persisted Order snapshot.
 type OrderState struct {
-	ID         string      `json:"id"`
-	CustomerID string      `json:"customerId"`
-	EditionID  string      `json:"editionId"`
-	Currency   string      `json:"currency"`
-	Status     string      `json:"status"`
-	Lines      []LineState `json:"lines"`
+	ID                 string      `json:"id"`
+	CustomerID         string      `json:"customerId"`
+	EditionID          string      `json:"editionId"`
+	Currency           string      `json:"currency"`
+	Status             string      `json:"status"`
+	CollectionRecorded bool        `json:"collectionRecorded,omitempty"`
+	Lines              []LineState `json:"lines"`
 }
 
 // Order owns order lines, their immediate invariants and placement.
@@ -99,6 +100,10 @@ func Restore(state OrderState) (*Order, error) {
 	if order.total() > 5 || (state.Status == "placed" && order.total() == 0) {
 		return nil, core.Corrupt("invalid order quantity")
 	}
+	if state.CollectionRecorded && state.Status != "placed" {
+		return nil, core.Corrupt("collection requires a placed order")
+	}
+	order.state.CollectionRecorded = state.CollectionRecorded
 	order.state.Status = state.Status
 	return order, nil
 }
@@ -155,6 +160,22 @@ func (o *Order) Place() error {
 	}
 	o.state.Status = "placed"
 	o.facts = append(o.facts, OrderPlacedDomainEvent{State: o.Snapshot()})
+	return nil
+}
+
+// RecordCollection records the owner's observation of a completed handover.
+func (o *Order) RecordCollection(customerID string) error {
+	if customerID != o.state.CustomerID {
+		return core.Reject("customer_mismatch", "Collection belongs to another customer")
+	}
+	if o.state.Status != "placed" {
+		return core.Reject("order_not_placed", "Collection requires a placed order")
+	}
+	if o.state.CollectionRecorded {
+		return nil
+	}
+	o.state.CollectionRecorded = true
+	o.facts = append(o.facts, OrderCollectionRecordedDomainEvent{OrderID: o.state.ID, CustomerID: customerID})
 	return nil
 }
 func (o *Order) total() int {

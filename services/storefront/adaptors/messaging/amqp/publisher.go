@@ -5,6 +5,7 @@ import (
 	"fmt"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	rabbit "github.com/rabbitmq/amqp091-go"
+	"strings"
 	"sync"
 )
 
@@ -36,7 +37,14 @@ func Connect(url string) (*ConfirmedPublisher, error) {
 }
 func (p *ConfirmedPublisher) Close() { _ = p.conn.Close() }
 func (p *ConfirmedPublisher) Publish(ctx context.Context, m a.Message, body []byte) error {
-	return p.send(ctx, Exchange, string(m.Visibility)+"."+m.Name, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Type: m.Name, AppId: m.Context, CorrelationId: m.CorrelationID, Body: body, Headers: rabbit.Table{"contract-version": int32(m.ContractVersion)}})
+	exchange, key := Exchange, string(m.Visibility)+"."+m.Name
+	if m.Visibility == "command" {
+		if !strings.HasPrefix(m.Name, m.Context+".") || !strings.HasSuffix(m.Name, ".command") {
+			return fmt.Errorf("invalid owner command route")
+		}
+		exchange, key = DeliveryExchange(m.Context), Queue(m.Name)
+	}
+	return p.send(ctx, exchange, key, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: m.ID, Type: m.Name, AppId: m.Context, CorrelationId: m.CorrelationID, Body: body, Headers: rabbit.Table{"contract-version": int32(m.ContractVersion)}})
 }
 func (p *ConfirmedPublisher) send(ctx context.Context, exchange, key string, message rabbit.Publishing) error {
 	p.lock.Lock()

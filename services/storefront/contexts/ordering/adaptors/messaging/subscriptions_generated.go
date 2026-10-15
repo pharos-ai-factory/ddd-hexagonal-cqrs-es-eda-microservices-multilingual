@@ -13,12 +13,14 @@ func Subscription(consumer names.SubscriptionName) broker.Binding {
 		panic("foreign subscription")
 	}
 	switch consumer.String() {
+	case "ordering.record-collection":
+		return broker.Binding{Consumer: consumer.String(), Event: "collection.order-collected", Visibility: "integration", Context: "ordering", Command: true}
 	case "ordering.menu-directory":
-		return broker.Binding{Consumer: consumer.String(), Event: "menu.edition-published", Visibility: "integration", Context: "ordering"}
+		return broker.Binding{Consumer: consumer.String(), Event: "menu.edition-published", Visibility: "integration", Context: "ordering", Command: false}
 	case "ordering.publish-order-placed":
-		return broker.Binding{Consumer: consumer.String(), Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"}
+		return broker.Binding{Consumer: consumer.String(), Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering", Command: false}
 	case "ordering.realtime-order-placed":
-		return broker.Binding{Consumer: consumer.String(), Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"}
+		return broker.Binding{Consumer: consumer.String(), Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering", Command: false}
 	}
 	panic("undeclared subscription: " + consumer.String())
 }

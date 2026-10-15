@@ -14,3 +14,8 @@ func (OrderLineQuantityChangedDomainEvent) DomainEvent() {}
 type OrderPlacedDomainEvent struct{ State OrderState }
 
 func (OrderPlacedDomainEvent) DomainEvent() {}
+
+// OrderCollectionRecordedDomainEvent records the accepted handover fact locally.
+type OrderCollectionRecordedDomainEvent struct{ OrderID, CustomerID string }
+
+func (OrderCollectionRecordedDomainEvent) DomainEvent() {}

@@ -40,6 +40,9 @@ generate_events()
 for contract in ("menu_private", "ordering_private"):
     owner = contract.removesuffix("_private")
     definitions = contract_sources(contract)
+    commands = ROOT / PRIVATE[owner] / "internal_commands.proto"
+    if commands.exists():
+        definitions[f"{owner}_commands.proto"] = commands
     if len({Path(name).stem for name in definitions}) != len(definitions):
         raise ValueError(f"{contract}: Protobuf filenames must be unique for the shared Go package")
     go_relative = PRIVATE[owner] + "/generated"

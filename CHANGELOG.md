@@ -6,6 +6,11 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Implement Go's durable command bus, owner-private codec, receiving outbox, fenced
+  relay and paired consumers. Ordering records Collection's handover through
+  `RecordCollection` and explicitly publishes its updated browser view. Add
+  compatibility fixtures, recovery tests, decision 0027 and complete creation recipes.
+
 - Name command, query, domain-event, integration-event and realtime bus ports across
   Go, Python and TypeScript. Make browser publication explicit in command and event
   handlers, with durable subscription receipts and typed application rejection messages.

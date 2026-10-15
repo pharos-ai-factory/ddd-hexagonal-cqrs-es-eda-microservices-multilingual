@@ -1,7 +1,7 @@
 import copy
 import unittest
 from compatibility import proto_changes
-from http_compatibility import changes
+from http_compatibility import changes, schema_changes
 from http_retirements import compatible_changes, RETIRED_STOREFRONT_OPERATIONS
 
 
@@ -96,3 +96,60 @@ class CompatibilityTests(unittest.TestCase):
         self.assertEqual(proto_changes(old, new), [])
         new["cafe.Example"]["fields"]["2"]["options"] = "required"
         self.assertTrue(proto_changes(old, new))
+
+
+class PaginatedResponseCompatibilityTests(unittest.TestCase):
+    def schema(self):
+        item = {
+            "type": "object",
+            "required": ["id", "status"],
+            "properties": {
+                "id": {"type": "string"},
+                "status": {"type": "string", "enum": ["draft", "placed"]},
+            },
+        }
+        return {
+            "oneOf": [
+                {"type": "array", "items": copy.deepcopy(item)},
+                {
+                    "type": "object",
+                    "required": ["items"],
+                    "properties": {"items": {"type": "array", "items": copy.deepcopy(item)}},
+                },
+            ]
+        }
+
+    def test_optional_response_field_is_checked_inside_both_list_shapes(self):
+        old, new = self.schema(), self.schema()
+        for item in (new["oneOf"][0]["items"], new["oneOf"][1]["properties"]["items"]["items"]):
+            item["properties"]["collectionRecorded"] = {"type": "boolean"}
+        self.assertEqual(schema_changes(old, new, response=True), [])
+
+    def test_incompatible_fields_in_either_branch_still_fail(self):
+        for index in (0, 1):
+            for mutation in ("removed", "enum", "type", "guarantee"):
+                with self.subTest(index=index, mutation=mutation):
+                    old, new = self.schema(), self.schema()
+                    item = (
+                        new["oneOf"][0]["items"]
+                        if index == 0
+                        else new["oneOf"][1]["properties"]["items"]["items"]
+                    )
+                    if mutation == "removed":
+                        del item["properties"]["id"]
+                    elif mutation == "enum":
+                        item["properties"]["status"]["enum"].append("collected")
+                    elif mutation == "type":
+                        item["properties"]["id"]["type"] = "integer"
+                    else:
+                        item["required"] = []
+                    self.assertTrue(schema_changes(old, new, response=True))
+
+    def test_other_union_changes_remain_conservative(self):
+        old, new = self.schema(), self.schema()
+        new["oneOf"].append({"type": "string"})
+        self.assertTrue(schema_changes(old, new, response=True))
+        old = {"oneOf": [{"type": "object", "required": ["a"]}, {"type": "object", "required": ["b"]}]}
+        new = copy.deepcopy(old)
+        new["oneOf"][0]["properties"] = {"optional": {"type": "boolean"}}
+        self.assertTrue(schema_changes(old, new, response=True))

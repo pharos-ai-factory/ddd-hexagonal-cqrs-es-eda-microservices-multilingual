@@ -3639,6 +3639,9 @@
             "items": {
               "$ref": "#/components/schemas/ordering.http_api.schemas.Line"
             }
+          },
+          "collectionRecorded": {
+            "type": "boolean"
           }
         }
       },

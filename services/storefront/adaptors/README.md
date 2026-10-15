@@ -10,7 +10,7 @@ and [Ordering](../contexts/ordering/README.md) context maps for business behavio
 | `persistence/postgres/` | Context pools, snapshots, repositories, receipts, outboxes and fenced dispatch leases.                                     |
 | `messaging/amqp/`       | RabbitMQ connections, confirms, manual acknowledgements and delivery topology.                                             |
 | `messaging/requests/`   | Published request decoding, handler registration and request workers.                                                      |
-| `messaging/workers/`    | Event outbox, consumer recovery and durable command-reply relays.                                                          |
+| `messaging/workers/`    | Event/command outbox relays, consumer recovery and durable command-reply relays.                                           |
 | `realtime/`             | Publish committed browser projection bytes to Centrifugo.                                                                  |
 | `http/`                 | Operational HTTP responses/security and generated OpenAPI validation.                                                      |
 
@@ -20,3 +20,9 @@ the order, outcome, reply and dispatch intent together. A private subscription
 runs the publication handler before integration consumers see `OrderPlaced`.
 
 [Repository-wide map](../../../docs/adaptor-layout.md).
+
+For RecordCollection, follow the owner-private codec through `CommandOutbox`, the
+fenced command relay and the paired consumers registered in composition. The
+command handler loads and saves one Order and explicitly publishes its snapshot.
+`messaging/internalcommands/` supplies shared identity and receipt validation;
+command payload mapping stays in Ordering's messaging adaptor.

@@ -30,7 +30,7 @@ type Metadata struct {
 	ExpectedVersion *uint64
 	CorrelationID   string
 	CausationID     string
-	// Input is a typed command DTO, used only to fingerprint material input.
+	// Input retains the original material input used for receipt fingerprints.
 	Input         any
 	Consumer      string
 	SourceEventID string

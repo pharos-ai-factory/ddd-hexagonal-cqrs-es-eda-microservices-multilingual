@@ -32,6 +32,12 @@ class ReadinessTests(unittest.TestCase):
         self.assertNotIn("ref.loyalty.issue-reward", queues)
         self.assertIn("ref.loyalty.commands", queues)
 
+    def test_go_command_pause_keeps_event_acceptance_ready(self):
+        queues = expected_queues(("STOREFRONT",), ("ordering.record-collection.command",))
+        self.assertNotIn("ref.ordering.record-collection.command", queues)
+        self.assertIn("ref.ordering.record-collection", queues)
+        self.assertIn("ref.ordering.commands", queues)
+
     def test_browser_readiness_requires_the_realtime_endpoint(self):
         values = {"WEB_PORT": "1", "REALTIME_ADMIN_PORT": "2"}
 

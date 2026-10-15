@@ -84,3 +84,7 @@ trade-offs, compatibility and enforcement. Update the current guides and relevan
 checks in the same change. Preserve dated assessments and executed verification
 as historical evidence; link subsequent refinements rather than silently rewriting
 their original rationale.
+
+[0027 — Go durable command reactions](0027-go-durable-command-reactions.md) completes
+the private command path with a receiving outbox, paired consumers, fenced relay
+and Ordering's `RecordCollection` example with explicit realtime publication.

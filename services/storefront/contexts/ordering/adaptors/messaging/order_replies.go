@@ -8,7 +8,7 @@ import (
 )
 
 func orderReply(value a.Loaded[d.OrderView]) proto.Message {
-	state := &pb.Order{Id: value.State.ID, CustomerId: value.State.CustomerID, EditionId: value.State.EditionID, Currency: value.State.Currency, Status: value.State.Status, Lines: make([]*pb.Line, 0, len(value.State.Lines))}
+	state := &pb.Order{Id: value.State.ID, CustomerId: value.State.CustomerID, EditionId: value.State.EditionID, Currency: value.State.Currency, Status: value.State.Status, CollectionRecorded: value.State.CollectionRecorded, Lines: make([]*pb.Line, 0, len(value.State.Lines))}
 	for _, line := range value.State.Lines {
 		state.Lines = append(state.Lines, &pb.Line{Id: line.ID, Quantity: int32(line.Quantity), Selection: &pb.Selection{OfferCode: line.Selection.OfferCode, Name: line.Selection.Name, Minor: line.Selection.Minor}})
 	}

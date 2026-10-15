@@ -86,10 +86,7 @@ func NewID() string {
 // derives identities from display names, provider identifiers or mutable data.
 // SHA-256 custom derivation uses UUID version 8, rather than claiming UUIDv5.
 func DerivedID(purpose, key string) string {
-	sum := sha256.Sum256([]byte("cafe-reference/v1\x00" + purpose + "\x00" + key))
-	sum[6] = (sum[6] & 15) | 128
-	sum[8] = (sum[8] & 63) | 128
-	return formatID(sum[:16])
+	return a.DerivedID(purpose, key)
 }
 func formatID(raw []byte) string {
 	h := hex.EncodeToString(raw)

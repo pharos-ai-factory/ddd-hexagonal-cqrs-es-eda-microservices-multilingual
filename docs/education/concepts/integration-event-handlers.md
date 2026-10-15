@@ -16,35 +16,27 @@ owner command. The receiving context owns its translation and recovery policy.
 
 Follow the [end-to-end recipe](../end-to-end-recipe.md) to connect this step to the complete workflow.
 
-## Go: update a projection
+## Go: record a collected order
 
-Ordering records published Menu terms as local read evidence. This reaction
-changes a projection, leaving aggregate mutation to later Order commands.
+Ordering translates Collection's handover fact into its own `RecordCollection`
+command. The generated payload supplies the order and customer; composition selects
+`event.OrderID` as the command target.
 
-### Go
-
-Source: [menu_published.go](../../../services/storefront/contexts/ordering/application/projections/menu_published.go).
-
-```go source="../../../services/storefront/contexts/ordering/application/projections/menu_published.go"
-package projections
-
-import (
-	"context"
-
-	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
-	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
-)
-
-// MenuDirectoryProjectionHandler updates the consumer-owned projection without aggregate mutation.
-type MenuDirectoryProjectionHandler struct {
-	Directory a.ProjectionPort[model.MenuPublishedIntegrationEvent]
+```go source="../../../services/storefront/contexts/ordering/application/eventhandlers/order_collected.go"
+// OrderCollectedIntegrationEventHandler durably requests an owner transition before acknowledging the fact.
+type OrderCollectedIntegrationEventHandler struct {
+	Commands a.CommandBusPort[commands.RecordCollectionCommand]
 }
 
-func (h MenuDirectoryProjectionHandler) Handle(ctx context.Context, m a.Metadata, event model.MenuPublishedIntegrationEvent) (a.Outcome, error) {
-	// Each edition is published once; later menus have a new edition identity.
-	return a.Outcome{}, h.Directory.Record(ctx, m, event.EditionID, 1, event)
+func (h OrderCollectedIntegrationEventHandler) Handle(ctx context.Context, m a.Metadata, event model.OrderCollectedIntegrationEvent) (a.Outcome, error) {
+	return h.Commands.Enqueue(ctx, m, commands.RecordCollectionCommand{CustomerID: event.CustomerID})
 }
 ```
+
+The [durable-command recipe](durable-commands.md) includes its private schema,
+codec, manifest, Fx bus binding and paired consumer registration.
+[MenuDirectoryProjectionHandler](../../../services/storefront/contexts/ordering/application/projections/menu_published.go)
+shows the separate projection-only role.
 
 ## Python: request preparation
 
@@ -108,14 +100,9 @@ The [subscription manifests](contracts-and-generation.md) name the consumer,
 upstream event and private command when applicable. Composition pairs event and
 command consumers and checks the complete declared set before workers start.
 
-An event ACK means its owned work is durable. For the Python and TypeScript
-examples that work is the receiving evidence plus exact queued command bytes
+An event ACK means its owned work is durable. For all three
+command examples that work is the receiving evidence plus exact queued command bytes
 and dispatch intent. It does not imply the later aggregate command has completed.
-
-Go currently has projection reactions. Adding an aggregate-changing Go reaction
-requires its own durable command port, private codec, outbox and paired consumers.
-Copying a Python handler's intent without that infrastructure would leave the
-required hand-off incomplete.
 
 ## Related concepts
 

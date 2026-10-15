@@ -108,10 +108,9 @@ command identities remain stable. New realtime subscriptions are generated into
 identifiers, topology and broker permissions. Apply the owner migrations and
 regenerate contracts before starting the revised development composition.
 
-Go defines `CommandBusPort`; its existing reactions maintain projections. The
-current repository still has no aggregate-changing Go event-to-private-command
-example. Python and TypeScript retain their executable durable-command adaptors.
-This implementation difference remains listed in educational coverage.
+At acceptance, Go defined `CommandBusPort` without an aggregate-changing private
+command example. [Decision 0027](0027-go-durable-command-reactions.md) subsequently
+adds the concrete receiving outbox, paired consumers and Ordering example.
 
 ## Verification
 

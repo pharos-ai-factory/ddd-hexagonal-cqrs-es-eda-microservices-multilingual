@@ -4,9 +4,11 @@ package support
 import broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/amqp"
 
 var expectedSubscriptions = map[string]broker.Binding{
-	"menu.drink-directory":           {Consumer: "menu.drink-directory", Event: "menu.drink-published", Visibility: "domain", Context: "menu"},
-	"ordering.menu-directory":        {Consumer: "ordering.menu-directory", Event: "menu.edition-published", Visibility: "integration", Context: "ordering"},
-	"menu.publish-edition-published": {Consumer: "menu.publish-edition-published", Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu"},
-	"ordering.publish-order-placed":  {Consumer: "ordering.publish-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"},
-	"ordering.realtime-order-placed": {Consumer: "ordering.realtime-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"},
+	"ordering.record-collection":         {Consumer: "ordering.record-collection", Event: "collection.order-collected", Visibility: "integration", Context: "ordering", Command: true},
+	"ordering.record-collection.command": {Consumer: "ordering.record-collection.command", Event: "ordering.record-collection.command", Visibility: "command", Context: "ordering"},
+	"menu.drink-directory":               {Consumer: "menu.drink-directory", Event: "menu.drink-published", Visibility: "domain", Context: "menu", Command: false},
+	"ordering.menu-directory":            {Consumer: "ordering.menu-directory", Event: "menu.edition-published", Visibility: "integration", Context: "ordering", Command: false},
+	"menu.publish-edition-published":     {Consumer: "menu.publish-edition-published", Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu", Command: false},
+	"ordering.publish-order-placed":      {Consumer: "ordering.publish-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering", Command: false},
+	"ordering.realtime-order-placed":     {Consumer: "ordering.realtime-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering", Command: false},
 }

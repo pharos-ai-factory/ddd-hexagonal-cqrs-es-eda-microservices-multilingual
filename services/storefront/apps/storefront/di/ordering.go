@@ -3,9 +3,11 @@ package di
 import (
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/command"
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/persistence/postgres"
+	registration "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/apps/commandregistration"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/apps/support"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
 	pg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/persistence/postgres"
+	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/eventhandlers"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	orderingprojections "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/projections"
@@ -20,6 +22,10 @@ import (
 
 func orderingModule() fx.Option {
 	return fx.Module("ordering", fx.Provide(
+		func() rpc.RecordCollectionCodec { return rpc.RecordCollectionCodec{} },
+		func(s *support.StorefrontRuntime, codec rpc.RecordCollectionCodec) reactions.OrderCollectedIntegrationEventHandler {
+			return reactions.OrderCollectedIntegrationEventHandler{Commands: store.NewCommandOutbox[commands.RecordCollectionCommand](s.Databases["ordering"], codec)}
+		},
 		func(s *support.StorefrontRuntime, orders ports.OrderReadRepository) reactions.OrderPlacedRealtimeDomainEventHandler {
 			return reactions.OrderPlacedRealtimeDomainEventHandler{Orders: orders, Realtime: store.NewRealtimeEventBus(s.Databases["ordering"], names.OrderingSubscriptionRealtimeOrderPlaced.String(), "order")}
 		},
@@ -45,9 +51,14 @@ func orderingModule() fx.Option {
 	), fx.Invoke(mountOrdering))
 }
 
-func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler, realtime reactions.OrderPlacedRealtimeDomainEventHandler) {
+func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler, realtime reactions.OrderPlacedRealtimeDomainEventHandler, commandCodec rpc.RecordCollectionCodec, collected reactions.OrderCollectedIntegrationEventHandler) {
 	support.SubscribePrivate(s, rpc.Subscription(names.OrderingSubscriptionPublishOrderPlaced), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, publication.Handle)
 	support.SubscribePrivate(s, rpc.Subscription(names.OrderingSubscriptionRealtimeOrderPlaced), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, realtime.Handle)
 	s.RequestWorkers["ordering"] = requests.Run
+	registration.Subscribe(requests.Commands, s, rpc.Subscription(names.OrderingSubscriptionRecordCollection), commandCodec,
+		func(event model.OrderCollectedIntegrationEvent) string { return event.OrderID }, collected.Handle,
+		func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) commands.RecordCollectionCommandHandler {
+			return commands.RecordCollectionCommandHandler{Repository: repository, Realtime: realtime}
+		})
 	support.Subscribe(s, rpc.Subscription(names.OrderingSubscriptionMenuDirectory), func(p model.MenuPublishedIntegrationEvent) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))
 }

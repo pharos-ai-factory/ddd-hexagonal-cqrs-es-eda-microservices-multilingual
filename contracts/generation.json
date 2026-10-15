@@ -2,7 +2,7 @@
   "events": {
     "storefront": {
       "produces": ["menu", "ordering"],
-      "consumes": ["menu"]
+      "consumes": ["menu", "collection"]
     },
     "operations": {
       "produces": ["preparation", "collection"],

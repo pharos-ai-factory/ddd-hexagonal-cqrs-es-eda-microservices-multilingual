@@ -13,6 +13,7 @@ export type Models = {
     id: string;
     customerId: string;
     editionId: string;
+    collectionRecorded?: boolean;
     currency: string;
     status: string;
     lines: { id: string; quantity: number; selection: { offerCode: string; name: string; minor: number } }[];

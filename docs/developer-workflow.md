@@ -147,10 +147,12 @@ generated identifier, parser and registration for each language.
    then rerun contract generation.
 7. Add a composition dispatch test, Gherkin example and native binding. Run the focused Ordering lane.
 
-Go's existing event handlers update projections. A future aggregate-changing Go
-subscription needs an owner durable command port, private codec/outbox and paired
-consumers, following the Operations and Engagement examples. A generated event
-handler is a starting point for that explicit implementation.
+For an event-triggered owner command, follow the [RecordCollection recipe](education/concepts/durable-commands.md#go-record-collection-on-the-order). Define the private
+Protobuf command and codec, declare the source subscription, bind `CommandBusPort`
+to `NewCommandOutbox`, and register both consumers with `registration.Subscribe`.
+Generation supplies typed identifiers, topology and broker permissions. The
+command handler receives its scoped repository and realtime bus through the same
+aggregate registry used by published commands.
 
 ## Shared boundary infrastructure
 

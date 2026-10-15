@@ -79,6 +79,25 @@ func TestOrderingFeatures(t *testing.T) {
 			})
 			sc.Step(`^the customer adds a second line containing (\d+) drinks?$`, func(n int) error { return w.add(s.SecondLine, s.Edition, "C1", n) })
 			sc.Step(`^the customer changes the first line to (\d+) drinks$`, w.quantity)
+			sc.Step(`^Collection reports handover for (the customer|another customer)$`, func(who string) error {
+				customer := s.Customer
+				if who == "another customer" {
+					customer = s.SecondLine
+				}
+				_, err := execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.RecordCollectionCommandHandler {
+					return orderingcommands.RecordCollectionCommandHandler{Repository: repository, Realtime: realtime}
+				}).Execute(context.Background(), s.Metadata(s.Order), orderingcommands.RecordCollectionCommand{CustomerID: customer})
+				return err
+			})
+			sc.Step(`^the order records collection$`, func() error {
+				if err := w.orders.Succeeded(); err != nil {
+					return err
+				}
+				if !w.orders.Loaded.State.CollectionRecorded || w.orders.Loaded.State.Status != "placed" {
+					return fmt.Errorf("order collection missing")
+				}
+				return nil
+			})
 			sc.Step(`^the customer places the order$`, w.place)
 			sc.Step(`^the order is placed$`, func() error {
 				if err := w.place(); err != nil {

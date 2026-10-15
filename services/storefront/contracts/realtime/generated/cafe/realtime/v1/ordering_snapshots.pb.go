@@ -142,15 +142,16 @@ func (x *Line) GetQuantity() int32 {
 }
 
 type Order struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	CustomerId    string                 `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
-	EditionId     string                 `protobuf:"bytes,3,opt,name=edition_id,json=editionId,proto3" json:"edition_id,omitempty"`
-	Currency      string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	Lines         []*Line                `protobuf:"bytes,6,rep,name=lines,proto3" json:"lines,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	CustomerId         string                 `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
+	EditionId          string                 `protobuf:"bytes,3,opt,name=edition_id,json=editionId,proto3" json:"edition_id,omitempty"`
+	Currency           string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
+	Status             string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	Lines              []*Line                `protobuf:"bytes,6,rep,name=lines,proto3" json:"lines,omitempty"`
+	CollectionRecorded bool                   `protobuf:"varint,7,opt,name=collection_recorded,json=collectionRecorded,proto3" json:"collection_recorded,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Order) Reset() {
@@ -225,6 +226,13 @@ func (x *Order) GetLines() []*Line {
 	return nil
 }
 
+func (x *Order) GetCollectionRecorded() bool {
+	if x != nil {
+		return x.CollectionRecorded
+	}
+	return false
+}
+
 var File_cafe_realtime_v1_contexts_ordering_ordering_snapshots_proto protoreflect.FileDescriptor
 
 const file_cafe_realtime_v1_contexts_ordering_ordering_snapshots_proto_rawDesc = "" +
@@ -238,7 +246,7 @@ const file_cafe_realtime_v1_contexts_ordering_ordering_snapshots_proto_rawDesc =
 	"\x04Line\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x129\n" +
 	"\tselection\x18\x02 \x01(\v2\x1b.cafe.realtime.v1.SelectionR\tselection\x12\x1a\n" +
-	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\xb9\x01\n" +
+	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\xea\x01\n" +
 	"\x05Order\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -247,7 +255,8 @@ const file_cafe_realtime_v1_contexts_ordering_ordering_snapshots_proto_rawDesc =
 	"edition_id\x18\x03 \x01(\tR\teditionId\x12\x1a\n" +
 	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\tR\x06status\x12,\n" +
-	"\x05lines\x18\x06 \x03(\v2\x16.cafe.realtime.v1.LineR\x05linesB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3"
+	"\x05lines\x18\x06 \x03(\v2\x16.cafe.realtime.v1.LineR\x05lines\x12/\n" +
+	"\x13collection_recorded\x18\a \x01(\bR\x12collectionRecordedB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3"
 
 var (
 	file_cafe_realtime_v1_contexts_ordering_ordering_snapshots_proto_rawDescOnce sync.Once

@@ -99,10 +99,8 @@ import (
 )
 // {name}Event describes the incoming fact; replace with the published application DTO.
 type {name}Event struct {{}}
-// {name}CommandQueue accepts the command durably before returning.
-type {name}CommandQueue[C any] interface {{ Enqueue(context.Context, a.Metadata, C) (a.Outcome,error) }}
 // {name}IntegrationEventHandler translates the fact into a durable owner command.
-type {name}IntegrationEventHandler[C any] struct {{ Commands {name}CommandQueue[C] }}
+type {name}IntegrationEventHandler[C any] struct {{ Commands a.CommandBusPort[C] }}
 func(h {name}IntegrationEventHandler[C]) Handle(ctx context.Context, m a.Metadata, event {name}Event) (a.Outcome,error) {{
  panic("Map the incoming fact, then return h.Commands.Enqueue(ctx, m, command)")
 }}
@@ -158,7 +156,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
         registration = {
             "operations": f"# In the context requests function, use its configured CommandRegistration:\ncommands.request(registry, {context.title()}Command.{snake.upper()}, wire.{snake}, {name}CommandHandler)\n",
             "engagement": f"// In the context request composition, use its configured CommandRegistration:\ncommands.request(registry, {context.title()}Command.{snake.upper()}, wire.{action}, (repository) => new {name}CommandHandler(repository));\n",
-            "storefront": f"// In the context request composition, use its aggregate registry:\nregistration.Register(aggregateCommands, names.{context.title()}Command{name}, wire.{name}, func(repository ports.OwningWriteRepository) commands.{name}CommandHandler {{\n return commands.{name}CommandHandler{{Repository: repository}}\n}})\n",
+            "storefront": f"// In the context request composition, use its aggregate registry:\nregistration.Register(aggregateCommands, names.{context.title()}Command{name}, wire.{name}, func(repository ports.OwningWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) commands.{name}CommandHandler {{\n return commands.{name}CommandHandler{{Repository: repository}}\n}})\n",
         }[service]
         registration += "Define the published command contract and run pnpm generate:contracts to create its identifier. Import the generated enum and define the owner parser, then register the handler here. The shared helper supplies execution policy.\n"
     files["registration.txt"] = registration
@@ -193,7 +191,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
             "Add its private Protobuf payload with an unused field number, decoder and golden fixture.\n"
             "Add the manifest entry, run generation for its event/subscription/private-command enums, then add the typed codec and provider; register the codec and plain handler factory through the aggregate command registration subscription method.\n"
             "Run completeSubscriptions/complete_subscriptions, generation and the composition tests.\n"
-            "For Go, introduce the owner durable command port/adaptor before adding an aggregate-changing subscription; existing Go subscriptions are projections.\n"
+            "For Go, follow Ordering RecordCollection: bind NewCommandOutbox with an owner-private codec and pair consumers through registration.Subscribe.\n"
         )
     if kind == "subscription":
         arranged = {}

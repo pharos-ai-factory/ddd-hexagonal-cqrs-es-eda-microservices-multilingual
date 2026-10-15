@@ -16,6 +16,7 @@ import (
 
 type orderingRequests struct {
 	*requests.RabbitMQRequestRegistry
+	Commands registration.Registry[*d.Order]
 }
 
 func orderingRequestsProvider(transaction execution.Transaction[*d.Order], directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], getOrder q.GetOrderQueryHandler, listOrders q.ListOrdersQueryHandler) orderingRequests {
@@ -35,5 +36,5 @@ func orderingRequestsProvider(transaction execution.Transaction[*d.Order], direc
 	})
 	requests.Query(r, names.OrderingQueryGetOrder, rpc.GetOrder, getOrder.Execute, rpc.GetOrderReply)
 	requests.Query(r, names.OrderingQueryListOrders, rpc.ListOrders, listOrders.Execute, rpc.ListOrdersReply)
-	return orderingRequests{r}
+	return orderingRequests{r, commands}
 }

@@ -10,6 +10,16 @@
     "command": true
   },
   {
+    "name": "collection.order-collected",
+    "owner": "collection",
+    "kind": "pickup",
+    "version": 1,
+    "visibility": "integration",
+    "type": "cafe.v1.OrderCollected",
+    "consumer": "ordering.record-collection",
+    "command": true
+  },
+  {
     "name": "collection.order-collected.domain",
     "owner": "collection",
     "visibility": "domain",

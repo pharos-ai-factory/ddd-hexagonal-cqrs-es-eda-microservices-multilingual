@@ -84,10 +84,10 @@ Reward. Their use cases differ because each context owns a different decision.
 The TypeScript redemption command demonstrates load/mutate/save; issuance
 demonstrates creation and domain-event recording.
 
-The current Go event reactions maintain projections. Aggregate-changing durable
-event reactions exist in Python and TypeScript. Pages state that difference
-explicitly. Every concept includes Go, Python and TypeScript snippets. Missing
+Aggregate-changing durable event reactions run in all three languages. Go's
+`OrderCollected` → `RecordCollection` chain includes explicit browser publication.
+Every concept includes Go, Python and TypeScript snippets. Missing
 implementations use clearly labelled illustrative examples, alongside links to
 the relevant existing source. See the [implementation coverage report](../implementation-coverage.md)
-for Go and Python gaps and the deliberate scope of the reference. Source-marked
+for remaining teaching gaps and the deliberate scope of the reference. Source-marked
 excerpts come directly from this repository.

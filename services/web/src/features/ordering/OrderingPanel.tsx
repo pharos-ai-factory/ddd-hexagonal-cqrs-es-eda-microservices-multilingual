@@ -59,7 +59,9 @@ export function OrderingPanel({
           <article className="card" data-testid="order" key={order.state.id}>
             <div className="card-heading">
               <strong>Order {short(order.state.id)}</strong>
-              <span className="badge">{order.state.status}</span>
+              <span className="badge">
+                {order.state.collectionRecorded ? 'collected' : order.state.status}
+              </span>
             </div>
             {order.state.lines.map((line) => (
               <p key={line.id}>

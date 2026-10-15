@@ -193,6 +193,11 @@ command outbox → persistent mandatory RabbitMQ publication → publisher confi
 command consumer → one aggregate + receipts + outcome + publications → commit → command ACK
 ```
 
+Go Ordering demonstrates the receiving path with Collection's `OrderCollected`
+→ `RecordCollection` → `Order.collectionRecorded`. Its private codec, command
+outbox, paired registration and fenced relay share the acceptance/execution policy
+used by Python and TypeScript. See [decision 0027](docs/decisions/0027-go-durable-command-reactions.md).
+
 The receiving outbox makes acceptance durable before command execution. Failure
 before acceptance commits remains the event consumer's retry responsibility. After
 acceptance, the command's dispatch and consumer own recovery. Command execution

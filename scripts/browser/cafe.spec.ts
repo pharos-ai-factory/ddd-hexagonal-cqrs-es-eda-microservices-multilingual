@@ -179,6 +179,11 @@ test('six contexts, independent windows, binary recovery, durable logout and unc
     await pickup.getByRole('textbox').fill(await pickup.getByTestId('collection-code').innerText());
     await pickup.getByRole('button', { name: 'Collect order' }).click();
     await expect(pickup).toHaveCount(0);
+    for (const window of [page, second]) {
+      await expect(window.getByTestId('order').filter({ hasText: title }).locator('.badge')).toHaveText(
+        'collected',
+      );
+    }
     await expect(second.getByTestId('loyalty-account')).toContainText(`${index + 1} orders collected`);
   }
   await expect(page.getByTestId('reward')).toHaveCount(1);

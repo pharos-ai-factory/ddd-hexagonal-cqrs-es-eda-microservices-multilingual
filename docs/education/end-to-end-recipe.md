@@ -136,10 +136,20 @@ enqueues `AcceptOrder`. TypeScript's [OrderCollected reaction](../../services/en
 enqueues `CreditCollection`. The [durable-command recipe](concepts/durable-commands.md)
 explains the paired consumer registration and retry boundaries.
 
-Go currently demonstrates projection reactions and defines the bus contract;
-it still needs a concrete private-command hand-off and paired-consumer example
-before adding an aggregate-changing Go event reaction. This is an implementation
-gap recorded in [coverage](implementation-coverage.md).
+Go's [OrderCollected reaction](../../services/storefront/contexts/ordering/application/eventhandlers/order_collected.go)
+enqueues `RecordCollection`, targeting `event.OrderID`. Follow the
+[Go creation steps](concepts/durable-commands.md#go-record-collection-on-the-order)
+for the private Protobuf oneof, codec, manifest, generated identifiers, bus provider
+and `registration.Subscribe` call. The handler restores the Order, requires a
+placed order and matching customer, records collection once, saves and explicitly
+publishes `collectionRecorded: true` through `RealtimeBusPort`. Placement status
+remains `placed`; Collection continues to own physical handover. A collected
+Pickup awaiting this command is an allowed pending state.
+
+The command publication commits with the changed root and receipts. It has no
+automatic integration-to-realtime mapping. Duplicate source delivery recovers the
+recorded outcome; a new event identity for an already recorded collection leaves
+the Order revision and browser outbox unchanged.
 
 ## 9. Explicitly select the browser publication
 

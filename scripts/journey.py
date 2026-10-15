@@ -138,6 +138,14 @@ def run(values, recovery=None):
         client.request(
             "OPERATIONS", pickup_path + "/collect", {"code": pickup["state"]["code"]}, pickup["version"]
         )
+        if recovery and number == 0:
+            recovery("after_collection", client, customer, order)
+        recorded = client.find(
+            "STOREFRONT",
+            "/v1/ordering/orders",
+            lambda state: state["id"] == order and state.get("collectionRecorded", False),
+        )
+        assert recorded["version"] == 4 and recorded["state"]["status"] == "placed"
     account = client.find(
         "ENGAGEMENT",
         "/v1/loyalty/accounts",

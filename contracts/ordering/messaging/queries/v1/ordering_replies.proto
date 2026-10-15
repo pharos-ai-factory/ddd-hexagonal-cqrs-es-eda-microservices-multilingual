@@ -21,6 +21,7 @@ message Order {
   string currency = 4;
   string status = 5;
   repeated Line lines = 6;
+  bool collection_recorded = 7;
 }
 
 message LoadedOrder {

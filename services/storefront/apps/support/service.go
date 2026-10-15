@@ -25,15 +25,16 @@ import (
 
 // StorefrontRuntime owns Storefront context resources and joins delivery workers before disposal.
 type StorefrontRuntime struct {
-	Context        context.Context
-	Mux            *contract.Mux
-	Databases      map[string]*postgres.ContextDatabase
-	RequestWorkers map[string]func(context.Context, string)
-	URLs           map[string]string
-	subscriptions  []broker.Subscription
-	cancel         context.CancelFunc
-	workers        sync.WaitGroup
-	apiKey         string
+	Context         context.Context
+	Mux             *contract.Mux
+	Databases       map[string]*postgres.ContextDatabase
+	RequestWorkers  map[string]func(context.Context, string)
+	URLs            map[string]string
+	subscriptions   []broker.Subscription
+	commandDecoders map[string]map[string]a.Decoder
+	cancel          context.CancelFunc
+	workers         sync.WaitGroup
+	apiKey          string
 }
 
 func Open(contexts ...string) (*StorefrontRuntime, error) {
@@ -122,6 +123,9 @@ func (s *StorefrontRuntime) Run() error {
 			return err
 		}
 		s.start(func() { workers.Relay(s.Context, db, s.URLs[owner], codec.Decode) })
+		if decoders := s.commandDecoders[owner]; len(decoders) > 0 {
+			s.start(func() { workers.Commands(s.Context, db, s.URLs[owner], decoders) })
+		}
 		s.start(func() { workers.Replies(s.Context, db, s.URLs[owner], owner) })
 		s.start(func() { gateway.Relay(s.Context, db, gatewayURL, realtimeKey) })
 	}

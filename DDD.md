@@ -20,7 +20,11 @@ all mutation of its children. A database row does not define an aggregate.
 MenuOffer is an immutable value inside an edition. It references a published
 Drink revision and freezes that offer's terms. Drink has its own lifecycle.
 OrderLine is a child entity: editing its quantity retains the line's
-identity but advances the Order version.
+identity but advances the Order version. Collection owns physical handover;
+Ordering records its published fact through `RecordCollection`. A matching customer
+and placed order are required. `collectionRecorded` changes once, leaving placement
+status and frozen lines intact. Repeated facts leave the revision unchanged.
+A collected Pickup whose Order still awaits that command is a permitted pending state.
 
 RewardGrant is an immutable earned fact within the account's transition.
 Reward is independently issued and redeemed. An earned grant awaiting issuance
@@ -64,6 +68,7 @@ PlaceOrder → OrderPlaced → AcceptOrder → PreparationTicket
 CompletePreparation → DrinksReadyDomainEvent → DrinksReadyDomainEventHandler
   → DrinksReadyIntegrationEvent → OpenPickup → Pickup
 CollectOrder → OrderCollected → CreditCollection → LoyaltyAccount
+CollectOrder → OrderCollected → RecordCollection → Order.collectionRecorded
 RewardEarned (private domain delivery) → IssueReward → Reward
 RewardIssued (published integration delivery) → RequestNotification → Notification
 ```

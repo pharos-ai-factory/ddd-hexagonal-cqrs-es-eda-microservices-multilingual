@@ -45,7 +45,7 @@ func orderView(s d.OrderState) (view.OrderView, error) {
 	for _, l := range s.Lines {
 		lines = append(lines, view.LineView{ID: l.ID, Quantity: l.Quantity, Selection: view.SelectionView{OfferCode: l.Selection.OfferCode, Name: l.Selection.Name, Minor: l.Selection.Minor}})
 	}
-	return view.OrderView{ID: s.ID, CustomerID: s.CustomerID, EditionID: s.EditionID, Currency: s.Currency, Status: s.Status, Lines: lines}, nil
+	return view.OrderView{ID: s.ID, CustomerID: s.CustomerID, EditionID: s.EditionID, Currency: s.Currency, Status: s.Status, CollectionRecorded: s.CollectionRecorded, Lines: lines}, nil
 }
 ```
 

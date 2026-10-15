@@ -18,7 +18,7 @@ class DeveloperTests(unittest.TestCase):
 
     def test_inspection_reads_historical_headers_without_exposing_content(self):
         paths = list(Path("services").glob("**/fixtures/*.command.hex"))
-        self.assertEqual(len(paths), 7)
+        self.assertEqual(len(paths), 8)
         for path in paths:
             identity = envelope_identity(bytes.fromhex(path.read_text().strip()))
             self.assertEqual(set(identity), {"commandId", "consumer", "eventId", "target", "correlationId"})
@@ -83,6 +83,13 @@ class DeveloperTests(unittest.TestCase):
             self.assertNotIn("CommandExecutor", registration)
             self.assertNotIn("bindCommand", registration)
             self.assertNotIn("providers.Singleton", registration)
+
+    def test_go_subscription_starter_uses_the_implemented_command_bus(self):
+        _, files = render("subscription", "ordering", "RecordCollection")
+        self.assertIn("a.CommandBusPort[C]", files["eventhandlers/record_collection.go"])
+        self.assertIn("registration.Subscribe", files["wiring.txt"])
+        _, commands = render("command", "ordering", "RecordCollection")
+        self.assertIn("a.RealtimeBusPort[a.RealtimeEvent]", commands["registration.txt"])
 
     def test_query_starters_register_each_query_directly(self):
         for context in ("ordering", "preparation", "loyalty"):

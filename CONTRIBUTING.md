@@ -35,7 +35,7 @@ Paths in this table are relative to the owning context.
 | Read repository                           | `application/ports/<resource>_read_repository` (Go/Python) or `<resource>-read-repository` (TypeScript); name the interface/protocol `<Resource>ReadRepository` |
 | Read representation                       | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript)                                                                            |
 | Event reaction                            | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript)                                                                            |
-| Projection update                         | Go's current reactions live in `application/projections/`                                                                                                       |
+| Projection update                         | Go projection handlers live in `application/projections/`                                                                                                       |
 | Protobuf input mapping                    | `adaptors/messaging/`; HTTP mapping lives in `services/api/adaptors/http/backend/` relative to the repository root                                              |
 | Stored-state restoration and view mapping | `adaptors/persistence/postgres/` (Go) or `adaptors/persistence/` (Python/TypeScript)                                                                            |
 | DI bindings and worker/resource lifetime  | Owning service's `apps/` composition module                                                                                                                     |
@@ -83,8 +83,9 @@ maps a fact to an owner command and calls `CommandBusPort`. Its receiving
 transaction records acceptance, exact private Protobuf command bytes and dispatch
 intent before ACK. The command queue then owns execution, bounded retries and
 replay. This applies between roots in one context as well as across contexts.
-Go's current subscriptions update projections; a new aggregate-changing Go
-reaction requires the explicit durable-command port/adaptor and paired consumers.
+Go's Ordering reaction enqueues `RecordCollection`; `registration.Subscribe` binds
+its private codec, event/command consumers and plain handler factory. Follow the
+[complete durable-command recipe](docs/education/concepts/durable-commands.md).
 
 Use generated context-specific command/query enums, event identifiers and
 subscription IDs in composition. Register each query explicitly with its owner

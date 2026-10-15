@@ -26,7 +26,6 @@ def schema_changes(old, new, response=False, path="schema"):
         "format",
         "nullable",
         "additionalProperties",
-        "oneOf",
         "anyOf",
         "allOf",
         "not",
@@ -35,6 +34,23 @@ def schema_changes(old, new, response=False, path="schema"):
     ):
         if old.get(key) != new.get(key):
             errors.append(path + ": changed " + key)
+    if old.get("oneOf") != new.get("oneOf"):
+        before, after = old.get("oneOf", []), new.get("oneOf", [])
+        # Complete lists and paginated objects are disjoint by JSON type. Compare
+        # their fields normally; keep other unions conservative about overlap.
+        if (
+            len(before) == len(after) == 2
+            and {branch.get("type") for branch in before} == {"array", "object"}
+            and {branch.get("type") for branch in after} == {"array", "object"}
+            and not any(branch.get("nullable") for branch in before + after)
+        ):
+            by_type = {branch["type"]: branch for branch in after}
+            for branch in before:
+                errors += schema_changes(
+                    branch, by_type[branch["type"]], response, path + ".oneOf." + branch["type"]
+                )
+        else:
+            errors.append(path + ": changed oneOf")
     if "enum" in wide and ("enum" not in narrow or not set(narrow["enum"]) <= set(wide["enum"])):
         errors.append(path + ": incompatible enum")
     for key in ("minimum", "minLength", "minItems", "minProperties"):

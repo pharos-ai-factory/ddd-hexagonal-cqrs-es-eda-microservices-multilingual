@@ -822,6 +822,7 @@ func maporderingOrder(value *ordering.Order) (map[string]any, error) {
 		itemsLines = append(itemsLines, item)
 	}
 	result["lines"] = itemsLines
+	result["collectionRecorded"] = value.CollectionRecorded
 	return result, nil
 }
 func maporderingLoadedOrder(value *ordering.LoadedOrder) (map[string]any, error) {

@@ -53,6 +53,11 @@ Source: [subscriptions.json](../../../services/storefront/contexts/ordering/adap
     "consumer": "ordering.realtime-order-placed",
     "event": "ordering.order-placed.domain",
     "realtime": "order"
+  },
+  {
+    "consumer": "ordering.record-collection",
+    "event": "collection.order-collected",
+    "command": "recordCollection"
   }
 ]
 ```

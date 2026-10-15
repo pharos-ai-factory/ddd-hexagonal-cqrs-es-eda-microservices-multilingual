@@ -14,9 +14,9 @@ func Subscription(consumer names.SubscriptionName) broker.Binding {
 	}
 	switch consumer.String() {
 	case "menu.drink-directory":
-		return broker.Binding{Consumer: consumer.String(), Event: "menu.drink-published", Visibility: "domain", Context: "menu"}
+		return broker.Binding{Consumer: consumer.String(), Event: "menu.drink-published", Visibility: "domain", Context: "menu", Command: false}
 	case "menu.publish-edition-published":
-		return broker.Binding{Consumer: consumer.String(), Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu"}
+		return broker.Binding{Consumer: consumer.String(), Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu", Command: false}
 	}
 	panic("undeclared subscription: " + consumer.String())
 }

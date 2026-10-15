@@ -17,24 +17,20 @@ page links directly to the relevant source.
 
 | Concept                                   | Go                                        | Python                | TypeScript                    | Implication                                                                                                    |
 | ----------------------------------------- | ----------------------------------------- | --------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Aggregate-changing durable event reaction | Missing                                   | Implemented           | Implemented                   | A new Go reaction needs a private command codec, receiving outbox and paired consumers                         |
+| Aggregate-changing durable event reaction | Implemented                               | Implemented           | Implemented                   | All three commit private command bytes before event ACK and execute through paired consumers                   |
 | Event-fed consumer projection             | Implemented for Ordering's menu directory | No equivalent example | No equivalent example         | Python and TypeScript currently query owner state directly; a projection needs a specific consumer use case    |
 | Standalone domain service                 | No named example                          | No named example      | No named example              | Current business rules have natural aggregate/value owners; introduce a service for a concrete new domain rule |
 | Named business value-object wrapper       | Money, Quantity and menu terms            | CollectionCode        | No equivalent wrapper example | TypeScript uses validated primitive terms and read-only domain records; its Money example is illustrative      |
 
-### Go: durable command reactions
+### Go: durable command reactions implemented
 
-The current [MenuDirectoryProjectionHandler](../../services/storefront/contexts/ordering/application/projections/menu_published.go)
-records a projection. The [Ordering composition](../../services/storefront/apps/storefront/di/ordering.go)
-registers that projection and private integration publication. It has no equivalent
-of Python's [command outbox](../../services/operations/src/operations/adaptors/persistence/command_outbox.py)
-and [paired AcceptOrder consumers](../../services/operations/src/operations/apps/composition/preparation.py).
-
-This is the main missing Go example if the reference should demonstrate the same
-aggregate-changing reaction pattern in every language. The current Go use cases
-do not require such a reaction. Adding one requires the complete durability and
-compatibility path described in [durable commands](concepts/durable-commands.md),
-plus real broker/database recovery tests.
+[OrderCollectedIntegrationEventHandler](../../services/storefront/contexts/ordering/application/eventhandlers/order_collected.go)
+accepts `RecordCollection` through the concrete PostgreSQL command outbox.
+Its owner-private codec, stored-byte fixture, paired consumers, fenced relay,
+generated permissions and startup completeness checks are implemented.
+[RecordCollectionCommandHandler](../../services/storefront/contexts/ordering/application/commands/record_collection.go)
+loads the Order, records collection, saves and explicitly publishes its browser view.
+The [recipe](concepts/durable-commands.md) links every step and recovery test.
 
 ### Python: event-fed projections
 
@@ -75,8 +71,7 @@ development-only scope.
 All three application foundations define `CommandBusPort`, `QueryBusPort`,
 `DomainEventBusPort`, `IntegrationEventBusPort` and `RealtimeBusPort`. Query registries
 use typed query dispatch; aggregate fact recording uses the private domain bus.
-Existing Python/TypeScript durable command adaptors implement the renamed command
-port. The Go aggregate-changing private-command example remains the gap listed above.
+Concrete durable command adaptors implement the command bus port in all three languages.
 
 Explicit command publication, scoped buffers, event-subscriber realtime outboxes
 and typed rejection publication are implemented in all three languages. Ordering

@@ -18,8 +18,9 @@ type Handler func(context.Context, a.Metadata, a.Message) error
 
 // Subscription binds a validated delivery to an owner application callback.
 type Subscription struct {
-	Binding Binding
-	Handle  Handler
+	Binding       Binding
+	Handle        Handler
+	DecodeCommand func([]byte) (a.Metadata, a.Message, error)
 }
 
 func Consume(ctx context.Context, url string, sub Subscription, decode a.Decoder, ids a.IDFactory) error {
@@ -50,16 +51,23 @@ func Consume(ctx context.Context, url string, sub Subscription, decode a.Decoder
 			}
 			attempt, validation := retryAttempt(delivery.Headers)
 			var message a.Message
+			var metadata a.Metadata
 			if validation == nil {
-				message, validation = decode(delivery.Body)
+				if sub.DecodeCommand != nil {
+					metadata, message, validation = sub.DecodeCommand(delivery.Body)
+				} else {
+					message, validation = decode(delivery.Body)
+				}
 			}
 			if validation == nil {
 				validation = validateDelivery(delivery, message, sub.Binding)
 			}
 			processing := validation
 			if processing == nil {
-				sum := sha256.Sum256(delivery.Body)
-				metadata := a.Metadata{ID: ids(sub.Binding.Consumer, message.ID), Name: sub.Binding.Consumer, CorrelationID: message.CorrelationID, CausationID: message.ID, Input: message.Payload, Consumer: sub.Binding.Consumer, SourceEventID: message.ID, SourceHash: hex.EncodeToString(sum[:]), SourceKind: message.AggregateKind, SourceVersion: message.AggregateVersion, SourceTime: message.OccurredAt}
+				if sub.DecodeCommand == nil {
+					sum := sha256.Sum256(delivery.Body)
+					metadata = a.Metadata{ID: ids(sub.Binding.Consumer, message.ID), Name: sub.Binding.Consumer, CorrelationID: message.CorrelationID, CausationID: message.ID, Input: message.Payload, Consumer: sub.Binding.Consumer, SourceEventID: message.ID, SourceHash: hex.EncodeToString(sum[:]), SourceKind: message.AggregateKind, SourceVersion: message.AggregateVersion, SourceTime: message.OccurredAt}
+				}
 				processing = sub.Handle(ctx, metadata, message)
 			}
 			if processing == nil {
@@ -108,10 +116,10 @@ func retryAttempt(headers rabbit.Table) (int, error) {
 	return int(attempt), nil
 }
 func validateDelivery(delivery rabbit.Delivery, m a.Message, b Binding) error {
-	if m.Name != b.Event {
+	if m.Name != b.Event || string(m.Visibility) != b.Visibility {
 		return fmt.Errorf("unexpected event for consumer")
 	}
-	if m.Visibility == a.Private && m.Context != b.Context {
+	if (m.Visibility == a.Private || m.Visibility == "command") && m.Context != b.Context {
 		return fmt.Errorf("private domain event crossed its context boundary")
 	}
 	version, ok := delivery.Headers["contract-version"].(int32)

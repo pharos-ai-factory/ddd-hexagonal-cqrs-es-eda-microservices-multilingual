@@ -105,7 +105,7 @@ def inspect(env_file, identity):
                 WHERE o.id IN ({quoted}) OR o.correlation_id IN ({quoted}) OR o.causation_id IN ({quoted}) ORDER BY o.created_at LIMIT 201""",
             )
             commands = []
-            if owner in ("preparation", "collection", "loyalty", "communication"):
+            if owner in ("menu", "ordering", "preparation", "collection", "loyalty", "communication"):
                 matches = " OR ".join(
                     "position(convert_to('" + str(UUID(value)) + "','UTF8') in c.body)>0"
                     for value in sorted(ids)
