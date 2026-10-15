@@ -56,7 +56,8 @@ and [decision 0021](docs/decisions/0021-service-and-context-adaptor-layout.md)
 explain every service and context boundary.
 
 Each context has `application/commands/` and `application/queries/`, with one
-named DTO and its matching handler per business use-case file. Go/Python filenames
+named handler per business use-case file. It imports its schema-generated plain
+command/query input from the service-local request contracts. Go/Python filenames
 use snake_case; TypeScript uses kebab-case. Callers import those packages/modules
 directly. Event reactions and projection handlers have separate business-named
 files. Read models and named read repository ports belong to the application; decoding,
@@ -347,3 +348,7 @@ Each context explicitly selects browser messages in application handlers. Comman
 publications commit with their outcome; declared event subscribers commit exact
 bytes with their receipt. Saving state alone produces no realtime publication.
 The owner gateway and Centrifugo continue handling authorised technical delivery.
+
+Command and query payloads are schema-generated plain contracts. Declare owner and
+visibility in Protobuf; generate types and mechanical mappings, then implement
+handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).

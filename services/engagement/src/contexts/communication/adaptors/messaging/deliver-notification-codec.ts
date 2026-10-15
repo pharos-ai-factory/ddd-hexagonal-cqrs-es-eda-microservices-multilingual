@@ -2,14 +2,14 @@ import {
   CommunicationPrivateCommand,
   CommunicationSubscription,
 } from '../../../../adaptors/generated/message-names.js';
-import { fields } from './command-fields.js';
+import { parseDeliverNotificationCommand } from './generated/request-payloads.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
 import { identifier } from '../../../../foundation/domain.js';
 
 import schema from './generated/internal_commands.json' with { type: 'json' };
 
-import type { DeliverNotificationCommand } from '../../application/commands/deliver-notification.js';
+import type { DeliverNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 
 export function deliveryCodec() {
   return new InternalCommandCodec(
@@ -17,8 +17,10 @@ export function deliveryCodec() {
     CommunicationSubscription.DELIVER_NOTICE,
     CommunicationPrivateCommand.DELIVER_NOTIFICATION,
     schema,
-    (value): DeliverNotificationCommand => ({
-      notificationId: identifier(String(fields(value).notificationId)),
-    }),
+    (value): DeliverNotificationCommand => {
+      const command = parseDeliverNotificationCommand(value);
+      identifier(command.notificationId);
+      return command;
+    },
   );
 }

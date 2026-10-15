@@ -4,5 +4,6 @@ option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-micr
 import "cafe/requests/v1/validation.proto";
 
 message CollectOrder {
+  option (cafe.requests.v1.contract) = { owner: "collection" visibility: PUBLIC };
   optional string code = 1 [(cafe.requests.v1.required_input) = true];
 }

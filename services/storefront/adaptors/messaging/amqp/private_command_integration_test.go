@@ -10,8 +10,8 @@ import (
 	internal "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/internalcommands"
 	store "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/persistence/postgres"
 	ownercodec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
-	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	rabbit "github.com/rabbitmq/amqp091-go"
 	"os"
@@ -29,11 +29,11 @@ func TestPrivateCommandRetryReplayPreservesAcceptedIdentity(t *testing.T) {
 	consumer := private.Consumer()
 	source := store.NewID()
 	metadata := a.Metadata{ID: a.DerivedID(consumer, source), Name: consumer, Consumer: consumer, SourceEventID: source, CausationID: source, SourceHash: strings.Repeat("a", 64), AggregateID: store.NewID(), CorrelationID: store.NewID(), Input: map[string]any{"evidence": "original"}}
-	body, err := private.Encode(metadata, commands.RecordCollectionCommand{CustomerID: store.NewID()})
+	body, err := private.Encode(metadata, orderingcontracts.RecordCollectionCommand{CustomerID: store.NewID()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	decoder := internal.DeliveryDecoder[commands.RecordCollectionCommand](private)
+	decoder := internal.DeliveryDecoder[orderingcontracts.RecordCollectionCommand](private)
 	_, message, err := decoder(body)
 	if err != nil {
 		t.Fatal(err)

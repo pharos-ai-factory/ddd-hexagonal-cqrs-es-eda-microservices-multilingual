@@ -2,8 +2,12 @@ syntax = "proto3";
 package cafe.preparation.requests.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1";
 
+import "cafe/requests/v1/validation.proto";
+
 message StartPreparation {
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
 }
 
 message CompletePreparation {
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
 }

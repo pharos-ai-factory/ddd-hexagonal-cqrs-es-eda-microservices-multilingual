@@ -18,6 +18,7 @@ import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime"
 	rt "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
 	"os"
@@ -59,7 +60,7 @@ func TestAcceptedCollectionCommitsOrderReceiptAndExplicitRealtimeTogether(t *tes
 	codec := rpc.RecordCollectionCodec{}
 	source := pg.NewID()
 	m := a.Metadata{ID: a.DerivedID(codec.Consumer(), source), Name: codec.Consumer(), Consumer: codec.Consumer(), SourceEventID: source, CausationID: source, AggregateID: id, CorrelationID: pg.NewID(), SourceHash: strings.Repeat("a", 64), Input: map[string]any{"orderId": id, "customerId": customer}}
-	reaction := reactions.OrderCollectedIntegrationEventHandler{Commands: pg.NewCommandOutbox[commands.RecordCollectionCommand](db, codec)}
+	reaction := reactions.OrderCollectedIntegrationEventHandler{Commands: pg.NewCommandOutbox[orderingcontracts.RecordCollectionCommand](db, codec)}
 	if _, err = reaction.Handle(t.Context(), m, model.OrderCollectedIntegrationEvent{OrderID: id, CustomerID: customer}); err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,7 @@
 import type { DeliveryPort, QueryPort } from '../../../../foundation/application.js';
 import type { NotificationState } from '../../domain/notification.js';
 import { restoreNotificationSnapshot } from '../persistence/notification-snapshot.js';
-import type { DeliverNotificationCommand } from '../../application/commands/deliver-notification.js';
+import type { DeliverNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 
 /** Recover idempotent provider acceptance before the command opens its aggregate transaction. */
 export class NotificationDeliveryPreparation {

@@ -9,13 +9,17 @@ from contract_selection import roots
 
 
 def compile_descriptors(kind, root=ROOT):
+    return compile_sources(sources(kind, root))
+
+
+def compile_sources(definitions):
+    """Compile authoritative logical imports, including shared option dependencies."""
     from google.protobuf.descriptor_pb2 import FileDescriptorSet
     import grpc_tools
     from grpc_tools import protoc
 
     with tempfile.TemporaryDirectory() as directory:
         stage = Path(directory)
-        definitions = sources(kind, root)
         for logical, source in definitions.items():
             target = stage / logical
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -32,7 +36,7 @@ def compile_descriptors(kind, root=ROOT):
             ]
         )
         if result:
-            raise ValueError("Cannot compile " + kind + " contracts")
+            raise ValueError("Cannot compile contracts")
         return FileDescriptorSet.FromString(output.read_bytes())
 
 

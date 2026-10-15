@@ -1,6 +1,7 @@
 // Owner-private durable command format. Published integration contracts remain separate.
 syntax = "proto3";
 package cafe.internal.collection;
+import "cafe/requests/v1/validation.proto";
 message CommandEnvelope {
   string id = 1;
   string consumer = 2;
@@ -14,4 +15,6 @@ message CommandEnvelope {
     OpenPickupCommand open_pickup = 10;
   }
 }
-message OpenPickupCommand { string order_id = 1; string customer_id = 2; }
+message OpenPickupCommand {
+  option (cafe.requests.v1.contract) = { owner: "collection" visibility: PRIVATE };
+  string order_id = 1; string customer_id = 2; }

@@ -43,6 +43,9 @@ for contract in ("menu_private", "ordering_private"):
     commands = ROOT / PRIVATE[owner] / "internal_commands.proto"
     if commands.exists():
         definitions[f"{owner}_commands.proto"] = commands
+        definitions["cafe/requests/v1/validation.proto"] = (
+            ROOT / "contracts/shared/messaging/v1/validation.proto"
+        )
     if len({Path(name).stem for name in definitions}) != len(definitions):
         raise ValueError(f"{contract}: Protobuf filenames must be unique for the shared Go package")
     go_relative = PRIVATE[owner] + "/generated"
@@ -76,7 +79,11 @@ for contract in ("menu_private", "ordering_private"):
             f"--go_out={go_out}",
             "--go_opt=module=" + module,
         ]
-        subprocess.run([*arguments, *definitions], cwd=ROOT, check=True)
+        subprocess.run(
+            [*arguments, *(name for name in definitions if not name.startswith("cafe/requests/"))],
+            cwd=ROOT,
+            check=True,
+        )
 for service in ("storefront", "api", "operations"):
     generate_requests(service, ROOT, plugin, standard_protos)
 subprocess.run(
@@ -102,6 +109,9 @@ for owner in ("preparation", "collection"):
             target = stage / logical
             target.parent.mkdir(parents=True)
             shutil.copyfile(source / filename, target)
+            dependency = stage / "cafe/requests/v1/validation.proto"
+            dependency.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / "contracts/shared/messaging/v1/validation.proto", dependency)
             subprocess.run(
                 [
                     "uv",
@@ -113,6 +123,7 @@ for owner in ("preparation", "collection"):
                     "-m",
                     "grpc_tools.protoc",
                     f"-I{stage}",
+                    f"-I{standard_protos}",
                     f"--python_out={python_out}",
                     f"--pyi_out={python_out}",
                     logical,
@@ -139,5 +150,6 @@ for directory in (python_out, ROOT / "services/engagement/src/adaptors/generated
     (directory / "persistence.json").write_text(json.dumps(checksums, indent=2) + "\n")
 subprocess.run(["node", "scripts/generate-typescript.mjs"], cwd=ROOT, check=True)
 
+subprocess.run(["python3", "scripts/generate_request_payloads.py"], cwd=ROOT, check=True)
 generate_migration_metadata()
 generate_http_contracts()

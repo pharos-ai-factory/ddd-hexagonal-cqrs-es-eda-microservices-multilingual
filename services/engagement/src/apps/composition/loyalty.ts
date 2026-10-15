@@ -40,14 +40,10 @@ import { InternalCommandCodec, commandPublication } from '../../adaptors/messagi
 import { PostgresDurableCommandOutbox } from '../../adaptors/persistence/command-outbox.js';
 import { derivedId } from '../../foundation/identity.js';
 import { secret } from '../../foundation/secrets.js';
-import {
-  CreditCollectionCommandHandler,
-  type CreditCollectionCommand,
-} from '../../contexts/loyalty/application/commands/credit-collection.js';
-import {
-  IssueRewardCommandHandler,
-  type IssueRewardCommand,
-} from '../../contexts/loyalty/application/commands/issue-reward.js';
+import { CreditCollectionCommandHandler } from '../../contexts/loyalty/application/commands/credit-collection.js';
+import type { CreditCollectionCommand } from '../../contracts/requests/generated/loyalty.js';
+import { IssueRewardCommandHandler } from '../../contexts/loyalty/application/commands/issue-reward.js';
+import type { IssueRewardCommand } from '../../contracts/requests/generated/loyalty.js';
 import { RedeemRewardCommandHandler } from '../../contexts/loyalty/application/commands/redeem-reward.js';
 import { OrderCollectedIntegrationEventHandler } from '../../contexts/loyalty/application/event-handlers/order-collected.js';
 import { RewardEarnedDomainEventHandler } from '../../contexts/loyalty/application/event-handlers/reward-earned.js';

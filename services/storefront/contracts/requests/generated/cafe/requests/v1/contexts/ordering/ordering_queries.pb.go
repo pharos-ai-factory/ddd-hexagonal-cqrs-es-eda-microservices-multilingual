@@ -114,12 +114,14 @@ var File_cafe_requests_v1_contexts_ordering_ordering_queries_proto protoreflect.
 
 const file_cafe_requests_v1_contexts_ordering_ordering_queries_proto_rawDesc = "" +
 	"\n" +
-	"9cafe/requests/v1/contexts/ordering/ordering_queries.proto\x12\x19cafe.ordering.requests.v1\x1a\x1dcafe/requests/v1/common.proto\"?\n" +
+	"9cafe/requests/v1/contexts/ordering/ordering_queries.proto\x12\x19cafe.ordering.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"Q\n" +
 	"\n" +
 	"ListOrders\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page\"\x1a\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\x10\xd2\xf3\x18\f\n" +
+	"\bordering\x10\x01\",\n" +
 	"\bGetOrder\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02idB\xb3\x01Z\xb0\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id:\x10\xd2\xf3\x18\f\n" +
+	"\bordering\x10\x01B\xb3\x01Z\xb0\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_ordering_ordering_queries_proto_rawDescOnce sync.Once

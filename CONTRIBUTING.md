@@ -30,8 +30,8 @@ Paths in this table are relative to the owning context.
 | Responsibility                            | Location and rule                                                                                                                                               |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Aggregate and its invariants              | `domain/<business-name>`; children have no independent repositories                                                                                             |
-| Command                                   | `application/commands/<action>`; one named DTO and matching `CommandHandler` together                                                                           |
-| Query                                     | `application/queries/<question>`; one named DTO and matching `QueryHandler` together                                                                            |
+| Command                                   | `application/commands/<action>`; one named `CommandHandler` importing its generated contract                                                                    |
+| Query                                     | `application/queries/<question>`; one named `QueryHandler` importing its generated contract                                                                     |
 | Read repository                           | `application/ports/<resource>_read_repository` (Go/Python) or `<resource>-read-repository` (TypeScript); name the interface/protocol `<Resource>ReadRepository` |
 | Read representation                       | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript)                                                                            |
 | Event reaction                            | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript)                                                                            |
@@ -209,3 +209,7 @@ and `RealtimeBusPort` for messaging capabilities. Declare realtime subscriptions
 and explicit command publications; a save alone produces no browser update. Follow
 [decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md) and
 the [end-to-end recipe](docs/education/end-to-end-recipe.md).
+
+Command and query payloads are schema-generated plain contracts. Declare owner and
+visibility in Protobuf; generate types and mechanical mappings, then implement
+handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).

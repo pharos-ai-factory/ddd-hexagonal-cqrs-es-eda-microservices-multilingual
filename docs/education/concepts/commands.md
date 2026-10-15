@@ -1,313 +1,264 @@
-# Commands
+# Commands: define the contract, generate the input, implement the handler
 
-A command requests an owner to perform a business action. Creating its application
-DTO is one step in making that action callable. This recipe connects a published
-Protobuf request to a plain command handler in Go, Python and TypeScript.
+A command asks its owning context to perform a business action. Protobuf defines
+its payload once. Generation produces its plain input type, wire binding,
+mechanical mapping and routing identifier. The handler imports the plain type.
 
-Follow the steps for your owning language. The examples already exist in this
-checkout: use their files as templates for a new action, and allocate new names
-and unused Protobuf field numbers. Reuse the existing aggregate infrastructure.
-For an event-triggered private command, follow the [durable command recipe](../../developer-workflow.md#wire-an-aggregate-changing-subscription)
-after defining the application command and handler.
+Follow this recipe in order. Use [durable commands](durable-commands.md) for an
+owner-only event reaction and [queries](queries.md) for reads.
 
-## 1. Choose the owner and transition
+## 1. Name the owner and choose visibility
 
-Run `pnpm context ordering`, `pnpm context preparation` or `pnpm context loyalty`
-and read the linked context README. Write down the target aggregate, input,
-required starting state, business rejection and resulting state.
+Run `pnpm context <context>` and read the owner README. Record the aggregate,
+invariant, starting state, expected rejection and permitted pending work.
 
-| Example             | Owner / language     | Aggregate         | Transition                                                  |
-| ------------------- | -------------------- | ----------------- | ----------------------------------------------------------- |
-| PlaceOrder          | Ordering / Go        | Order             | Valid non-empty draft → placed, with OrderPlacedDomainEvent |
-| CompletePreparation | Preparation / Python | PreparationTicket | Preparing → ready, with DrinksReadyDomainEvent              |
-| RedeemReward        | Loyalty / TypeScript | Reward            | Issued and unexpired → redeemed for an order                |
+| Example             | Owner / language     | Transition                     |
+| ------------------- | -------------------- | ------------------------------ |
+| PlaceOrder          | Ordering / Go        | Valid draft → placed           |
+| CompletePreparation | Preparation / Python | Preparing ticket → ready       |
+| RedeemReward        | Loyalty / TypeScript | Valid issued reward → redeemed |
 
-These are immediate transitions of existing roots. Downstream integration work
-can remain pending after commit. A new aggregate also needs its own restoration,
-repository and transaction bindings; follow [write repositories](write-repositories.md)
-and [dependency injection](dependency-injection.md) before registering its first command.
+Choose `PUBLIC` for a supported capability called from outside the context.
+Choose `PRIVATE` for an owner-controlled durable workflow step. Both are commands
+with schema-generated payloads. All existing query capabilities are public.
+Visibility is explicit in the schema and checked against the delivery envelope.
 
-## 2. Write the application command and handler
+## 2. Define the Protobuf payload and envelope member
 
-Create one command DTO/handler file under the context's `application/commands/`:
-use snake_case in Go/Python and kebab-case in TypeScript. Put business input in
-the DTO. Target identity, command identity, expected revision and correlation
-metadata arrive separately through the executor. These are the actual DTOs:
+Public payloads live under `contracts/<owner>/messaging/commands/v1/`.
+Import `cafe/requests/v1/validation.proto` and declare owner and visibility.
+Required scalar inputs use `optional` with `required_input = true`: omission is
+rejected while an explicitly supplied zero retains its value.
 
 ### Go
 
-Source: [place_order.go](../../../services/storefront/contexts/ordering/application/commands/place_order.go).
-
-```go source="../../../services/storefront/contexts/ordering/application/commands/place_order.go"
-type PlaceOrderCommand struct{}
+```protobuf source="../../../contracts/ordering/messaging/commands/v1/ordering_commands.proto"
+message PlaceOrder {
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC };
+}
 ```
 
 ### Python
 
-Source: [complete_preparation.py](../../../services/operations/src/operations/contexts/preparation/application/commands/complete_preparation.py).
-
-```python source="../../../services/operations/src/operations/contexts/preparation/application/commands/complete_preparation.py"
-class CompletePreparationCommand(TypedDict):
-    """Requests completion of the targeted preparation ticket."""
-
-    pass
+```protobuf source="../../../contracts/preparation/messaging/commands/v1/preparation_commands.proto"
+message CompletePreparation {
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
+}
 ```
 
 ### TypeScript
 
-Source: [redeem-reward.ts](../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts).
-
-```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
-export type RedeemRewardCommand = { orderId: string };
-```
-
-Add the named handler in that same file. Inject `OrderWriteRepository`,
-`TicketWriteRepository` or `RewardWriteRepository`; load the target, handle missing
-state, invoke the aggregate operation and save. The [command handler page](command-handlers.md#the-complete-use-cases-in-three-languages)
-contains the complete files for all three examples, including imports and method
-signatures. Implement and test the corresponding aggregate behaviour before wiring
-transport. The central executor will own the transaction and repository lifetime.
-
-**Checkpoint:** the command DTO and handler can be tested using plain ports.
-They have no imports from Protobuf, RabbitMQ or the DI framework.
-
-## 3. Declare the published payload and envelope case
-
-Edit two owner schema files: the payload under `messaging/commands/v1/` and its
-case inside `message Command` → `oneof payload` under `messaging/v1/`.
-A payload declaration alone does not create a routing identifier.
-
-### Go: PlaceOrder
-
-Payload: [ordering_commands.proto](../../../contracts/ordering/messaging/commands/v1/ordering_commands.proto).
-
-```protobuf source="../../../contracts/ordering/messaging/commands/v1/ordering_commands.proto"
-message PlaceOrder {
-}
-```
-
-Envelope: [ordering_requests.proto](../../../contracts/ordering/messaging/v1/ordering_requests.proto), inside `Command.payload`.
-
-```protobuf source="../../../contracts/ordering/messaging/v1/ordering_requests.proto"
-cafe.ordering.requests.v1.PlaceOrder place_order = 20;
-```
-
-### Python: CompletePreparation
-
-Payload: [preparation_commands.proto](../../../contracts/preparation/messaging/commands/v1/preparation_commands.proto).
-
-```protobuf source="../../../contracts/preparation/messaging/commands/v1/preparation_commands.proto"
-message CompletePreparation {
-}
-```
-
-Envelope: [preparation_requests.proto](../../../contracts/preparation/messaging/v1/preparation_requests.proto), inside `Command.payload`.
-
-```protobuf source="../../../contracts/preparation/messaging/v1/preparation_requests.proto"
-cafe.preparation.requests.v1.CompletePreparation complete_preparation = 22;
-```
-
-### TypeScript: RedeemReward
-
-Payload: [loyalty_commands.proto](../../../contracts/loyalty/messaging/commands/v1/loyalty_commands.proto).
-
 ```protobuf source="../../../contracts/loyalty/messaging/commands/v1/loyalty_commands.proto"
 message RedeemReward {
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
   optional string order_id = 1 [(cafe.requests.v1.required_input) = true];
 }
 ```
 
-Envelope: [loyalty_requests.proto](../../../contracts/loyalty/messaging/v1/loyalty_requests.proto), inside `Command.payload`.
+Add the corresponding payload to `Command.payload` in the owner's request
+envelope under `messaging/v1/`. Allocate an unused field number and keep existing
+wire names stable. Existing cases are `place_order = 20`,
+`complete_preparation = 22` and `redeem_reward = 24`; new commands need new numbers.
+The envelope carries target, command identity, expected revision and correlation.
 
-```protobuf source="../../../contracts/loyalty/messaging/v1/loyalty_requests.proto"
-cafe.loyalty.requests.v1.RedeemReward redeem_reward = 24;
-```
+For a private command, define its annotated payload and `CommandEnvelope.command`
+case in the owner's `adaptors/messaging/internal_commands.proto`. Its visibility
+is `PRIVATE`; it uses the durable acceptance/execution path in the
+[private-command recipe](durable-commands.md).
 
-For required scalar input, follow `order_id`: explicit presence plus the
-`required_input` annotation, with the validation schema imported. Preserve existing
-field numbers, names and compatibility. The numbers above belong to the existing
-examples; a new command gets a fresh case number.
-
-## 4. Generate the wire types and routing identifiers
-
-From the repository root, run:
+## 3. Generate the contracts
 
 ```sh
 pnpm generate:contracts
 ```
 
-The [identifier generator](../../../scripts/generate_request_names.py) reads the
-compiled `Command.payload` fields. It derives member names from the context and
-snake_case field name, and routing values from the field's Protobuf JSON name.
-By default, `place_order` has the JSON name `placeOrder`.
-It does not inspect application command classes.
+The [payload generator](../../../scripts/generate_request_payloads.py) reads compiler
+descriptors. It emits Go structs, Python command `TypedDict`s and TypeScript plain
+types without Protobuf imports. Query inputs and their shared pagination type are
+generated by the same pipeline. Commit these outputs with their schema sources.
 
-| Envelope case                      | Generated identifier                      | Routing value         |
-| ---------------------------------- | ----------------------------------------- | --------------------- |
-| Ordering `place_order`             | `OrderingCommandPlaceOrder`               | `placeOrder`          |
-| Preparation `complete_preparation` | `PreparationCommand.COMPLETE_PREPARATION` | `completePreparation` |
-| Loyalty `redeem_reward`            | `LoyaltyCommand.REDEEM_REWARD`            | `redeemReward`        |
+| Language   | Generated payload                     | Generated identifier                      |
+| ---------- | ------------------------------------- | ----------------------------------------- |
+| Go         | `orderingcontracts.PlaceOrderCommand` | `names.OrderingCommandPlaceOrder`         |
+| Python     | `CompletePreparationCommand`          | `PreparationCommand.COMPLETE_PREPARATION` |
+| TypeScript | `RedeemRewardCommand`                 | `LoyaltyCommand.REDEEM_REWARD`            |
 
-### Go output
+The identifier selects a route. The payload type defines the data accepted by the
+handler. Both derive from the schema. `names` and `orderingcontracts` are ordinary
+Go import aliases; Python's `PreparationCommand` is the generated routing enum.
 
-[names.go](../../../services/storefront/contracts/requests/generated/cafe/requests/v1/names.go)
-contains a typed string constant. Its package is imported as `names` in composition.
-
-```go source="../../../services/storefront/contracts/requests/generated/cafe/requests/v1/names.go"
-OrderingCommandPlaceOrder     OrderingCommand = "placeOrder"
-```
-
-### Python output
-
-[request_names.py](../../../services/operations/src/operations/adaptors/generated/request_names.py)
-contains a `StrEnum` of routing names. `PreparationCommand` is that enum;
-`CompletePreparationCommand` is the application DTO written in step 2.
-
-```python source="../../../services/operations/src/operations/adaptors/generated/request_names.py"
-class PreparationCommand(StrEnum):
-    START_PREPARATION = 'startPreparation'
-    COMPLETE_PREPARATION = 'completePreparation'
-```
-
-### TypeScript output
-
-[request-names.ts](../../../services/engagement/src/adaptors/generated/request-names.ts)
-contains the corresponding string enum.
-
-```ts source="../../../services/engagement/src/adaptors/generated/request-names.ts"
-export enum LoyaltyCommand {
-  REDEEM_REWARD = 'redeemReward',
-}
-```
-
-**Checkpoint:** inspect the generated diff for the payload binding, envelope case
-and identifier. Commit generated outputs with their schema sources. Change schema
-sources and rerun generation whenever the published contract changes.
-
-## 5. Write the wire-to-application parser
-
-Create or extend the owning context's messaging adaptor. Import the generated
-payload type and the application DTO, validate boundary input, and return the
-application command. This is handwritten conversion code.
+Generated payload definitions:
 
 ### Go
 
-[ordering_requests.go](../../../services/storefront/contexts/ordering/adaptors/messaging/ordering_requests.go)
-uses `pb` for the generated Ordering payload package and `commands` for the
-application command package:
-
-```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/ordering_requests.go"
-import (
-	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
-	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering"
-)
-```
-
-```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/ordering_requests.go"
-func PlaceOrder(p *pb.PlaceOrder) commands.PlaceOrderCommand {
-	return commands.PlaceOrderCommand{}
+```go source="../../../services/storefront/contracts/requests/model/ordering/payloads_generated.go"
+type PlaceOrderCommand struct {
 }
 ```
 
 ### Python
 
-[ticket_requests.py](../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py)
-imports `CompletePreparation` from the generated `preparation_commands_pb2` module
-and `CompletePreparationCommand` from the application module linked in step 2:
-
-```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
-from google.protobuf.message import Message
+```python source="../../../services/operations/src/operations/contracts/requests/generated/preparation.py"
+class CompletePreparationCommand(TypedDict):
+    """Schema-defined public command payload."""
 ```
-
-```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
-from operations.contexts.preparation.application.commands.complete_preparation import (
-    CompletePreparationCommand,
-)
-from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_commands_pb2 import (
-    StartPreparation,
-    CompletePreparation,
-)
-```
-
-The existing adaptor also handles StartPreparation. Keep the imports needed by
-the parsers in your file, then add the conversion function:
-
-```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
-def complete(value: Message) -> CompletePreparationCommand:
-    if not isinstance(value, CompletePreparation):
-        raise ValueError("Unexpected complete preparation payload")
-    return CompletePreparationCommand()
-```
-
-`CompletePreparationCommand()` creates an empty dictionary with a TypedDict shape.
-The parser's return annotation carries the application type to the registration.
 
 ### TypeScript
 
-[reward-requests.ts](../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-requests.ts)
-uses generated wire types and owner validation helpers:
-
-```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-requests.ts"
-import { identifier } from '../../../../foundation/domain.js';
+```ts source="../../../services/engagement/src/contracts/requests/generated/loyalty.ts"
+export type RedeemRewardCommand = Readonly<{
+  orderId: string;
+}>;
 ```
 
-```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-requests.ts"
-import { record, text } from '../../../../adaptors/messaging/request-values.js';
-import type { loyalty as wire } from '../../../../adaptors/generated/request-types.js';
-```
+## 4. Write the named handler using the generated input
 
-```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-requests.ts"
-export function redeem(value: unknown): { orderId: string } {
-  const fields = record(value);
-  const wire: wire.RedeemReward = { orderId: text(fields.orderId) };
-  return { orderId: identifier(wire.orderId!) };
-}
-```
+Create one handler file under `application/commands/<action>`: snake_case in Go
+and Python, kebab-case in TypeScript. Import the generated type, inject the named
+write repository, load the aggregate, invoke its behaviour and save. The central
+executor supplies the transaction and per-invocation ports.
 
-The returned `{ orderId: string }` is structurally compatible with
-`RedeemRewardCommand`. The current parser writes that shape inline; it does not
-import the type alias. Its `wire` type import is the generated Loyalty namespace,
-while composition's `wire` below is an alias for this handwritten parser module.
-
-**Checkpoint:** test valid input, missing required fields and invalid values.
-The parser produces application input; the aggregate checks lifecycle rules.
-
-## 6. Bind the parser and handler in composition
-
-Use the owning aggregate's existing command registration and transaction. Import
-the generated identifier, the parser module and the concrete handler. The aliases
-below are local import names chosen in these files:
-
-| Composition name            | Meaning and import target                                                                                            |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Go `names`                  | Generated [request identifiers](../../../services/storefront/contracts/requests/generated/cafe/requests/v1/names.go) |
-| Go `rpc`                    | Handwritten [Ordering messaging package](../../../services/storefront/contexts/ordering/adaptors/messaging/)         |
-| Go `orderingcommands`       | Plain [application command package](../../../services/storefront/contexts/ordering/application/commands/)            |
-| Python `PreparationCommand` | Enum from `operations.adaptors.generated.request_names`                                                              |
-| Python `wire`               | `ticket_requests` imported from `operations.contexts.preparation.adaptors.messaging`                                 |
-| TypeScript `LoyaltyCommand` | Enum imported from `../../adaptors/generated/request-names.js`                                                       |
-| TypeScript `wire`           | `import * as wire from '../../contexts/loyalty/adaptors/messaging/reward-requests.js'`                               |
-
-In particular, `rpc.PlaceOrder` is the handwritten function from step 5.
-`pb.PlaceOrder` inside that function is the generated Protobuf message type.
-Go's import alias places the function under `rpc` at this call site.
+These are the complete handlers, including their generated-type imports:
 
 ### Go
 
-Source: [ordering_requests.go](../../../services/storefront/apps/storefront/di/ordering_requests.go).
+```go source="../../../services/storefront/contexts/ordering/application/commands/place_order.go"
+package commands
+
+import (
+	"context"
+	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
+	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+)
+
+// PlaceOrderCommandHandler applies PlaceOrder through one aggregate command transaction.
+type PlaceOrderCommandHandler struct {
+	Repository ports.OrderWriteRepository
+}
+
+func (h PlaceOrderCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ orderingcontracts.PlaceOrderCommand) (a.CommandResult, error) {
+	s, err := h.Repository.Get(ctx, m.Target)
+	if err != nil {
+		return a.CommandResult{}, err
+	}
+	if !s.Exists {
+		return a.CommandResult{}, orderNotFound()
+	}
+	order := s.State
+	if err = order.Place(); err != nil {
+		return a.CommandResult{}, err
+	}
+	if err = h.Repository.Save(ctx, order); err != nil {
+		return a.CommandResult{}, err
+	}
+	return a.Result("placed"), nil
+}
+```
+
+### Python
+
+```python source="../../../services/operations/src/operations/contexts/preparation/application/commands/complete_preparation.py"
+from operations.contracts.requests.generated.preparation import CompletePreparationCommand
+from operations.foundation.write_repository import CommandResult, CommandContext
+from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
+from operations.foundation.domain import Rejection
+
+
+class CompletePreparationCommandHandler:
+    """Completes one ticket and records the outgoing preparation fact atomically."""
+
+    def __init__(self, repository: TicketWriteRepository) -> None:
+        self.repository = repository
+
+    def execute(self, context: CommandContext, command: CompletePreparationCommand) -> CommandResult:
+        loaded = self.repository.get(context.target)
+        state = loaded["state"] if loaded else None
+        if state is None:
+            raise Rejection("not_found", "The preparation ticket does not exist")
+        ticket = state
+        ticket.complete()
+        self.repository.save(ticket)
+        return CommandResult("ready")
+```
+
+### TypeScript
+
+```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
+import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
+import { Rejection } from '../../../../foundation/domain.js';
+import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
+import type { CommandContext } from '../../../../foundation/write-repository.js';
+import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
+import { ApplicationError } from '../../../../foundation/application.js';
+
+/** Applies the reward redemption rule using the injected clock and one aggregate transaction. */
+export class RedeemRewardCommandHandler {
+  constructor(
+    private repository: RewardWriteRepository,
+    private realtime: RealtimeBusPort<RealtimeEvent>,
+    private clock: () => Date,
+  ) {}
+  async execute(context: CommandContext, command: RedeemRewardCommand) {
+    try {
+      const loaded = await this.repository.get(context.target);
+      if (!loaded) throw new RewardNotFoundApplicationError();
+      const reward = loaded.state;
+      reward.redeem(command.orderId, this.clock());
+      await this.repository.save(reward);
+      await this.realtime.publish({ snapshot: reward.snapshot() });
+      return { status: 'redeemed' };
+    } catch (error) {
+      if (error instanceof Rejection) await this.realtime.publish({ rejection: error.outcome() });
+      throw error;
+    }
+  }
+}
+
+/** Reports the expected rejection when the targeted reward has no stored state. */
+export class RewardNotFoundApplicationError extends ApplicationError {
+  constructor() {
+    super('not_found', 'The reward does not exist');
+  }
+}
+```
+
+The [command-handler recipe](command-handlers.md) explains missing roots, creation,
+expected rejections and repository injection. Select browser publication explicitly
+through `RealtimeBusPort`; the [realtime recipe](realtime-events.md) describes the
+command and subscriber transaction choices.
+
+## 5. Use the generated mapping and retain semantic validation
+
+Go's [generated owner mappings](../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go)
+include `PlaceOrder`. The request registry validates presence and transport
+metadata before conversion. Python's [generated mappings](../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/generated/request_payloads.py)
+include `complete_preparation`; the owner `wire.complete` function delegates to it.
+TypeScript's [generated parsers](../../../services/engagement/src/contexts/loyalty/adaptors/messaging/generated/request-payloads.ts)
+include `parseRedeemRewardCommand`; the owner `redeem` wrapper validates the order UUID.
+
+Generated code copies fields and preserves optional presence. Owner adaptors retain
+semantic checks, such as UUID authority, valid grant terms and receipt identities.
+Aggregates retain business invariants. A separate handwritten input is justified
+only by an explicit semantic translation between contracts and a different use case.
+
+## 6. Register the identifier, mapping and handler together
+
+Configure the aggregate transaction once. Bind the named repository and handler
+factory through the shared registration API. Existing registration calls:
+
+### Go
 
 ```go source="../../../services/storefront/apps/storefront/di/ordering_requests.go"
-	registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
+registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
 		return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 	})
 ```
 
 ### Python
 
-Source: [preparation.py](../../../services/operations/src/operations/apps/composition/preparation.py).
-
 ```python source="../../../services/operations/src/operations/apps/composition/preparation.py"
-    commands.request(
+commands.request(
         registry,
         PreparationCommand.COMPLETE_PREPARATION,
         wire.complete,
@@ -316,8 +267,6 @@ Source: [preparation.py](../../../services/operations/src/operations/apps/compos
 ```
 
 ### TypeScript
-
-Source: [loyalty.ts](../../../services/engagement/src/apps/composition/loyalty.ts).
 
 ```ts source="../../../services/engagement/src/apps/composition/loyalty.ts"
 c.rewardCommands.request(
@@ -328,87 +277,29 @@ c.rewardCommands.request(
 );
 ```
 
-These statements belong inside the existing request-registration functions.
-Go's `commands` is created with `registration.New(r, transaction)`; Python's
-`commands` is resolved from `container.commands()`; TypeScript's `rewardCommands`
-is constructed with `new CommandRegistration(c.rewardTransaction)`. See the
-[transaction bindings](dependency-injection.md#configure-one-aggregate-transaction).
-For a command on an existing root, reuse that registration. Resolve any additional
-handler dependency at startup and capture it in the factory, as the TypeScript
-example does with `clock`.
+`rpc.PlaceOrder` is a generated function in the owner messaging package.
+Its return type is `orderingcontracts.PlaceOrderCommand`, matching the handler's
+`Execute` parameter. Python and TypeScript retain small owner validation wrappers
+around generated parsers. The registration connects these types; a class name
+alone never installs a consumer.
 
-The three roles in each registration are **routing identifier → parser → handler
-factory**. At runtime the registry selects the identifier and calls the parser;
-the executor opens the transaction and supplies the factory with its repository
-and invocation-scoped realtime bus. The constructed handler receives the parser's result in `execute` / `Execute`.
+## 7. Expose the public capability and verify it
 
-| Language   | Parser result passed to the handler                                                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------------ |
-| Go         | `rpc.PlaceOrder` returns `commands.PlaceOrderCommand`; `PlaceOrderCommandHandler.Execute` accepts it         |
-| Python     | `wire.complete` returns `CompletePreparationCommand`; `CompletePreparationCommandHandler.execute` accepts it |
-| TypeScript | `wire.redeem` returns the `RedeemRewardCommand` shape; `RedeemRewardCommandHandler.execute` accepts it       |
+For a browser/API capability, add its owner OpenAPI operation and explicit API
+[contract mapping](../../../services/api/adaptors/http/backend/contract_mappings.json).
+Run generation again. Bind owner dependencies before workers start; use the
+generated frontend operation client for the HTTP request.
 
-The application DTO is therefore connected through the parser output and handler
-input types. Each registration supplies an explicit factory; the Python lambda
-constructs its handler with only the repository because this use case delegates
-realtime publication to a domain-event subscriber. Registration resolves the
-handler from this declaration. Static checks cover parser/handler compatibility; a dispatch test must
-also prove that the selected wire case reaches the intended behaviour.
+Public visibility grants no blanket caller access. The API's declared contract
+selection and owner/private delivery paths determine the generated broker
+permissions. A private payload in the public request envelope fails generation.
+See [broker authority](../../broker-permissions.md).
 
-## 7. Expose an HTTP operation when required
+Test required and optional inputs, explicit zero values, business outcomes,
+identical retries and expected-version conflicts. Private commands also need their
+historical encoded-byte fixture and durable hand-off tests. Run the owning
+`pnpm test:focused <service> --context <context>`, then `pnpm check --changed`,
+`pnpm verify` and `pnpm test:integration`.
 
-For an API-callable command, add the operation and request schema to the owner's
-HTTP contract: [Ordering](../../../contracts/ordering/http_api/orders.paths.json),
-[Preparation](../../../contracts/preparation/http_api/tickets.paths.json) or
-[Loyalty](../../../contracts/loyalty/http_api/rewards.paths.json), plus that directory's
-`schemas.json`. Preserve the existing command metadata/reply conventions.
-
-Add its operation ID, Protobuf message and payload field mapping to
-[contract_mappings.json](../../../services/api/adaptors/http/backend/contract_mappings.json).
-The existing `redeemReward` entry maps HTTP `orderId` to Protobuf `orderId`;
-`placeOrder` and `completePreparation` have empty payload field maps.
-Run `pnpm generate:contracts` again to update HTTP, API mapping and client outputs.
-Implement any new translation behaviour in the API's [HTTP backend](../../../services/api/adaptors/http/backend/).
-Owner services expose commands over messaging; business HTTP routes belong in the API.
-
-A browser feature then calls the generated operation client and uses the existing
-[command recovery and realtime flow](../../../CLIENT-SUBSCRIPTIONS.md). A new action
-on an existing aggregate can reuse its current projection contract. If the view
-changes, update that contract and its mappings as part of the feature.
-
-## 8. Prove the whole connection
-
-Add domain/handler tests for success, invalid state and missing targets. Extend a
-production-composition dispatch test using a generated request and a test
-transaction. Assert the parsed input, selected aggregate, saved state, outcome,
-metadata and expected private facts. Test malformed input and expected-version
-conflicts. Use these existing tests as templates:
-
-- Go: [menu_requests_test.go](../../../services/storefront/apps/storefront/di/menu_requests_test.go).
-- Python: [test_command_registration.py](../../../services/operations/tests/test_command_registration.py).
-- TypeScript: [command-registration.test.ts](../../../services/engagement/src/apps/command-registration.test.ts).
-
-Add the business scenario/native binding and update the context's navigation and
-catalogue where needed. For an HTTP operation, extend API translation and live
-operation tests. Run the appropriate owner lane, then the repository gates:
-
-```sh
-pnpm test:focused storefront --context ordering
-# Or: pnpm test:focused operations --context preparation
-# Or: pnpm test:focused engagement --context loyalty
-pnpm check --changed
-pnpm verify
-pnpm test:integration
-```
-
-The recipe is complete when a real boundary request reaches the concrete handler,
-commits the expected state and returns its recorded outcome. An identical retry
-retains the same command identity, input and expected revision. Infrastructure
-checks establish rollback and lost-reply recovery; record executed evidence in
-[verification](../../verification.md).
-
-## Related concepts
-
-[Command handlers](command-handlers.md) · [Application layer](application-layer.md) · [Contracts and generation](contracts-and-generation.md) · [Durable commands](durable-commands.md)
-
-[Concept catalogue](index.md) · [Learning path](../index.md)
+Continue with [aggregates](aggregates.md), [write repositories](write-repositories.md),
+[domain events](domain-events.md) and the [end-to-end recipe](../end-to-end-recipe.md).

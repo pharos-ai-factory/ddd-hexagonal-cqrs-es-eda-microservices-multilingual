@@ -1,10 +1,9 @@
+import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import { Rejection } from '../../../../foundation/domain.js';
 import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { ApplicationError } from '../../../../foundation/application.js';
-
-export type RedeemRewardCommand = { orderId: string };
 
 /** Applies the reward redemption rule using the injected clock and one aggregate transaction. */
 export class RedeemRewardCommandHandler {

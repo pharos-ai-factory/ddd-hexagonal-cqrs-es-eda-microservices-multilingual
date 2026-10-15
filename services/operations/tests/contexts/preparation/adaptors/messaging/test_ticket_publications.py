@@ -7,9 +7,9 @@ from operations.adaptors.messaging.event_codec import decode, encode
 from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
 from operations.contexts.preparation.application.commands.complete_preparation import (
-    CompletePreparationCommand,
     CompletePreparationCommandHandler,
 )
+from operations.contracts.requests.generated.preparation import CompletePreparationCommand
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketState
 from operations.foundation.application import Loaded, Metadata
 from operations.foundation.write_repository import CommandContext

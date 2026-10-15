@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!cafe/requests/v1/validation.proto\x12\x10\x63\x61\x66\x65.requests.v1\x1a google/protobuf/descriptor.proto:7\n\x0erequired_input\x12\x1d.google.protobuf.FieldOptions\x18\xb9\x8e\x03 \x01(\x08\x42\xa6\x01Z\xa3\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared;sharedv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!cafe/requests/v1/validation.proto\x12\x10\x63\x61\x66\x65.requests.v1\x1a google/protobuf/descriptor.proto\"R\n\x0fRequestContract\x12\r\n\x05owner\x18\x01 \x01(\t\x12\x30\n\nvisibility\x18\x02 \x01(\x0e\x32\x1c.cafe.requests.v1.Visibility*A\n\nVisibility\x12\x1a\n\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\n\n\x06PUBLIC\x10\x01\x12\x0b\n\x07PRIVATE\x10\x02:7\n\x0erequired_input\x12\x1d.google.protobuf.FieldOptions\x18\xb9\x8e\x03 \x01(\x08:V\n\x08\x63ontract\x12\x1f.google.protobuf.MessageOptions\x18\xba\x8e\x03 \x01(\x0b\x32!.cafe.requests.v1.RequestContractB\xa6\x01Z\xa3\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared;sharedv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,4 +33,8 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.requests.v1.validation
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\243\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared;sharedv1'
+  _globals['_VISIBILITY']._serialized_start=173
+  _globals['_VISIBILITY']._serialized_end=238
+  _globals['_REQUESTCONTRACT']._serialized_start=89
+  _globals['_REQUESTCONTRACT']._serialized_end=171
 # @@protoc_insertion_point(module_scope)

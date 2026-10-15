@@ -1,13 +1,7 @@
+from operations.contracts.requests.generated.preparation import CompletePreparationCommand
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
-from typing import TypedDict
 from operations.foundation.domain import Rejection
-
-
-class CompletePreparationCommand(TypedDict):
-    """Requests completion of the targeted preparation ticket."""
-
-    pass
 
 
 class CompletePreparationCommandHandler:

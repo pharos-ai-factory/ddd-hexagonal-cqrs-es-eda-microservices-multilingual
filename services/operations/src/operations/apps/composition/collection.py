@@ -21,10 +21,8 @@ from operations.contexts.collection.adaptors.messaging import pickup_requests as
 from operations.contexts.collection.adaptors.messaging.drinks_ready_subscription import DRINKS_READY
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
-from operations.contexts.collection.application.commands.open_pickup import (
-    OpenPickupCommand,
-    OpenPickupCommandHandler,
-)
+from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommandHandler
+from operations.contracts.requests.generated.collection import OpenPickupCommand
 from operations.contexts.collection.application.commands.collect_order import CollectOrderCommandHandler
 from operations.contexts.collection.application.event_handlers.drinks_ready import (
     DrinksReadyIntegrationEventHandler,

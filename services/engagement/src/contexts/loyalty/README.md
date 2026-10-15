@@ -10,6 +10,7 @@ A loyalty account earns each third-collection grant; a reward independently cont
 
 - [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
+- [Generated command/query payloads](../../contracts/requests/generated/loyalty.ts)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
 - [Generated command and query identifiers](../../adaptors/generated/request-names.ts)
@@ -31,7 +32,8 @@ A loyalty account earns each third-collection grant; a reward independently cont
 ## Follow a use case
 
 Start with the named file in `application/commands/` or `application/queries/`.
-The DTO and handler live together. Follow the injected application port to the
+The handler imports its plain input from the schema-generated request contracts.
+Change command/query fields in Protobuf and run `pnpm generate:contracts` first. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
 The composition module pairs command names/codecs with concrete handler factories.
 Its aggregate registration helper supplies the executor internally.

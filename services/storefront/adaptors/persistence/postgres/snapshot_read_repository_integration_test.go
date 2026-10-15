@@ -37,10 +37,10 @@ func TestQueriesTraverseMoreThanOnePageAndRetainUnpaginatedReads(t *testing.T) {
 		if page.NextID == "" {
 			break
 		}
-		if page.NextID <= request.After {
+		if request.After != nil && page.NextID <= *request.After {
 			t.Fatal("cursor did not advance")
 		}
-		request.After = page.NextID
+		request.After = &page.NextID
 	}
 	if !reflect.DeepEqual(all, combined) {
 		t.Fatal("pagination lost, repeated or reordered rows")

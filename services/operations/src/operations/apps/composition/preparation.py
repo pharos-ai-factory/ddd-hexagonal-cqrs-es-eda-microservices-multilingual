@@ -28,10 +28,8 @@ from operations.contexts.preparation.adaptors.messaging import ticket_requests a
 from operations.contexts.preparation.adaptors.messaging.order_placed_subscription import ORDER_PLACED
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.adaptors.persistence.command_outbox import PostgresDurableCommandOutbox
-from operations.contexts.preparation.application.commands.accept_order import (
-    AcceptOrderCommand,
-    AcceptOrderCommandHandler,
-)
+from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommandHandler
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.contexts.preparation.application.commands.start_preparation import (
     StartPreparationCommandHandler,
 )

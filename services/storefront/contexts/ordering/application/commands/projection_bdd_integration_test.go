@@ -9,6 +9,7 @@ import (
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/command"
 	orderpg "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/persistence/postgres"
 	orderingports "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	"os"
 	"reflect"
 	"testing"
@@ -30,7 +31,7 @@ type projectionWorld struct {
 	evidence    *pgxpool.Pool
 	menus       *pg.ProjectionStore[model.MenuPublishedIntegrationEvent]
 	m           a.Metadata
-	input       orderingcommands.CreateOrderCommand
+	input       orderingcontracts.CreateOrderCommand
 	first, last a.Outcome
 	original    a.Loaded[d.OrderState]
 }
@@ -105,7 +106,7 @@ func TestProjectionRecoveryFeatures(t *testing.T) {
 				zero := uint64(0)
 				*w = projectionWorld{db: db, evidence: evidence, menus: pg.Project[model.MenuPublishedIntegrationEvent](db, "menu-directory"),
 					m:     a.Metadata{ID: pg.NewID(), AggregateID: pg.NewID(), Name: "create-order", CorrelationID: pg.NewID(), ExpectedVersion: &zero},
-					input: orderingcommands.CreateOrderCommand{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
+					input: orderingcontracts.CreateOrderCommand{CustomerID: pg.NewID(), EditionID: pg.NewID()}}
 				return ctx, nil
 			})
 			sc.Step(`^a published menu has not reached Ordering$`, func() error {

@@ -12,7 +12,7 @@ from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription
 from operations.apps.composition.collection import CollectionContainer, requests
 from operations.apps.composition.preparation import PreparationContainer, subscriptions
 from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketSnapshot
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications

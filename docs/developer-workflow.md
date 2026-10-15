@@ -95,13 +95,13 @@ through the shared command registration API, naming the command and plain handle
 factory together. Its internal executor supplies the repository and owns transaction
 and delivery bookkeeping. A projection reaction updates read data without changing a root.
 
-Every context puts commands in `application/commands/`, with one command DTO and
-its matching handler in the same file. Name the file after the business action:
+Every context puts command handlers in `application/commands/`. Each imports its
+plain command payload from the schema-generated service-local request contracts. Name the file after the business action:
 Go and Python use `create_order.go` / `accept_order.py`; TypeScript uses
 `credit-collection.ts`. Import the concrete command package or module directly.
 Shared errors and event DTOs have their own files. Event reactions and query
 handlers remain separate from command execution. Queries use `application/queries/`,
-with one named query DTO and matching handler per file. Their named read repository ports
+with one handler per file importing its schema-generated query input. Their named read repository ports
 and read models live in `application/ports/` and `readmodels/` (Go), `read_models/`
 (Python) or `read-models/` (TypeScript). Each event reaction has its own module in
 `event_handlers/` (Python), `event-handlers/` (TypeScript) or `projections/` (Go's
@@ -129,17 +129,19 @@ field numbers or silently register unfinished policy.
 The [command recipe](education/concepts/commands.md) shows the exact schema,
 generated identifier, parser and registration for each language.
 
-1. Add the named command DTO and handler together in
+1. Define the command payload in `contracts/ordering/messaging/commands/v1/`,
+   including `owner: "ordering"` and `visibility: PUBLIC`, and add its case in
+   `Command.payload` under `contracts/ordering/messaging/v1/`.
+2. Run `pnpm generate:contracts`. Inspect the plain input under
+   `services/storefront/contracts/requests/model/ordering/`, the wire bindings,
+   typed identifier and generated owner input mapping.
+3. Import that generated input into the handler in
    `services/storefront/contexts/ordering/application/commands/cancel_order.go`.
-   Use `package commands`; follow `change_quantity.go` for the load, mutate and save flow.
-2. Implement and test the root behaviour in `domain/order.go`. Use `OrderWriteRepository` to load the root, call its method and save it.
-   The aggregate records facts; the owner publication mapper selects outgoing messages.
-3. Add the published payload in `contracts/ordering/messaging/commands/v1/`
-   and its `Command.payload` case in `contracts/ordering/messaging/v1/`.
-   Run `pnpm generate:contracts` to produce the wire types and routing identifier.
-4. Write the owner parser in `contexts/ordering/adaptors/messaging/ordering_requests.go`.
-   It accepts the generated payload and returns the application command.
-5. Register the generated command name, owner parser and handler factory together in
+   Use `package commands`; follow `change_quantity.go` for load, mutate and save.
+4. Implement and test the root behaviour in `domain/order.go`. Use `OrderWriteRepository`
+   to load the root, call its method and save it. Keep additional semantic input
+   validation in a handwritten owner wrapper around the generated mapping.
+5. Register the generated command name, input mapping and handler factory together in
    `apps/storefront/di/ordering_requests.go` with `registration.Register`. The
    aggregate registry supplies its transaction and invocation-scoped repository.
    Use `RegisterProjection` when immutable projection data must be prepared first.
@@ -168,14 +170,15 @@ generator and run `pnpm generate:contracts` when extending that catalogue.
 
 ## Python: add a Preparation command or subscription
 
-1. Add a TypedDict command and named handler together in Preparation's
-   `application/commands/<action>.py` module.
+1. Define the command payload and envelope case in Preparation's Protobuf schema,
+   declaring its owner and visibility. Generate the plain TypedDict, then import it
+   into the named handler in `application/commands/<action>.py`.
    Inject `TicketWriteRepository`; load the root, invoke its behaviour and save it.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
 3. For a published command, add its payload and `Command.payload` case under
    `contracts/preparation/messaging/`, then run `pnpm generate:contracts`.
-   Write its parser in `adaptors/messaging/ticket_requests.py`; import the generated
-   payload and return the application TypedDict. See the [complete recipe](education/concepts/commands.md).
+   Use its generated input mapper in `adaptors/messaging/generated/request_payloads.py`.
+   Add owner semantic validation in `ticket_requests.py` when needed. See the [complete recipe](education/concepts/commands.md).
 4. In `apps/composition/preparation.py`, use the configured aggregate registration:
    `commands.request(registry, PreparationCommand.START_PREPARATION, wire.start, StartPreparationCommandHandler)`.
    The shared helper creates the executor and supplies each invocation's repository.
@@ -195,14 +198,15 @@ It receives no Pika connection or SQL transaction.
 
 ## TypeScript: add a Loyalty command or subscription
 
-1. Add the command DTO and plain handler together under Loyalty's
-   `application/commands/<action>.ts`. Follow `credit-collection.ts`; its
+1. Define the command payload and envelope case in Loyalty's Protobuf schema,
+   declaring its owner and visibility. Generate the plain type, then import it
+   into the handler under `application/commands/<action>.ts`. Follow `credit-collection.ts`; its
    constructor receives application ports.
 2. Implement the aggregate rule and its domain test.
 3. For a published command, add its payload and `Command.payload` case under
    `contracts/loyalty/messaging/`, then run `pnpm generate:contracts`.
-   Write its parser in `adaptors/messaging/reward-requests.ts`; validate the wire
-   input and return the application command shape. See the [complete recipe](education/concepts/commands.md).
+   Use its generated parser in `adaptors/messaging/generated/request-payloads.ts`.
+   Retain owner semantic validation in `reward-requests.ts`. See the [complete recipe](education/concepts/commands.md).
 4. Extend `LoyaltyDependencies` and the explicit Awilix factory in
    `apps/composition/loyalty.ts` for any new dependency. Register the command name,
    parser and handler factory together through `c.rewardCommands.request(...)`
@@ -269,7 +273,7 @@ to obtain the receipt before starting the aggregate transaction. See
 
 ## Add or change a query
 
-1. Define its input and handler in the owning `application/queries/` file.
+1. Define its Protobuf input and envelope case with owner and public visibility; generate the input type and parser, then import the plain type into the owning `application/queries/` handler.
 2. Select the required fields in an application read model and name the read repository
    capability. Keep aggregate snapshots inside command/persistence code.
 3. Implement the read repository under the context's persistence adaptor, validating stored
@@ -423,3 +427,7 @@ A saved root produces no browser message unless application code selects it.
 Event-driven refreshes publish the owner view's actual revision. Expected business
 rejections may publish a matching typed outcome; technical failures remain retryable.
 See [decision 0026](decisions/0026-explicit-bus-ports-and-realtime-publication.md).
+
+Command and query payloads are schema-generated plain contracts. Declare owner and
+visibility in Protobuf; generate types and mechanical mappings, then implement
+handlers and semantic validation. See [decision 0028](decisions/0028-schema-generated-command-and-query-inputs.md).

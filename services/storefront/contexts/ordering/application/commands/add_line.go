@@ -5,17 +5,10 @@ import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/domain"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
-
-// AddLineCommand expresses the owner AddLine use case independently of transport.
-type AddLineCommand struct {
-	LineID    string `json:"lineId"`
-	EditionID string `json:"editionId"`
-	OfferCode string `json:"offerCode"`
-	Quantity  int    `json:"quantity"`
-}
 
 // AddLineCommandHandler applies AddLine through one aggregate command transaction.
 type AddLineCommandHandler struct {
@@ -24,7 +17,7 @@ type AddLineCommandHandler struct {
 	Menus      a.ProjectionPort[model.MenuPublishedIntegrationEvent]
 }
 
-func (h AddLineCommandHandler) Execute(ctx context.Context, m a.CommandContext, c AddLineCommand) (a.CommandResult, error) {
+func (h AddLineCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.AddLineCommand) (a.CommandResult, error) {
 	menu, found, err := h.Menus.Find(ctx, c.EditionID)
 	if err != nil {
 		return a.CommandResult{}, err

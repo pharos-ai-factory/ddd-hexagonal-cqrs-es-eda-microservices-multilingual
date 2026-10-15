@@ -1,12 +1,12 @@
 import { LoyaltyPrivateCommand, LoyaltySubscription } from '../../../../adaptors/generated/message-names.js';
-import { fields } from './command-fields.js';
+import { parseCreditCollectionCommand } from './generated/request-payloads.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
 import { identifier } from '../../../../foundation/domain.js';
 
 import schema from './generated/internal_commands.json' with { type: 'json' };
 
-import type { CreditCollectionCommand } from '../../application/commands/credit-collection.js';
+import type { CreditCollectionCommand } from '../../../../contracts/requests/generated/loyalty.js';
 
 export const creditCodec = () =>
   new InternalCommandCodec(
@@ -15,7 +15,9 @@ export const creditCodec = () =>
     LoyaltyPrivateCommand.CREDIT_COLLECTION,
     schema,
     (value): CreditCollectionCommand => {
-      const p = fields(value);
-      return { orderId: identifier(String(p.orderId)), customerId: identifier(String(p.customerId)) };
+      const command = parseCreditCollectionCommand(value);
+      identifier(command.orderId);
+      identifier(command.customerId);
+      return command;
     },
   );

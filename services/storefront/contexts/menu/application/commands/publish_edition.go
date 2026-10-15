@@ -3,12 +3,10 @@ package commands
 import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
+	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
-
-// PublishEditionCommand expresses the owner use case independently of its transport.
-type PublishEditionCommand struct{}
 
 // PublishEditionCommandHandler applies PublishEdition through one aggregate command transaction.
 type PublishEditionCommandHandler struct {
@@ -16,7 +14,7 @@ type PublishEditionCommandHandler struct {
 	Repository ports.EditionWriteRepository
 }
 
-func (h PublishEditionCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ PublishEditionCommand) (a.CommandResult, error) {
+func (h PublishEditionCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ menucontracts.PublishEditionCommand) (a.CommandResult, error) {
 	s, err := h.Repository.Get(ctx, m.Target)
 	if err != nil {
 		return a.CommandResult{}, err

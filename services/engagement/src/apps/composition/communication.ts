@@ -30,14 +30,10 @@ import { PostgresDurableCommandOutbox } from '../../adaptors/persistence/command
 import { HttpNotificationDelivery } from '../../contexts/communication/adaptors/delivery/http-notification-delivery.js';
 import { secret } from '../../foundation/secrets.js';
 import { derivedId } from '../../foundation/identity.js';
-import {
-  RequestNotificationCommandHandler,
-  type RequestNotificationCommand,
-} from '../../contexts/communication/application/commands/request-notification.js';
-import {
-  DeliverNotificationCommandHandler,
-  type DeliverNotificationCommand,
-} from '../../contexts/communication/application/commands/deliver-notification.js';
+import { RequestNotificationCommandHandler } from '../../contexts/communication/application/commands/request-notification.js';
+import type { RequestNotificationCommand } from '../../contracts/requests/generated/communication.js';
+import { DeliverNotificationCommandHandler } from '../../contexts/communication/application/commands/deliver-notification.js';
+import type { DeliverNotificationCommand } from '../../contracts/requests/generated/communication.js';
 import { PickupOpenedIntegrationEventHandler } from '../../contexts/communication/application/event-handlers/pickup-opened.js';
 import { RewardIssuedIntegrationEventHandler } from '../../contexts/communication/application/event-handlers/reward-issued.js';
 import { NotificationRequestedDomainEventHandler } from '../../contexts/communication/application/event-handlers/notification-requested.js';

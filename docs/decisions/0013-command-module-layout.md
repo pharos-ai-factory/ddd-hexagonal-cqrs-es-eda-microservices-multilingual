@@ -1,5 +1,9 @@
 # 0013 — One command and handler per use-case file
 
+Refined by [decision 0028](0028-schema-generated-command-and-query-inputs.md):
+command/query payload types and mechanical input mappings are generated from
+annotated owner Protobuf schemas; handlers import the generated plain contracts.
+
 Status: accepted, 9 October 2026. Extends decisions 0011 and 0012.
 
 ## Decision

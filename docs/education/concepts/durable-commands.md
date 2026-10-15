@@ -6,8 +6,8 @@ responsibility before acknowledging the incoming event.
 
 ## Creation recipe
 
-1. Define the target owner command/handler and its invariant, aggregate and permitted pending state.
-2. Add the private command payload/envelope in the owner's `internal_commands.proto`, then implement its typed codec and semantic validation with compatibility fixtures.
+1. Name the target command, invariant, aggregate and permitted pending state.
+2. Declare the command payload in the owner's `internal_commands.proto` with its `owner` and `visibility: PRIVATE`; add its envelope case. Run generation for its plain input and mechanical mappings. Implement the owner codec's semantic validation and compatibility fixtures.
 3. Inject `CommandBusPort` into the event reaction and explicitly map the fact into the owner DTO. Choose stable target/command identities; correlation groups a workflow and does not deduplicate it.
 4. Declare the source event, stable subscription identity and private command in `subscriptions.json`. Run `pnpm generate:contracts` for generated identifiers and topology.
 5. Bind the concrete durable command outbox, reaction and plain command handler through the shared paired-consumer helper. Preserve separate event-acceptance and command-execution transactions.
@@ -78,9 +78,9 @@ Collection owns physical handover. Ordering records that fact on its existing ro
 A completed Pickup with `Order.collectionRecorded == false` is an allowed pending
 state while the private command awaits execution.
 
-### 1. Create the command and invariant
+### 1. Name the invariant and handler behaviour
 
-Follow [record_collection.go](../../../services/storefront/contexts/ordering/application/commands/record_collection.go).
+After generating the contract in step 2, follow [record_collection.go](../../../services/storefront/contexts/ordering/application/commands/record_collection.go).
 Inject `OrderWriteRepository` and `RealtimeBusPort`, load the target, call
 `Order.RecordCollection(customerID)`, save a changed root and explicitly publish
 its snapshot. The aggregate requires a placed order and matching customer.
@@ -88,7 +88,7 @@ Repeated collection facts produce no new revision, fact or browser publication.
 Missing order authority is retryable; a mismatched customer is a recorded rejection.
 
 ```go source="../../../services/storefront/contexts/ordering/application/commands/record_collection.go"
-func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.CommandContext, c RecordCollectionCommand) (a.CommandResult, error) {
+func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.RecordCollectionCommand) (a.CommandResult, error) {
 	loaded, err := h.Repository.Get(ctx, m.Target)
 	if err != nil {
 		return a.CommandResult{}, err
@@ -116,6 +116,8 @@ func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.Command
 
 Add the payload and `CommandEnvelope.command` oneof case in
 [internal_commands.proto](../../../services/storefront/contexts/ordering/adaptors/messaging/internal_commands.proto).
+Declare `owner: "ordering"` and `visibility: PRIVATE`, then run `pnpm generate:contracts`.
+Import `RecordCollectionCommand` from the [generated plain contracts](../../../services/storefront/contracts/requests/model/ordering/payloads_generated.go).
 Use a new field number. The shared envelope fields retain the source receipt and
 command identity. This format belongs to Ordering's adaptor and is separate from
 the API's published request envelope.
@@ -131,12 +133,14 @@ message CommandEnvelope {
  bytes receipt_material = 7;
  oneof command { RecordCollectionCommand record_collection = 10; }
 }
-message RecordCollectionCommand { string customer_id = 1; }
+message RecordCollectionCommand {
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PRIVATE };
+  string customer_id = 1; }
 ```
 
 Implement `Encode` and `Decode` in
 [RecordCollectionCodec](../../../services/storefront/contexts/ordering/adaptors/messaging/record_collection_codec.go).
-They map Protobuf to the plain command, validate UUIDs, subscription ownership,
+They call generated payload mappings and validate UUIDs, subscription ownership,
 the source hash and original receipt JSON. `ID` must equal
 `DerivedID(consumer, sourceEventID)`; `CausationID` retains that source event.
 Keep a historical hex fixture and native round-trip/invalid-envelope tests.
@@ -167,16 +171,16 @@ is selected explicitly in composition; the generated string alone cannot select 
 ```go source="../../../services/storefront/contexts/ordering/application/eventhandlers/order_collected.go"
 // OrderCollectedIntegrationEventHandler durably requests an owner transition before acknowledging the fact.
 type OrderCollectedIntegrationEventHandler struct {
-	Commands a.CommandBusPort[commands.RecordCollectionCommand]
+	Commands a.CommandBusPort[orderingcontracts.RecordCollectionCommand]
 }
 
 func (h OrderCollectedIntegrationEventHandler) Handle(ctx context.Context, m a.Metadata, event model.OrderCollectedIntegrationEvent) (a.Outcome, error) {
-	return h.Commands.Enqueue(ctx, m, commands.RecordCollectionCommand{CustomerID: event.CustomerID})
+	return h.Commands.Enqueue(ctx, m, orderingcontracts.RecordCollectionCommand{CustomerID: event.CustomerID})
 }
 ```
 
 The Fx provider in [ordering.go](../../../services/storefront/apps/storefront/di/ordering.go)
-injects `store.NewCommandOutbox[commands.RecordCollectionCommand](database, codec)`.
+injects `store.NewCommandOutbox[orderingcontracts.RecordCollectionCommand](database, codec)`.
 The target is `event.OrderID`; the source envelope's aggregate is a Pickup, so
 using its aggregate ID would target the wrong root.
 

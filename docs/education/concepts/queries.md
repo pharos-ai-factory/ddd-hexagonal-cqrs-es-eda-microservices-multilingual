@@ -14,6 +14,7 @@ validate their business meaning in the owner input mapper.
 
 ```proto source="../../../contracts/ordering/messaging/queries/v1/ordering_queries.proto"
 message GetOrder {
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC };
   string id = 1;
 }
 ```
@@ -22,6 +23,7 @@ message GetOrder {
 
 ```proto source="../../../contracts/preparation/messaging/queries/v1/preparation_queries.proto"
 message GetTicket {
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
   string id = 1;
 }
 ```
@@ -30,6 +32,7 @@ message GetTicket {
 
 ```proto source="../../../contracts/loyalty/messaging/queries/v1/loyalty_queries.proto"
 message GetReward {
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
   string id = 1;
 }
 ```
@@ -47,10 +50,11 @@ The existing examples are:
 | Python     | [preparation_requests.proto](../../../contracts/preparation/messaging/v1/preparation_requests.proto) | `get_ticket` | `ticket`     |
 | TypeScript | [loyalty_requests.proto](../../../contracts/loyalty/messaging/v1/loyalty_requests.proto)             | `get_reward` | `reward`     |
 
-## 3. Generate wire types and routing identifiers
+## 3. Generate plain query inputs, wire types and routing identifiers
 
-Run `pnpm generate:contracts`. The generator reads the query envelope's oneof
-members. `QueryBusPort` dispatches the resulting application query after parsing;
+Run `pnpm generate:contracts`. Declare `owner` and `visibility: PUBLIC` on the
+query payload. The generator reads its fields and the query envelope's oneof
+members, producing the plain query input and its mechanical parser. `QueryBusPort` dispatches the resulting application query after parsing;
 transport registration still uses the generated routing identifier.
 
 | Language   | Generated identifier          | Import source                                                                                       |
@@ -60,13 +64,13 @@ transport registration still uses the generated routing identifier.
 | TypeScript | `LoyaltyQuery.GET_REWARD`     | [request-names.ts](../../../services/engagement/src/adaptors/generated/request-names.ts)            |
 
 `names` is a Go import alias. `PreparationQuery` and `LoyaltyQuery` are generated
-routing enums. Creating an application query class does not add an envelope member
-or a routing identifier; these are separate steps.
+routing enums. The plain query class is generated from that same schema. The handler imports
+it; changing the schema and regenerating updates every field and conversion.
 
-## 4. Create the input and named query handler
+## 4. Import the generated input into a named query handler
 
-Create `application/queries/<question>` in the owner. Keep the DTO and handler
-together. Inject the named read repository; return its application view, revision
+Create the handler in `application/queries/<question>` in the owner. Import its
+plain input from the service-local generated request contracts. Inject the named read repository; return its application view, revision
 and missing-resource result. These complete files show the boundary:
 
 ### Go
@@ -80,16 +84,14 @@ import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	view "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/readmodels"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
-
-// GetOrderQuery identifies the order requested by the caller.
-type GetOrderQuery struct{ ID string }
 
 // GetOrderQueryHandler reads one order through its application capability.
 type GetOrderQueryHandler struct{ ReadRepository ports.OrderReadRepository }
 
-func (h GetOrderQueryHandler) Execute(ctx context.Context, q GetOrderQuery) (a.Loaded[view.OrderView], error) {
+func (h GetOrderQueryHandler) Execute(ctx context.Context, q orderingcontracts.GetOrderQuery) (a.Loaded[view.OrderView], error) {
 	return h.ReadRepository.Get(ctx, q.ID)
 }
 ```
@@ -99,17 +101,10 @@ func (h GetOrderQueryHandler) Execute(ctx context.Context, q GetOrderQuery) (a.L
 Source: [get_ticket.py](../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py).
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py"
-from dataclasses import dataclass
+from operations.contracts.requests.generated.preparation import GetTicketQuery
 from operations.foundation.application import Loaded
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
 from operations.contexts.preparation.application.read_models.ticket import TicketView
-
-
-@dataclass(frozen=True)
-class GetTicketQuery:
-    """Select one ticket."""
-
-    identity: str
 
 
 class GetTicketQueryHandler:
@@ -119,7 +114,7 @@ class GetTicketQueryHandler:
         self.read_repository = read_repository
 
     def execute(self, query: GetTicketQuery) -> Loaded[TicketView] | None:
-        return self.read_repository.get(query.identity)
+        return self.read_repository.get(query.id)
 ```
 
 ### TypeScript
@@ -127,10 +122,8 @@ class GetTicketQueryHandler:
 Source: [get-reward.ts](../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts"
+import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Select one reward. */
-export type GetRewardQuery = Readonly<{ id: string }>;
 
 /** Execute the GetReward use case through its context-owned read port. */
 export class GetRewardQueryHandler {
@@ -157,18 +150,23 @@ For an item query, preserve absence explicitly. For a list query, return every i
 unless pagination is requested; then preserve the continuation. See the
 [read repository recipe](read-repositories.md).
 
-## 6. Translate the generated request into the application DTO
+## 6. Use generated parsing and add owner semantic validation
 
-Add the mapper to the owner's messaging adaptor. These are handwritten functions;
-the names `rpc`, `wire` and `rewardQueries` are import aliases for these modules.
-They decode generated transport messages into the inputs from step 4.
+Generation supplies the mechanical field mapping and optional-presence handling.
+The names `rpc`, `wire` and `rewardQueries` are import aliases for owner messaging
+modules. Go registers its generated mapping directly; Python and TypeScript wrap
+generated parsers with explicit UUID validation. Reply mappings remain handwritten.
 
 ### Go
 
-Source: [order_queries.go](../../../services/storefront/contexts/ordering/adaptors/messaging/order_queries.go).
+Source: [generated mappings](../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go).
 
-```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/order_queries.go"
-func GetOrder(value *pb.GetOrder) q.GetOrderQuery { return q.GetOrderQuery{ID: value.GetId()} }
+```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go"
+func GetOrder(value *pb.GetOrder) model.GetOrderQuery {
+ result := model.GetOrderQuery{}
+ result.ID = value.GetId()
+ return result
+}
 ```
 
 ### Python
@@ -177,10 +175,9 @@ Source: [ticket_requests.py](../../../services/operations/src/operations/context
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
 def get_ticket(value: Message) -> GetTicketQuery:
-    """Decode the published item query into its application input."""
-    if not isinstance(value, GetTicket):
-        raise ValueError("Unexpected get ticket payload")
-    return GetTicketQuery(identifier(value.id))
+    query = inputs.get_ticket(value)
+    identifier(query.id)
+    return query
 ```
 
 ### TypeScript
@@ -189,10 +186,10 @@ Source: [reward-query-mapping.ts](../../../services/engagement/src/contexts/loya
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-query-mapping.ts"
 export function getReward(value: unknown): GetRewardQuery {
-  return { id: identifier(text(record(value).id)) };
+  const query = parseGetRewardQuery(value);
+  identifier(query.id);
+  return query;
 }
-
-/** Preserve complete reads and explicitly requested pagination. */
 ```
 
 ## 7. Map the result into its published reply
@@ -206,7 +203,7 @@ its revision. Keep this mapping outside the query handler.
 Source: [order_queries.go](../../../services/storefront/contexts/ordering/adaptors/messaging/order_queries.go).
 
 ```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/order_queries.go"
-func GetOrderReply(_ q.GetOrderQuery, loaded a.Loaded[view.OrderView]) envelope.Reply {
+func GetOrderReply(_ orderingcontracts.GetOrderQuery, loaded a.Loaded[view.OrderView]) envelope.Reply {
 	if !loaded.Exists {
 		return &pb.Reply{Payload: &pb.Reply_Error{Error: &envelope.RequestError{Code: "not_found"}}}
 	}

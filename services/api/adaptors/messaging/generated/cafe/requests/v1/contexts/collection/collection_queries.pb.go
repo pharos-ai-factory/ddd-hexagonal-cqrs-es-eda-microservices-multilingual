@@ -114,11 +114,15 @@ var File_cafe_requests_v1_contexts_collection_collection_queries_proto protorefl
 
 const file_cafe_requests_v1_contexts_collection_collection_queries_proto_rawDesc = "" +
 	"\n" +
-	"=cafe/requests/v1/contexts/collection/collection_queries.proto\x12\x1bcafe.collection.requests.v1\x1a\x1dcafe/requests/v1/common.proto\"@\n" +
+	"=cafe/requests/v1/contexts/collection/collection_queries.proto\x12\x1bcafe.collection.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"T\n" +
 	"\vListPickups\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page\"\x1b\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\x12\xd2\xf3\x18\x0e\n" +
+	"\n" +
+	"collection\x10\x01\"/\n" +
 	"\tGetPickup\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02idB\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id:\x12\xd2\xf3\x18\x0e\n" +
+	"\n" +
+	"collection\x10\x01B\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_collection_collection_queries_proto_rawDescOnce sync.Once

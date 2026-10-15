@@ -12,3 +12,7 @@ export function integer(value: unknown): number {
     throw new Error('A safe integer is required');
   return value;
 }
+export function boolean(value: unknown): boolean {
+  if (typeof value !== 'boolean') throw new Error('A boolean is required');
+  return value;
+}

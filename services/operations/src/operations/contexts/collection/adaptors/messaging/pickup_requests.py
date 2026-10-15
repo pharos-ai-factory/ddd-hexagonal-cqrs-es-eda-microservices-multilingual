@@ -1,5 +1,8 @@
 """Explicit mapping between collection wire contracts and application types."""
 
+from .generated import request_payloads as inputs
+
+
 from google.protobuf.message import Message
 from operations.foundation.application import Loaded
 from operations.contexts.collection.application.read_models.pickup import PickupView
@@ -9,24 +12,15 @@ from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collecti
     Pickups,
 )
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Reply
-from operations.contexts.collection.application.commands.collect_order import CollectOrderCommand
-from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_commands_pb2 import (
-    CollectOrder,
-)
-from operations.contexts.collection.application.queries.get_pickup import GetPickupQuery
-from operations.contexts.collection.application.queries.list_pickups import ListPickupsQuery
-from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_queries_pb2 import (
-    GetPickup,
-    ListPickups,
-)
+from operations.contracts.requests.generated.collection import CollectOrderCommand
+from operations.contracts.requests.generated.collection import GetPickupQuery
+from operations.contracts.requests.generated.collection import ListPickupsQuery
 from operations.foundation.domain import identifier
-from operations.foundation.pagination import Page, PageRequest
+from operations.foundation.pagination import Page
 
 
 def collect(value: Message) -> CollectOrderCommand:
-    if not isinstance(value, CollectOrder):
-        raise ValueError("Unexpected collection payload")
-    return CollectOrderCommand(code=value.code)
+    return inputs.collect_order(value)
 
 
 def item(loaded: Loaded[PickupView]) -> LoadedPickup:
@@ -48,22 +42,16 @@ def listing(items: list[Loaded[PickupView]], paged: bool, next_id: str | None) -
 
 
 def get_pickup(value: Message) -> GetPickupQuery:
-    """Decode the published item query into its application input."""
-    if not isinstance(value, GetPickup):
-        raise ValueError("Unexpected get pickup payload")
-    return GetPickupQuery(identifier(value.id))
+    query = inputs.get_pickup(value)
+    identifier(query.id)
+    return query
 
 
 def list_pickups(value: Message) -> ListPickupsQuery:
-    """Preserve complete reads and explicitly requested pagination."""
-    if not isinstance(value, ListPickups):
-        raise ValueError("Unexpected list pickups payload")
-    page = value.page if value.HasField("page") else None
-    return ListPickupsQuery(
-        PageRequest(page.limit, identifier(page.after) if page.HasField("after") else None)
-        if page is not None
-        else None
-    )
+    query = inputs.list_pickups(value)
+    if query.page is not None and query.page.after is not None:
+        identifier(query.page.after)
+    return query
 
 
 def get_reply(query: GetPickupQuery, loaded: Loaded[PickupView] | None) -> Reply:

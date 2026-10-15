@@ -101,3 +101,15 @@ foreign access, forged publications, binding changes, default-exchange bypasses
 and unregistered resources. Go, Python and TypeScript recovery fixtures retain
 their owner credentials and use the declared queues. The full live journey then
 runs through the same generated topology.
+
+## Command and query visibility
+
+Payload schemas declare their owner and PUBLIC/PRIVATE visibility. The generator
+checks those declarations against public request and private durable-command
+envelopes before producing permissions. The generated `request_contracts` inventory
+records each payload's role and visibility; private subscription command references
+must resolve to an owner-private schema. API contract selection authorises the
+published owner request families. Public request keys remain scoped to owner and
+command/query kind, while private commands use owner-only delivery exchanges and
+queues. Payload-level validation remains in the owner boundary. Changing visibility
+requires the corresponding envelope, caller selection and compatibility review.

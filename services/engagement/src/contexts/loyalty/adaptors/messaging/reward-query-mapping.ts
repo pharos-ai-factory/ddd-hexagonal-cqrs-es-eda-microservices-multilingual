@@ -1,25 +1,24 @@
-import { record, integer, text } from '../../../../adaptors/messaging/request-values.js';
+import { parseGetRewardQuery, parseListRewardsQuery } from './generated/request-payloads.js';
 import { identifier } from '../../../../foundation/domain.js';
 import type { Loaded } from '../../../../foundation/application.js';
 import type { Page } from '../../../../foundation/pagination.js';
-import type { GetRewardQuery } from '../../application/queries/get-reward.js';
-import type { ListRewardsQuery } from '../../application/queries/list-rewards.js';
+import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
+import type { ListRewardsQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { RewardView } from '../../application/read-models/reward.js';
 import { reward } from './reward-requests.js';
 
 /** Decode the published item query into its application input. */
 export function getReward(value: unknown): GetRewardQuery {
-  return { id: identifier(text(record(value).id)) };
+  const query = parseGetRewardQuery(value);
+  identifier(query.id);
+  return query;
 }
 
 /** Preserve complete reads and explicitly requested pagination. */
 export function listRewards(value: unknown): ListRewardsQuery {
-  const fields = record(value);
-  if (!('page' in fields)) return {};
-  const page = record(fields.page);
-  return {
-    page: { limit: integer(page.limit), ...('after' in page ? { after: identifier(text(page.after)) } : {}) },
-  };
+  const query = parseListRewardsQuery(value);
+  if (query.page?.after !== undefined) identifier(query.page.after);
+  return query;
 }
 
 /** Map the resource revision or the existing missing-resource response. */

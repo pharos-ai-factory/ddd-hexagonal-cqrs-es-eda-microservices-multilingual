@@ -94,9 +94,17 @@ if (requestOwners.length) {
 
 for (const owner of ['loyalty', 'communication']) {
   const base = `services/engagement/src/contexts/${owner}/adaptors/messaging`;
-  const schema = new protobuf.Root().loadSync(`${base}/internal_commands.proto`).resolveAll();
-  await writeFile(
-    `${base}/generated/internal_commands.json`,
-    JSON.stringify(schema.toJSON(), null, 2) + '\n',
-  );
+  const schema = new protobuf.Root();
+  schema.resolvePath = (origin, target) =>
+    target === 'cafe/requests/v1/validation.proto'
+      ? path.resolve('contracts/shared/messaging/v1/validation.proto')
+      : target.startsWith('google/protobuf/')
+        ? path.resolve('node_modules/protobufjs', target)
+        : path.resolve(path.dirname(origin), target);
+  schema.loadSync(path.resolve(`${base}/internal_commands.proto`)).resolveAll();
+  const runtime = schema.toJSON();
+  // Contract annotations are checked at generation; runtime payloads need no descriptor API.
+  delete runtime.nested.google;
+  delete runtime.nested.cafe.nested.requests;
+  await writeFile(`${base}/generated/internal_commands.json`, JSON.stringify(runtime, null, 2) + '\n');
 }

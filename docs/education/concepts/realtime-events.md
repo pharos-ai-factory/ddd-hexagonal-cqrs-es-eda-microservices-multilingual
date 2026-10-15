@@ -52,15 +52,10 @@ import (
 	"context"
 	"errors"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
-
-// ChangeQuantityCommand expresses the owner ChangeQuantity use case independently of transport.
-type ChangeQuantityCommand struct {
-	LineID   string `json:"lineId"`
-	Quantity int    `json:"quantity"`
-}
 
 // ChangeQuantityCommandHandler applies ChangeQuantity through one aggregate command transaction.
 type ChangeQuantityCommandHandler struct {
@@ -68,7 +63,7 @@ type ChangeQuantityCommandHandler struct {
 	Repository ports.OrderWriteRepository
 }
 
-func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c ChangeQuantityCommand) (result a.CommandResult, err error) {
+func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.ChangeQuantityCommand) (result a.CommandResult, err error) {
 	defer func() {
 		var rejected d.ExpectedError
 		if errors.As(err, &rejected) {
@@ -106,18 +101,12 @@ func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandCo
 Source: [collect_order.py](../../../services/operations/src/operations/contexts/collection/application/commands/collect_order.py).
 
 ```python source="../../../services/operations/src/operations/contexts/collection/application/commands/collect_order.py"
+from operations.contracts.requests.generated.collection import CollectOrderCommand
 from operations.foundation.domain import Rejection
 from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
-from typing import TypedDict
 from operations.foundation.application import ApplicationError
-
-
-class CollectOrderCommand(TypedDict):
-    """Requests collection using the supplied collection code."""
-
-    code: str
 
 
 class PickupNotFoundApplicationError(ApplicationError):
@@ -155,13 +144,12 @@ class CollectOrderCommandHandler:
 Source: [redeem-reward.ts](../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
+import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import { Rejection } from '../../../../foundation/domain.js';
 import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { ApplicationError } from '../../../../foundation/application.js';
-
-export type RedeemRewardCommand = { orderId: string };
 
 /** Applies the reward redemption rule using the injected clock and one aggregate transaction. */
 export class RedeemRewardCommandHandler {

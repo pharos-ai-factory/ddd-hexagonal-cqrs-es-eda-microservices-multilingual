@@ -1,6 +1,7 @@
 // Owner-private durable command format. Published integration contracts remain separate.
 syntax = "proto3";
 package cafe.internal.loyalty;
+import "cafe/requests/v1/validation.proto";
 message CommandEnvelope {
   string id = 1;
   string consumer = 2;
@@ -15,5 +16,9 @@ message CommandEnvelope {
     IssueRewardCommand issue_reward = 11;
   }
 }
-message CreditCollectionCommand { string order_id = 1; string customer_id = 2; }
-message IssueRewardCommand { string grant_id = 1; string account_id = 2; string benefit = 3; int32 valid_days = 4; }
+message CreditCollectionCommand {
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PRIVATE };
+  string order_id = 1; string customer_id = 2; }
+message IssueRewardCommand {
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PRIVATE };
+  string grant_id = 1; string account_id = 2; string benefit = 3; int32 valid_days = 4; }

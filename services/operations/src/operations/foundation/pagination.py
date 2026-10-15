@@ -3,12 +3,7 @@ from typing import Protocol
 from operations.foundation.application import Loaded, QueryPort
 
 
-@dataclass(frozen=True)
-class PageRequest:
-    """Selects a bounded keyset page using the last observed resource identity."""
-
-    limit: int
-    after: str | None = None
+from operations.contracts.requests.generated.shared import PageRequest as PageRequest
 
 
 @dataclass(frozen=True)

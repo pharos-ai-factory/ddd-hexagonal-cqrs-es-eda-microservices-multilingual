@@ -119,8 +119,10 @@ rehydration remain separate operations. This is the reference's explicit convent
 DDD also permits transactionally safe event-handling use cases. Decision 0011
 records why this repository accepts the extra durable hand-off.
 
-Each command or query DTO lives beside its handler in one business-named file
-under `application/commands/` or `application/queries/`. Each event reaction has
+Each command/query payload is generated from its owner Protobuf schema. Its handler
+imports that plain type in one business-named file under `application/commands/`
+or `application/queries/`. Public/private visibility controls its supported callers
+and delivery envelope; private queued messages retain compatibility checks. Each event reaction has
 its own module. Application handlers never call another command handler, and a
 command execution changes one aggregate through its named write repository. Plain constructor
 ports keep these use cases independent of DI, transport and persistence. See
@@ -142,3 +144,7 @@ receipts and integration bytes commit separately from the original command. See
 Realtime message selection belongs to application handlers through `RealtimeBusPort`.
 Aggregates queue private facts; domain/integration handlers and command use cases
 explicitly choose browser messages. See [decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md).
+
+Command and query payloads are schema-generated plain contracts. Declare owner and
+visibility in Protobuf; generate types and mechanical mappings, then implement
+handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).

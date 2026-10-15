@@ -1,6 +1,6 @@
 import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { PickupOpenedIntegrationEvent } from '../../../../contracts/events/generated/collection.js';
-import type { RequestNotificationCommand } from '../commands/request-notification.js';
+import type { RequestNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 
 /** Owns notification wording and durably requests a notification aggregate. */
 export class PickupOpenedIntegrationEventHandler {

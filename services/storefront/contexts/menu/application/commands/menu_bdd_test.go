@@ -7,6 +7,7 @@ import (
 	menupub "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/publications"
 	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/eventhandlers"
 	menuports "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
+	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -42,7 +43,7 @@ func (w *menuWorld) add(code string, minor int64) error {
 	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.AddOfferCommandHandler {
 		return menucommands.AddOfferCommandHandler{Repository: repository, Realtime: realtime, Drinks: &w.directory}
 	})).Execute(context.Background(), s.Metadata(s.Edition),
-		menucommands.AddOfferCommand{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
+		menucontracts.AddOfferCommand{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
 	return err
 }
 func (w *menuWorld) publish() error {
@@ -54,7 +55,7 @@ func (w *menuWorld) publish() error {
 func (w *menuWorld) price(code string, minor int64) error {
 	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.ChangePriceCommandHandler {
 		return menucommands.ChangePriceCommandHandler{Repository: repository, Realtime: realtime}
-	})).Execute(context.Background(), s.Metadata(s.Edition), menucommands.ChangePriceCommand{Code: code, Minor: minor})
+	})).Execute(context.Background(), s.Metadata(s.Edition), menucontracts.ChangePriceCommand{Code: code, Minor: minor})
 	return err
 }
 func (w *menuWorld) offer() (d.OfferState, error) {
@@ -76,7 +77,7 @@ func TestMenuFeatures(t *testing.T) {
 			sc.Step(`^a published drink named "([^"]*)"$`, func(name string) error {
 				_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateDrinkCommandHandler {
 					return menucommands.CreateDrinkCommandHandler{Repository: repository, Realtime: realtime}
-				})).Execute(context.Background(), s.Metadata(s.Drink), menucommands.CreateDrinkCommand{Name: name})
+				})).Execute(context.Background(), s.Metadata(s.Drink), menucontracts.CreateDrinkCommand{Name: name})
 				if err != nil {
 					return err
 				}
@@ -88,7 +89,7 @@ func TestMenuFeatures(t *testing.T) {
 			sc.Step(`^a draft menu edition in "([^"]*)"$`, func(currency string) error {
 				_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateEditionCommandHandler {
 					return menucommands.CreateEditionCommandHandler{Repository: repository, Realtime: realtime}
-				})).Execute(context.Background(), s.Metadata(s.Edition), menucommands.CreateEditionCommand{Currency: currency})
+				})).Execute(context.Background(), s.Metadata(s.Edition), menucontracts.CreateEditionCommand{Currency: currency})
 				if err != nil {
 					return err
 				}
@@ -152,7 +153,7 @@ func TestMenuFeatures(t *testing.T) {
 			sc.Step(`^the drink is renamed to "([^"]*)" and published again$`, func(name string) error {
 				_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.ReviseDrinkCommandHandler {
 					return menucommands.ReviseDrinkCommandHandler{Repository: repository, Realtime: realtime}
-				})).Execute(context.Background(), s.Metadata(s.Drink), menucommands.ReviseDrinkCommand{Name: name})
+				})).Execute(context.Background(), s.Metadata(s.Drink), menucontracts.ReviseDrinkCommand{Name: name})
 				if err != nil {
 					return err
 				}

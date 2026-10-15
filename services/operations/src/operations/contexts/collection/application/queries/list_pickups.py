@@ -1,14 +1,7 @@
-from dataclasses import dataclass
-from operations.foundation.pagination import Page, PageRequest
+from operations.contracts.requests.generated.collection import ListPickupsQuery
+from operations.foundation.pagination import Page
 from operations.contexts.collection.application.ports.pickup_read_repository import PickupReadRepository
 from operations.contexts.collection.application.read_models.pickup import PickupView
-
-
-@dataclass(frozen=True)
-class ListPickupsQuery:
-    """Select pickups or an explicitly requested page."""
-
-    page: PageRequest | None = None
 
 
 class ListPickupsQueryHandler:

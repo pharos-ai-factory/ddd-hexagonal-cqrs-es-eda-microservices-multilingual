@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	ownercodec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging"
-	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"strings"
 	"sync"
@@ -20,10 +20,10 @@ func TestCommandAcceptanceRollbackDuplicateIdentityAndFencedRecovery(t *testing.
 	owner := admin(t)
 	ctx := t.Context()
 	codec := ownercodec.RecordCollectionCodec{}
-	bus := NewCommandOutbox[commands.RecordCollectionCommand](db, codec)
+	bus := NewCommandOutbox[orderingcontracts.RecordCollectionCommand](db, codec)
 	source, target, customer := NewID(), NewID(), NewID()
 	m := a.Metadata{ID: DerivedID(codec.Consumer(), source), Name: codec.Consumer(), Consumer: codec.Consumer(), SourceEventID: source, CausationID: source, AggregateID: target, CorrelationID: NewID(), SourceHash: strings.Repeat("a", 64), Input: map[string]any{"customerId": customer, "orderId": target}}
-	command := commands.RecordCollectionCommand{CustomerID: customer}
+	command := orderingcontracts.RecordCollectionCommand{CustomerID: customer}
 	t.Cleanup(func() {
 		_, _ = owner.Exec(context.Background(), `DELETE FROM cafe.internal_command_dispatches WHERE event_id=$1`, m.ID)
 		_, _ = owner.Exec(context.Background(), `DELETE FROM cafe.internal_commands WHERE id=$1`, m.ID)

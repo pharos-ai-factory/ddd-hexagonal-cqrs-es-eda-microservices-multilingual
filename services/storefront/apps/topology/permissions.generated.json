@@ -7,6 +7,274 @@
     "loyalty",
     "communication"
   ],
+  "request_contracts": [
+    {
+      "owner": "collection",
+      "name": "CollectOrderCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "collectOrder"
+    },
+    {
+      "owner": "collection",
+      "name": "ListPickupsQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listPickups"
+    },
+    {
+      "owner": "collection",
+      "name": "GetPickupQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getPickup"
+    },
+    {
+      "owner": "communication",
+      "name": "ListNotificationsQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listNotifications"
+    },
+    {
+      "owner": "communication",
+      "name": "GetNotificationQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getNotification"
+    },
+    {
+      "owner": "loyalty",
+      "name": "RedeemRewardCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "redeemReward"
+    },
+    {
+      "owner": "loyalty",
+      "name": "ListAccountsQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listAccounts"
+    },
+    {
+      "owner": "loyalty",
+      "name": "GetAccountQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getAccount"
+    },
+    {
+      "owner": "loyalty",
+      "name": "ListRewardsQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listRewards"
+    },
+    {
+      "owner": "loyalty",
+      "name": "GetRewardQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getReward"
+    },
+    {
+      "owner": "menu",
+      "name": "CreateDrinkCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "createDrink"
+    },
+    {
+      "owner": "menu",
+      "name": "ReviseDrinkCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "reviseDrink"
+    },
+    {
+      "owner": "menu",
+      "name": "PublishDrinkCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "publishDrink"
+    },
+    {
+      "owner": "menu",
+      "name": "CreateEditionCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "createEdition"
+    },
+    {
+      "owner": "menu",
+      "name": "AddOfferCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "addOffer"
+    },
+    {
+      "owner": "menu",
+      "name": "ChangePriceCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "changePrice"
+    },
+    {
+      "owner": "menu",
+      "name": "PublishEditionCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "publishEdition"
+    },
+    {
+      "owner": "menu",
+      "name": "ListDrinksQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listDrinks"
+    },
+    {
+      "owner": "menu",
+      "name": "GetDrinkQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getDrink"
+    },
+    {
+      "owner": "menu",
+      "name": "ListEditionsQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listEditions"
+    },
+    {
+      "owner": "menu",
+      "name": "GetEditionQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getEdition"
+    },
+    {
+      "owner": "ordering",
+      "name": "CreateOrderCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "createOrder"
+    },
+    {
+      "owner": "ordering",
+      "name": "AddLineCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "addLine"
+    },
+    {
+      "owner": "ordering",
+      "name": "ChangeQuantityCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "changeQuantity"
+    },
+    {
+      "owner": "ordering",
+      "name": "PlaceOrderCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "placeOrder"
+    },
+    {
+      "owner": "ordering",
+      "name": "ListOrdersQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listOrders"
+    },
+    {
+      "owner": "ordering",
+      "name": "GetOrderQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getOrder"
+    },
+    {
+      "owner": "preparation",
+      "name": "StartPreparationCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "startPreparation"
+    },
+    {
+      "owner": "preparation",
+      "name": "CompletePreparationCommand",
+      "role": "Command",
+      "visibility": "PUBLIC",
+      "route": "completePreparation"
+    },
+    {
+      "owner": "preparation",
+      "name": "ListTicketsQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "listTickets"
+    },
+    {
+      "owner": "preparation",
+      "name": "GetTicketQuery",
+      "role": "Query",
+      "visibility": "PUBLIC",
+      "route": "getTicket"
+    },
+    {
+      "owner": "ordering",
+      "name": "RecordCollectionCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "recordCollection"
+    },
+    {
+      "owner": "preparation",
+      "name": "AcceptOrderCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "acceptOrder"
+    },
+    {
+      "owner": "collection",
+      "name": "OpenPickupCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "openPickup"
+    },
+    {
+      "owner": "loyalty",
+      "name": "CreditCollectionCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "creditCollection"
+    },
+    {
+      "owner": "loyalty",
+      "name": "IssueRewardCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "issueReward"
+    },
+    {
+      "owner": "communication",
+      "name": "RequestNotificationCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "requestNotification"
+    },
+    {
+      "owner": "communication",
+      "name": "DeliverNotificationCommand",
+      "role": "Command",
+      "visibility": "PRIVATE",
+      "route": "deliverNotification"
+    }
+  ],
   "queues": {
     "menu": [
       "ref.menu.commands",

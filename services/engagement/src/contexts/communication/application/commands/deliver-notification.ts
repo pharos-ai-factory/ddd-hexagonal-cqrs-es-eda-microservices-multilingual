@@ -1,9 +1,8 @@
+import type { DeliverNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { NotificationWriteRepository } from '../ports/notification-write-repository.js';
 import { Rejection } from '../../../../foundation/domain.js';
-
-export type DeliverNotificationCommand = { notificationId: string };
 
 /** Records provider acceptance through the notification aggregate; delivery preparation obtains the receipt before the transaction. */
 export class DeliverNotificationCommandHandler {

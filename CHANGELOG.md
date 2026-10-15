@@ -6,6 +6,10 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Generate plain public/private command and query inputs from annotated Protobuf
+  schemas across Go, Python and TypeScript; remove handwritten payload copies,
+  preserve presence and update owner mappings, permissions and educational recipes.
+
 - Implement Go's durable command bus, owner-private codec, receiving outbox, fenced
   relay and paired consumers. Ordering records Collection's handover through
   `RecordCollection` and explicitly publishes its updated browser view. Add

@@ -78,3 +78,13 @@ and typed rejection publication are implemented in all three languages. Ordering
 and Preparation demonstrate domain-to-realtime subscribers. Loyalty demonstrates
 an explicitly declared integration-to-realtime subscriber. The
 [realtime recipe](concepts/realtime-events.md) links the source and tests.
+
+## Generated command and query inputs
+
+All existing public commands, private durable commands and query inputs in Go,
+Python and TypeScript now derive from their Protobuf schemas. Handler modules
+import the generated plain types. The generator also supplies mechanical mappings
+and the shared pagination input. Owner semantic validation and all business
+behaviour remain handwritten. Visibility and ownership are required schema metadata.
+See the [command recipe](concepts/commands.md), [query recipe](concepts/queries.md)
+and [decision 0028](../decisions/0028-schema-generated-command-and-query-inputs.md).

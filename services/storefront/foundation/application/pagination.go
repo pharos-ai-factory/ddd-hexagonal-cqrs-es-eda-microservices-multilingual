@@ -1,12 +1,12 @@
 package application
 
-import "context"
+import (
+	"context"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/shared"
+)
 
 // PageRequest opts into a bounded keyset scan. List remains an unpaginated query.
-type PageRequest struct {
-	Limit int
-	After string
-}
+type PageRequest = shared.PageRequest
 
 // Page contains a bounded set of versioned read values and a continuation identity.
 type Page[S any] struct {

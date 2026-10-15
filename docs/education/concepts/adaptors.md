@@ -11,11 +11,12 @@ validated and translated into plain application commands.
 
 ### Go
 
-Source: [ordering_requests.go](../../../services/storefront/contexts/ordering/adaptors/messaging/ordering_requests.go).
+Source: [ordering_requests.go](../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go).
 
-```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/ordering_requests.go"
-func PlaceOrder(p *pb.PlaceOrder) commands.PlaceOrderCommand {
-	return commands.PlaceOrderCommand{}
+```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go"
+func PlaceOrder(value *pb.PlaceOrder) model.PlaceOrderCommand {
+	result := model.PlaceOrderCommand{}
+	return result
 }
 ```
 
@@ -25,9 +26,7 @@ Source: [ticket_requests.py](../../../services/operations/src/operations/context
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
 def complete(value: Message) -> CompletePreparationCommand:
-    if not isinstance(value, CompletePreparation):
-        raise ValueError("Unexpected complete preparation payload")
-    return CompletePreparationCommand()
+    return inputs.complete_preparation(value)
 ```
 
 ### TypeScript
@@ -35,10 +34,10 @@ def complete(value: Message) -> CompletePreparationCommand:
 Source: [reward-requests.ts](../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-requests.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-requests.ts"
-export function redeem(value: unknown): { orderId: string } {
-  const fields = record(value);
-  const wire: wire.RedeemReward = { orderId: text(fields.orderId) };
-  return { orderId: identifier(wire.orderId!) };
+export function redeem(value: unknown): RedeemRewardCommand {
+  const command = parseRedeemRewardCommand(value);
+  identifier(command.orderId);
+  return command;
 }
 ```
 

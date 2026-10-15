@@ -58,9 +58,9 @@ directly in their transaction provider.
 
 ## Construct the handler inside the invocation
 
-First complete the [command creation recipe](commands.md): define the application
-DTO and handler, add the published schema/envelope case, generate the identifier
-and write the owner parser. The registration below connects those completed parts.
+First complete the [command creation recipe](commands.md): define the annotated
+Protobuf payload and envelope case, generate its plain input, identifier and mapping,
+then import the generated input into the handler. Add owner semantic validation. The registration below connects those completed parts.
 
 ### Go
 

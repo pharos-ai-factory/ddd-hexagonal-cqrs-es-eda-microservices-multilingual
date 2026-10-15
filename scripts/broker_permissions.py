@@ -4,6 +4,7 @@ import json
 import re
 
 from contract_selection import owners
+from request_payloads import load as request_payloads
 from contract_sources import ROOT, OWNERS, catalogue, subscriptions
 
 GENERATED = "services/storefront/apps/topology/permissions.generated.json"
@@ -17,7 +18,14 @@ def exact(names):
 
 def build(root=ROOT):
     """Include durable commands, retries, dead letters and API request/reply queues."""
-    request_owners = owners("api", "requests", root)
+    payloads = request_payloads(root)["payloads"]
+    selected = owners("api", "requests", root)
+    public_owners = {m["owner"] for m in payloads if m["visibility"] == "PUBLIC"}
+    request_owners = tuple(owner for owner in selected if owner in public_owners)
+    private = {(m["owner"], m["route"]) for m in payloads if m["visibility"] == "PRIVATE"}
+    for sub in subscriptions(root):
+        if "command" in sub and (sub["consumer"].split(".")[0], sub["command"]) not in private:
+            raise ValueError("Durable subscription must name an owner-private command")
     events = catalogue("topology", root)
     commands = {item["consumer"] for item in subscriptions(root) if "command" in item}
     delivery = {owner: f"ref.{owner}.delivery" for owner in OWNERS}
@@ -96,6 +104,9 @@ def build(root=ROOT):
     )
     return {
         "request_owners": list(request_owners),
+        "request_contracts": [
+            {key: m[key] for key in ("owner", "name", "role", "visibility", "route")} for m in payloads
+        ],
         "queues": {
             owner: sorted(name for name, context in queues.items() if context == owner)
             for owner in (*OWNERS, "api")

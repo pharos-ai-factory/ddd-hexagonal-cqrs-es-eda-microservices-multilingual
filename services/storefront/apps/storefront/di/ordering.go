@@ -16,6 +16,7 @@ import (
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/model"
 	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
 	codec "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/protobuf"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"go.uber.org/fx"
 )
@@ -24,7 +25,7 @@ func orderingModule() fx.Option {
 	return fx.Module("ordering", fx.Provide(
 		func() rpc.RecordCollectionCodec { return rpc.RecordCollectionCodec{} },
 		func(s *support.StorefrontRuntime, codec rpc.RecordCollectionCodec) reactions.OrderCollectedIntegrationEventHandler {
-			return reactions.OrderCollectedIntegrationEventHandler{Commands: store.NewCommandOutbox[commands.RecordCollectionCommand](s.Databases["ordering"], codec)}
+			return reactions.OrderCollectedIntegrationEventHandler{Commands: store.NewCommandOutbox[orderingcontracts.RecordCollectionCommand](s.Databases["ordering"], codec)}
 		},
 		func(s *support.StorefrontRuntime, orders ports.OrderReadRepository) reactions.OrderPlacedRealtimeDomainEventHandler {
 			return reactions.OrderPlacedRealtimeDomainEventHandler{Orders: orders, Realtime: store.NewRealtimeEventBus(s.Databases["ordering"], names.OrderingSubscriptionRealtimeOrderPlaced.String(), "order")}

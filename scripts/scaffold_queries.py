@@ -1,5 +1,7 @@
 """Named query, read-model and read-repository starters in each language's native layout."""
 
+from scaffold_inputs import generated_inputs
+
 
 def render_query(service, context, name, snake):
     if service == "engagement":
@@ -117,4 +119,4 @@ func(h {name}QueryHandler) Execute(ctx context.Context,q {name}Query) (a.Loaded[
         "Implement the read repository and transport-to-query mapping under the owning adaptors/.\n"
         "Bind the read repository and handler in composition and add the API/Protobuf operation when published.\n"
     )
-    return files
+    return generated_inputs(files, service, context, name, "Query")

@@ -10,7 +10,7 @@ and topology. Handwritten domain and application policy remains with its owner.
 2. Edit that owner source; preserve existing wire field numbers and historical fixtures. Add envelope alternatives, annotations and constraints where the boundary requires them.
 3. For delivered reactions, update the consumer-owned `subscriptions.json`. A `realtime` entry is an explicit browser reaction; `publication` maps a private fact to integration; `command` binds a durable owner command.
 4. Run `pnpm generate:contracts` for Protobuf/catalogue changes or `pnpm generate:http` for OpenAPI alone. Commit generated files with the source changes.
-5. Import generated identifiers in composition and implement handwritten owner parsers, business mappings and handlers. Generation cannot infer these decisions.
+5. Import generated command/query payloads into handlers and generated identifiers into composition. Use generated mechanical input mappings; implement owner semantic validation, business mappings and handlers.
 6. Update API operation mappings and the generated operation client for HTTP exposure. Bind every declared consumer and resolve DI before starting workers.
 7. Run generated-drift and compatibility checks, focused tests and full verification. Apply new context migrations and generated broker permissions to the development composition before exercising the new route.
 
@@ -18,15 +18,15 @@ Follow the [end-to-end recipe](../end-to-end-recipe.md) to connect this step to 
 
 ## Sources and outputs
 
-| Boundary                    | Authoritative source                                       | Generated roles                                          |
-| --------------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
-| Public commands and queries | Owner messaging Protobuf envelopes                         | Request DTOs, command/query identifiers and factories    |
-| Integration events          | Owner event Protobuf annotations                           | Plain DTOs, validation, codecs and publication factories |
-| Private domain delivery     | Owner `private_messages.proto` and `private_messages.json` | Private codecs and routing identifiers                   |
-| Private commands            | Owner `internal_commands.proto`                            | Stored command codec schemas and identifiers             |
-| Subscriptions               | Consumer-owned `subscriptions.json`                        | Subscription identifiers and topology                    |
-| Realtime                    | Owner snapshot schemas and shared envelope                 | Browser projection codecs and types                      |
-| HTTP                        | Owner OpenAPI sources                                      | API/browser operation contracts                          |
+| Boundary                    | Authoritative source                                       | Generated roles                                              |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ |
+| Public commands and queries | Owner messaging Protobuf envelopes                         | Plain inputs, wire bindings, parsers and identifiers         |
+| Integration events          | Owner event Protobuf annotations                           | Plain DTOs, validation, codecs and publication factories     |
+| Private domain delivery     | Owner `private_messages.proto` and `private_messages.json` | Private codecs and routing identifiers                       |
+| Private commands            | Owner `internal_commands.proto`                            | Plain inputs, payload mappings, wire schemas and identifiers |
+| Subscriptions               | Consumer-owned `subscriptions.json`                        | Subscription identifiers and topology                        |
+| Realtime                    | Owner snapshot schemas and shared envelope                 | Browser projection codecs and types                          |
+| HTTP                        | Owner OpenAPI sources                                      | API/browser operation contracts                              |
 
 ## A manifest in each language service
 

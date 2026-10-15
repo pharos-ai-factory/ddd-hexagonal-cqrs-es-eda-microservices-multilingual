@@ -7,6 +7,7 @@ import (
 	orderingpub "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/publications"
 	reactions "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/eventhandlers"
 	orderingports "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -26,14 +27,14 @@ func (w *orderWorld) add(id, edition, code string, quantity int) error {
 	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.AddLineCommandHandler {
 		return orderingcommands.AddLineCommandHandler{Repository: repository, Realtime: realtime, Menus: &w.menus}
 	})).Execute(context.Background(), s.Metadata(s.Order),
-		orderingcommands.AddLineCommand{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
+		orderingcontracts.AddLineCommand{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) quantity(quantity int) error {
 	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.ChangeQuantityCommandHandler {
 		return orderingcommands.ChangeQuantityCommandHandler{Repository: repository, Realtime: realtime}
 	})).Execute(context.Background(), s.Metadata(s.Order),
-		orderingcommands.ChangeQuantityCommand{LineID: s.FirstLine, Quantity: quantity})
+		orderingcontracts.ChangeQuantityCommand{LineID: s.FirstLine, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) place() error {
@@ -59,7 +60,7 @@ func TestOrderingFeatures(t *testing.T) {
 				_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.CreateOrderCommandHandler {
 					return orderingcommands.CreateOrderCommandHandler{Repository: repository, Realtime: realtime, Menus: &w.menus}
 				})).Execute(context.Background(), s.Metadata(s.Order),
-					orderingcommands.CreateOrderCommand{CustomerID: s.Customer, EditionID: s.Edition})
+					orderingcontracts.CreateOrderCommand{CustomerID: s.Customer, EditionID: s.Edition})
 				if err != nil {
 					return err
 				}
@@ -86,7 +87,7 @@ func TestOrderingFeatures(t *testing.T) {
 				}
 				_, err := execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.RecordCollectionCommandHandler {
 					return orderingcommands.RecordCollectionCommandHandler{Repository: repository, Realtime: realtime}
-				}).Execute(context.Background(), s.Metadata(s.Order), orderingcommands.RecordCollectionCommand{CustomerID: customer})
+				}).Execute(context.Background(), s.Metadata(s.Order), orderingcontracts.RecordCollectionCommand{CustomerID: customer})
 				return err
 			})
 			sc.Step(`^the order records collection$`, func() error {

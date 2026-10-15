@@ -1,4 +1,5 @@
 from operations.adaptors.generated.cafe.requests.v1 import common_pb2 as _common_pb2
+from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as _validation_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from collections.abc import Mapping as _Mapping

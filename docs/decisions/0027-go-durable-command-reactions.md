@@ -1,5 +1,9 @@
 # 0027: Go durable command reactions
 
+Refined by [decision 0028](0028-schema-generated-command-and-query-inputs.md):
+command/query payload types and mechanical input mappings are generated from
+annotated owner Protobuf schemas; handlers import the generated plain contracts.
+
 Status: accepted. Date: 15 October 2026.
 Refines decisions 0011, 0023, 0024 and 0026.
 

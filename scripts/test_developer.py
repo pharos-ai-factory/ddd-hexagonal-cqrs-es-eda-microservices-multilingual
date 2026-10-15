@@ -45,6 +45,21 @@ class DeveloperTests(unittest.TestCase):
         self.assertIn("'../../../../foundation/write-repository.js'", typescript["commands/cancel-reward.ts"])
         self.assertIn("commands/cancel-reward.test.ts", typescript)
 
+    def test_starters_import_inputs_and_supply_the_authoritative_schema_fragment(self):
+        for context in ("ordering", "preparation", "loyalty"):
+            for role in ("command", "query"):
+                _, files = render(role, context, "ExampleUseCase")
+                folder = "commands/" if role == "command" else "queries/"
+                source = next(
+                    text for name, text in files.items() if name.startswith(folder) and "test" not in name
+                )
+                self.assertIn("contracts", source)
+                self.assertNotIn("type ExampleUseCase" + role.title() + " struct", source)
+                self.assertNotIn("class ExampleUseCase" + role.title() + "(", source)
+                self.assertNotIn("export type ExampleUseCase" + role.title(), source)
+                self.assertIn("visibility: PUBLIC", files["contract.proto.txt"])
+                self.assertIn("pnpm generate:contracts", files["generation.txt"])
+
     def test_python_focused_lane_discovers_all_owned_tests(self):
         with patch("developer.run") as run:
             run_tests("operations", "preparation")

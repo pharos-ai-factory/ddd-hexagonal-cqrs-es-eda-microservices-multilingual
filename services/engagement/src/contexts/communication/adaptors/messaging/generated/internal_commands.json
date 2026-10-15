@@ -61,6 +61,10 @@
                   }
                 },
                 "RequestNotificationCommand": {
+                  "options": {
+                    "(cafe.requests.v1.contract).owner": "communication",
+                    "(cafe.requests.v1.contract).visibility": "PRIVATE"
+                  },
                   "fields": {
                     "recipient": {
                       "type": "string",
@@ -77,6 +81,10 @@
                   }
                 },
                 "DeliverNotificationCommand": {
+                  "options": {
+                    "(cafe.requests.v1.contract).owner": "communication",
+                    "(cafe.requests.v1.contract).visibility": "PRIVATE"
+                  },
                   "fields": {
                     "notificationId": {
                       "type": "string",

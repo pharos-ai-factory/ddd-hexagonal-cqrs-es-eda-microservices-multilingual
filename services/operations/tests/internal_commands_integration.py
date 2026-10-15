@@ -32,10 +32,8 @@ from operations.adaptors.messaging.rabbitmq_outbox_relay import relay
 from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
 from operations.adaptors.persistence.snapshot_read_repository import PostgresSnapshotReadRepository
 from operations.adaptors.generated.cafe.v1.events_pb2 import Event as WireEvent
-from operations.contexts.preparation.application.commands.accept_order import (
-    AcceptOrderCommand,
-    AcceptOrderCommandHandler,
-)
+from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommandHandler
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.foundation.application import Metadata, Outcome
 from operations.foundation.identity import derived_id
 

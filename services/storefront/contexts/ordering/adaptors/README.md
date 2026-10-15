@@ -5,7 +5,7 @@ This boundary owns order storage and wire mappings. Start with the
 
 - [Messaging](messaging): resource query mappings, request/reply mappings,
   private fact codecs, publication mappings and stable subscription declarations.
-  Start with [ordering_requests.go](messaging/ordering_requests.go) for the published request boundary.
+  Start with [ordering_requests.go](messaging/request_payloads_generated.go) for the published request boundary.
 - [Persistence](persistence/postgres): named read/write repositories, snapshot restoration
   and aggregate transaction bindings. [Migrations](persistence/migrations) belong
   to this context's database.

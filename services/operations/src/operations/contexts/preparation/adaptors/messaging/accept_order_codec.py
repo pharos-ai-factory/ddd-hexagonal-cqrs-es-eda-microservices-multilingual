@@ -1,20 +1,22 @@
 """Preparation owns its private command identity, validation and stored wire format."""
 
+from .generated.request_payloads import parse_accept_order_command
+
+
 from operations.adaptors.generated.message_names import PreparationPrivateCommand, PreparationSubscription
 
 from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.internal.preparation.internal_commands_pb2 import CommandEnvelope
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
-from operations.foundation.domain import identifier, record, text
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
+from operations.foundation.domain import identifier, text
 
 
 def accept_command(value: object) -> AcceptOrderCommand:
-    data = record(value)
-    return AcceptOrderCommand(
-        orderId=identifier(data["orderId"]),
-        customerId=identifier(data["customerId"]),
-        instructions=text(data["instructions"]),
-    )
+    command = parse_accept_order_command(value)
+    identifier(command["orderId"])
+    identifier(command["customerId"])
+    text(command["instructions"])
+    return command
 
 
 def command_codec() -> InternalCommandCodec[AcceptOrderCommand]:

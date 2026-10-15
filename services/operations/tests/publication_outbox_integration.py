@@ -23,7 +23,7 @@ from operations.adaptors.messaging.rabbitmq_consumer import EventSubscription
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_requests_pb2 import (
     Request,
 )
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.contexts.preparation.adaptors.messaging.private_events import DRINKS_READY_DOMAIN
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.foundation.application import Metadata

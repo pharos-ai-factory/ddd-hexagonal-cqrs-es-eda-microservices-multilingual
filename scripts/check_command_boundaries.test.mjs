@@ -6,7 +6,7 @@ import { violations, productionProgram, commandLayout } from './check_command_bo
 
 test('require one command and its handler per command module', () => {
   const filename = 'contexts/loyalty/application/commands/credit-collection.ts';
-  const pair = 'type CreditCollectionCommand = {}; class CreditCollectionCommandHandler {}';
+  const pair = `import type { CreditCollectionCommand } from "../../../../contracts/requests/generated/loyalty.js"; class CreditCollectionCommandHandler {}`;
   const checkLayout = (source, name = filename) =>
     commandLayout(ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true));
   assert.deepEqual(checkLayout(pair), []);
@@ -101,7 +101,7 @@ test('queries and event reactions remain separate discoverable use cases', () =>
         true,
       ),
     );
-  const pair = 'type GetAccountQuery = {}; class GetAccountQueryHandler {}';
+  const pair = `import type { GetAccountQuery } from "../../../../contracts/requests/generated/loyalty.js"; class GetAccountQueryHandler {}`;
   assert.deepEqual(check(pair, 'queries'), []);
   assert.ok(check(pair, 'commands').length);
   assert.ok(

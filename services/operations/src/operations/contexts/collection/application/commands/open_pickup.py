@@ -1,16 +1,9 @@
+from operations.contracts.requests.generated.collection import OpenPickupCommand
 from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
 from collections.abc import Callable
-from typing import TypedDict
 from operations.contexts.collection.domain.pickup import Pickup
-
-
-class OpenPickupCommand(TypedDict):
-    """Owner instruction to open collection for a prepared order."""
-
-    orderId: str
-    customerId: str
 
 
 class OpenPickupCommandHandler:

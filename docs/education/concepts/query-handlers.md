@@ -6,10 +6,10 @@ semantics. It has no aggregate mutation capability.
 
 ## Creation recipe
 
-1. Follow the [query creation recipe](queries.md) through schema, envelope, generated identifier and application input.
+1. Follow the [query creation recipe](queries.md) through schema, envelope, generated identifier and generated plain input.
 2. Define the application-owned view and named `<Resource>ReadRepository` capability. Decide missing-resource and pagination behaviour before implementing the handler.
 3. Implement the handler as a plain read-repository consumer. Preserve the loaded view's revision and list continuation.
-4. Implement the owner request parser and reply mapper. The handler receives its application input and returns its application result.
+4. Use the generated request parser, retain owner semantic validation and implement the reply mapper. The handler receives its generated plain input and returns its application result.
 5. Bind the concrete repository and handler in DI. Register generated ID, parser, handler and reply mapper together; the request registry dispatches through `QueryBusPort`.
 6. Test the registered query through its transport boundary as well as read behaviour. Missing roots, corrupt state and incomplete lists must retain distinct outcomes.
 
@@ -28,16 +28,14 @@ import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
 	view "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/readmodels"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
-
-// GetOrderQuery identifies the order requested by the caller.
-type GetOrderQuery struct{ ID string }
 
 // GetOrderQueryHandler reads one order through its application capability.
 type GetOrderQueryHandler struct{ ReadRepository ports.OrderReadRepository }
 
-func (h GetOrderQueryHandler) Execute(ctx context.Context, q GetOrderQuery) (a.Loaded[view.OrderView], error) {
+func (h GetOrderQueryHandler) Execute(ctx context.Context, q orderingcontracts.GetOrderQuery) (a.Loaded[view.OrderView], error) {
 	return h.ReadRepository.Get(ctx, q.ID)
 }
 ```
@@ -47,17 +45,10 @@ func (h GetOrderQueryHandler) Execute(ctx context.Context, q GetOrderQuery) (a.L
 Source: [get_ticket.py](../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py).
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py"
-from dataclasses import dataclass
+from operations.contracts.requests.generated.preparation import GetTicketQuery
 from operations.foundation.application import Loaded
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
 from operations.contexts.preparation.application.read_models.ticket import TicketView
-
-
-@dataclass(frozen=True)
-class GetTicketQuery:
-    """Select one ticket."""
-
-    identity: str
 
 
 class GetTicketQueryHandler:
@@ -67,7 +58,7 @@ class GetTicketQueryHandler:
         self.read_repository = read_repository
 
     def execute(self, query: GetTicketQuery) -> Loaded[TicketView] | None:
-        return self.read_repository.get(query.identity)
+        return self.read_repository.get(query.id)
 ```
 
 ### TypeScript
@@ -75,10 +66,8 @@ class GetTicketQueryHandler:
 Source: [get-reward.ts](../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts"
+import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Select one reward. */
-export type GetRewardQuery = Readonly<{ id: string }>;
 
 /** Execute the GetReward use case through its context-owned read port. */
 export class GetRewardQueryHandler {

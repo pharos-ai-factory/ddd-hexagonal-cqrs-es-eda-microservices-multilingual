@@ -202,16 +202,20 @@ var File_cafe_requests_v1_contexts_loyalty_loyalty_queries_proto protoreflect.Fi
 
 const file_cafe_requests_v1_contexts_loyalty_loyalty_queries_proto_rawDesc = "" +
 	"\n" +
-	"7cafe/requests/v1/contexts/loyalty/loyalty_queries.proto\x12\x18cafe.loyalty.requests.v1\x1a\x1dcafe/requests/v1/common.proto\"A\n" +
+	"7cafe/requests/v1/contexts/loyalty/loyalty_queries.proto\x12\x18cafe.loyalty.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"R\n" +
 	"\fListAccounts\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page\"\x1c\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\x0f\xd2\xf3\x18\v\n" +
+	"\aloyalty\x10\x01\"-\n" +
 	"\n" +
 	"GetAccount\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"@\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id:\x0f\xd2\xf3\x18\v\n" +
+	"\aloyalty\x10\x01\"Q\n" +
 	"\vListRewards\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page\"\x1b\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\x0f\xd2\xf3\x18\v\n" +
+	"\aloyalty\x10\x01\",\n" +
 	"\tGetReward\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02idB\xb1\x01Z\xae\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id:\x0f\xd2\xf3\x18\v\n" +
+	"\aloyalty\x10\x01B\xb1\x01Z\xae\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_loyalty_loyalty_queries_proto_rawDescOnce sync.Once

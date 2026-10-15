@@ -1,6 +1,7 @@
 // Owner-private durable command format. Published integration contracts remain separate.
 syntax = "proto3";
 package cafe.internal.preparation;
+import "cafe/requests/v1/validation.proto";
 message CommandEnvelope {
   string id = 1;
   string consumer = 2;
@@ -14,4 +15,6 @@ message CommandEnvelope {
     AcceptOrderCommand accept_order = 10;
   }
 }
-message AcceptOrderCommand { string order_id = 1; string customer_id = 2; string instructions = 3; }
+message AcceptOrderCommand {
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PRIVATE };
+  string order_id = 1; string customer_id = 2; string instructions = 3; }

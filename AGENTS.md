@@ -56,8 +56,9 @@ and a dedicated topology credential.
 
 ## Source layout and composition
 
-- Put one command DTO/handler pair in `application/commands/<action>` and one
-  query DTO/handler pair in `application/queries/<question>`. Import their concrete
+- Generate command/query input types from owner Protobuf schemas, including explicit
+  owner and PUBLIC/PRIVATE visibility. Put one handler in `application/commands/<action>`
+  or `application/queries/<question>` and import its generated plain contract. Import their concrete
   modules directly. Use snake_case files in Go/Python and kebab-case in TypeScript.
 - Give each event reaction or projection handler its own business-named file.
   Python uses `event_handlers` and `read_models`; TypeScript uses `event-handlers`
@@ -143,3 +144,7 @@ and a dedicated topology credential.
 - Run `pnpm verify` and `pnpm test:integration` before hand-off. Report any
   skipped environment-dependent checks and record executed evidence in
   `docs/verification.md`. Keep secrets and build artefacts out of commits.
+
+Command and query payloads are schema-generated plain contracts. Declare owner and
+visibility in Protobuf; generate types and mechanical mappings, then implement
+handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).

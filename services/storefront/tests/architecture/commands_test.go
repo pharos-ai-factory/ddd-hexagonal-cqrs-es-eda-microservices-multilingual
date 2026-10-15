@@ -194,7 +194,7 @@ func commandLayout(file *ast.File, packagePath string) bool {
 		if len(inputs)+len(handlers) == 0 {
 			continue
 		}
-		if !(strings.HasSuffix(packagePath, "/application/"+role.folder) && len(inputs) == 1 && len(handlers) == 1 && handlers[0] == inputs[0]+"Handler") {
+		if !(strings.HasSuffix(packagePath, "/application/"+role.folder) && len(inputs) == 0 && len(handlers) == 1 && generatedInput(file, strings.TrimSuffix(handlers[0], "Handler"))) {
 			return false
 		}
 	}
@@ -205,6 +205,29 @@ func commandLayout(file *ast.File, packagePath string) bool {
 		}
 	}
 	return reactions == 0 || (reactions == 1 && (strings.HasSuffix(packagePath, "/application/projections") || strings.HasSuffix(packagePath, "/application/eventhandlers")))
+}
+
+func generatedInput(file *ast.File, name string) bool {
+	imports := map[string]bool{}
+	for _, item := range file.Imports {
+		if strings.Contains(item.Path.Value, "/contracts/requests/model/") {
+			alias := filepath.Base(strings.Trim(item.Path.Value, "\""))
+			if item.Name != nil {
+				alias = item.Name.Name
+			}
+			imports[alias] = true
+		}
+	}
+	found := false
+	ast.Inspect(file, func(node ast.Node) bool {
+		if selector, ok := node.(*ast.SelectorExpr); ok && selector.Sel.Name == name {
+			if qualifier, ok := selector.X.(*ast.Ident); ok && imports[qualifier.Name] {
+				found = true
+			}
+		}
+		return true
+	})
+	return found
 }
 
 func TestProductionCommandBoundaries(t *testing.T) {
@@ -269,9 +292,11 @@ func TestCommandPackageLayout(t *testing.T) {
 		path, source string
 		valid        bool
 	}{
-		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", true},
+		{"fixture/contexts/ordering/application/commands", `import model "fixture/contracts/requests/model/ordering"; type PlaceOrderCommandHandler struct{}; func use(value model.PlaceOrderCommand) {}`, true},
+		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", false},
 		{"fixture/contexts/ordering/application/commands", "type OrderNotFoundApplicationError struct{}", true},
-		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", true},
+		{"fixture/contexts/ordering/application/queries", `import model "fixture/contracts/requests/model/ordering"; type GetOrderQueryHandler struct{}; func use(value model.GetOrderQuery) {}`, true},
+		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", false},
 		{"fixture/contexts/ordering/application", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", false},
 		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}; type ListOrdersQuery struct{}; type ListOrdersQueryHandler struct{}", false},
 		{"fixture/contexts/ordering/application/projections", "type MenuDirectoryProjectionHandler struct{}", true},

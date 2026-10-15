@@ -7,6 +7,7 @@
 package preparationv1
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -97,9 +98,11 @@ var File_cafe_requests_v1_contexts_preparation_preparation_commands_proto protor
 
 const file_cafe_requests_v1_contexts_preparation_preparation_commands_proto_rawDesc = "" +
 	"\n" +
-	"@cafe/requests/v1/contexts/preparation/preparation_commands.proto\x12\x1ccafe.preparation.requests.v1\"\x12\n" +
-	"\x10StartPreparation\"\x15\n" +
-	"\x13CompletePreparationB\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3"
+	"@cafe/requests/v1/contexts/preparation/preparation_commands.proto\x12\x1ccafe.preparation.requests.v1\x1a!cafe/requests/v1/validation.proto\"'\n" +
+	"\x10StartPreparation:\x13\xd2\xf3\x18\x0f\n" +
+	"\vpreparation\x10\x01\"*\n" +
+	"\x13CompletePreparation:\x13\xd2\xf3\x18\x0f\n" +
+	"\vpreparation\x10\x01B\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_preparation_preparation_commands_proto_rawDescOnce sync.Once

@@ -35,7 +35,10 @@ def proto_snapshot(root):
     }
     for path in root.glob("services/**/internal_commands.proto"):
         owner = path.parts[path.parts.index("contexts") + 1]
-        groups[owner + "_commands"] = {f"cafe/internal/{owner}/internal_commands.proto": path}
+        groups[owner + "_commands"] = {
+            f"cafe/internal/{owner}/internal_commands.proto": path,
+            "cafe/requests/v1/validation.proto": root / "contracts/shared/messaging/v1/validation.proto",
+        }
     for group, definitions in groups.items():
         with tempfile.TemporaryDirectory() as directory:
             stage = Path(directory)

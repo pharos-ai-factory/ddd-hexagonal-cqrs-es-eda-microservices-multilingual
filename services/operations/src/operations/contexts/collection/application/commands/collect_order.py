@@ -1,15 +1,9 @@
+from operations.contracts.requests.generated.collection import CollectOrderCommand
 from operations.foundation.domain import Rejection
 from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
-from typing import TypedDict
 from operations.foundation.application import ApplicationError
-
-
-class CollectOrderCommand(TypedDict):
-    """Requests collection using the supplied collection code."""
-
-    code: str
 
 
 class PickupNotFoundApplicationError(ApplicationError):

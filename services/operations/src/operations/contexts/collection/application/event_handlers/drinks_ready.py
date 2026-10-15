@@ -1,6 +1,6 @@
 from operations.contracts.events.generated import preparation as events
 from operations.foundation.application import CommandBusPort, Metadata, Outcome
-from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
+from operations.contracts.requests.generated.collection import OpenPickupCommand
 
 
 class DrinksReadyIntegrationEventHandler:

@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as cafe_dot_requests_dot_v1_dot_validation__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n@cafe/requests/v1/contexts/preparation/preparation_commands.proto\x12\x1c\x63\x61\x66\x65.preparation.requests.v1\"\x12\n\x10StartPreparation\"\x15\n\x13\x43ompletePreparationB\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n@cafe/requests/v1/contexts/preparation/preparation_commands.proto\x12\x1c\x63\x61\x66\x65.preparation.requests.v1\x1a!cafe/requests/v1/validation.proto\"\'\n\x10StartPreparation:\x13\xd2\xf3\x18\x0f\n\x0bpreparation\x10\x01\"*\n\x13\x43ompletePreparation:\x13\xd2\xf3\x18\x0f\n\x0bpreparation\x10\x01\x42\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,8 +33,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.requests.v1.contexts.p
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\266\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1'
-  _globals['_STARTPREPARATION']._serialized_start=98
-  _globals['_STARTPREPARATION']._serialized_end=116
-  _globals['_COMPLETEPREPARATION']._serialized_start=118
-  _globals['_COMPLETEPREPARATION']._serialized_end=139
+  _globals['_STARTPREPARATION']._loaded_options = None
+  _globals['_STARTPREPARATION']._serialized_options = b'\322\363\030\017\n\013preparation\020\001'
+  _globals['_COMPLETEPREPARATION']._loaded_options = None
+  _globals['_COMPLETEPREPARATION']._serialized_options = b'\322\363\030\017\n\013preparation\020\001'
+  _globals['_STARTPREPARATION']._serialized_start=133
+  _globals['_STARTPREPARATION']._serialized_end=172
+  _globals['_COMPLETEPREPARATION']._serialized_start=174
+  _globals['_COMPLETEPREPARATION']._serialized_end=216
 # @@protoc_insertion_point(module_scope)

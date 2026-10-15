@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 from developer import ROOT, CONTEXTS
+from scaffold_inputs import generated_inputs
 
 
 def render(kind, context, name):
@@ -146,7 +147,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
         files = arranged
         files["placement.txt"] = (
             "Place commands/ under the owning context application/ directory.\n"
-            "Keep the command DTO and handler together; import their module directly.\n"
+            "Import the schema-generated command into its named handler module.\n"
             "Replace the generic aggregate type with the owner root and use its named WriteRepository port.\n"
             "Register the command, owner parser and plain handler together through the aggregate command registration API.\n"
             "Place Python test modules under tests/contexts/<context>/application/commands/.\n"
@@ -187,7 +188,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
             + "\n"
         )
         files["wiring.txt"] = (
-            "Add the typed incoming event and owner command DTO. Map the event inside handle; the starter forwards an already mapped command.\n"
+            "Import the generated incoming event and owner command DTO. Map the event inside handle; the starter forwards an already mapped command.\n"
             "Add its private Protobuf payload with an unused field number, decoder and golden fixture.\n"
             "Add the manifest entry, run generation for its event/subscription/private-command enums, then add the typed codec and provider; register the codec and plain handler factory through the aggregate command registration subscription method.\n"
             "Run completeSubscriptions/complete_subscriptions, generation and the composition tests.\n"
@@ -217,7 +218,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
             "Place the reaction directory under the context application/.\n"
             "Place Python tests under tests/contexts/<context>/application/event_handlers/.\n"
         )
-    return service, files
+    return service, generated_inputs(files, service, context, name, "Command") if kind == "command" else files
 
 
 def main():

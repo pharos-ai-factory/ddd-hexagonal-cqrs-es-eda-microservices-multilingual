@@ -205,7 +205,7 @@ command dispatch recovery, bounded command retries and replay without a second
 aggregate transition. Run `pnpm verify` and `pnpm test:integration` together for a
 complete hand-off; static analysis assumes the supported typed coding conventions.
 
-Command layout checks require one DTO/handler pair per file in each context's
+Command/query layout checks require one handler importing its generated payload per file in each context's
 `application/commands/` directory. Negative fixtures cover grouped pairs, a
 missing handler and the previous flat layout. Go checks include nested
 application packages; native scenario runners discover the relocated tests.
@@ -217,7 +217,7 @@ repeated store calls, subscription completeness and lifecycle failure cleanup.
 Infrastructure verification also stops a service to test readiness and inspects
 a completed workflow without consuming its messages. See decision 0012.
 
-Query layout checks require one input/handler pair under `application/queries/`.
+Query layout checks require one handler importing its generated input under `application/queries/`.
 Reaction checks require one event or projection handler per role module. Context
 navigation checks compare the catalogue with source ownership and resolve README
 links. Negative fixtures cover grouped queries, misplaced reactions, shared

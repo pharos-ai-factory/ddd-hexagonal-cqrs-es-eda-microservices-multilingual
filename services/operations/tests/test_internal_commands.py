@@ -4,11 +4,11 @@ from dataclasses import replace
 from pathlib import Path
 from collections.abc import Mapping
 from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
-from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
+from operations.contracts.requests.generated.collection import OpenPickupCommand
 import pytest
 from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec
 from operations.contexts.collection.adaptors.messaging.open_pickup_codec import command_codec as pickup_codec
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.foundation.application import Metadata
 from operations.foundation.identity import derived_id
 

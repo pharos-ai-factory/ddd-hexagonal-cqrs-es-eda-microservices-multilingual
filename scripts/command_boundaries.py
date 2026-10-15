@@ -204,7 +204,7 @@ def check(root=ROOT):
 
 
 def layout_violations(source, path):
-    """Keep each command DTO and its handler in one discoverable use-case module."""
+    """Keep one handler per use case and import its schema-generated input."""
     names = [node.name for node in ast.parse(source).body if isinstance(node, ast.ClassDef)]
     errors = []
     for role, folder in (("Command", "commands"), ("Query", "queries")):
@@ -214,10 +214,19 @@ def layout_violations(source, path):
             continue
         if not (
             Path(path).parent.as_posix().endswith("/application/" + folder)
-            and len(inputs) == 1
-            and handlers == [inputs[0] + "Handler"]
+            and not inputs
+            and len(handlers) == 1
+            and any(
+                isinstance(node, ast.ImportFrom)
+                and node.module
+                and ".contracts.requests.generated." in node.module
+                and any(alias.name == handlers[0].removesuffix("Handler") for alias in node.names)
+                for node in ast.parse(source).body
+            )
         ):
-            errors.append(f"{path}: keep one {role.lower()} and its handler together in application/{folder}")
+            errors.append(
+                f"{path}: import the generated {role.lower()} and keep one handler in application/{folder}"
+            )
     reactions = [name for name in names if name.endswith(("EventHandler", "ProjectionHandler"))]
     if reactions and (len(reactions) != 1 or Path(path).parent.name not in ("event_handlers", "projections")):
         errors.append(f"{path}: keep each event reaction in its own event_handlers or projections module")

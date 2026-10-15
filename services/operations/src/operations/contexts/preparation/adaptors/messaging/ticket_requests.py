@@ -1,5 +1,8 @@
 """Explicit mapping between preparation wire contracts and application types."""
 
+from .generated import request_payloads as inputs
+
+
 from google.protobuf.message import Message
 from operations.foundation.application import Loaded
 from operations.contexts.preparation.application.read_models.ticket import TicketView
@@ -9,34 +12,20 @@ from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.prepara
     Tickets,
 )
 from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_requests_pb2 import Reply
-from operations.contexts.preparation.application.commands.start_preparation import StartPreparationCommand
-from operations.contexts.preparation.application.commands.complete_preparation import (
-    CompletePreparationCommand,
-)
-from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_commands_pb2 import (
-    StartPreparation,
-    CompletePreparation,
-)
-from operations.contexts.preparation.application.queries.get_ticket import GetTicketQuery
-from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQuery
-from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.preparation_queries_pb2 import (
-    GetTicket,
-    ListTickets,
-)
+from operations.contracts.requests.generated.preparation import StartPreparationCommand
+from operations.contracts.requests.generated.preparation import CompletePreparationCommand
+from operations.contracts.requests.generated.preparation import GetTicketQuery
+from operations.contracts.requests.generated.preparation import ListTicketsQuery
 from operations.foundation.domain import identifier
-from operations.foundation.pagination import Page, PageRequest
+from operations.foundation.pagination import Page
 
 
 def start(value: Message) -> StartPreparationCommand:
-    if not isinstance(value, StartPreparation):
-        raise ValueError("Unexpected start preparation payload")
-    return StartPreparationCommand()
+    return inputs.start_preparation(value)
 
 
 def complete(value: Message) -> CompletePreparationCommand:
-    if not isinstance(value, CompletePreparation):
-        raise ValueError("Unexpected complete preparation payload")
-    return CompletePreparationCommand()
+    return inputs.complete_preparation(value)
 
 
 def item(loaded: Loaded[TicketView]) -> LoadedTicket:
@@ -62,22 +51,16 @@ def listing(items: list[Loaded[TicketView]], paged: bool, next_id: str | None) -
 
 
 def get_ticket(value: Message) -> GetTicketQuery:
-    """Decode the published item query into its application input."""
-    if not isinstance(value, GetTicket):
-        raise ValueError("Unexpected get ticket payload")
-    return GetTicketQuery(identifier(value.id))
+    query = inputs.get_ticket(value)
+    identifier(query.id)
+    return query
 
 
 def list_tickets(value: Message) -> ListTicketsQuery:
-    """Preserve complete reads and explicitly requested pagination."""
-    if not isinstance(value, ListTickets):
-        raise ValueError("Unexpected list tickets payload")
-    page = value.page if value.HasField("page") else None
-    return ListTicketsQuery(
-        PageRequest(page.limit, identifier(page.after) if page.HasField("after") else None)
-        if page is not None
-        else None
-    )
+    query = inputs.list_tickets(value)
+    if query.page is not None and query.page.after is not None:
+        identifier(query.page.after)
+    return query
 
 
 def get_reply(query: GetTicketQuery, loaded: Loaded[TicketView] | None) -> Reply:

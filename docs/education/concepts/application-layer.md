@@ -30,7 +30,7 @@ type PlaceOrderCommandHandler struct {
 	Repository ports.OrderWriteRepository
 }
 
-func (h PlaceOrderCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ PlaceOrderCommand) (a.CommandResult, error) {
+func (h PlaceOrderCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ orderingcontracts.PlaceOrderCommand) (a.CommandResult, error) {
 ```
 
 ### Python
@@ -71,9 +71,11 @@ existing Order may be placed belongs to the domain. The framework determines
 how to decode a message; persistence determines how to restore state. These
 responsibilities meet through plain [ports](ports.md).
 
-Application DTOs are also independent of HTTP and Protobuf. A command DTO can be
-an empty Go struct, a Python TypedDict or a TypeScript object type. The owner
-[adaptor](adaptors.md) handles conversion from the published request.
+Command and query inputs are generated from their authoritative Protobuf schemas.
+Their Go structs, Python TypedDicts/dataclasses and TypeScript types have no HTTP
+or Protobuf runtime dependency. Handlers depend on the contract's meaning and
+shape; generated [adaptor](adaptors.md) mappings handle its wire representation.
+Owner adaptors retain semantic validation.
 
 ## Related concepts
 

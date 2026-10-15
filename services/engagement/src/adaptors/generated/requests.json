@@ -107,6 +107,10 @@
                       }
                     },
                     "ListNotifications": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "communication",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "fields": {
                         "page": {
                           "type": "cafe.requests.v1.PageRequest",
@@ -115,6 +119,10 @@
                       }
                     },
                     "GetNotification": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "communication",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "fields": {
                         "id": {
                           "type": "string",
@@ -324,6 +332,30 @@
                   "id": 51001,
                   "extend": "google.protobuf.FieldOptions",
                   "protoName": "required_input"
+                },
+                "Visibility": {
+                  "values": {
+                    "VISIBILITY_UNSPECIFIED": 0,
+                    "PUBLIC": 1,
+                    "PRIVATE": 2
+                  }
+                },
+                "RequestContract": {
+                  "fields": {
+                    "owner": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "visibility": {
+                      "type": "Visibility",
+                      "id": 2
+                    }
+                  }
+                },
+                "contract": {
+                  "type": "RequestContract",
+                  "id": 51002,
+                  "extend": "google.protobuf.MessageOptions"
                 }
               }
             }
@@ -664,6 +696,10 @@
                       }
                     },
                     "ListAccounts": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "loyalty",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "fields": {
                         "page": {
                           "type": "cafe.requests.v1.PageRequest",
@@ -672,6 +708,10 @@
                       }
                     },
                     "GetAccount": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "loyalty",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "fields": {
                         "id": {
                           "type": "string",
@@ -680,6 +720,10 @@
                       }
                     },
                     "ListRewards": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "loyalty",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "fields": {
                         "page": {
                           "type": "cafe.requests.v1.PageRequest",
@@ -688,6 +732,10 @@
                       }
                     },
                     "GetReward": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "loyalty",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "fields": {
                         "id": {
                           "type": "string",
@@ -696,6 +744,10 @@
                       }
                     },
                     "RedeemReward": {
+                      "options": {
+                        "(cafe.requests.v1.contract).owner": "loyalty",
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                      },
                       "oneofs": {
                         "_orderId": {
                           "oneof": [

@@ -7,7 +7,7 @@ the [aggregate](aggregates.md) to decide and stages the changed state.
 ## Creation recipe
 
 1. Complete the [command contract and registration recipe](commands.md): payload, request envelope, generated identifier and owner parser.
-2. Create the named DTO/handler pair in `application/commands/<action>`. Inject the named write repository and any plain clock/identity/projection ports needed by the use case.
+2. Define the command in Protobuf, run generation and import its generated plain input into the named handler in `application/commands/<action>`. Inject the named write repository and any plain clock/identity/projection ports needed by the use case.
 3. Load the target through `get`. Handle missing resources explicitly, or create the root when this is a creation command. Follow [hydration](aggregate-hydration.md).
 4. Invoke one aggregate behaviour and save its resulting state. The aggregate records its private facts; its owner mapper selects delivered facts.
 5. If this use case directly updates the browser, inject `RealtimeBusPort<RealtimeEvent>` and call `publish` with the selected snapshot after saving. For an event-driven update, declare the separate subscriber in the [realtime recipe](realtime-events.md).
@@ -32,18 +32,16 @@ package commands
 import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
-
-// PlaceOrderCommand expresses the owner use case independently of its transport.
-type PlaceOrderCommand struct{}
 
 // PlaceOrderCommandHandler applies PlaceOrder through one aggregate command transaction.
 type PlaceOrderCommandHandler struct {
 	Repository ports.OrderWriteRepository
 }
 
-func (h PlaceOrderCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ PlaceOrderCommand) (a.CommandResult, error) {
+func (h PlaceOrderCommandHandler) Execute(ctx context.Context, m a.CommandContext, _ orderingcontracts.PlaceOrderCommand) (a.CommandResult, error) {
 	s, err := h.Repository.Get(ctx, m.Target)
 	if err != nil {
 		return a.CommandResult{}, err
@@ -67,16 +65,10 @@ func (h PlaceOrderCommandHandler) Execute(ctx context.Context, m a.CommandContex
 Source: [complete_preparation.py](../../../services/operations/src/operations/contexts/preparation/application/commands/complete_preparation.py).
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/commands/complete_preparation.py"
+from operations.contracts.requests.generated.preparation import CompletePreparationCommand
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
-from typing import TypedDict
 from operations.foundation.domain import Rejection
-
-
-class CompletePreparationCommand(TypedDict):
-    """Requests completion of the targeted preparation ticket."""
-
-    pass
 
 
 class CompletePreparationCommandHandler:
@@ -101,11 +93,12 @@ class CompletePreparationCommandHandler:
 Source: [redeem-reward.ts](../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
+import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
+import { Rejection } from '../../../../foundation/domain.js';
+import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { ApplicationError } from '../../../../foundation/application.js';
-
-export type RedeemRewardCommand = { orderId: string };
 
 /** Applies the reward redemption rule using the injected clock and one aggregate transaction. */
 export class RedeemRewardCommandHandler {

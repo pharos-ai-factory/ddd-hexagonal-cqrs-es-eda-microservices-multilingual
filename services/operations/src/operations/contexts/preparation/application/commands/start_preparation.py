@@ -1,14 +1,8 @@
+from operations.contracts.requests.generated.preparation import StartPreparationCommand
 from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
-from typing import TypedDict
 from operations.foundation.domain import Rejection
-
-
-class StartPreparationCommand(TypedDict):
-    """Requests the queued-to-preparing transition for the targeted ticket."""
-
-    pass
 
 
 class StartPreparationCommandHandler:

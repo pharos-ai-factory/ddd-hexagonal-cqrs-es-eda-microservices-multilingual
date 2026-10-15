@@ -1,16 +1,21 @@
 """Collection owns its private command identity, validation and stored wire format."""
 
+from .generated.request_payloads import parse_open_pickup_command
+
+
 from operations.adaptors.generated.message_names import CollectionPrivateCommand, CollectionSubscription
 
 from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.generated.cafe.internal.collection.internal_commands_pb2 import CommandEnvelope
-from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommand
-from operations.foundation.domain import identifier, record
+from operations.contracts.requests.generated.collection import OpenPickupCommand
+from operations.foundation.domain import identifier
 
 
 def open_command(value: object) -> OpenPickupCommand:
-    data = record(value)
-    return OpenPickupCommand(orderId=identifier(data["orderId"]), customerId=identifier(data["customerId"]))
+    command = parse_open_pickup_command(value)
+    identifier(command["orderId"])
+    identifier(command["customerId"])
+    return command
 
 
 def command_codec() -> InternalCommandCodec[OpenPickupCommand]:

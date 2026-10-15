@@ -88,3 +88,8 @@ their original rationale.
 [0027 — Go durable command reactions](0027-go-durable-command-reactions.md) completes
 the private command path with a receiving outbox, paired consumers, fenced relay
 and Ordering's `RecordCollection` example with explicit realtime publication.
+
+[0028 — Schema-generated command and query inputs](0028-schema-generated-command-and-query-inputs.md)
+refines 0013–0014, 0017, 0024 and 0027: Protobuf defines payloads once, including
+owner/visibility; generation supplies plain types and mechanical mappings, and
+application handlers import those generated contracts.

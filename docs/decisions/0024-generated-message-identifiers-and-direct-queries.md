@@ -1,5 +1,9 @@
 # 0024 — Generated message identifiers and direct query registration
 
+Refined by [decision 0028](0028-schema-generated-command-and-query-inputs.md):
+command/query payload types and mechanical input mappings are generated from
+annotated owner Protobuf schemas; handlers import the generated plain contracts.
+
 Status: accepted, 14 October 2026. Refines decisions 0014, 0017, 0019 and 0023.
 
 ## Decision

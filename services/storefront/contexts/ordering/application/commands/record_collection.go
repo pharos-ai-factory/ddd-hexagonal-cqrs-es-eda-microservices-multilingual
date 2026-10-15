@@ -4,13 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
-
-// RecordCollectionCommand records Collection's published handover fact.
-type RecordCollectionCommand struct {
-	CustomerID string `json:"customerId"`
-}
 
 // RecordCollectionCommandHandler changes one Order and explicitly publishes its updated view.
 type RecordCollectionCommandHandler struct {
@@ -18,7 +14,7 @@ type RecordCollectionCommandHandler struct {
 	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
 }
 
-func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.CommandContext, c RecordCollectionCommand) (a.CommandResult, error) {
+func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.RecordCollectionCommand) (a.CommandResult, error) {
 	loaded, err := h.Repository.Get(ctx, m.Target)
 	if err != nil {
 		return a.CommandResult{}, err

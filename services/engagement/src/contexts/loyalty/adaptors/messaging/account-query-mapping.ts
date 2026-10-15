@@ -1,25 +1,24 @@
-import { record, integer, text } from '../../../../adaptors/messaging/request-values.js';
+import { parseGetAccountQuery, parseListAccountsQuery } from './generated/request-payloads.js';
 import { identifier } from '../../../../foundation/domain.js';
 import type { Loaded } from '../../../../foundation/application.js';
 import type { Page } from '../../../../foundation/pagination.js';
-import type { GetAccountQuery } from '../../application/queries/get-account.js';
-import type { ListAccountsQuery } from '../../application/queries/list-accounts.js';
+import type { GetAccountQuery } from '../../../../contracts/requests/generated/loyalty.js';
+import type { ListAccountsQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { AccountView } from '../../application/read-models/account.js';
 import { account } from './account-replies.js';
 
 /** Decode the published item query into its application input. */
 export function getAccount(value: unknown): GetAccountQuery {
-  return { id: identifier(text(record(value).id)) };
+  const query = parseGetAccountQuery(value);
+  identifier(query.id);
+  return query;
 }
 
 /** Preserve complete reads and explicitly requested pagination. */
 export function listAccounts(value: unknown): ListAccountsQuery {
-  const fields = record(value);
-  if (!('page' in fields)) return {};
-  const page = record(fields.page);
-  return {
-    page: { limit: integer(page.limit), ...('after' in page ? { after: identifier(text(page.after)) } : {}) },
-  };
+  const query = parseListAccountsQuery(value);
+  if (query.page?.after !== undefined) identifier(query.page.after);
+  return query;
 }
 
 /** Map the resource revision or the existing missing-resource response. */

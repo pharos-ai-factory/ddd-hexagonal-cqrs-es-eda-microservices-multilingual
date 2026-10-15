@@ -26,13 +26,22 @@ export function commandLayout(file) {
           .dirname(file.fileName)
           .replaceAll('\\', '/')
           .endsWith('/application/' + folder) &&
-        inputs.length === 1 &&
+        inputs.length === 0 &&
         handlers.length === 1 &&
-        handlers[0] === inputs[0] + 'Handler'
+        file.statements.some(
+          (node) =>
+            ts.isImportDeclaration(node) &&
+            node.moduleSpecifier.text.includes('/contracts/requests/generated/') &&
+            node.importClause?.namedBindings &&
+            ts.isNamedImports(node.importClause.namedBindings) &&
+            node.importClause.namedBindings.elements.some(
+              (item) => item.name.text + 'Handler' === handlers[0],
+            ),
+        )
       )
     )
       errors.push(
-        `${file.fileName}: keep one ${role.toLowerCase()} and its handler together in application/${folder}`,
+        `${file.fileName}: import the generated ${role.toLowerCase()} and keep one handler in application/${folder}`,
       );
   }
   const reactions = names.filter((name) => /(?:Event|Projection)Handler$/.test(name));

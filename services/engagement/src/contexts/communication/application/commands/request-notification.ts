@@ -1,10 +1,10 @@
+import type { RequestNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { NotificationWriteRepository } from '../ports/notification-write-repository.js';
 import { Notification } from '../../domain/notification.js';
 
 /** Owner-local notification content, prepared before the durable hand-off. */
-export type RequestNotificationCommand = { recipient: string; subject: string; body: string };
 
 /** Creates one notification and records its private delivery-requested fact atomically. */
 export class RequestNotificationCommandHandler {

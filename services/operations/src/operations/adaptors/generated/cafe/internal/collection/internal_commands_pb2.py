@@ -22,17 +22,20 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as cafe_dot_requests_dot_v1_dot_validation__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n0cafe/internal/collection/internal_commands.proto\x12\x18\x63\x61\x66\x65.internal.collection\"\xee\x01\n\x0f\x43ommandEnvelope\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08\x63onsumer\x18\x02 \x01(\t\x12\x17\n\x0fsource_event_id\x18\x03 \x01(\t\x12\x13\n\x0bsource_hash\x18\x04 \x01(\t\x12\x0e\n\x06target\x18\x05 \x01(\t\x12\x16\n\x0e\x63orrelation_id\x18\x06 \x01(\t\x12\x18\n\x10receipt_material\x18\x07 \x01(\x0c\x12\x42\n\x0bopen_pickup\x18\n \x01(\x0b\x32+.cafe.internal.collection.OpenPickupCommandH\x00\x42\t\n\x07\x63ommand\":\n\x11OpenPickupCommand\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x02 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n0cafe/internal/collection/internal_commands.proto\x12\x18\x63\x61\x66\x65.internal.collection\x1a!cafe/requests/v1/validation.proto\"\xee\x01\n\x0f\x43ommandEnvelope\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08\x63onsumer\x18\x02 \x01(\t\x12\x17\n\x0fsource_event_id\x18\x03 \x01(\t\x12\x13\n\x0bsource_hash\x18\x04 \x01(\t\x12\x0e\n\x06target\x18\x05 \x01(\t\x12\x16\n\x0e\x63orrelation_id\x18\x06 \x01(\t\x12\x18\n\x10receipt_material\x18\x07 \x01(\x0c\x12\x42\n\x0bopen_pickup\x18\n \x01(\x0b\x32+.cafe.internal.collection.OpenPickupCommandH\x00\x42\t\n\x07\x63ommand\"N\n\x11OpenPickupCommand\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x02 \x01(\t:\x12\xd2\xf3\x18\x0e\n\ncollection\x10\x02\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.internal.collection.internal_commands_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_COMMANDENVELOPE']._serialized_start=79
-  _globals['_COMMANDENVELOPE']._serialized_end=317
-  _globals['_OPENPICKUPCOMMAND']._serialized_start=319
-  _globals['_OPENPICKUPCOMMAND']._serialized_end=377
+  _globals['_OPENPICKUPCOMMAND']._loaded_options = None
+  _globals['_OPENPICKUPCOMMAND']._serialized_options = b'\322\363\030\016\n\ncollection\020\002'
+  _globals['_COMMANDENVELOPE']._serialized_start=114
+  _globals['_COMMANDENVELOPE']._serialized_end=352
+  _globals['_OPENPICKUPCOMMAND']._serialized_start=354
+  _globals['_OPENPICKUPCOMMAND']._serialized_end=432
 # @@protoc_insertion_point(module_scope)

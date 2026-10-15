@@ -33,18 +33,11 @@ func New(id, customer, edition, currency string) (*Order, error) {
 Source: [accept_order.py](../../../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py).
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/commands/accept_order.py"
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
+from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
-from typing import TypedDict
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketState
-
-
-class AcceptOrderCommand(TypedDict):
-    """Owner instruction to create a preparation ticket with immutable instructions."""
-
-    orderId: str
-    customerId: str
-    instructions: str
 
 
 class AcceptOrderCommandHandler:
@@ -73,12 +66,12 @@ class AcceptOrderCommandHandler:
 Source: [issue-reward.ts](../../../services/engagement/src/contexts/loyalty/application/commands/issue-reward.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/issue-reward.ts"
+import type { IssueRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { Reward } from '../../domain/reward.js';
 
 /** Carries the immutable grant so reward issuance can recover independently. */
-export type IssueRewardCommand = { grantId: string; accountId: string; benefit: string; validDays: number };
 
 /** Creates one Reward from its immutable earned grant and injected clock. */
 export class IssueRewardCommandHandler {

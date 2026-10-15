@@ -1,5 +1,9 @@
 # 0014 — Context navigation and explicit read use cases
 
+Refined by [decision 0028](0028-schema-generated-command-and-query-inputs.md):
+command/query payload types and mechanical input mappings are generated from
+annotated owner Protobuf schemas; handlers import the generated plain contracts.
+
 Status: accepted, 9 October 2026. Extends decisions 0012 and 0013.
 
 The persistence names below are refined by

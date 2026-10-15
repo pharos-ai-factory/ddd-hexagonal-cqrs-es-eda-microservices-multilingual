@@ -25,11 +25,11 @@ command. The generated payload supplies the order and customer; composition sele
 ```go source="../../../services/storefront/contexts/ordering/application/eventhandlers/order_collected.go"
 // OrderCollectedIntegrationEventHandler durably requests an owner transition before acknowledging the fact.
 type OrderCollectedIntegrationEventHandler struct {
-	Commands a.CommandBusPort[commands.RecordCollectionCommand]
+	Commands a.CommandBusPort[orderingcontracts.RecordCollectionCommand]
 }
 
 func (h OrderCollectedIntegrationEventHandler) Handle(ctx context.Context, m a.Metadata, event model.OrderCollectedIntegrationEvent) (a.Outcome, error) {
-	return h.Commands.Enqueue(ctx, m, commands.RecordCollectionCommand{CustomerID: event.CustomerID})
+	return h.Commands.Enqueue(ctx, m, orderingcontracts.RecordCollectionCommand{CustomerID: event.CustomerID})
 }
 ```
 
@@ -47,7 +47,7 @@ Source: [order_placed.py](../../../services/operations/src/operations/contexts/p
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py"
 from operations.contracts.events.generated import ordering as events
 from operations.foundation.application import CommandBusPort, Metadata, Outcome
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 
 
 class OrderPlacedIntegrationEventHandler:
@@ -79,7 +79,7 @@ Source: [order-collected.ts](../../../services/engagement/src/contexts/loyalty/a
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/event-handlers/order-collected.ts"
 import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { OrderCollectedIntegrationEvent } from '../../../../contracts/events/generated/collection.js';
-import type { CreditCollectionCommand } from '../commands/credit-collection.js';
+import type { CreditCollectionCommand } from '../../../../contracts/requests/generated/loyalty.js';
 
 /** Maps Collection's fact into a durable intent owned by Loyalty. */
 export class OrderCollectedIntegrationEventHandler {

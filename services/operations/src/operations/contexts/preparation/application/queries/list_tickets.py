@@ -1,14 +1,7 @@
-from dataclasses import dataclass
-from operations.foundation.pagination import Page, PageRequest
+from operations.contracts.requests.generated.preparation import ListTicketsQuery
+from operations.foundation.pagination import Page
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
 from operations.contexts.preparation.application.read_models.ticket import TicketView
-
-
-@dataclass(frozen=True)
-class ListTicketsQuery:
-    """Select tickets or an explicitly requested page."""
-
-    page: PageRequest | None = None
 
 
 class ListTicketsQueryHandler:

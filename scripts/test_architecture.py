@@ -63,6 +63,22 @@ class ArchitectureTests(unittest.TestCase):
                     core_violation(base + "/application/handler", target.replace("contracts", "adaptors"))
                 )
 
+    def test_generated_request_inputs_remain_owner_scoped(self):
+        source = MODULE + "/contexts/ordering/application/commands"
+        self.assertIsNone(import_violation(source, MODULE + "/contracts/requests/model/ordering"))
+        self.assertIsNotNone(import_violation(source, MODULE + "/contracts/requests/model/menu"))
+        for service, owner, prefix, extension in (
+            ("operations", "preparation", "operations", ""),
+            ("engagement", "loyalty", "services/engagement/src", ".js"),
+        ):
+            source = f"services/{service}/src/contexts/{owner}/application/commands/example"
+            target = f"{prefix}/contracts/requests/generated/{owner}{extension}"
+            self.assertIsNone(core_violation(source, target))
+            self.assertIsNotNone(
+                core_violation(source, target.replace(owner + extension, "foreign" + extension))
+            )
+            self.assertIsNotNone(core_violation(source.replace("application/commands", "domain"), target))
+
     def test_misplaced_generated_header_fails_the_architecture_gate(self):
         path = check_architecture.ROOT / "services/engagement/src/contracts/events/collection.ts"
         read_text = Path.read_text

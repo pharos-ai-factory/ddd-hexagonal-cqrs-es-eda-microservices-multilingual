@@ -1,7 +1,5 @@
+import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Select one reward. */
-export type GetRewardQuery = Readonly<{ id: string }>;
 
 /** Execute the GetReward use case through its context-owned read port. */
 export class GetRewardQueryHandler {

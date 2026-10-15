@@ -4,5 +4,6 @@ option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-micr
 import "cafe/requests/v1/validation.proto";
 
 message RedeemReward {
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
   optional string order_id = 1 [(cafe.requests.v1.required_input) = true];
 }

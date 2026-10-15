@@ -23,9 +23,10 @@ _sym_db = _symbol_database.Default()
 
 
 from operations.adaptors.generated.cafe.requests.v1 import common_pb2 as cafe_dot_requests_dot_v1_dot_common__pb2
+from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as cafe_dot_requests_dot_v1_dot_validation__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/requests/v1/contexts/preparation/preparation_queries.proto\x12\x1c\x63\x61\x66\x65.preparation.requests.v1\x1a\x1d\x63\x61\x66\x65/requests/v1/common.proto\":\n\x0bListTickets\x12+\n\x04page\x18\x01 \x01(\x0b\x32\x1d.cafe.requests.v1.PageRequest\"\x17\n\tGetTicket\x12\n\n\x02id\x18\x01 \x01(\tB\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/requests/v1/contexts/preparation/preparation_queries.proto\x12\x1c\x63\x61\x66\x65.preparation.requests.v1\x1a\x1d\x63\x61\x66\x65/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"O\n\x0bListTickets\x12+\n\x04page\x18\x01 \x01(\x0b\x32\x1d.cafe.requests.v1.PageRequest:\x13\xd2\xf3\x18\x0f\n\x0bpreparation\x10\x01\",\n\tGetTicket\x12\n\n\x02id\x18\x01 \x01(\t:\x13\xd2\xf3\x18\x0f\n\x0bpreparation\x10\x01\x42\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,8 +34,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.requests.v1.contexts.p
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\266\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1'
-  _globals['_LISTTICKETS']._serialized_start=128
-  _globals['_LISTTICKETS']._serialized_end=186
-  _globals['_GETTICKET']._serialized_start=188
-  _globals['_GETTICKET']._serialized_end=211
+  _globals['_LISTTICKETS']._loaded_options = None
+  _globals['_LISTTICKETS']._serialized_options = b'\322\363\030\017\n\013preparation\020\001'
+  _globals['_GETTICKET']._loaded_options = None
+  _globals['_GETTICKET']._serialized_options = b'\322\363\030\017\n\013preparation\020\001'
+  _globals['_LISTTICKETS']._serialized_start=163
+  _globals['_LISTTICKETS']._serialized_end=242
+  _globals['_GETTICKET']._serialized_start=244
+  _globals['_GETTICKET']._serialized_end=288
 # @@protoc_insertion_point(module_scope)

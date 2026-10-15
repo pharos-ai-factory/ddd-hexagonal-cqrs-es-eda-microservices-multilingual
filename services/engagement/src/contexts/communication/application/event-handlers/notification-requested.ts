@@ -1,6 +1,6 @@
 import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { NotificationRequestedDomainEventPayload } from '../events.js';
-import type { DeliverNotificationCommand } from '../commands/deliver-notification.js';
+import type { DeliverNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 
 /** Requests delivery through its own command queue after notification creation commits. */
 export class NotificationRequestedDomainEventHandler {

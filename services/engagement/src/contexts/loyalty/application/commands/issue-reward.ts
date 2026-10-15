@@ -1,9 +1,9 @@
+import type { IssueRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { Reward } from '../../domain/reward.js';
 
 /** Carries the immutable grant so reward issuance can recover independently. */
-export type IssueRewardCommand = { grantId: string; accountId: string; benefit: string; validDays: number };
 
 /** Creates one Reward from its immutable earned grant and injected clock. */
 export class IssueRewardCommandHandler {

@@ -112,3 +112,12 @@ public contract changes and private queued formats retain compatibility checks.
 compilation/conformance. `pnpm test:integration` proves the same boundaries through
 live owner services. Follow the [developer workflow](../docs/developer-workflow.md)
 when adding a published operation or private subscription.
+
+## Schema-defined command and query inputs
+
+Declare every payload's owner and PUBLIC/PRIVATE visibility with
+`cafe.requests.v1.contract`. Run `pnpm generate:contracts` for plain Go/Python/TypeScript
+inputs, mechanical boundary mappings and routing identifiers. Handlers import
+service-local `contracts/requests` types. Public request envelopes and private
+durable envelopes retain separate delivery protocols and their compatibility
+obligations. See [decision 0028](../docs/decisions/0028-schema-generated-command-and-query-inputs.md).

@@ -1,5 +1,9 @@
 # 0017 — Contract-driven event boundaries
 
+Refined by [decision 0028](0028-schema-generated-command-and-query-inputs.md):
+command/query payload types and mechanical input mappings are generated from
+annotated owner Protobuf schemas; handlers import the generated plain contracts.
+
 Accepted: 2026-10-14.
 
 Refined by [decision 0019](0019-durable-domain-event-publication.md): aggregate

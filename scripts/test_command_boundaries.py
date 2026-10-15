@@ -5,7 +5,7 @@ from command_boundaries import violations, aggregate_methods, check, layout_viol
 class CommandBoundaryTests(unittest.TestCase):
     def test_command_module_layout(self):
         path = "contexts/preparation/application/commands/accept_order.py"
-        pair = "class AcceptOrderCommand: pass\nclass AcceptOrderCommandHandler: pass\n"
+        pair = "from operations.contracts.requests.generated.preparation import AcceptOrderCommand\nclass AcceptOrderCommandHandler: pass\n"
         self.assertEqual(layout_violations(pair, path), [])
         self.assertEqual(layout_violations("class MissingTicketError: pass", path), [])
         self.assertTrue(layout_violations(pair, "contexts/preparation/application.py"))

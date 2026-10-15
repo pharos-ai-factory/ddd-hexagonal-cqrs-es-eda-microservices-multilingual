@@ -1,8 +1,5 @@
-import type { PageRequest } from '../../../../foundation/pagination.js';
+import type { ListAccountsQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { AccountReadRepository } from '../ports/account-read-repository.js';
-
-/** Select accounts or an explicitly requested page. */
-export type ListAccountsQuery = Readonly<{ page?: PageRequest | undefined }>;
 
 /** Execute the ListAccounts use case through its context-owned read port. */
 export class ListAccountsQueryHandler {

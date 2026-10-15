@@ -4,15 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
-
-// ChangeQuantityCommand expresses the owner ChangeQuantity use case independently of transport.
-type ChangeQuantityCommand struct {
-	LineID   string `json:"lineId"`
-	Quantity int    `json:"quantity"`
-}
 
 // ChangeQuantityCommandHandler applies ChangeQuantity through one aggregate command transaction.
 type ChangeQuantityCommandHandler struct {
@@ -20,7 +15,7 @@ type ChangeQuantityCommandHandler struct {
 	Repository ports.OrderWriteRepository
 }
 
-func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c ChangeQuantityCommand) (result a.CommandResult, err error) {
+func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.ChangeQuantityCommand) (result a.CommandResult, err error) {
 	defer func() {
 		var rejected d.ExpectedError
 		if errors.As(err, &rejected) {

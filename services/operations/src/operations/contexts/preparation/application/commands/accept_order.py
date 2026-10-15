@@ -1,16 +1,8 @@
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
-from typing import TypedDict
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket, TicketState
-
-
-class AcceptOrderCommand(TypedDict):
-    """Owner instruction to create a preparation ticket with immutable instructions."""
-
-    orderId: str
-    customerId: str
-    instructions: str
 
 
 class AcceptOrderCommandHandler:

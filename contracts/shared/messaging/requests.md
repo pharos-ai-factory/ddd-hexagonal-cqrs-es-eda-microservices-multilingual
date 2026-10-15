@@ -84,8 +84,7 @@ failures produce a technical unavailable reply and allow an explicit retry.
 
 Commands retain the supplied command ID, aggregate ID, expected version and
 workflow correlation ID. Transport request IDs change on retries and match replies;
-they never become command deduplication keys. Query adaptors construct named
-application query DTOs; their handlers use application-owned read models and
+they never become command deduplication keys. Generated query mappings construct the schema-defined plain inputs; their handlers use application-owned read models and
 named read repository ports. Pagination sends an owner identity cursor; the API translates that
 into the resource-bound opaque HTTP cursor.
 
@@ -111,3 +110,10 @@ checks OpenAPI-to-Protobuf translation for all 31 business operations and native
 command/query adaptors. `pnpm test:integration` exercises the actual request/reply
 path through Go, Python and TypeScript, denied broker operations and recovery of
 a committed command after its reply is deliberately made unroutable.
+
+Every command/query payload declares owner and visibility using
+`cafe.requests.v1.contract`. Generation supplies the plain input types and
+mechanical mappings as well as wire bindings and identifiers. Owner wrappers
+retain semantic checks. See [decision 0028](../../../docs/decisions/0028-schema-generated-command-and-query-inputs.md)
+and the [command](../../../docs/education/concepts/commands.md) and
+[query](../../../docs/education/concepts/queries.md) recipes.

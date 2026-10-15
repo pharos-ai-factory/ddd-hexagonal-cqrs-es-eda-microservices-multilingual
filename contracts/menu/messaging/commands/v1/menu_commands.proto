@@ -4,21 +4,26 @@ option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-micr
 import "cafe/requests/v1/validation.proto";
 
 message CreateDrink {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
   optional string name = 1 [(cafe.requests.v1.required_input) = true];
 }
 
 message ReviseDrink {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
   optional string name = 1 [(cafe.requests.v1.required_input) = true];
 }
 
 message PublishDrink {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
 }
 
 message CreateEdition {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
   optional string currency = 1 [(cafe.requests.v1.required_input) = true];
 }
 
 message AddOffer {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
   optional string code = 1 [(cafe.requests.v1.required_input) = true];
   optional string drink_id = 2 [(cafe.requests.v1.required_input) = true];
   optional uint64 drink_revision = 3 [(cafe.requests.v1.required_input) = true];
@@ -26,9 +31,11 @@ message AddOffer {
 }
 
 message ChangePrice {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
   optional string code = 1 [(cafe.requests.v1.required_input) = true];
   optional int64 minor = 2 [(cafe.requests.v1.required_input) = true];
 }
 
 message PublishEdition {
+  option (cafe.requests.v1.contract) = { owner: "menu" visibility: PUBLIC };
 }

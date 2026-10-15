@@ -1,6 +1,6 @@
 import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { OrderCollectedIntegrationEvent } from '../../../../contracts/events/generated/collection.js';
-import type { CreditCollectionCommand } from '../commands/credit-collection.js';
+import type { CreditCollectionCommand } from '../../../../contracts/requests/generated/loyalty.js';
 
 /** Maps Collection's fact into a durable intent owned by Loyalty. */
 export class OrderCollectedIntegrationEventHandler {

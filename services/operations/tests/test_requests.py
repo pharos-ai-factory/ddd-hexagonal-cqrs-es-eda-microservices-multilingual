@@ -8,7 +8,7 @@ from operations.adaptors.messaging.request_envelope import validate
 from operations.adaptors.messaging.request_envelope import new_reply, parse_request
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Request
 from operations.foundation.application import Metadata, Outcome
-from operations.contexts.collection.application.commands.collect_order import CollectOrderCommand
+from operations.contracts.requests.generated.collection import CollectOrderCommand
 
 ID = "11111111-1111-4111-8111-111111111111"
 

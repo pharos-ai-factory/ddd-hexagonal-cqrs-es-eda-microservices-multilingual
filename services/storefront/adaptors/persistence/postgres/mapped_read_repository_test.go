@@ -33,8 +33,9 @@ func TestMappedReadRepositoryPreserveMissingRowsRevisionsAndFailures(t *testing.
 	if err != nil || missing.Exists || calls != 0 {
 		t.Fatal("mapped a missing aggregate")
 	}
-	page, err := q.Page(ctx, a.PageRequest{Limit: 2, After: "after"})
-	if err != nil || page.NextID != "next" || len(page.Items) != 1 || page.Items[0].Version != 7 || page.Items[0].State != "read" || source.request.After != "after" {
+	after := "after"
+	page, err := q.Page(ctx, a.PageRequest{Limit: 2, After: &after})
+	if err != nil || page.NextID != "next" || len(page.Items) != 1 || page.Items[0].Version != 7 || page.Items[0].State != "read" || source.request.After == nil || *source.request.After != "after" {
 		t.Fatalf("page changed: %+v %v", page, err)
 	}
 	source.failure = errors.New("storage unavailable")

@@ -14,6 +14,7 @@ from adaptor_layout import import_violation as adaptor_import_violation
 from hashlib import sha256
 import json
 import os
+from request_contract_policy import plain_request_or_event
 from pathlib import Path
 import re
 import subprocess
@@ -130,6 +131,12 @@ for owner in ("loyalty", "communication"):
 for pattern in (
     "services/storefront/apps/support/subscriptions_generated.go",
     "services/storefront/contracts/events/model/*_generated.go",
+    "services/storefront/contracts/requests/model/*/*_generated.go",
+    "services/storefront/contexts/*/adaptors/messaging/request_payloads_generated.go",
+    "services/operations/src/operations/contracts/requests/generated/*.py",
+    "services/operations/src/operations/contexts/*/adaptors/messaging/generated/request_payloads.py",
+    "services/engagement/src/contracts/requests/generated/*.ts",
+    "services/engagement/src/contexts/*/adaptors/messaging/generated/request-payloads.ts",
     "services/storefront/contracts/events/protobuf/*_generated.go",
     "services/storefront/contexts/*/adaptors/messaging/subscriptions_generated.go",
     "services/operations/src/operations/contracts/events/generated/*.py",
@@ -180,6 +187,8 @@ def import_violation(package, imported):
                     f"contexts/{owner}/application",
                     "foundation/application",
                     "contracts/events/model",
+                    f"contracts/requests/model/{owner}",
+                    "contracts/requests/model/shared",
                 ]
             if internal and not any(target == p or target.startswith(p + "/") for p in allowed):
                 return "outward core dependency"
@@ -187,7 +196,11 @@ def import_violation(package, imported):
                 "." in imported.split("/")[0] or imported.split("/")[0] in {"net", "os", "database", "log"}
             ):
                 return "infrastructure in core"
-    if path.startswith("foundation/") and internal and not target.startswith("foundation/"):
+    if (
+        path.startswith("foundation/")
+        and internal
+        and not target.startswith(("foundation/", "contracts/requests/model/shared"))
+    ):
         return "business dependency in technical foundation"
     if path.startswith("apps/") and target.startswith("contexts/"):
         if target.split("/")[1] not in SERVICES.get(service, set()):
@@ -238,16 +251,7 @@ def core_violation(path, target):
         return "query capabilities must use application read models"
     if ring in {"domain", "application"}:
         service = parts[1] if parts[0] == "services" else ""
-        plain_contract_roots = {
-            "operations": (
-                "operations/contracts/events/generated",
-                "services/operations/src/operations/contracts/events/generated",
-            ),
-            "engagement": ("services/engagement/src/contracts/events/generated",),
-        }
-        plain_contract = any(
-            target == root or target.startswith(root + "/") for root in plain_contract_roots.get(service, ())
-        )
+        plain_contract = plain_request_or_event(service, owner, target)
         if any(p in target.split("/") for p in ("adaptors", "apps")) or (
             "generated" in target.split("/") and not plain_contract
         ):

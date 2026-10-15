@@ -24,6 +24,10 @@ export interface RequestError {
   code: string;
   message: string;
 }
+export interface RequestContract {
+  owner: string;
+  visibility: number;
+}
 }
 export namespace loyalty {
 export interface Grant {

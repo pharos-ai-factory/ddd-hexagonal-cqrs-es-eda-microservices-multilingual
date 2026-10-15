@@ -1,8 +1,5 @@
-import type { PageRequest } from '../../../../foundation/pagination.js';
+import type { ListRewardsQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Select rewards or an explicitly requested page. */
-export type ListRewardsQuery = Readonly<{ page?: PageRequest | undefined }>;
 
 /** Execute the ListRewards use case through its context-owned read port. */
 export class ListRewardsQueryHandler {

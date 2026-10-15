@@ -9,6 +9,7 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Adaptor responsibilities and navigation](adaptors/README.md)
 
 - [Aggregate behaviour](domain)
+- [Generated command/query payloads](../../contracts/requests/model/menu/payloads_generated.go)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
 - [Generated command and query identifiers](../../contracts/requests/generated/cafe/requests/v1/names.go)
@@ -32,7 +33,8 @@ A menu edition owns its offers; every offer pins a published drink revision.
 ## Follow a use case
 
 Start with the named file in `application/commands/` or `application/queries/`.
-The DTO and handler live together. Follow the injected application port to the
+The handler imports its plain input from the schema-generated request contracts.
+Change command/query fields in Protobuf and run `pnpm generate:contracts` first. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
 Command handlers load, mutate and save through named write repositories.
 Composition pairs each command with its plain handler factory through the shared

@@ -6,17 +6,10 @@ import (
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
+	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	core "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
-
-// AddOfferCommand expresses the owner AddOffer use case independently of transport.
-type AddOfferCommand struct {
-	Code          string `json:"code"`
-	DrinkID       string `json:"drinkId"`
-	DrinkRevision uint64 `json:"drinkRevision"`
-	Minor         int64  `json:"minor"`
-}
 
 // AddOfferCommandHandler applies AddOffer through one aggregate command transaction.
 type AddOfferCommandHandler struct {
@@ -25,7 +18,7 @@ type AddOfferCommandHandler struct {
 	Drinks     a.ProjectionPort[app.DrinkPublishedDomainEvent]
 }
 
-func (h AddOfferCommandHandler) Execute(ctx context.Context, m a.CommandContext, c AddOfferCommand) (a.CommandResult, error) {
+func (h AddOfferCommandHandler) Execute(ctx context.Context, m a.CommandContext, c menucontracts.AddOfferCommand) (a.CommandResult, error) {
 	// This immutable owner-local projection is loaded before the command transaction.
 	published, found, err := h.Drinks.Find(ctx, fmt.Sprintf("%s/%d", c.DrinkID, c.DrinkRevision))
 	if err != nil {

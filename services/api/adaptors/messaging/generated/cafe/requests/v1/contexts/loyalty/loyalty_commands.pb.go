@@ -70,9 +70,10 @@ var File_cafe_requests_v1_contexts_loyalty_loyalty_commands_proto protoreflect.F
 
 const file_cafe_requests_v1_contexts_loyalty_loyalty_commands_proto_rawDesc = "" +
 	"\n" +
-	"8cafe/requests/v1/contexts/loyalty/loyalty_commands.proto\x12\x18cafe.loyalty.requests.v1\x1a!cafe/requests/v1/validation.proto\"A\n" +
+	"8cafe/requests/v1/contexts/loyalty/loyalty_commands.proto\x12\x18cafe.loyalty.requests.v1\x1a!cafe/requests/v1/validation.proto\"R\n" +
 	"\fRedeemReward\x12$\n" +
-	"\border_id\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\aorderId\x88\x01\x01B\v\n" +
+	"\border_id\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\aorderId\x88\x01\x01:\x0f\xd2\xf3\x18\v\n" +
+	"\aloyalty\x10\x01B\v\n" +
 	"\t_order_idB\xb1\x01Z\xae\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1b\x06proto3"
 
 var (

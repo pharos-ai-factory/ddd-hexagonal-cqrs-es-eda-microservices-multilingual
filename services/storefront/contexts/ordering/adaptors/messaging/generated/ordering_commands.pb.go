@@ -9,6 +9,7 @@
 package orderinginternal
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -193,7 +194,7 @@ var File_ordering_commands_proto protoreflect.FileDescriptor
 
 const file_ordering_commands_proto_rawDesc = "" +
 	"\n" +
-	"\x17ordering_commands.proto\x12\x16cafe.ordering.internal\"\xdb\x02\n" +
+	"\x17ordering_commands.proto\x12\x16cafe.ordering.internal\x1a!cafe/requests/v1/validation.proto\"\xdb\x02\n" +
 	"\x0fCommandEnvelope\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bconsumer\x18\x02 \x01(\tR\bconsumer\x12&\n" +
@@ -205,10 +206,11 @@ const file_ordering_commands_proto_rawDesc = "" +
 	"\x10receipt_material\x18\a \x01(\fR\x0freceiptMaterial\x12^\n" +
 	"\x11record_collection\x18\n" +
 	" \x01(\v2/.cafe.ordering.internal.RecordCollectionCommandH\x00R\x10recordCollectionB\t\n" +
-	"\acommand\":\n" +
+	"\acommand\"L\n" +
 	"\x17RecordCollectionCommand\x12\x1f\n" +
 	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerIdB\xa8\x01Z\xa5\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternalb\x06proto3"
+	"customerId:\x10\xd2\xf3\x18\f\n" +
+	"\bordering\x10\x02B\xa8\x01Z\xa5\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternalb\x06proto3"
 
 var (
 	file_ordering_commands_proto_rawDescOnce sync.Once

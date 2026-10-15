@@ -127,7 +127,7 @@ Source: [reward-earned.ts](../../../services/engagement/src/contexts/loyalty/app
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/event-handlers/reward-earned.ts"
 import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { RewardEarnedDomainEventPayload } from '../events.js';
-import type { IssueRewardCommand } from '../commands/issue-reward.js';
+import type { IssueRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 
 /** Hands an immutable grant to the independent Reward aggregate command queue. */
 export class RewardEarnedDomainEventHandler {

@@ -1,6 +1,6 @@
 from operations.contracts.events.generated import ordering as events
 from operations.foundation.application import CommandBusPort, Metadata, Outcome
-from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 
 
 class OrderPlacedIntegrationEventHandler:

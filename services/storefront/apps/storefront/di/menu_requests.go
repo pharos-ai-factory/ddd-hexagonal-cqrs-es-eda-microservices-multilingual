@@ -12,6 +12,7 @@ import (
 	q "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/queries"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1"
+	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
@@ -35,7 +36,7 @@ func menuRequestsProvider(drinkTransaction execution.Transaction[*d.Drink], edit
 	registration.Register(editionCommands, names.MenuCommandCreateEdition, rpc.CreateEdition, func(repository ports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateEditionCommandHandler {
 		return menucommands.CreateEditionCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	registration.RegisterProjection(editionCommands, names.MenuCommandAddOffer, rpc.AddOffer, directory, func(c menucommands.AddOfferCommand) string { return fmt.Sprintf("%s/%d", c.DrinkID, c.DrinkRevision) },
+	registration.RegisterProjection(editionCommands, names.MenuCommandAddOffer, rpc.AddOffer, directory, func(c menucontracts.AddOfferCommand) string { return fmt.Sprintf("%s/%d", c.DrinkID, c.DrinkRevision) },
 		func(repository ports.EditionWriteRepository, directory a.ProjectionPort[app.DrinkPublishedDomainEvent], realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.AddOfferCommandHandler {
 			return menucommands.AddOfferCommandHandler{Repository: repository, Realtime: realtime, Drinks: directory}
 		})

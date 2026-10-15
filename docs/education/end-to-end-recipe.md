@@ -23,13 +23,14 @@ records no delivered domain fact.
 
 For a new API command, edit the owner's published command payload and request
 oneof, then run `pnpm generate:contracts`. For an internal reaction, edit the
-owner's private command envelope and codec instead. The complete
+owner's private command envelope with `visibility: PRIVATE`. Both paths generate
+the plain command payload; the owner codec retains semantic and receipt checks. The complete
 [command recipe](concepts/commands.md) explains generated names, imports, wire
 parsers and registration step by step.
 
 | Language   | Wire source                                                                                                                                                                                      | Owner input mapper                                                                                                     |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Go         | [Ordering commands](../../contracts/ordering/messaging/commands/v1/ordering_commands.proto) and [request envelope](../../contracts/ordering/messaging/v1/ordering_requests.proto)                | [PlaceOrder mapper](../../services/storefront/contexts/ordering/adaptors/messaging/ordering_requests.go)               |
+| Go         | [Ordering commands](../../contracts/ordering/messaging/commands/v1/ordering_commands.proto) and [request envelope](../../contracts/ordering/messaging/v1/ordering_requests.proto)                | [PlaceOrder mapper](../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go)      |
 | Python     | [Preparation commands](../../contracts/preparation/messaging/commands/v1/preparation_commands.proto) and [request envelope](../../contracts/preparation/messaging/v1/preparation_requests.proto) | [complete mapper](../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py) |
 | TypeScript | [private command envelope](../../services/engagement/src/contexts/loyalty/adaptors/messaging/internal_commands.proto)                                                                            | [IssueReward codec](../../services/engagement/src/contexts/loyalty/adaptors/messaging/issue-reward-codec.ts)           |
 
@@ -37,9 +38,11 @@ Keep command ID, target, expected revision and correlation in the execution
 envelope. An identical retry keeps its identity and material input. A new business
 attempt gets a new command ID.
 
-## 3. Create the application DTO and named handler
+## 3. Import the generated command and write its handler
 
-Create one command DTO/handler file under `application/commands/<action>`.
+Declare the command fields once in Protobuf with owner and visibility, then run
+`pnpm generate:contracts`. Import the generated plain type into its handler under
+`application/commands/<action>`.
 Inject its named write repository. The full source files are
 [PlaceOrder](../../services/storefront/contexts/ordering/application/commands/place_order.go),
 [CompletePreparation](../../services/operations/src/operations/contexts/preparation/application/commands/complete_preparation.py)
@@ -126,7 +129,8 @@ See [integration events](concepts/integration-events.md) and
 
 ## 8. Declare any aggregate-changing integration reaction
 
-A consumer that changes business state defines its own command/handler pair,
+A consumer that changes business state defines its private command schema and imports
+the generated command into its handler. It also supplies its
 private command codec and `command` subscription entry. Its integration handler
 maps the public DTO and calls `CommandBusPort.enqueue`. Acceptance commits exact
 command bytes and receiving evidence; a separate command worker executes later.
@@ -197,7 +201,7 @@ saving state nor publishing integration events automatically forwards to realtim
 ## 10. Expose queries and connect the frontend
 
 Implement the [complete query recipe](concepts/queries.md): query schema and reply,
-generated routing ID, input DTO, view, read repository, parser, handler, reply mapper,
+generated routing ID, generated input DTO/parser, view, read repository, handler, reply mapper,
 DI registration, OpenAPI operation and API translation. Call the generated browser
 operation client. The frontend attaches server-authorised subscriptions before its
 initial query and reconciles again after an unrecoverable history gap.

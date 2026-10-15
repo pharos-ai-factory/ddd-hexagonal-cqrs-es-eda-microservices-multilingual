@@ -58,7 +58,7 @@ func TestDirectQueryRegistrationPreservesReadBehaviour(t *testing.T) {
 	}
 	request.GetQuery().GetListDrinks().Page = &shared.PageRequest{Limit: 2, After: proto.String(support.Drink)}
 	reply = registry.Handle(t.Context(), request).(*pb.Reply)
-	if !reply.GetDrinks().Paged || reply.GetDrinks().GetNextId() != support.Drink || reader.page.Limit != 2 || reader.page.After != support.Drink {
+	if !reply.GetDrinks().Paged || reply.GetDrinks().GetNextId() != support.Drink || reader.page.Limit != 2 || reader.page.After == nil || *reader.page.After != support.Drink {
 		t.Fatal("pagination changed")
 	}
 	before := reader.calls

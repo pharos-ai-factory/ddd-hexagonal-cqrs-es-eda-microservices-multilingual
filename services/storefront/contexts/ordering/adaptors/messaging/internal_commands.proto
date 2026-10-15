@@ -2,6 +2,7 @@
 syntax = "proto3";
 package cafe.ordering.internal;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternal";
+import "cafe/requests/v1/validation.proto";
 message CommandEnvelope {
  string id = 1;
  string consumer = 2;
@@ -12,4 +13,6 @@ message CommandEnvelope {
  bytes receipt_material = 7;
  oneof command { RecordCollectionCommand record_collection = 10; }
 }
-message RecordCollectionCommand { string customer_id = 1; }
+message RecordCollectionCommand {
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PRIVATE };
+  string customer_id = 1; }

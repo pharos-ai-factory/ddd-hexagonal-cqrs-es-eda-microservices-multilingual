@@ -1,14 +1,7 @@
-from dataclasses import dataclass
+from operations.contracts.requests.generated.collection import GetPickupQuery
 from operations.foundation.application import Loaded
 from operations.contexts.collection.application.ports.pickup_read_repository import PickupReadRepository
 from operations.contexts.collection.application.read_models.pickup import PickupView
-
-
-@dataclass(frozen=True)
-class GetPickupQuery:
-    """Select one pickup."""
-
-    identity: str
 
 
 class GetPickupQueryHandler:
@@ -18,4 +11,4 @@ class GetPickupQueryHandler:
         self.read_repository = read_repository
 
     def execute(self, query: GetPickupQuery) -> Loaded[PickupView] | None:
-        return self.read_repository.get(query.identity)
+        return self.read_repository.get(query.id)

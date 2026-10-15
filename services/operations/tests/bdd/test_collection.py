@@ -18,10 +18,8 @@ import pytest
 
 from pytest_bdd import given, when, then, parsers, scenarios
 
-from operations.contexts.collection.application.commands.open_pickup import (
-    OpenPickupCommand,
-    OpenPickupCommandHandler,
-)
+from operations.contexts.collection.application.commands.open_pickup import OpenPickupCommandHandler
+from operations.contracts.requests.generated.collection import OpenPickupCommand
 from operations.contexts.collection.application.event_handlers.drinks_ready import (
     DrinksReadyIntegrationEventHandler,
 )

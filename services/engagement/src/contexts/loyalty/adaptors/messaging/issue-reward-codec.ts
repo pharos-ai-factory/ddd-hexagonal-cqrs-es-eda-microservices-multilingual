@@ -1,12 +1,12 @@
 import { LoyaltyPrivateCommand, LoyaltySubscription } from '../../../../adaptors/generated/message-names.js';
-import { fields } from './command-fields.js';
+import { parseIssueRewardCommand } from './generated/request-payloads.js';
 import { InternalCommandCodec } from '../../../../adaptors/messaging/internal-command-codec.js';
 
 import { identifier } from '../../../../foundation/domain.js';
 
 import schema from './generated/internal_commands.json' with { type: 'json' };
 
-import type { IssueRewardCommand } from '../../application/commands/issue-reward.js';
+import type { IssueRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 
 export const issueCodec = () =>
   new InternalCommandCodec(
@@ -15,14 +15,10 @@ export const issueCodec = () =>
     LoyaltyPrivateCommand.ISSUE_REWARD,
     schema,
     (value): IssueRewardCommand => {
-      const p = fields(value);
-      if (typeof p.benefit !== 'string' || !Number.isInteger(p.validDays) || Number(p.validDays) < 1)
-        throw new Error('Invalid grant');
-      return {
-        grantId: identifier(String(p.grantId)),
-        accountId: identifier(String(p.accountId)),
-        benefit: p.benefit,
-        validDays: Number(p.validDays),
-      };
+      const command = parseIssueRewardCommand(value);
+      identifier(command.grantId);
+      identifier(command.accountId);
+      if (command.validDays < 1) throw new Error('Invalid grant');
+      return command;
     },
   );

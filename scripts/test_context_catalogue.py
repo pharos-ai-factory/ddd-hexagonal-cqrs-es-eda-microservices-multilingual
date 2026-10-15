@@ -24,7 +24,7 @@ class ContextNavigationTests(unittest.TestCase):
             self.assertTrue(any("ownership tree" in error for error in check(root)))
 
     def test_python_queries_and_reactions_have_one_responsibility_per_module(self):
-        pair = "class GetTicketQuery: pass\nclass GetTicketQueryHandler: pass\n"
+        pair = "from operations.contracts.requests.generated.preparation import GetTicketQuery\nclass GetTicketQueryHandler: pass\n"
         path = "contexts/preparation/application/queries/get_ticket.py"
         self.assertEqual(layout_violations(pair, path), [])
         for source, location in [

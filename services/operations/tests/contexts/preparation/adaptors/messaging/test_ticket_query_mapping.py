@@ -10,8 +10,8 @@ from operations.adaptors.generated.cafe.requests.v1.contexts.preparation.prepara
     GetTicket,
     ListTickets,
 )
-from operations.contexts.preparation.application.queries.get_ticket import GetTicketQuery
-from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQuery
+from operations.contracts.requests.generated.preparation import GetTicketQuery
+from operations.contracts.requests.generated.preparation import ListTicketsQuery
 from operations.contexts.preparation.application.queries.get_ticket import GetTicketQueryHandler
 from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 

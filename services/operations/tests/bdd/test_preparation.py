@@ -11,10 +11,8 @@ from operations.contexts.preparation.domain.preparation_ticket import Preparatio
 import pytest
 from pytest_bdd import given, when, then, parsers, scenarios
 
-from operations.contexts.preparation.application.commands.accept_order import (
-    AcceptOrderCommand,
-    AcceptOrderCommandHandler,
-)
+from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommandHandler
+from operations.contracts.requests.generated.preparation import AcceptOrderCommand
 from operations.contexts.preparation.application.event_handlers.order_placed import (
     OrderPlacedIntegrationEventHandler,
 )

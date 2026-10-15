@@ -56,8 +56,8 @@ func (q *SnapshotReadRepository[S]) read(ctx context.Context, request *a.PageReq
 	if request != nil {
 		sql += ` AND ($2::uuid IS NULL OR id>$2::uuid) ORDER BY id LIMIT $3`
 		var after any
-		if request.After != "" {
-			after = request.After
+		if request.After != nil {
+			after = *request.After
 		}
 		args = append(args, after, request.Limit+1)
 	} else {

@@ -1,7 +1,5 @@
+import type { GetAccountQuery } from '../../../../contracts/requests/generated/loyalty.js';
 import type { AccountReadRepository } from '../ports/account-read-repository.js';
-
-/** Select one account. */
-export type GetAccountQuery = Readonly<{ id: string }>;
 
 /** Execute the GetAccount use case through its context-owned read port. */
 export class GetAccountQueryHandler {

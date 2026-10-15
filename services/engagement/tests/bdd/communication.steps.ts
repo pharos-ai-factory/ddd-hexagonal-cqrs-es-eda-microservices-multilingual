@@ -6,10 +6,8 @@ import assert from 'node:assert/strict';
 import { Given, When, Then } from '@cucumber/cucumber';
 import { PickupOpenedIntegrationEventHandler } from '../../src/contexts/communication/application/event-handlers/pickup-opened.js';
 import { RewardIssuedIntegrationEventHandler } from '../../src/contexts/communication/application/event-handlers/reward-issued.js';
-import {
-  RequestNotificationCommandHandler,
-  type RequestNotificationCommand,
-} from '../../src/contexts/communication/application/commands/request-notification.js';
+import { RequestNotificationCommandHandler } from '../../src/contexts/communication/application/commands/request-notification.js';
+import type { RequestNotificationCommand } from '../../src/contracts/requests/generated/communication.js';
 import type { Metadata } from '../../src/foundation/application.js';
 import { customer, metadata, notification, selectedOrder } from './probes.js';
 import type { EngagementWorld as W } from './world.js';

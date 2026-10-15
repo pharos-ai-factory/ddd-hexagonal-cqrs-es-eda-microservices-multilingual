@@ -1,7 +1,5 @@
+import type { GetNotificationQuery } from '../../../../contracts/requests/generated/communication.js';
 import type { NotificationReadRepository } from '../ports/notification-read-repository.js';
-
-/** Select one notification. */
-export type GetNotificationQuery = Readonly<{ id: string }>;
 
 /** Execute the GetNotification use case through its context-owned read port. */
 export class GetNotificationQueryHandler {

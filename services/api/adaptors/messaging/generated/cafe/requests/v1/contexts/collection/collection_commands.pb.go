@@ -70,9 +70,11 @@ var File_cafe_requests_v1_contexts_collection_collection_commands_proto protoref
 
 const file_cafe_requests_v1_contexts_collection_collection_commands_proto_rawDesc = "" +
 	"\n" +
-	">cafe/requests/v1/contexts/collection/collection_commands.proto\x12\x1bcafe.collection.requests.v1\x1a!cafe/requests/v1/validation.proto\"6\n" +
+	">cafe/requests/v1/contexts/collection/collection_commands.proto\x12\x1bcafe.collection.requests.v1\x1a!cafe/requests/v1/validation.proto\"J\n" +
 	"\fCollectOrder\x12\x1d\n" +
-	"\x04code\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04code\x88\x01\x01B\a\n" +
+	"\x04code\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04code\x88\x01\x01:\x12\xd2\xf3\x18\x0e\n" +
+	"\n" +
+	"collection\x10\x01B\a\n" +
 	"\x05_codeB\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3"
 
 var (

@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated"
-	commands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/commands"
+	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
 	"os"
@@ -21,7 +21,7 @@ func collectionMetadata() a.Metadata {
 func TestRecordCollectionStoredBytesAndReceiptMaterial(t *testing.T) {
 	codec := RecordCollectionCodec{}
 	m := collectionMetadata()
-	c := commands.RecordCollectionCommand{CustomerID: m.CorrelationID}
+	c := orderingcontracts.RecordCollectionCommand{CustomerID: m.CorrelationID}
 	body, err := codec.Encode(m, c)
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +54,7 @@ func TestRecordCollectionStoredBytesAndReceiptMaterial(t *testing.T) {
 func TestRecordCollectionRejectsInvalidEnvelopes(t *testing.T) {
 	codec := RecordCollectionCodec{}
 	m := collectionMetadata()
-	body, _ := codec.Encode(m, commands.RecordCollectionCommand{CustomerID: m.CorrelationID})
+	body, _ := codec.Encode(m, orderingcontracts.RecordCollectionCommand{CustomerID: m.CorrelationID})
 	cases := map[string]func(*pb.CommandEnvelope){
 		"foreign consumer": func(e *pb.CommandEnvelope) { e.Consumer = "loyalty.record-collection" },
 		"changed identity": func(e *pb.CommandEnvelope) { e.Id = e.Target },

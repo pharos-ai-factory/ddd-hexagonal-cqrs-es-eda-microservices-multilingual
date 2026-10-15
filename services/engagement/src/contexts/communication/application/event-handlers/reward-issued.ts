@@ -1,6 +1,6 @@
 import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { RewardIssuedIntegrationEvent } from '../../../../contracts/events/generated/loyalty.js';
-import type { RequestNotificationCommand } from '../commands/request-notification.js';
+import type { RequestNotificationCommand } from '../../../../contracts/requests/generated/communication.js';
 
 /** Translates a published reward into Communication's durable notification intent. */
 export class RewardIssuedIntegrationEventHandler {
