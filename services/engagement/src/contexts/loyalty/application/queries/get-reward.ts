@@ -1,10 +1,11 @@
 import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
+import type { GetRewardResponse } from '../../../../contracts/requests/generated/loyalty-responses.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Execute the GetReward use case through its context-owned read port. */
+/** Preserve revision, missing-resource and pagination policy in a generated response. */
 export class GetRewardQueryHandler {
   constructor(private readRepository: RewardReadRepository) {}
-  async execute(query: GetRewardQuery) {
-    return this.readRepository.get(query.id);
+  async execute(query: GetRewardQuery): Promise<GetRewardResponse> {
+    const value = await this.readRepository.get(query.id);
+    return value ? { reward: value } : { error: { code: 'not_found', message: '' } };
   }
 }

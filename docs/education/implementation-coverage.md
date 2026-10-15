@@ -88,3 +88,11 @@ and the shared pagination input. Owner semantic validation and all business
 behaviour remain handwritten. Visibility and ownership are required schema metadata.
 See the [command recipe](concepts/commands.md), [query recipe](concepts/queries.md)
 and [decision 0028](../decisions/0028-schema-generated-command-and-query-inputs.md).
+
+## Response contracts
+
+All command outcomes and all 16 query response contracts now derive from owner
+Protobuf in Go, Python and TypeScript. Generated query bindings enforce the
+request/result association. Published read views alias generated resource DTOs;
+owner handlers retain missing-resource, pagination and business decisions.
+See [responses](concepts/responses.md) and the [query recipe](concepts/queries.md).

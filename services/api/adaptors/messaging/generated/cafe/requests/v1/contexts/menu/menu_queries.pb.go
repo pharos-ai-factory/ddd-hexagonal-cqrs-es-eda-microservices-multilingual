@@ -202,21 +202,21 @@ var File_cafe_requests_v1_contexts_menu_menu_queries_proto protoreflect.FileDesc
 
 const file_cafe_requests_v1_contexts_menu_menu_queries_proto_rawDesc = "" +
 	"\n" +
-	"1cafe/requests/v1/contexts/menu/menu_queries.proto\x12\x15cafe.menu.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"M\n" +
+	"1cafe/requests/v1/contexts/menu/menu_queries.proto\x12\x15cafe.menu.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"k\n" +
 	"\n" +
 	"ListDrinks\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01\"(\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:*\xd2\xf3\x18&\n" +
+	"\x04menu\x10\x01\x1a\x1ccafe.menu.requests.v1.Drinks\"K\n" +
 	"\bGetDrink\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01\"O\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id:/\xd2\xf3\x18+\n" +
+	"\x04menu\x10\x01\x1a!cafe.menu.requests.v1.LoadedDrink\"o\n" +
 	"\fListEditions\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01\"*\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:,\xd2\xf3\x18(\n" +
+	"\x04menu\x10\x01\x1a\x1ecafe.menu.requests.v1.Editions\"O\n" +
 	"\n" +
 	"GetEdition\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\xab\x01Z\xa8\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id:1\xd2\xf3\x18-\n" +
+	"\x04menu\x10\x01\x1a#cafe.menu.requests.v1.LoadedEditionB\xab\x01Z\xa8\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_menu_menu_queries_proto_rawDescOnce sync.Once

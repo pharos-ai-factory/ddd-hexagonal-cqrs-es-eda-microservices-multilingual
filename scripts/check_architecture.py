@@ -2,7 +2,7 @@
 """Check service ownership and inward dependencies in all implementation languages."""
 
 from python_imports import python_imports
-from command_registration_policy import violation as command_registration_violation
+from command_registration_policy import violation as registration_rule
 from request_contracts import OWNED
 from event_boundaries import violation as event_boundary_violation
 from generated_files import violation as generated_file_violation
@@ -15,6 +15,7 @@ from hashlib import sha256
 import json
 import os
 from request_contract_policy import plain_request_or_event
+from response_contract_policy import violation as response_rule
 from pathlib import Path
 import re
 import subprocess
@@ -126,12 +127,14 @@ for owner in ("loyalty", "communication"):
     )
 
 
-# These paths are exclusively managed by the published-event generator. Drift is
-# checked by isolated regeneration before architecture verification.
+# Isolated regeneration checks these schema-owned outputs.
 for pattern in (
     "services/storefront/apps/support/subscriptions_generated.go",
-    "services/storefront/contracts/events/model/*_generated.go",
-    "services/storefront/contracts/requests/model/*/*_generated.go",
+    "services/storefront/contracts/events/generated/model/*.go",
+    "services/storefront/contracts/requests/generated/model/*/*.go",
+    "services/storefront/adaptors/messaging/generated/responses/*.go",
+    "services/storefront/contexts/*/adaptors/messaging/request_responses_generated.go",
+    "services/storefront/contexts/*/adaptors/messaging/generated/queryregistration/*.go",
     "services/storefront/contexts/*/adaptors/messaging/request_payloads_generated.go",
     "services/operations/src/operations/contracts/requests/generated/*.py",
     "services/operations/src/operations/contexts/*/adaptors/messaging/generated/request_payloads.py",
@@ -147,7 +150,7 @@ for pattern in (
     "services/engagement/src/adaptors/generated/private-event-registry.ts",
     "services/engagement/src/adaptors/generated/*-names.ts",
     "services/operations/src/operations/adaptors/generated/*_names.py",
-    "services/storefront/contracts/events/names/*_generated.go",
+    "services/storefront/contracts/events/generated/names/*.go",
     "services/*/**/generated/cafe/requests/v1/names.go",
 ):
     GENERATED.update(path.relative_to(ROOT).as_posix() for path in ROOT.glob(pattern))
@@ -186,9 +189,9 @@ def import_violation(package, imported):
                 allowed += [
                     f"contexts/{owner}/application",
                     "foundation/application",
-                    "contracts/events/model",
-                    f"contracts/requests/model/{owner}",
-                    "contracts/requests/model/shared",
+                    "contracts/events/generated/model",
+                    f"contracts/requests/generated/model/{owner}",
+                    "contracts/requests/generated/model/shared",
                 ]
             if internal and not any(target == p or target.startswith(p + "/") for p in allowed):
                 return "outward core dependency"
@@ -199,7 +202,7 @@ def import_violation(package, imported):
     if (
         path.startswith("foundation/")
         and internal
-        and not target.startswith(("foundation/", "contracts/requests/model/shared"))
+        and not target.startswith(("foundation/", "contracts/requests/generated/model/shared"))
     ):
         return "business dependency in technical foundation"
     if path.startswith("apps/") and target.startswith("contexts/"):
@@ -352,7 +355,7 @@ def check():
                     errors.append(f"{relative}: {reason}: {target}")
         if reason := event_boundary_violation(relative, content, event_names):
             errors.append(f"{relative}: {reason}")
-        if reason := command_registration_violation(relative, content):
+        if reason := response_rule(relative, content) or registration_rule(relative, content):
             errors.append(f"{relative}: {reason}")
         if reason := owner_http_violation(relative, content):
             errors.append(f"{relative}: {reason}")

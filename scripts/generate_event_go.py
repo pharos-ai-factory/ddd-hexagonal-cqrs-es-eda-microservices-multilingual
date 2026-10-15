@@ -23,14 +23,14 @@ def generate(root, messages, events):
         return source
 
     base = root / "services/storefront/contracts/events"
-    for directory in ("model", "protobuf"):
+    for directory, pattern in (("generated/model", "*.go"), ("protobuf", "*_generated.go")):
         (base / directory).mkdir(parents=True, exist_ok=True)
-        for path in (base / directory).glob("*_generated.go"):
+        for path in (base / directory).glob(pattern):
             path.unlink()
     for owner in sorted({m["owner"] for m in messages}):
         owned = [m for m in messages if m["owner"] == owner]
         dtos = [HEADER, "package model\n"]
-        imports = f'import (\n model "{MODULE}/contracts/events/model"\n pb "{MODULE}/contracts/events/generated/cafe/v1"\n'
+        imports = f'import (\n model "{MODULE}/contracts/events/generated/model"\n pb "{MODULE}/contracts/events/generated/cafe/v1"\n'
         if any(e["type"] == m["type"] for e in events for m in owned):
             imports += f' a "{MODULE}/foundation/application"\n'
         if any(f["type"] == 5 for m in owned for f in m["fields"]):
@@ -98,12 +98,12 @@ def generate(root, messages, events):
                 codecs.append(
                     f"\n// Publish{name} binds the published identity to its plain payload type.\nfunc Publish{name}(payload model.{name}) a.Publication {{\n return a.Publication{{Name: {json.dumps(event['name'])}, Visibility: a.Public, Payload: payload}}\n}}\n"
                 )
-        (base / f"model/{owner}_generated.go").write_text(explicit_names("".join(dtos)))
+        (base / f"generated/model/{owner}.go").write_text(explicit_names("".join(dtos)))
         (base / f"protobuf/{owner}_generated.go").write_text(explicit_names("".join(codecs), True))
     registry = [
         HEADER,
         "package protobuf\n",
-        f'import (\n "fmt"\n "google.golang.org/protobuf/proto"\n model "{MODULE}/contracts/events/model"\n pb "{MODULE}/contracts/events/generated/cafe/v1"\n)\n',
+        f'import (\n "fmt"\n "google.golang.org/protobuf/proto"\n model "{MODULE}/contracts/events/generated/model"\n pb "{MODULE}/contracts/events/generated/cafe/v1"\n)\n',
         "var payloadCodecs = map[string]payloadCodec{\n",
     ]
     for e in events:

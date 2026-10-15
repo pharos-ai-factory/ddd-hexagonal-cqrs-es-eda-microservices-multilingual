@@ -33,11 +33,13 @@ supplies mechanical conversions and typed publication factories. Owner publicati
 mappers still choose which domain facts to publish. Consumer reactions still map
 published facts into durable owner commands.
 
-Generated output paths identify their ownership: the filename includes
-`generated`, or an ancestor folder is named exactly `generated`. Python and
-TypeScript plain DTOs use `contracts/events/generated/`; Go's existing
-`*_generated.go` files retain their locations. The same convention covers generated
-descriptors and migration assets. Dependency lockfiles and Next.js' required
+Generated packages live beneath a folder named exactly `generated`, with ordinary
+filenames and generated-source headers. Go plain DTOs use
+`contracts/events/generated/model/`; Python and TypeScript use
+`contracts/events/generated/`. Mixed packages retain `*_generated.go` filenames.
+[Decision 0030](0030-generated-package-layout.md) defines the package layout and
+generator cleanup boundaries. The same convention covers generated descriptors
+and migration assets. Dependency lockfiles and Next.js' required
 `next-env.d.ts` retain their standard names. Architecture checks enforce placement
 while allowing applications to use their service's plain generated contracts.
 

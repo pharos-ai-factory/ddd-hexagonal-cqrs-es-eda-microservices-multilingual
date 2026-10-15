@@ -234,38 +234,38 @@ var File_cafe_requests_v1_contexts_ordering_ordering_commands_proto protoreflect
 
 const file_cafe_requests_v1_contexts_ordering_ordering_commands_proto_rawDesc = "" +
 	"\n" +
-	":cafe/requests/v1/contexts/ordering/ordering_commands.proto\x12\x19cafe.ordering.requests.v1\x1a!cafe/requests/v1/validation.proto\"\x94\x01\n" +
+	":cafe/requests/v1/contexts/ordering/ordering_commands.proto\x12\x19cafe.ordering.requests.v1\x1a!cafe/requests/v1/validation.proto\"\xae\x01\n" +
 	"\vCreateOrder\x12*\n" +
 	"\vcustomer_id\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\n" +
 	"customerId\x88\x01\x01\x12(\n" +
 	"\n" +
-	"edition_id\x18\x02 \x01(\tB\x04\xc8\xf3\x18\x01H\x01R\teditionId\x88\x01\x01:\x10\xd2\xf3\x18\f\n" +
-	"\bordering\x10\x01B\x0e\n" +
+	"edition_id\x18\x02 \x01(\tB\x04\xc8\xf3\x18\x01H\x01R\teditionId\x88\x01\x01:*\xd2\xf3\x18&\n" +
+	"\bordering\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\x0e\n" +
 	"\f_customer_idB\r\n" +
-	"\v_edition_id\"\xf1\x01\n" +
+	"\v_edition_id\"\x8b\x02\n" +
 	"\aAddLine\x12\"\n" +
 	"\aline_id\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x06lineId\x88\x01\x01\x12(\n" +
 	"\n" +
 	"edition_id\x18\x02 \x01(\tB\x04\xc8\xf3\x18\x01H\x01R\teditionId\x88\x01\x01\x12(\n" +
 	"\n" +
 	"offer_code\x18\x03 \x01(\tB\x04\xc8\xf3\x18\x01H\x02R\tofferCode\x88\x01\x01\x12%\n" +
-	"\bquantity\x18\x04 \x01(\x05B\x04\xc8\xf3\x18\x01H\x03R\bquantity\x88\x01\x01:\x10\xd2\xf3\x18\f\n" +
-	"\bordering\x10\x01B\n" +
+	"\bquantity\x18\x04 \x01(\x05B\x04\xc8\xf3\x18\x01H\x03R\bquantity\x88\x01\x01:*\xd2\xf3\x18&\n" +
+	"\bordering\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\n" +
 	"\n" +
 	"\b_line_idB\r\n" +
 	"\v_edition_idB\r\n" +
 	"\v_offer_codeB\v\n" +
-	"\t_quantity\"\x86\x01\n" +
+	"\t_quantity\"\xa0\x01\n" +
 	"\x0eChangeQuantity\x12\"\n" +
 	"\aline_id\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x06lineId\x88\x01\x01\x12%\n" +
-	"\bquantity\x18\x02 \x01(\x05B\x04\xc8\xf3\x18\x01H\x01R\bquantity\x88\x01\x01:\x10\xd2\xf3\x18\f\n" +
-	"\bordering\x10\x01B\n" +
+	"\bquantity\x18\x02 \x01(\x05B\x04\xc8\xf3\x18\x01H\x01R\bquantity\x88\x01\x01:*\xd2\xf3\x18&\n" +
+	"\bordering\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\n" +
 	"\n" +
 	"\b_line_idB\v\n" +
-	"\t_quantity\"\x1e\n" +
+	"\t_quantity\"8\n" +
 	"\n" +
-	"PlaceOrder:\x10\xd2\xf3\x18\f\n" +
-	"\bordering\x10\x01B\xb3\x01Z\xb0\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1b\x06proto3"
+	"PlaceOrder:*\xd2\xf3\x18&\n" +
+	"\bordering\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\xb3\x01Z\xb0\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/ordering;orderingv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_ordering_ordering_commands_proto_rawDescOnce sync.Once

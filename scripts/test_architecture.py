@@ -39,7 +39,9 @@ class ArchitectureTests(unittest.TestCase):
 
     def test_framework_independent_contract_is_allowed(self):
         self.assertIsNone(
-            import_violation(MODULE + "/contexts/ordering/application", MODULE + "/contracts/events/model")
+            import_violation(
+                MODULE + "/contexts/ordering/application", MODULE + "/contracts/events/generated/model"
+            )
         )
 
     def test_generated_plain_contracts_preserve_core_boundaries(self):
@@ -65,8 +67,8 @@ class ArchitectureTests(unittest.TestCase):
 
     def test_generated_request_inputs_remain_owner_scoped(self):
         source = MODULE + "/contexts/ordering/application/commands"
-        self.assertIsNone(import_violation(source, MODULE + "/contracts/requests/model/ordering"))
-        self.assertIsNotNone(import_violation(source, MODULE + "/contracts/requests/model/menu"))
+        self.assertIsNone(import_violation(source, MODULE + "/contracts/requests/generated/model/ordering"))
+        self.assertIsNotNone(import_violation(source, MODULE + "/contracts/requests/generated/model/menu"))
         for service, owner, prefix, extension in (
             ("operations", "preparation", "operations", ""),
             ("engagement", "loyalty", "services/engagement/src", ".js"),
@@ -78,6 +80,24 @@ class ArchitectureTests(unittest.TestCase):
                 core_violation(source, target.replace(owner + extension, "foreign" + extension))
             )
             self.assertIsNotNone(core_violation(source.replace("application/commands", "domain"), target))
+
+    def test_go_generated_models_do_not_open_wire_or_domain_dependencies(self):
+        application = MODULE + "/contexts/ordering/application/commands"
+        domain = MODULE + "/contexts/ordering/domain"
+        for target in (
+            "/contracts/events/generated/model",
+            "/contracts/requests/generated/model/ordering",
+            "/contracts/requests/generated/model/shared",
+        ):
+            self.assertIsNone(import_violation(application, MODULE + target))
+            self.assertIsNotNone(import_violation(domain, MODULE + target))
+        for target in (
+            "/contracts/requests/generated/cafe/requests/v1/contexts/ordering",
+            "/contracts/events/generated/names",
+            "/contexts/ordering/adaptors/messaging/generated/queryregistration",
+            "/contracts/requests/model/ordering",
+        ):
+            self.assertIsNotNone(import_violation(application, MODULE + target))
 
     def test_misplaced_generated_header_fails_the_architecture_gate(self):
         path = check_architecture.ROOT / "services/engagement/src/contracts/events/collection.ts"

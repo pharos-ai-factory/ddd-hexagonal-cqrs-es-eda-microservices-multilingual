@@ -3,6 +3,7 @@ package requests
 import (
 	"context"
 	"fmt"
+	responses "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/generated/responses"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	"google.golang.org/protobuf/proto"
@@ -65,12 +66,12 @@ func Command[P proto.Message, I any](r *RabbitMQRequestRegistry, name pb.Command
 		if err != nil {
 			return nil, err
 		}
-		return OutcomeReply(r.Owner, result), nil
+		return OutcomeReply(r.Owner, result)
 	})
 }
 
 // Query connects one generated query identifier to its owner parser, handler and reply mapper.
-func Query[P proto.Message, Q, R any](r *RabbitMQRequestRegistry, name pb.QueryName, parse func(P) Q, execute func(context.Context, Q) (R, error), reply func(Q, R) pb.Reply) {
+func Query[P proto.Message, Q, R any](r *RabbitMQRequestRegistry, name pb.QueryName, parse func(P) Q, execute func(context.Context, Q) (R, error), reply func(Q, R) (pb.Reply, error)) {
 	if name == nil || name.Owner() != r.Owner || !name.Valid() {
 		panic("query identifier disagrees with owner")
 	}
@@ -85,23 +86,23 @@ func Query[P proto.Message, Q, R any](r *RabbitMQRequestRegistry, name pb.QueryN
 		if err != nil {
 			return nil, err
 		}
-		return reply(query, result), nil
+		return reply(query, result)
 	})
 }
 
-func OutcomeReply(owner string, result a.Outcome) pb.Reply {
-	outcome := &pb.Outcome{AggregateId: result.AggregateID, Version: result.Version, Status: result.Status}
-	if result.Rejection != nil {
-		outcome.Rejection = &pb.Rejection{Code: result.Rejection.Code, Message: result.Rejection.Message}
+func OutcomeReply(owner string, result a.Outcome) (pb.Reply, error) {
+	outcome, err := responses.ToOutcome(result)
+	if err != nil {
+		return nil, err
 	}
 	reply, err := pb.NewReply(owner, "")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if err = SetPayload(reply, "outcome", outcome); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return reply
+	return reply, nil
 }
 
 // handlerQueryBus routes the application DTO after owner transport parsing.

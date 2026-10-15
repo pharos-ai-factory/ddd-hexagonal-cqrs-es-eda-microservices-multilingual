@@ -117,3 +117,13 @@ mechanical mappings as well as wire bindings and identifiers. Owner wrappers
 retain semantic checks. See [decision 0028](../../../docs/decisions/0028-schema-generated-command-and-query-inputs.md)
 and the [command](../../../docs/education/concepts/commands.md) and
 [query](../../../docs/education/concepts/queries.md) recipes.
+
+## Response authority
+
+Every command/query `contract` annotation declares a fully qualified `response`.
+Commands select `cafe.requests.v1.Outcome`; queries select the matching success
+message in their owner's `Reply` envelope. Run `pnpm generate:contracts` to emit
+plain response/resource DTOs, checked encoders and typed query registrations.
+`required_output` marks required nested message values; optional fields preserve
+presence. Owner handlers select missing-resource and pagination behaviour.
+See [decision 0029](../../../docs/decisions/0029-schema-generated-command-and-query-responses.md).

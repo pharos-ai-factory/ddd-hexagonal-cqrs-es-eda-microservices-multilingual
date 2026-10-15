@@ -28,7 +28,7 @@ Source: [aggregate_transaction.go](../../../services/storefront/adaptors/persist
 ```go source="../../../services/storefront/adaptors/persistence/postgres/aggregate_transaction.go"
 if savedHash != hash {
 	detail := (&a.ApplicationError{Code: "idempotency_conflict", Message: "The command identity was reused with different input"}).Rejection()
-	return commitOutcome(ctx, tx, a.Outcome{AggregateID: m.AggregateID, Rejection: &detail})
+	return commitOutcome(ctx, tx, a.Outcome{AggregateID: m.AggregateID, Rejection: &shared.Rejection{Code: detail.Code, Message: detail.Message}})
 }
 ```
 

@@ -1,5 +1,7 @@
 """Preparation's explicit providers and typed subscription declaration."""
 
+from operations.contexts.preparation.adaptors.messaging.generated import response_payloads as responses
+
 from operations.adaptors.persistence.realtime_event_bus import PostgresRealtimeEventBus
 from operations.contexts.preparation.application.event_handlers.realtime_drinks_ready import (
     DrinksReadyRealtimeDomainEventHandler,
@@ -17,7 +19,7 @@ from operations.contexts.preparation.adaptors.persistence.ticket_read_repository
     PostgresTicketReadRepository,
 )
 from operations.contexts.preparation.adaptors.messaging.accept_order_codec import command_codec
-from operations.adaptors.generated.request_names import PreparationCommand, PreparationQuery
+from operations.adaptors.generated.request_names import PreparationCommand
 from operations.contexts.preparation.application.queries.get_ticket import GetTicketQueryHandler
 from operations.contexts.preparation.application.queries.list_tickets import ListTicketsQueryHandler
 from operations.contexts.preparation.adaptors.messaging.ticket_publications import ticket_publications
@@ -103,12 +105,8 @@ def requests(container: PreparationContainer) -> RabbitMQRequestRegistry:
         wire.complete,
         lambda repository, _realtime: CompletePreparationCommandHandler(repository),
     )
-    registry.query(
-        PreparationQuery.GET_TICKET, wire.get_ticket, container.get_ticket().execute, wire.get_reply
-    )
-    registry.query(
-        PreparationQuery.LIST_TICKETS, wire.list_tickets, container.list_tickets().execute, wire.list_reply
-    )
+    responses.register_get_ticket(registry, wire.get_ticket, container.get_ticket().execute)
+    responses.register_list_tickets(registry, wire.list_tickets, container.list_tickets().execute)
     return registry
 
 

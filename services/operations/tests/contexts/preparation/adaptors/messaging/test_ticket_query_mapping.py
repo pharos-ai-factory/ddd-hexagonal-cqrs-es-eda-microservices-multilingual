@@ -44,10 +44,12 @@ def test_query_boundary_preserves_missing_rows_revisions_and_continuations() -> 
     reader = MappedReadRepository(Reader(), ticket_view)
     get = GetTicketQueryHandler(reader)
     listing = ListTicketsQueryHandler(reader)
-    assert get.execute(GetTicketQuery("missing")) is None
-    assert get.execute(wire.get_ticket(GetTicket(id=ID))) == row
-    assert listing.execute(wire.list_tickets(ListTickets())).items == [row]
-    assert listing.execute(ListTicketsQuery(request)) == Page([row], ID)
+    assert get.execute(GetTicketQuery("missing")) == {"error": {"code": "not_found", "message": ""}}
+    assert get.execute(wire.get_ticket(GetTicket(id=ID))) == {"ticket": row}
+    assert listing.execute(wire.list_tickets(ListTickets())) == {"tickets": {"items": [row], "paged": False}}
+    assert listing.execute(ListTicketsQuery(request)) == {
+        "tickets": {"items": [row], "paged": True, "nextId": ID}
+    }
     with pytest.raises(RuntimeError, match="storage unavailable"):
         get.execute(GetTicketQuery("failed"))
 

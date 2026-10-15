@@ -1,5 +1,7 @@
 """Collection's providers bind its own database and durable command port."""
 
+from operations.contexts.collection.adaptors.messaging.generated import response_payloads as responses
+
 from operations.adaptors.generated.message_names import CollectionIntegrationEvent, CollectionSubscription
 
 from operations.contexts.collection.adaptors.persistence.pickup_write_repository import (
@@ -10,7 +12,7 @@ from operations.contexts.collection.adaptors.persistence.pickup_read_repository 
     PostgresPickupReadRepository,
 )
 from operations.contexts.collection.adaptors.messaging.open_pickup_codec import command_codec
-from operations.adaptors.generated.request_names import CollectionCommand, CollectionQuery
+from operations.adaptors.generated.request_names import CollectionCommand
 from operations.contexts.collection.application.queries.get_pickup import GetPickupQueryHandler
 from operations.contexts.collection.application.queries.list_pickups import ListPickupsQueryHandler
 from operations.contexts.collection.adaptors.messaging.pickup_publications import pickup_publications
@@ -93,12 +95,8 @@ def requests(container: CollectionContainer) -> RabbitMQRequestRegistry:
     container.commands().request(
         registry, CollectionCommand.COLLECT_ORDER, wire.collect, CollectOrderCommandHandler
     )
-    registry.query(
-        CollectionQuery.GET_PICKUP, wire.get_pickup, container.get_pickup().execute, wire.get_reply
-    )
-    registry.query(
-        CollectionQuery.LIST_PICKUPS, wire.list_pickups, container.list_pickups().execute, wire.list_reply
-    )
+    responses.register_get_pickup(registry, wire.get_pickup, container.get_pickup().execute)
+    responses.register_list_pickups(registry, wire.list_pickups, container.list_pickups().execute)
     return registry
 
 

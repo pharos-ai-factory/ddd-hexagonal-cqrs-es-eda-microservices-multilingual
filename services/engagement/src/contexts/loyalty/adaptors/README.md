@@ -17,4 +17,4 @@ visible through receipts and dispatch evidence; its meaning is described in the
 context map. Query endpoints return application read models through named read
 repositories.
 
-Account replies live in `messaging/account-replies.ts`. CreditCollection and IssueReward have separate private command codecs; subscription identities come from `adaptors/generated/message-names.ts` in the service.
+Account response types and encoders are generated; `messaging/generated/response-payloads.ts` binds each query to its declared reply. CreditCollection and IssueReward have separate private command codecs; subscription identities come from `adaptors/generated/message-names.ts` in the service.

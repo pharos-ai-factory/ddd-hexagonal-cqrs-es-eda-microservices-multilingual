@@ -26,12 +26,8 @@ export type Metadata = {
   sourceVersion?: number;
   sourceTime?: string;
 };
-export type Outcome = {
-  aggregateId: string;
-  version: number;
-  status: string;
-  rejection?: { code: string; message: string };
-};
+import type { Outcome } from '../contracts/requests/generated/shared-responses.js';
+export type { Outcome } from '../contracts/requests/generated/shared-responses.js';
 export type Loaded<S> = { exists: boolean; version: number; state: S };
 export type Publication = { name: string; payload: object };
 export type Change<S> = { state: S; status: string; changed: boolean; publications?: Publication[] };

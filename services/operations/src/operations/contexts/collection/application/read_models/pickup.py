@@ -1,11 +1,5 @@
-from typing import Literal, TypedDict
+"""Use the schema-owned response representation at the read port."""
 
+from operations.contracts.requests.generated.collection_responses import Pickup
 
-class PickupView(TypedDict):
-    """Application read contract for one pickup, independent of storage and transport."""
-
-    id: str
-    orderId: str
-    customerId: str
-    code: str
-    status: Literal["ready", "collected"]
+PickupView = Pickup

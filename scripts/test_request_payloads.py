@@ -60,7 +60,7 @@ class RequestPayloadTests(unittest.TestCase):
         for owner, render in [("ordering", go), ("preparation", python), ("loyalty", typescript)]:
             render(self.root, owner, [m for m in data["payloads"] if m["owner"] == owner])
         plain = (
-            self.root / "services/storefront/contracts/requests/model/ordering/payloads_generated.go"
+            self.root / "services/storefront/contracts/requests/generated/model/ordering/payloads.go"
         ).read_text()
         self.assertIn("Attempt *int", plain)
         self.assertNotIn("protobuf", plain)
@@ -107,7 +107,9 @@ class RequestPayloadTests(unittest.TestCase):
                     self.schema()
         path.write_text(
             original.replace(
-                'option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC };', "", 1
+                'option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC response: "cafe.requests.v1.Outcome" };',
+                "",
+                1,
             )
         )
         with self.assertRaisesRegex(ValueError, "must declare"):

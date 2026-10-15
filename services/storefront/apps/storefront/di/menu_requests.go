@@ -6,13 +6,14 @@ import (
 	requests "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/requests"
 	registration "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/apps/commandregistration"
 	rpc "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging"
+	responses "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/adaptors/messaging/generated/queryregistration"
 	app "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application"
 	menucommands "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/commands"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
 	q "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/queries"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/domain"
 	names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1"
-	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
+	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/menu"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
@@ -46,9 +47,9 @@ func menuRequestsProvider(drinkTransaction execution.Transaction[*d.Drink], edit
 	registration.Register(editionCommands, names.MenuCommandPublishEdition, rpc.PublishEdition, func(repository ports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.PublishEditionCommandHandler {
 		return menucommands.PublishEditionCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	requests.Query(r, names.MenuQueryGetDrink, rpc.GetDrink, getDrink.Execute, rpc.GetDrinkReply)
-	requests.Query(r, names.MenuQueryListDrinks, rpc.ListDrinks, listDrinks.Execute, rpc.ListDrinksReply)
-	requests.Query(r, names.MenuQueryGetEdition, rpc.GetEdition, getEdition.Execute, rpc.GetEditionReply)
-	requests.Query(r, names.MenuQueryListEditions, rpc.ListEditions, listEditions.Execute, rpc.ListEditionsReply)
+	responses.RegisterGetDrink(r, rpc.GetDrink, getDrink.Execute)
+	responses.RegisterListDrinks(r, rpc.ListDrinks, listDrinks.Execute)
+	responses.RegisterGetEdition(r, rpc.GetEdition, getEdition.Execute)
+	responses.RegisterListEditions(r, rpc.ListEditions, listEditions.Execute)
 	return menuRequests{r}
 }

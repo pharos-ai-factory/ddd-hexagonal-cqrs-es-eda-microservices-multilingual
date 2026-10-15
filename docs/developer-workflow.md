@@ -117,7 +117,7 @@ pnpm scaffold subscription loyalty CreditPurchase
 
 The result is under `.local/scaffolds/<context>/<name>/`. An existing output is
 never overwritten. Review the inputs, replace generic snapshot types with the
-owner's type. Query starters include an application view and read repository port; reuse
+owner's type. Query starters include a response schema, generated view alias and read repository port; reuse
 an existing one when suitable. Place the code in the existing application layout.
 The generated test deliberately fails until you specify observable behaviour. Registration
 snippets identify the composition change; subscription starters additionally
@@ -133,7 +133,7 @@ generated identifier, parser and registration for each language.
    including `owner: "ordering"` and `visibility: PUBLIC`, and add its case in
    `Command.payload` under `contracts/ordering/messaging/v1/`.
 2. Run `pnpm generate:contracts`. Inspect the plain input under
-   `services/storefront/contracts/requests/model/ordering/`, the wire bindings,
+   `services/storefront/contracts/requests/generated/model/ordering/`, the wire bindings,
    typed identifier and generated owner input mapping.
 3. Import that generated input into the handler in
    `services/storefront/contexts/ordering/application/commands/cancel_order.go`.
@@ -273,48 +273,29 @@ to obtain the receipt before starting the aggregate transaction. See
 
 ## Add or change a query
 
-1. Define its Protobuf input and envelope case with owner and public visibility; generate the input type and parser, then import the plain type into the owning `application/queries/` handler.
-2. Select the required fields in an application read model and name the read repository
-   capability. Keep aggregate snapshots inside command/persistence code.
-3. Implement the read repository under the context's persistence adaptor, validating stored
-   state before mapping it. Preserve revisions and pagination continuations.
-4. Map transport arguments and replies in the owning messaging adaptor. Bind the
-   read repository and named handler in composition. Register the generated query
-   identifier, input mapper, handler and reply mapper directly together.
-5. Update the owner OpenAPI/Protobuf boundary if its public shape changes and run
-   generation. Test missing resources, storage failures and relevant read behaviour.
+1. Define the input and response in owner Protobuf. Set `contract.response` to the
+   fully qualified success message, then add both envelope alternatives.
+2. Run `pnpm generate:contracts`. Use the generated resource DTO at the named read
+   repository port; existing read-model modules can alias it.
+3. Validate stored state and select published fields in the owner persistence adaptor.
+4. Return the generated query response from the handler. Select `not_found` explicitly,
+   preserve revisions and retain complete/paginated read behaviour.
+5. Bind the concrete reader and handler in DI, then call the generated owner registration
+   with the parser and handler. It fixes the identifier, response type and encoder.
+6. Update the HTTP boundary, generate and test successful/missing reads, repository
+   failures, presence, nested fields and pagination through the registered route.
 
-For example, Preparation registers its item query with:
+Preparation's actual binding is:
 
 ```python
-registry.query(
-    PreparationQuery.GET_TICKET,
-    wire.get_ticket,
-    container.get_ticket().execute,
-    wire.get_reply,
-)
+responses.register_get_ticket(registry, wire.get_ticket, container.get_ticket().execute)
 ```
 
-Import `PreparationCommand` and `PreparationQuery` from the generated request-name
-module. Query handlers receive their named read repository through DI. Go uses
-`requests.Query`; TypeScript uses `registry.query` with the handler object.
-
-Integration events, domain delivery, private commands and subscriptions also have
-generated context-specific identifiers. Their sources are the published schema
-annotations, private event catalogue, private command envelope and subscription
-manifest. Keep plain domain facts in their owner. See [decision 0024](decisions/0024-generated-message-identifiers-and-direct-queries.md).
-
-Name the port `<Resource>ReadRepository` and its concrete Python/TypeScript class
-`Postgres<Resource>ReadRepository`. Go uses `postgres.New<Resource>ReadRepository`.
-Use `_read_repository` filenames in Go/Python and `-read-repository` in TypeScript.
-Keep shared snapshot restoration in its own owner persistence module. Use a named `WriteRepository` for authoritative aggregate reads and saves.
-The central command executor supplies a fresh repository and owns the local
-transaction, receipt/outcome records and outgoing intent. [Decision 0015](decisions/0015-explicit-persistence-role-names.md)
-records the distinction and examples.
-
-Python focused tests recursively discover `tests/contexts/<context>/` and run the
-context's Gherkin binding. Go and TypeScript discover tests beside their subjects.
-Cross-context transport conformance and infrastructure checks remain service-wide.
+`responses` imports the owner's generated `response_payloads` module. Go uses
+`responses.RegisterGetOrder`; TypeScript uses `responses.registerGetReward`. Follow the
+[complete three-language recipe](education/concepts/queries.md) and
+[response recipe](education/concepts/responses.md). The scaffold supplies request
+and reply schema fragments and imports their generated types.
 
 ## Change an HTTP operation or browser feature
 
@@ -431,3 +412,18 @@ See [decision 0026](decisions/0026-explicit-bus-ports-and-realtime-publication.m
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement
 handlers and semantic validation. See [decision 0028](decisions/0028-schema-generated-command-and-query-inputs.md).
+
+## Generated package ownership
+
+Place wholly generated packages beneath a `generated` directory and give files
+ordinary descriptive names. Go request DTOs use
+`contracts/requests/generated/model/<owner>/{payloads,responses}.go`; event DTOs
+use `contracts/events/generated/model/<producer>.go`. Shared response encoders
+and owner query registrations use adaptor `generated` packages. Mixed packages
+retain `_generated.go` filenames and all generated source retains its header.
+
+Update generator destinations, cleanup scopes, formatter globs, architecture
+classification, imports, scaffolds and source-linked documentation together.
+Request wire cleanup owns only `generated/cafe/requests`, so it preserves plain
+models. Run `pnpm generate:contracts` and `pnpm check:contracts` to verify the
+result. See [decision 0030](decisions/0030-generated-package-layout.md).

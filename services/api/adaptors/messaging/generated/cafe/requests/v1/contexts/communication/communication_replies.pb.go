@@ -7,6 +7,7 @@
 package communicationv1
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -229,7 +230,7 @@ var File_cafe_requests_v1_contexts_communication_communication_replies_proto pro
 
 const file_cafe_requests_v1_contexts_communication_communication_replies_proto_rawDesc = "" +
 	"\n" +
-	"Ccafe/requests/v1/contexts/communication/communication_replies.proto\x12\x1ecafe.communication.requests.v1\"\xc7\x01\n" +
+	"Ccafe/requests/v1/contexts/communication/communication_replies.proto\x12\x1ecafe.communication.requests.v1\x1a!cafe/requests/v1/validation.proto\"\xc7\x01\n" +
 	"\fNotification\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
 	"\trecipient\x18\x02 \x01(\tR\trecipient\x12\x18\n" +
@@ -237,11 +238,11 @@ const file_cafe_requests_v1_contexts_communication_communication_replies_proto_r
 	"\x04body\x18\x04 \x01(\tR\x04body\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\tR\x06status\x12.\n" +
 	"\x10provider_receipt\x18\x06 \x01(\tH\x00R\x0fproviderReceipt\x88\x01\x01B\x13\n" +
-	"\x11_provider_receipt\"\x8a\x01\n" +
+	"\x11_provider_receipt\"\x90\x01\n" +
 	"\x12LoadedNotification\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x12B\n" +
-	"\x05state\x18\x03 \x01(\v2,.cafe.communication.requests.v1.NotificationR\x05state\"\x99\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x12H\n" +
+	"\x05state\x18\x03 \x01(\v2,.cafe.communication.requests.v1.NotificationB\x04\xd8\xf3\x18\x01R\x05state\"\x99\x01\n" +
 	"\rNotifications\x12H\n" +
 	"\x05items\x18\x01 \x03(\v22.cafe.communication.requests.v1.LoadedNotificationR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +

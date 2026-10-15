@@ -6,11 +6,11 @@ stored data and maps it into a stable application representation.
 
 ## Creation recipe
 
-1. Define the application view and the item/list/pagination capabilities needed by the new query.
+1. Generate the resource response DTO and alias the application view and the item/list/pagination capabilities needed by the new query.
 2. Add the named `<Resource>ReadRepository` interface/protocol. Preserve resource absence and revision in the port result.
 3. Implement `Postgres<Resource>ReadRepository` in owner persistence; Go uses the `postgres.New<Resource>ReadRepository` constructor. Restore/validate stored authority before selecting view fields.
 4. Bind the concrete repository to the named query handler in DI. A `QueryBusPort` routes the question; this repository performs the storage read.
-5. Implement and register the query parser and reply mapper using the [query recipe](queries.md).
+5. Bind the owner parser and handler through the generated response registration using the [query recipe](queries.md).
 6. Test item absence, revision preservation, invalid stored state, full-list behaviour and requested pagination. Event-driven browser handlers can reuse the read port and must publish the revision actually returned with the view.
 
 Follow the [end-to-end recipe](../end-to-end-recipe.md) to connect this step to the complete workflow.

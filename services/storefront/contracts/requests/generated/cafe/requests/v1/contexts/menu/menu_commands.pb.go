@@ -350,39 +350,39 @@ var File_cafe_requests_v1_contexts_menu_menu_commands_proto protoreflect.FileDes
 
 const file_cafe_requests_v1_contexts_menu_menu_commands_proto_rawDesc = "" +
 	"\n" +
-	"2cafe/requests/v1/contexts/menu/menu_commands.proto\x12\x15cafe.menu.requests.v1\x1a!cafe/requests/v1/validation.proto\"C\n" +
+	"2cafe/requests/v1/contexts/menu/menu_commands.proto\x12\x15cafe.menu.requests.v1\x1a!cafe/requests/v1/validation.proto\"]\n" +
 	"\vCreateDrink\x12\x1d\n" +
-	"\x04name\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04name\x88\x01\x01:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\a\n" +
-	"\x05_name\"C\n" +
+	"\x04name\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04name\x88\x01\x01:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\a\n" +
+	"\x05_name\"]\n" +
 	"\vReviseDrink\x12\x1d\n" +
-	"\x04name\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04name\x88\x01\x01:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\a\n" +
-	"\x05_name\"\x1c\n" +
-	"\fPublishDrink:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01\"Q\n" +
+	"\x04name\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04name\x88\x01\x01:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\a\n" +
+	"\x05_name\"6\n" +
+	"\fPublishDrink:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.Outcome\"k\n" +
 	"\rCreateEdition\x12%\n" +
-	"\bcurrency\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\bcurrency\x88\x01\x01:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\v\n" +
-	"\t_currency\"\xe3\x01\n" +
+	"\bcurrency\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\bcurrency\x88\x01\x01:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\v\n" +
+	"\t_currency\"\xfd\x01\n" +
 	"\bAddOffer\x12\x1d\n" +
 	"\x04code\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04code\x88\x01\x01\x12$\n" +
 	"\bdrink_id\x18\x02 \x01(\tB\x04\xc8\xf3\x18\x01H\x01R\adrinkId\x88\x01\x01\x120\n" +
 	"\x0edrink_revision\x18\x03 \x01(\x04B\x04\xc8\xf3\x18\x01H\x02R\rdrinkRevision\x88\x01\x01\x12\x1f\n" +
-	"\x05minor\x18\x04 \x01(\x03B\x04\xc8\xf3\x18\x01H\x03R\x05minor\x88\x01\x01:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\a\n" +
+	"\x05minor\x18\x04 \x01(\x03B\x04\xc8\xf3\x18\x01H\x03R\x05minor\x88\x01\x01:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\a\n" +
 	"\x05_codeB\v\n" +
 	"\t_drink_idB\x11\n" +
 	"\x0f_drink_revisionB\b\n" +
-	"\x06_minor\"n\n" +
+	"\x06_minor\"\x88\x01\n" +
 	"\vChangePrice\x12\x1d\n" +
 	"\x04code\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00R\x04code\x88\x01\x01\x12\x1f\n" +
-	"\x05minor\x18\x02 \x01(\x03B\x04\xc8\xf3\x18\x01H\x01R\x05minor\x88\x01\x01:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\a\n" +
+	"\x05minor\x18\x02 \x01(\x03B\x04\xc8\xf3\x18\x01H\x01R\x05minor\x88\x01\x01:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\a\n" +
 	"\x05_codeB\b\n" +
-	"\x06_minor\"\x1e\n" +
-	"\x0ePublishEdition:\f\xd2\xf3\x18\b\n" +
-	"\x04menu\x10\x01B\xab\x01Z\xa8\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1b\x06proto3"
+	"\x06_minor\"8\n" +
+	"\x0ePublishEdition:&\xd2\xf3\x18\"\n" +
+	"\x04menu\x10\x01\x1a\x18cafe.requests.v1.OutcomeB\xab\x01Z\xa8\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/menu;menuv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_menu_menu_commands_proto_rawDescOnce sync.Once

@@ -73,9 +73,11 @@ func (Visibility) EnumDescriptor() ([]byte, []int) {
 }
 
 type RequestContract struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Owner         string                 `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	Visibility    Visibility             `protobuf:"varint,2,opt,name=visibility,proto3,enum=cafe.requests.v1.Visibility" json:"visibility,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Owner      string                 `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	Visibility Visibility             `protobuf:"varint,2,opt,name=visibility,proto3,enum=cafe.requests.v1.Visibility" json:"visibility,omitempty"`
+	// Fully qualified response payload; public requests bind it to their Reply oneof.
+	Response      string `protobuf:"bytes,3,opt,name=response,proto3" json:"response,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -124,6 +126,13 @@ func (x *RequestContract) GetVisibility() Visibility {
 	return Visibility_VISIBILITY_UNSPECIFIED
 }
 
+func (x *RequestContract) GetResponse() string {
+	if x != nil {
+		return x.Response
+	}
+	return ""
+}
+
 var file_cafe_requests_v1_validation_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
@@ -131,6 +140,14 @@ var file_cafe_requests_v1_validation_proto_extTypes = []protoimpl.ExtensionInfo{
 		Field:         51001,
 		Name:          "cafe.requests.v1.required_input",
 		Tag:           "varint,51001,opt,name=required_input",
+		Filename:      "cafe/requests/v1/validation.proto",
+	},
+	{
+		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
+		ExtensionType: (*bool)(nil),
+		Field:         51003,
+		Name:          "cafe.requests.v1.required_output",
+		Tag:           "varint,51003,opt,name=required_output",
 		Filename:      "cafe/requests/v1/validation.proto",
 	},
 	{
@@ -147,31 +164,37 @@ var file_cafe_requests_v1_validation_proto_extTypes = []protoimpl.ExtensionInfo{
 var (
 	// optional bool required_input = 51001;
 	E_RequiredInput = &file_cafe_requests_v1_validation_proto_extTypes[0]
+	// A successful response must include this message value.
+	//
+	// optional bool required_output = 51003;
+	E_RequiredOutput = &file_cafe_requests_v1_validation_proto_extTypes[1]
 )
 
 // Extension fields to descriptorpb.MessageOptions.
 var (
 	// optional cafe.requests.v1.RequestContract contract = 51002;
-	E_Contract = &file_cafe_requests_v1_validation_proto_extTypes[1]
+	E_Contract = &file_cafe_requests_v1_validation_proto_extTypes[2]
 )
 
 var File_cafe_requests_v1_validation_proto protoreflect.FileDescriptor
 
 const file_cafe_requests_v1_validation_proto_rawDesc = "" +
 	"\n" +
-	"!cafe/requests/v1/validation.proto\x12\x10cafe.requests.v1\x1a google/protobuf/descriptor.proto\"e\n" +
+	"!cafe/requests/v1/validation.proto\x12\x10cafe.requests.v1\x1a google/protobuf/descriptor.proto\"\x81\x01\n" +
 	"\x0fRequestContract\x12\x14\n" +
 	"\x05owner\x18\x01 \x01(\tR\x05owner\x12<\n" +
 	"\n" +
 	"visibility\x18\x02 \x01(\x0e2\x1c.cafe.requests.v1.VisibilityR\n" +
-	"visibility*A\n" +
+	"visibility\x12\x1a\n" +
+	"\bresponse\x18\x03 \x01(\tR\bresponse*A\n" +
 	"\n" +
 	"Visibility\x12\x1a\n" +
 	"\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
 	"\x06PUBLIC\x10\x01\x12\v\n" +
 	"\aPRIVATE\x10\x02:F\n" +
-	"\x0erequired_input\x12\x1d.google.protobuf.FieldOptions\x18\xb9\x8e\x03 \x01(\bR\rrequiredInput:`\n" +
+	"\x0erequired_input\x12\x1d.google.protobuf.FieldOptions\x18\xb9\x8e\x03 \x01(\bR\rrequiredInput:H\n" +
+	"\x0frequired_output\x12\x1d.google.protobuf.FieldOptions\x18\xbb\x8e\x03 \x01(\bR\x0erequiredOutput:`\n" +
 	"\bcontract\x12\x1f.google.protobuf.MessageOptions\x18\xba\x8e\x03 \x01(\v2!.cafe.requests.v1.RequestContractR\bcontractB\xa6\x01Z\xa3\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/shared;sharedv1b\x06proto3"
 
 var (
@@ -197,12 +220,13 @@ var file_cafe_requests_v1_validation_proto_goTypes = []any{
 var file_cafe_requests_v1_validation_proto_depIdxs = []int32{
 	0, // 0: cafe.requests.v1.RequestContract.visibility:type_name -> cafe.requests.v1.Visibility
 	2, // 1: cafe.requests.v1.required_input:extendee -> google.protobuf.FieldOptions
-	3, // 2: cafe.requests.v1.contract:extendee -> google.protobuf.MessageOptions
-	1, // 3: cafe.requests.v1.contract:type_name -> cafe.requests.v1.RequestContract
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	3, // [3:4] is the sub-list for extension type_name
-	1, // [1:3] is the sub-list for extension extendee
+	2, // 2: cafe.requests.v1.required_output:extendee -> google.protobuf.FieldOptions
+	3, // 3: cafe.requests.v1.contract:extendee -> google.protobuf.MessageOptions
+	1, // 4: cafe.requests.v1.contract:type_name -> cafe.requests.v1.RequestContract
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	4, // [4:5] is the sub-list for extension type_name
+	1, // [1:4] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
 }
 
@@ -218,7 +242,7 @@ func file_cafe_requests_v1_validation_proto_init() {
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cafe_requests_v1_validation_proto_rawDesc), len(file_cafe_requests_v1_validation_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   1,
-			NumExtensions: 2,
+			NumExtensions: 3,
 			NumServices:   0,
 		},
 		GoTypes:           file_cafe_requests_v1_validation_proto_goTypes,

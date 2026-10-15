@@ -27,6 +27,7 @@ export interface RequestError {
 export interface RequestContract {
   owner: string;
   visibility: number;
+  response: string;
 }
 }
 export namespace loyalty {

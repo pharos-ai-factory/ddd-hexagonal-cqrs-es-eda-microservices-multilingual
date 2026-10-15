@@ -5,9 +5,9 @@ option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-micr
 import "cafe/requests/v1/validation.proto";
 
 message StartPreparation {
-  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC response: "cafe.requests.v1.Outcome" };
 }
 
 message CompletePreparation {
-  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC response: "cafe.requests.v1.Outcome" };
 }

@@ -96,7 +96,7 @@ func (db *ContextDatabase) persistRealtime(ctx context.Context, tx pgx.Tx, kind 
 			if saved == nil || !reflect.DeepEqual(saved, published) {
 				return fmt.Errorf("realtime snapshot differs from committed state")
 			}
-		} else if event.Rejection == nil || outcome.Rejection == nil || *event.Rejection != *outcome.Rejection {
+		} else if event.Rejection == nil || outcome.Rejection == nil || event.Rejection.Code != outcome.Rejection.Code || event.Rejection.Message != outcome.Rejection.Message {
 			return fmt.Errorf("realtime rejection differs from committed outcome")
 		}
 		event.CommandID, event.CorrelationID = m.ID, m.CorrelationID

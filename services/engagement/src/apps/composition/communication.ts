@@ -1,3 +1,4 @@
+import * as responses from '../../contexts/communication/adaptors/messaging/generated/response-payloads.js';
 import {
   CollectionIntegrationEvent,
   CommunicationDomainEvent,
@@ -5,7 +6,6 @@ import {
   LoyaltyIntegrationEvent,
 } from '../../adaptors/generated/message-names.js';
 import * as notificationQueries from '../../contexts/communication/adaptors/messaging/notification-query-mapping.js';
-import { CommunicationQuery } from '../../adaptors/generated/request-names.js';
 import { CommandRegistration } from '../command-registration.js';
 import { RabbitMQRequestRegistry } from '../../adaptors/messaging/rabbitmq-request-registry.js';
 import { notificationPublications } from '../../contexts/communication/adaptors/messaging/notification-publications.js';
@@ -142,18 +142,8 @@ export async function composeCommunication() {
 /** Communication exposes query requests and receives commands through durable subscriptions. */
 export function communicationRequests(c: CommunicationDependencies) {
   const registry = new RabbitMQRequestRegistry('communication');
-  registry.query(
-    CommunicationQuery.GET_NOTIFICATION,
-    notificationQueries.getNotification,
-    c.getNotification,
-    notificationQueries.getReply,
-  );
-  registry.query(
-    CommunicationQuery.LIST_NOTIFICATIONS,
-    notificationQueries.listNotifications,
-    c.listNotifications,
-    notificationQueries.listReply,
-  );
+  responses.registerGetNotification(registry, notificationQueries.getNotification, c.getNotification);
+  responses.registerListNotifications(registry, notificationQueries.listNotifications, c.listNotifications);
   return registry;
 }
 

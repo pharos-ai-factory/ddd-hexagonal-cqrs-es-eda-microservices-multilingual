@@ -16,7 +16,7 @@ def proto_snapshot(root):
 
     sys.path.insert(0, str(ROOT / "scripts"))
     from contract_sources import sources, PRIVATE
-    from google.protobuf import descriptor_pb2
+    from google.protobuf import descriptor_pb2, descriptor_pool, message_factory
     import grpc_tools
 
     result = {}
@@ -62,6 +62,17 @@ def proto_snapshot(root):
             )
             descriptors = descriptor_pb2.FileDescriptorSet.FromString(output.read_bytes())
 
+        pool = descriptor_pool.DescriptorPool()
+        for file in descriptors.file:
+            pool.Add(file)
+        try:
+            request_contract = pool.FindExtensionByName("cafe.requests.v1.contract")
+            options_type = message_factory.GetMessageClass(
+                pool.FindMessageTypeByName("google.protobuf.MessageOptions")
+            )
+        except KeyError:
+            request_contract = None
+
         def messages(prefix, items):
             for item in items:
                 name = prefix + "." + item.name
@@ -81,6 +92,13 @@ def proto_snapshot(root):
                         for f in item.field
                     }
                 }
+                if request_contract is not None:
+                    options = options_type.FromString(item.options.SerializeToString())
+                    if options.HasExtension(request_contract):
+                        result[name]["contract"] = {
+                            field.name: value
+                            for field, value in options.Extensions[request_contract].ListFields()
+                        }
                 messages(name, item.nested_type)
                 enums(name, item.enum_type)
 
@@ -156,12 +174,14 @@ def main():
     args = parser.parse_args()
     from http_retirements import compatible_changes
     from event_redesign import accepted_baseline
+    from response_compatibility import accepted_guarantees
 
     with tempfile.TemporaryDirectory() as directory:
         baseline = Path(directory)
         checkout(args.against, baseline)
         old, new = snapshot(baseline), snapshot(ROOT)
-    errors = proto_changes(accepted_baseline(old["protobuf"], new["protobuf"]), new["protobuf"])
+    baseline = accepted_baseline(old["protobuf"], new["protobuf"])
+    errors = proto_changes(accepted_guarantees(baseline, new["protobuf"]), new["protobuf"])
     for name, document in old["http"].items():
         errors += [name + ": " + error for error in compatible_changes(name, document, new["http"][name])]
     for name, data in old["fixtures"].items():

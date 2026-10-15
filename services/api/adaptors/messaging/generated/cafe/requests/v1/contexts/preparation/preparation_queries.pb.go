@@ -114,13 +114,13 @@ var File_cafe_requests_v1_contexts_preparation_preparation_queries_proto protore
 
 const file_cafe_requests_v1_contexts_preparation_preparation_queries_proto_rawDesc = "" +
 	"\n" +
-	"?cafe/requests/v1/contexts/preparation/preparation_queries.proto\x12\x1ccafe.preparation.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"U\n" +
+	"?cafe/requests/v1/contexts/preparation/preparation_queries.proto\x12\x1ccafe.preparation.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"{\n" +
 	"\vListTickets\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\x13\xd2\xf3\x18\x0f\n" +
-	"\vpreparation\x10\x01\"0\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:9\xd2\xf3\x185\n" +
+	"\vpreparation\x10\x01\x1a$cafe.preparation.requests.v1.Tickets\"[\n" +
 	"\tGetTicket\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id:\x13\xd2\xf3\x18\x0f\n" +
-	"\vpreparation\x10\x01B\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id:>\xd2\xf3\x18:\n" +
+	"\vpreparation\x10\x01\x1a)cafe.preparation.requests.v1.LoadedTicketB\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_preparation_preparation_queries_proto_rawDescOnce sync.Once

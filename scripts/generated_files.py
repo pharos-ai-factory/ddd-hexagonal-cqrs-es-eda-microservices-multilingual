@@ -20,6 +20,12 @@ def violation(path, source, classified=False):
     """Check classified outputs and recognise generated headers outside the inventory."""
     header = "\n".join(source.splitlines()[:5])
     generated = classified or HEADER.search(header) or header.startswith('"""Generated plain published')
+    if (
+        generated
+        and "generated" in Path(path).parts[:-1]
+        and re.search(r"(^|[_.-])generated([_.-]|$)", Path(path).name)
+    ):
+        return "generated folder already identifies ownership; remove the redundant filename marker"
     if generated and path not in STANDARD_NAMES and not clear_location(path):
         return "generated file must have 'generated' in its filename or live under a 'generated' folder"
     return None

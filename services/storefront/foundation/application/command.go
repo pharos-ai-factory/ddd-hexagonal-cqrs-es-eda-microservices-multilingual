@@ -3,6 +3,7 @@ package application
 
 import (
 	"context"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 	"time"
 
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
@@ -41,12 +42,7 @@ type Metadata struct {
 }
 
 // Outcome records a committed aggregate revision or typed business rejection.
-type Outcome struct {
-	AggregateID string            `json:"aggregateId"`
-	Version     uint64            `json:"version"`
-	Status      string            `json:"status"`
-	Rejection   *domain.Violation `json:"rejection,omitempty"`
-}
+type Outcome = shared.Outcome
 
 // ApplicationError represents an expected command failure outside aggregate policy.
 type ApplicationError struct {

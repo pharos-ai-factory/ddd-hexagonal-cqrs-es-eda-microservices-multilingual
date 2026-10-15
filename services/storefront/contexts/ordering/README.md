@@ -9,11 +9,12 @@ An order owns its lines and enforces the five-drink limit.
 - [Adaptor responsibilities and navigation](adaptors/README.md)
 
 - [Aggregate behaviour](domain)
-- [Generated command/query payloads](../../contracts/requests/model/ordering/payloads_generated.go)
+- [Generated command/query payloads](../../contracts/requests/generated/model/ordering/payloads.go)
+- [Generated responses and resource DTOs](../../contracts/requests/generated/model/ordering/responses.go)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
 - [Generated command and query identifiers](../../contracts/requests/generated/cafe/requests/v1/names.go)
-- [Generated event and subscription identifiers](../../contracts/events/names/names_generated.go)
+- [Generated event and subscription identifiers](../../contracts/events/generated/names/names.go)
 - [Domain publication handlers](application/eventhandlers)
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
@@ -27,22 +28,23 @@ An order owns its lines and enforces the five-drink limit.
 - [Executable specifications](../../../../specifications/ordering)
 - [Dependency composition](../../apps/storefront/di/ordering.go)
 - [Command and query registrations](../../apps/storefront/di/ordering_requests.go)
+- [Generated query bindings](adaptors/messaging/generated/queryregistration/responses.go)
 - [Context tests](.)
 
 ## Follow a use case
 
 Start with the named file in `application/commands/` or `application/queries/`.
-The handler imports its plain input from the schema-generated request contracts.
-Change command/query fields in Protobuf and run `pnpm generate:contracts` first. Follow the injected application port to the
+The handler imports its plain input and response from the schema-generated request contracts.
+Change command/query input and response fields in Protobuf and run `pnpm generate:contracts` first. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
 Command handlers load, mutate and save through named write repositories.
 Composition pairs each command with its plain handler factory through the shared
 registration helper, which supplies each invocation's repository and transaction. Owner adaptors map aggregate facts into outgoing messages.
 Projection handlers update consumer-owned read data without changing aggregates.
-Composition registers each generated query identifier with its input mapper,
-concrete handler and reply mapper. Event and subscription identifiers come from
+Composition uses a generated query binding with its input mapper and concrete handler.
+The binding fixes the identifier, result contract and generated reply encoder. Event and subscription identifiers come from
 the published and owner-private catalogues.
-Queries use named read repository ports and return application-owned views.
+Queries use named read repository ports and return generated plain responses.
 Persistence adaptors validate stored
 authority and select the fields exposed by those views.
 

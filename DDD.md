@@ -46,7 +46,7 @@ Clients supply an idempotency key and expected version. Repeating the same
 command returns its recorded outcome. Reusing the identity with different
 material input is a conflict. Duplicate/no-op transitions emit no new events.
 
-Queries have named input/handler pairs, application-owned read models and named
+Queries have named input/handler pairs, schema-generated plain read models and named
 read repository ports. Persistence adaptors validate stored authority and select view
 fields. A query preserves root revisions, missing resources and explicit pagination
 without acquiring mutation capability. Domain methods have no network,
@@ -102,7 +102,7 @@ Use real infrastructure when the example claims durable retries, duplicate
 business-key protection or concurrency; a decision probe cannot prove those.
 
 Python commands, outcomes, published DTOs, read views and restored snapshots have
-explicit shapes, including literal lifecycle states. Command ports retain the
+explicit shapes. Restored snapshots retain literal lifecycle states. Command ports retain the
 owning snapshot type; read repository ports expose application views. Domain facts use
 immutable context-owned dataclasses.
 Static types do not validate external JSON or stored state. Boundary decoders
@@ -148,3 +148,8 @@ explicitly choose browser messages. See [decision 0026](docs/decisions/0026-expl
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement
 handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).
+
+Command/query responses, their resource DTOs and mechanical encoders are generated
+from Protobuf too. Query handlers return generated responses; composition uses
+the generated typed binding. The command executor assembles the generated outcome.
+See [decision 0029](docs/decisions/0029-schema-generated-command-and-query-responses.md).

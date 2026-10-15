@@ -22,7 +22,7 @@ def generate(root=ROOT):
         if owner in ("shared", "loyalty", "communication"):
             typescript(root, owner, messages)
     paths = [
-        *root.glob("services/storefront/contracts/requests/model/**/*_generated.go"),
+        *root.glob("services/storefront/contracts/requests/generated/model/**/*.go"),
         *root.glob("services/storefront/contexts/*/adaptors/messaging/request_payloads_generated.go"),
     ]
     subprocess.run(

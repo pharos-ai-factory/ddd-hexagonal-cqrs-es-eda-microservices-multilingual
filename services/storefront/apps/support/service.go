@@ -193,7 +193,7 @@ func bindSubscription[P any](s *StorefrontRuntime, binding broker.Binding, targe
 			return err
 		}
 		if result.Rejection != nil {
-			return result.Rejection
+			return &a.ApplicationError{Code: result.Rejection.Code, Message: result.Rejection.Message}
 		}
 		return nil
 	}})

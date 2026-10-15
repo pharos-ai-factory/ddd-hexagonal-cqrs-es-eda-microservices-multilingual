@@ -1,3 +1,5 @@
+import { encodeGetAccountResponse } from '../contexts/loyalty/adaptors/messaging/generated/response-payloads.js';
+import type { GetAccountResponse } from '../contracts/requests/generated/loyalty-responses.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { asValue } from 'awilix';
@@ -23,6 +25,7 @@ void test('direct query handlers preserve missing roots, complete reads, paginat
   const container = createLoyaltyContainer('postgresql://unused:unused@127.0.0.1:1/unused');
   const calls: unknown[] = [];
   let failed = false;
+  let continuation: string | undefined = id;
   container.register({
     accountReadRepository: asValue({
       get: async (identity: string) => {
@@ -36,7 +39,7 @@ void test('direct query handlers preserve missing roots, complete reads, paginat
       },
       page: async (page: PageRequest) => {
         calls.push(page);
-        return { items: [row], nextId: id };
+        return { items: [row], nextId: continuation };
       },
     }),
   });
@@ -75,6 +78,17 @@ void test('direct query handlers preserve missing roots, complete reads, paginat
       .accounts;
     assert.deepEqual(paged, { items: [wireRow], paged: true, nextId: id });
     assert.deepEqual(calls.at(-1), { limit: 2, after: id });
+    continuation = '';
+    assert.deepEqual((await query(LoyaltyQuery.LIST_ACCOUNTS, { page: { limit: 2 } })).accounts, {
+      items: [wireRow],
+      paged: true,
+      nextId: '',
+    });
+    continuation = undefined;
+    assert.deepEqual((await query(LoyaltyQuery.LIST_ACCOUNTS, { page: { limit: 2 } })).accounts, {
+      items: [wireRow],
+      paged: true,
+    });
     const before = calls.length;
     await assert.rejects(query(LoyaltyQuery.LIST_ACCOUNTS, { page: { limit: 0 } }));
     assert.equal(calls.length, before);
@@ -89,24 +103,34 @@ void test('direct query handlers preserve missing roots, complete reads, paginat
 
 void test('query registrations reject duplicates and foreign identifiers', () => {
   const registry = new RabbitMQRequestRegistry('loyalty');
-  const handler = { execute: async () => undefined };
-  registry.query(LoyaltyQuery.GET_ACCOUNT, mapping.getAccount, handler, mapping.getReply);
+  const handler = {
+    execute: async (): Promise<GetAccountResponse> => ({ error: { code: 'not_found', message: '' } }),
+  };
+  registry.query(LoyaltyQuery.GET_ACCOUNT, mapping.getAccount, handler, encodeGetAccountResponse);
   assert.throws(
-    () => registry.query(LoyaltyQuery.GET_ACCOUNT, mapping.getAccount, handler, mapping.getReply),
+    () => registry.query(LoyaltyQuery.GET_ACCOUNT, mapping.getAccount, handler, encodeGetAccountResponse),
     /Duplicate/,
   );
   assert.throws(
-    () => registry.query(CommunicationQuery.GET_NOTIFICATION, mapping.getAccount, handler, mapping.getReply),
+    () =>
+      registry.query(
+        CommunicationQuery.GET_NOTIFICATION,
+        mapping.getAccount,
+        handler,
+        encodeGetAccountResponse,
+      ),
     /owner/,
   );
 });
 
 // These callers are compiled but never invoked; widening the API makes the directives fail.
 function rejectedIdentifiers(registry: RabbitMQRequestRegistry) {
-  const handler = { execute: async () => undefined };
+  const handler = {
+    execute: async (): Promise<GetAccountResponse> => ({ error: { code: 'not_found', message: '' } }),
+  };
   // @ts-expect-error Raw wire strings require a generated query identifier.
-  registry.query('getAccount', mapping.getAccount, handler, mapping.getReply);
+  registry.query('getAccount', mapping.getAccount, handler, encodeGetAccountResponse);
   // @ts-expect-error A command identifier cannot select a query handler.
-  registry.query(LoyaltyCommand.REDEEM_REWARD, mapping.getAccount, handler, mapping.getReply);
+  registry.query(LoyaltyCommand.REDEEM_REWARD, mapping.getAccount, handler, encodeGetAccountResponse);
 }
 void rejectedIdentifiers;

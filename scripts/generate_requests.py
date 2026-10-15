@@ -107,7 +107,7 @@ def generate_requests(service, root, plugin, standard_protos):
         if service == "operations":
             (generated / "request_registry.py").write_text(python_registry(owners))
         # Compilation must succeed before old bindings are replaced or pruned.
-        managed = output if service != "operations" else output / "cafe/requests"
+        managed = output / "cafe/requests"
         patterns = ("*.go",) if service != "operations" else ("*_pb2.py", "*_pb2.pyi")
         for pattern in patterns:
             for path in managed.rglob(pattern):

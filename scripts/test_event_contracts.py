@@ -50,7 +50,7 @@ message MenuArchived {
 """)
         generate(self.root)
         self.assertEqual(hashlib.sha256(envelope.read_bytes()).hexdigest(), before)
-        model = (self.root / "services/storefront/contracts/events/model/menu_generated.go").read_text()
+        model = (self.root / "services/storefront/contracts/events/generated/model/menu.go").read_text()
         self.assertIn("type MenuArchivedIntegrationEvent struct", model)
         self.assertRegex(model, r"Reason\s+string")
         codec = (self.root / "services/storefront/contracts/events/protobuf/menu_generated.go").read_text()
@@ -127,8 +127,17 @@ message MenuArchived {
             self.assertTrue((base / "generated" / expected).is_file())
             self.assertEqual(list(base.glob("*" + suffix)), [])
             (base / "generated" / ("obsolete" + suffix)).write_text("stale output\n")
+        go = self.root / "services/storefront/contracts/events"
+        self.assertTrue((go / "generated/model/menu.go").is_file())
+        self.assertTrue((go / "generated/names/names.go").is_file())
+        self.assertFalse((go / "model").exists())
+        self.assertFalse((go / "names").exists())
+        (go / "generated/model/obsolete.go").write_text("stale output\n")
+        handwritten = go / "protobuf/codec.go"
+        handwritten.write_text("package protobuf\n")
         generate(self.root)
         self.assertFalse(list(self.root.rglob("obsolete.*")))
+        self.assertEqual(handwritten.read_text(), "package protobuf\n")
 
     def test_invalid_schema_declarations_fail_generation(self):
         source = self.schema.read_text()

@@ -16,5 +16,5 @@ message CommandEnvelope {
   }
 }
 message AcceptOrderCommand {
-  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PRIVATE };
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PRIVATE response: "cafe.requests.v1.Outcome" };
   string order_id = 1; string customer_id = 2; string instructions = 3; }

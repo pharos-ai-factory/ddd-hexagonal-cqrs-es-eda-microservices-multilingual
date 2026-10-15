@@ -43,17 +43,9 @@ class ProtobufGenerationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown wire input"):
             generate(self.root, self.document)
 
-    def test_contexts_can_reuse_payload_tags_and_names(self):
-        # Ordering already uses tag 17 and the name create_order. Both are local.
-        self.commands.write_text(self.commands.read_text() + "\nmessage CreateOrder { }\n")
-        envelope = self.root / "contracts/menu/messaging/v1/menu_requests.proto"
-        envelope.write_text(
-            envelope.read_text().replace(
-                "cafe.menu.requests.v1.PublishEdition publish_edition = 16;",
-                "cafe.menu.requests.v1.PublishEdition publish_edition = 16;\n cafe.menu.requests.v1.CreateOrder create_order = 17;",
-            )
-        )
-        standard = subprocess.check_output(
+    @staticmethod
+    def standard_protos():
+        return subprocess.check_output(
             [
                 "uv",
                 "run",
@@ -66,6 +58,34 @@ class ProtobufGenerationTests(unittest.TestCase):
             ],
             text=True,
         ).strip()
+
+    def test_wire_regeneration_preserves_plain_models_and_prunes_stale_bindings(self):
+        relative = "services/storefront/contracts/requests/generated"
+        output = self.root / relative
+        shutil.copytree(ROOT / relative / "model", output / "model")
+        before = {p.relative_to(output): p.read_bytes() for p in (output / "model").rglob("*.go")}
+        self.assertTrue(before)
+        stale = output / "cafe/requests/v1/obsolete.pb.go"
+        stale.parent.mkdir(parents=True)
+        stale.write_text("stale binding\n")
+        generate_requests("storefront", self.root, ensure_go_plugin(ROOT), self.standard_protos())
+        self.assertFalse(stale.exists())
+        self.assertTrue((output / "cafe/requests/v1/contexts/ordering/ordering_requests.pb.go").is_file())
+        self.assertEqual(
+            before, {p.relative_to(output): p.read_bytes() for p in (output / "model").rglob("*.go")}
+        )
+
+    def test_contexts_can_reuse_payload_tags_and_names(self):
+        # Ordering already uses tag 17 and the name create_order. Both are local.
+        self.commands.write_text(self.commands.read_text() + "\nmessage CreateOrder { }\n")
+        envelope = self.root / "contracts/menu/messaging/v1/menu_requests.proto"
+        envelope.write_text(
+            envelope.read_text().replace(
+                "cafe.menu.requests.v1.PublishEdition publish_edition = 16;",
+                "cafe.menu.requests.v1.PublishEdition publish_edition = 16;\n cafe.menu.requests.v1.CreateOrder create_order = 17;",
+            )
+        )
+        standard = self.standard_protos()
         generate_requests("api", self.root, ensure_go_plugin(ROOT), standard)
         output = self.root / "services/api/adaptors/messaging/generated/cafe/requests/v1"
         self.assertFalse((output / "requests.pb.go").exists())

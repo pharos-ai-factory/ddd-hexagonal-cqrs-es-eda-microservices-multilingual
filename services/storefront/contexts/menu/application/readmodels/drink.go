@@ -1,9 +1,6 @@
 package readmodels
 
-// DrinkView is the application-owned read representation.
-type DrinkView struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Revision  uint64 `json:"revision"`
-	Published bool   `json:"published"`
-}
+import model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/menu"
+
+// DrinkView uses the schema-generated response representation.
+type DrinkView = model.Drink

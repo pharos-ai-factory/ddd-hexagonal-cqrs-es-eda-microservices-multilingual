@@ -1,3 +1,4 @@
+import { toOutcome } from './generated/response-payloads.js';
 import { replyType, decodeRequest, type Request } from './request-envelope.js';
 import amqp from 'amqplib';
 
@@ -32,14 +33,7 @@ export class RabbitMQRequestRegistry {
       const input = parse(request.body);
       const result = await execute({ ...request.metadata, input }, input);
       return {
-        outcome: {
-          aggregateId: result.aggregateId,
-          version: result.version,
-          status: result.status,
-          ...(result.rejection
-            ? { rejection: { code: result.rejection.code, message: result.rejection.message } }
-            : {}),
-        },
+        outcome: toOutcome(result),
       };
     });
   }
@@ -144,14 +138,7 @@ export class RabbitMQRequestRegistry {
                 id: request.id,
                 committed: false,
                 encode: (outcome) => {
-                  const result = {
-                    aggregateId: outcome.aggregateId,
-                    version: outcome.version,
-                    status: outcome.status,
-                    ...(outcome.rejection
-                      ? { rejection: { code: outcome.rejection.code, message: outcome.rejection.message } }
-                      : {}),
-                  };
+                  const result = toOutcome(outcome);
                   const type = replyType(this.owner);
                   return Buffer.from(
                     type

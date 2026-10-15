@@ -7,6 +7,7 @@
 package menuv1
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -485,7 +486,7 @@ var File_cafe_requests_v1_contexts_menu_menu_replies_proto protoreflect.FileDesc
 
 const file_cafe_requests_v1_contexts_menu_menu_replies_proto_rawDesc = "" +
 	"\n" +
-	"1cafe/requests/v1/contexts/menu/menu_replies.proto\x12\x15cafe.menu.requests.v1\"e\n" +
+	"1cafe/requests/v1/contexts/menu/menu_replies.proto\x12\x15cafe.menu.requests.v1\x1a!cafe/requests/v1/validation.proto\"e\n" +
 	"\x05Drink\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
@@ -502,21 +503,21 @@ const file_cafe_requests_v1_contexts_menu_menu_replies_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12\x16\n" +
 	"\x06status\x18\x03 \x01(\tR\x06status\x124\n" +
-	"\x06offers\x18\x04 \x03(\v2\x1c.cafe.menu.requests.v1.OfferR\x06offers\"s\n" +
+	"\x06offers\x18\x04 \x03(\v2\x1c.cafe.menu.requests.v1.OfferR\x06offers\"y\n" +
 	"\vLoadedDrink\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x122\n" +
-	"\x05state\x18\x03 \x01(\v2\x1c.cafe.menu.requests.v1.DrinkR\x05state\"\x82\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x128\n" +
+	"\x05state\x18\x03 \x01(\v2\x1c.cafe.menu.requests.v1.DrinkB\x04\xd8\xf3\x18\x01R\x05state\"\x82\x01\n" +
 	"\x06Drinks\x128\n" +
 	"\x05items\x18\x01 \x03(\v2\".cafe.menu.requests.v1.LoadedDrinkR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +
 	"\anext_id\x18\x03 \x01(\tH\x00R\x06nextId\x88\x01\x01B\n" +
 	"\n" +
-	"\b_next_id\"w\n" +
+	"\b_next_id\"}\n" +
 	"\rLoadedEdition\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x124\n" +
-	"\x05state\x18\x03 \x01(\v2\x1e.cafe.menu.requests.v1.EditionR\x05state\"\x86\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x12:\n" +
+	"\x05state\x18\x03 \x01(\v2\x1e.cafe.menu.requests.v1.EditionB\x04\xd8\xf3\x18\x01R\x05state\"\x86\x01\n" +
 	"\bEditions\x12:\n" +
 	"\x05items\x18\x01 \x03(\v2$.cafe.menu.requests.v1.LoadedEditionR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +

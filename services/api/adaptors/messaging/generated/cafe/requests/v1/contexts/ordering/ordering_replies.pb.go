@@ -7,6 +7,7 @@
 package orderingv1
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -357,15 +358,15 @@ var File_cafe_requests_v1_contexts_ordering_ordering_replies_proto protoreflect.
 
 const file_cafe_requests_v1_contexts_ordering_ordering_replies_proto_rawDesc = "" +
 	"\n" +
-	"9cafe/requests/v1/contexts/ordering/ordering_replies.proto\x12\x19cafe.ordering.requests.v1\"T\n" +
+	"9cafe/requests/v1/contexts/ordering/ordering_replies.proto\x12\x19cafe.ordering.requests.v1\x1a!cafe/requests/v1/validation.proto\"T\n" +
 	"\tSelection\x12\x1d\n" +
 	"\n" +
 	"offer_code\x18\x01 \x01(\tR\tofferCode\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
-	"\x05minor\x18\x03 \x01(\x03R\x05minor\"v\n" +
+	"\x05minor\x18\x03 \x01(\x03R\x05minor\"|\n" +
 	"\x04Line\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12B\n" +
-	"\tselection\x18\x02 \x01(\v2$.cafe.ordering.requests.v1.SelectionR\tselection\x12\x1a\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12H\n" +
+	"\tselection\x18\x02 \x01(\v2$.cafe.ordering.requests.v1.SelectionB\x04\xd8\xf3\x18\x01R\tselection\x12\x1a\n" +
 	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\xf3\x01\n" +
 	"\x05Order\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
@@ -376,11 +377,11 @@ const file_cafe_requests_v1_contexts_ordering_ordering_replies_proto_rawDesc = "
 	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\tR\x06status\x125\n" +
 	"\x05lines\x18\x06 \x03(\v2\x1f.cafe.ordering.requests.v1.LineR\x05lines\x12/\n" +
-	"\x13collection_recorded\x18\a \x01(\bR\x12collectionRecorded\"w\n" +
+	"\x13collection_recorded\x18\a \x01(\bR\x12collectionRecorded\"}\n" +
 	"\vLoadedOrder\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x126\n" +
-	"\x05state\x18\x03 \x01(\v2 .cafe.ordering.requests.v1.OrderR\x05state\"\x86\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x12<\n" +
+	"\x05state\x18\x03 \x01(\v2 .cafe.ordering.requests.v1.OrderB\x04\xd8\xf3\x18\x01R\x05state\"\x86\x01\n" +
 	"\x06Orders\x12<\n" +
 	"\x05items\x18\x01 \x03(\v2&.cafe.ordering.requests.v1.LoadedOrderR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +

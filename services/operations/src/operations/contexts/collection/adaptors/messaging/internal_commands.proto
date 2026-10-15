@@ -16,5 +16,5 @@ message CommandEnvelope {
   }
 }
 message OpenPickupCommand {
-  option (cafe.requests.v1.contract) = { owner: "collection" visibility: PRIVATE };
+  option (cafe.requests.v1.contract) = { owner: "collection" visibility: PRIVATE response: "cafe.requests.v1.Outcome" };
   string order_id = 1; string customer_id = 2; }

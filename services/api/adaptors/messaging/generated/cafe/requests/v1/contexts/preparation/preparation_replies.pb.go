@@ -7,6 +7,7 @@
 package preparationv1
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -221,18 +222,18 @@ var File_cafe_requests_v1_contexts_preparation_preparation_replies_proto protore
 
 const file_cafe_requests_v1_contexts_preparation_preparation_replies_proto_rawDesc = "" +
 	"\n" +
-	"?cafe/requests/v1/contexts/preparation/preparation_replies.proto\x12\x1ccafe.preparation.requests.v1\"\x90\x01\n" +
+	"?cafe/requests/v1/contexts/preparation/preparation_replies.proto\x12\x1ccafe.preparation.requests.v1\x1a!cafe/requests/v1/validation.proto\"\x90\x01\n" +
 	"\x06Ticket\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x03 \x01(\tR\n" +
 	"customerId\x12\"\n" +
 	"\finstructions\x18\x04 \x01(\tR\finstructions\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\tR\x06status\"|\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\"\x82\x01\n" +
 	"\fLoadedTicket\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x12:\n" +
-	"\x05state\x18\x03 \x01(\v2$.cafe.preparation.requests.v1.TicketR\x05state\"\x8b\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x12@\n" +
+	"\x05state\x18\x03 \x01(\v2$.cafe.preparation.requests.v1.TicketB\x04\xd8\xf3\x18\x01R\x05state\"\x8b\x01\n" +
 	"\aTickets\x12@\n" +
 	"\x05items\x18\x01 \x03(\v2*.cafe.preparation.requests.v1.LoadedTicketR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +

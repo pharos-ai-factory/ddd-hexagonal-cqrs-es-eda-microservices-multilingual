@@ -1,3 +1,4 @@
+from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as _validation_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message

@@ -1,3 +1,4 @@
+import * as responses from '../../contexts/loyalty/adaptors/messaging/generated/response-payloads.js';
 import { PostgresRealtimeEventBus } from '../../adaptors/persistence/realtime-event-bus.js';
 import { RewardIssuedRealtimeIntegrationEventHandler } from '../../contexts/loyalty/application/event-handlers/realtime-reward-issued.js';
 import { realtimeSubscription } from '../runtime.js';
@@ -9,7 +10,7 @@ import {
 } from '../../adaptors/generated/message-names.js';
 import * as rewardQueries from '../../contexts/loyalty/adaptors/messaging/reward-query-mapping.js';
 import * as accountQueries from '../../contexts/loyalty/adaptors/messaging/account-query-mapping.js';
-import { LoyaltyQuery, LoyaltyCommand } from '../../adaptors/generated/request-names.js';
+import { LoyaltyCommand } from '../../adaptors/generated/request-names.js';
 import { PostgresPublicationOutbox } from '../../adaptors/persistence/integration-event-outbox.js';
 import { published } from '../../adaptors/generated/event-types.js';
 import { RewardIssuedDomainEventHandler } from '../../contexts/loyalty/application/event-handlers/publish-reward-issued.js';
@@ -185,20 +186,10 @@ export function loyaltyRequests(c: LoyaltyDependencies) {
     wire.redeem,
     (repository, realtime) => new RedeemRewardCommandHandler(repository, realtime, clock),
   );
-  registry.query(LoyaltyQuery.GET_ACCOUNT, accountQueries.getAccount, c.getAccount, accountQueries.getReply);
-  registry.query(
-    LoyaltyQuery.LIST_ACCOUNTS,
-    accountQueries.listAccounts,
-    c.listAccounts,
-    accountQueries.listReply,
-  );
-  registry.query(LoyaltyQuery.GET_REWARD, rewardQueries.getReward, c.getReward, rewardQueries.getReply);
-  registry.query(
-    LoyaltyQuery.LIST_REWARDS,
-    rewardQueries.listRewards,
-    c.listRewards,
-    rewardQueries.listReply,
-  );
+  responses.registerGetAccount(registry, accountQueries.getAccount, c.getAccount);
+  responses.registerListAccounts(registry, accountQueries.listAccounts, c.listAccounts);
+  responses.registerGetReward(registry, rewardQueries.getReward, c.getReward);
+  responses.registerListRewards(registry, rewardQueries.listRewards, c.listRewards);
   return registry;
 }
 

@@ -7,7 +7,7 @@ Go, Python and TypeScript implementation through its related concepts. Code
 excerpts link to their source; imports and surrounding declarations may be omitted.
 The documentation check verifies that marked excerpts still match the checkout.
 
-The catalogue below is the implementation reading order. All 31 pages are available.
+The catalogue below is the implementation reading order. All 32 pages are available.
 The broader [learning path](../index.md) provides the introductory explanations
 of DDD, hexagonal architecture, CQRS, EDA and event sourcing.
 
@@ -32,6 +32,7 @@ of DDD, hexagonal architecture, CQRS, EDA and event sourcing.
 | [Commands](commands.md)                         | Create a callable command: DTO, schema, generation, parser, registration and tests |
 | [Command handlers](command-handlers.md)         | Inject a repository, load, mutate and save                                         |
 | [Queries](queries.md)                           | Define and register a read question and its reply mapping                          |
+| [Responses](responses.md)                       | Generate command outcomes, query results and typed bindings                        |
 | [Query handlers](query-handlers.md)             | Inject a read repository and return a view                                         |
 | [Ports](ports.md)                               | Define named application capabilities and their guarantees                         |
 | [Adaptors](adaptors.md)                         | Map transport and persistence to application boundaries                            |
@@ -39,14 +40,14 @@ of DDD, hexagonal architecture, CQRS, EDA and event sourcing.
 
 ## 3. Restore and persist state
 
-| Concept                                       | What its page explains                                   |
-| --------------------------------------------- | -------------------------------------------------------- |
-| [Write repositories](write-repositories.md)   | Owner mappings, staging and invocation lifetime          |
-| [Aggregate hydration](aggregate-hydration.md) | Restore and validate current saved authority             |
-| [Read models](read-models.md)                 | Shape application-owned query results                    |
-| [Read repositories](read-repositories.md)     | Validate stored values, map views and preserve revisions |
-| [Transactions](transactions.md)               | Commit state, outcomes, receipts and outgoing intent     |
-| [Projections](projections.md)                 | Maintain derived evidence and reason about freshness     |
+| Concept                                       | What its page explains                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| [Write repositories](write-repositories.md)   | Owner mappings, staging and invocation lifetime              |
+| [Aggregate hydration](aggregate-hydration.md) | Restore and validate current saved authority                 |
+| [Read models](read-models.md)                 | Use schema-generated resource DTOs at application read ports |
+| [Read repositories](read-repositories.md)     | Validate stored values, map views and preserve revisions     |
+| [Transactions](transactions.md)               | Commit state, outcomes, receipts and outgoing intent         |
+| [Projections](projections.md)                 | Maintain derived evidence and reason about freshness         |
 
 ## 4. Deliver facts and updates
 

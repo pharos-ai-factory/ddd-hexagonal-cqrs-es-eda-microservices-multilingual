@@ -1,21 +1,35 @@
-# Queries: create, register and expose a read use case
+# Queries: define the request and response, then implement the read
 
-Use this recipe after naming the owning context and the read behaviour. The three
-running examples are `GetOrder` (Go), `GetTicket` (Python) and `GetReward`
-(TypeScript). Each returns an application-owned view with its stored revision.
+A query has a schema-defined input and response. This recipe follows `GetOrder`
+(Go), `GetTicket` (Python) and `GetReward` (TypeScript). Each handler uses a named
+read repository and returns its generated response with the stored revision.
 
-## 1. Define the published question
+## 1. Name the owner and read policy
 
-Edit the owner's `contracts/<context>/messaging/queries/v1/*_queries.proto`.
-Allocate unused field numbers. Define required identity, filters or pagination;
-validate their business meaning in the owner input mapper.
+Run `pnpm context <owner>` and read its README. Identify the required fields,
+missing-resource behaviour and complete or paginated list semantics. Queries have
+no aggregate mutation capability. Keep private databases within their context.
+
+## 2. Define both sides in Protobuf
+
+Add the input in `contracts/<owner>/messaging/queries/v1/*_queries.proto` and
+its response graph in `*_replies.proto`. The input's `contract.response` names the
+fully qualified success message. Declare the owner and public visibility too.
 
 ### Go
 
 ```proto source="../../../contracts/ordering/messaging/queries/v1/ordering_queries.proto"
 message GetOrder {
-  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC response: "cafe.ordering.requests.v1.LoadedOrder" };
   string id = 1;
+}
+```
+
+```proto source="../../../contracts/ordering/messaging/queries/v1/ordering_replies.proto"
+message LoadedOrder {
+  bool exists = 1;
+  uint64 version = 2;
+  Order state = 3 [(cafe.requests.v1.required_output) = true];
 }
 ```
 
@@ -23,8 +37,16 @@ message GetOrder {
 
 ```proto source="../../../contracts/preparation/messaging/queries/v1/preparation_queries.proto"
 message GetTicket {
-  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC response: "cafe.preparation.requests.v1.LoadedTicket" };
   string id = 1;
+}
+```
+
+```proto source="../../../contracts/preparation/messaging/queries/v1/preparation_replies.proto"
+message LoadedTicket {
+  bool exists = 1;
+  uint64 version = 2;
+  Ticket state = 3 [(cafe.requests.v1.required_output) = true];
 }
 ```
 
@@ -32,50 +54,70 @@ message GetTicket {
 
 ```proto source="../../../contracts/loyalty/messaging/queries/v1/loyalty_queries.proto"
 message GetReward {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC response: "cafe.loyalty.requests.v1.LoadedReward" };
   string id = 1;
 }
 ```
 
-## 2. Add the query and reply to the owner envelope
+```proto source="../../../contracts/loyalty/messaging/queries/v1/loyalty_replies.proto"
+message LoadedReward {
+  bool exists = 1;
+  uint64 version = 2;
+  Reward state = 3 [(cafe.requests.v1.required_output) = true];
+}
+```
 
-Edit the owner's `messaging/v1/*_requests.proto`: add the query payload to
-`Query.payload`, then add its loaded resource/list reply to `Reply.payload`.
-Preserve old field numbers. A loaded response includes the resource revision.
-The existing examples are:
+Define the resource's fields in the same reply schema. Nested resources and
+repeated fields are generated recursively. `required_output` requires a successful
+loaded response to supply its state. Optional fields retain their presence;
+for example, an absent continuation differs from a present empty string.
 
-| Language   | Owner envelope                                                                                       | Query member | Reply member |
-| ---------- | ---------------------------------------------------------------------------------------------------- | ------------ | ------------ |
-| Go         | [ordering_requests.proto](../../../contracts/ordering/messaging/v1/ordering_requests.proto)          | `get_order`  | `order`      |
-| Python     | [preparation_requests.proto](../../../contracts/preparation/messaging/v1/preparation_requests.proto) | `get_ticket` | `ticket`     |
-| TypeScript | [loyalty_requests.proto](../../../contracts/loyalty/messaging/v1/loyalty_requests.proto)             | `get_reward` | `reward`     |
+## 3. Add the envelope alternatives
 
-## 3. Generate plain query inputs, wire types and routing identifiers
+Add the input to `Query.payload` and its success message to `Reply.payload` in
+`messaging/v1/<owner>_requests.proto`. Keep the shared `RequestError` alternative.
+Allocate unused field numbers and preserve historical identities. Generation
+checks that `response` identifies exactly one success alternative in this owner.
 
-Run `pnpm generate:contracts`. Declare `owner` and `visibility: PUBLIC` on the
-query payload. The generator reads its fields and the query envelope's oneof
-members, producing the plain query input and its mechanical parser. `QueryBusPort` dispatches the resulting application query after parsing;
-transport registration still uses the generated routing identifier.
+| Example   | Input member | Success member |
+| --------- | ------------ | -------------- |
+| GetOrder  | `get_order`  | `order`        |
+| GetTicket | `get_ticket` | `ticket`       |
+| GetReward | `get_reward` | `reward`       |
 
-| Language   | Generated identifier          | Import source                                                                                       |
-| ---------- | ----------------------------- | --------------------------------------------------------------------------------------------------- |
-| Go         | `names.OrderingQueryGetOrder` | [names.go](../../../services/storefront/contracts/requests/generated/cafe/requests/v1/names.go)     |
-| Python     | `PreparationQuery.GET_TICKET` | [request_names.py](../../../services/operations/src/operations/adaptors/generated/request_names.py) |
-| TypeScript | `LoyaltyQuery.GET_REWARD`     | [request-names.ts](../../../services/engagement/src/adaptors/generated/request-names.ts)            |
+## 4. Generate and inspect the outputs
 
-`names` is a Go import alias. `PreparationQuery` and `LoyaltyQuery` are generated
-routing enums. The plain query class is generated from that same schema. The handler imports
-it; changing the schema and regenerating updates every field and conversion.
+Run `pnpm generate:contracts`. It produces plain input/resource/response types,
+wire bindings, input parsers, checked response encoders and typed registration
+functions. Each query response selects its own success payload or `RequestError`.
 
-## 4. Import the generated input into a named query handler
+| Language   | Plain responses                                                                                                               | Boundary bindings                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Go         | [responses.go](../../../services/storefront/contracts/requests/generated/model/ordering/responses.go)                         | [queryregistration](../../../services/storefront/contexts/ordering/adaptors/messaging/generated/queryregistration/responses.go)            |
+| Python     | [preparation_responses.py](../../../services/operations/src/operations/contracts/requests/generated/preparation_responses.py) | [response_payloads.py](../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/generated/response_payloads.py) |
+| TypeScript | [loyalty-responses.ts](../../../services/engagement/src/contracts/requests/generated/loyalty-responses.ts)                    | [response-payloads.ts](../../../services/engagement/src/contexts/loyalty/adaptors/messaging/generated/response-payloads.ts)                |
 
-Create the handler in `application/queries/<question>` in the owner. Import its
-plain input from the service-local generated request contracts. Inject the named read repository; return its application view, revision
-and missing-resource result. These complete files show the boundary:
+Plain contracts have no Protobuf runtime imports. An incompatible response handler
+fails the generated binding's type signature. Commit the generated outputs.
+
+## 5. Implement the named read repository
+
+Use the generated resource DTO directly or through a named alias in the existing
+read-model module. The named application port carries that DTO, its revision and
+absence. Keep generic `Loaded`/`Page` repository containers where they express
+storage results. They also serve snapshot reads and are separate from response envelopes.
+
+Implement the port in owner persistence. Validate stored authority before selecting
+published fields. Reuse the [read repository recipe](read-repositories.md), including
+complete lists and explicit keyset pagination. Bind the concrete reader through DI.
+
+## 6. Return the generated response from the handler
+
+The handler explicitly selects `not_found` for absence and preserves the loaded
+revision on success. Storage failures propagate to the registry's retryable error
+handling. A successful read does not invent an aggregate transition.
 
 ### Go
-
-Source: [get_order.go](../../../services/storefront/contexts/ordering/application/queries/get_order.go).
 
 ```go source="../../../services/storefront/contexts/ordering/application/queries/get_order.go"
 package queries
@@ -83,207 +125,126 @@ package queries
 import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
-	view "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/readmodels"
-	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
-	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/ordering"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 )
 
-// GetOrderQueryHandler reads one order through its application capability.
+// GetOrderQueryHandler preserves revision, absence and pagination policy.
 type GetOrderQueryHandler struct{ ReadRepository ports.OrderReadRepository }
 
-func (h GetOrderQueryHandler) Execute(ctx context.Context, q orderingcontracts.GetOrderQuery) (a.Loaded[view.OrderView], error) {
-	return h.ReadRepository.Get(ctx, q.ID)
+func (h GetOrderQueryHandler) Execute(ctx context.Context, q model.GetOrderQuery) (model.GetOrderResponse, error) {
+	value, err := h.ReadRepository.Get(ctx, q.ID)
+	if err != nil {
+		return model.GetOrderResponse{}, err
+	}
+	if !value.Exists {
+		return model.GetOrderResponse{Error: &shared.RequestError{Code: "not_found"}}, nil
+	}
+	return model.GetOrderResponse{Order: &model.LoadedOrder{Exists: value.Exists, Version: value.Version, State: value.State}}, nil
 }
 ```
 
 ### Python
 
-Source: [get_ticket.py](../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py).
-
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py"
 from operations.contracts.requests.generated.preparation import GetTicketQuery
-from operations.foundation.application import Loaded
+from operations.contracts.requests.generated.preparation_responses import GetTicketResponse, LoadedTicket
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
-from operations.contexts.preparation.application.read_models.ticket import TicketView
 
 
 class GetTicketQueryHandler:
-    """Execute the GetTicket read use case through its owning application port."""
+    """Preserve revision, missing-resource and pagination policy in a generated response."""
 
     def __init__(self, read_repository: TicketReadRepository) -> None:
         self.read_repository = read_repository
 
-    def execute(self, query: GetTicketQuery) -> Loaded[TicketView] | None:
-        return self.read_repository.get(query.id)
+    def execute(self, query: GetTicketQuery) -> GetTicketResponse:
+        value = self.read_repository.get(query.id)
+        if value is None:
+            return {"error": {"code": "not_found", "message": ""}}
+        return {
+            "ticket": LoadedTicket(exists=value["exists"], version=value["version"], state=value["state"])
+        }
 ```
 
 ### TypeScript
 
-Source: [get-reward.ts](../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts).
-
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts"
 import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
+import type { GetRewardResponse } from '../../../../contracts/requests/generated/loyalty-responses.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Execute the GetReward use case through its context-owned read port. */
+/** Preserve revision, missing-resource and pagination policy in a generated response. */
 export class GetRewardQueryHandler {
   constructor(private readRepository: RewardReadRepository) {}
-  async execute(query: GetRewardQuery) {
-    return this.readRepository.get(query.id);
+  async execute(query: GetRewardQuery): Promise<GetRewardResponse> {
+    const value = await this.readRepository.get(query.id);
+    return value ? { reward: value } : { error: { code: 'not_found', message: '' } };
   }
 }
 ```
 
-## 5. Define the view and implement its read repository
+For list queries, load every item when no page is supplied. Otherwise request the
+page and preserve its continuation. Construct the generated collection DTO with
+`paged` and the generated loaded resources. See
+[ListOrders](../../../services/storefront/contexts/ordering/application/queries/list_orders.go),
+[ListTickets](../../../services/operations/src/operations/contexts/preparation/application/queries/list_tickets.py) and
+[ListRewards](../../../services/engagement/src/contexts/loyalty/application/queries/list-rewards.ts).
 
-Add the required fields to an application read model, then define the named port.
-Implement it in the context's persistence adaptor. Validate stored state before
-mapping it. The existing implementations pair these files:
+## 7. Retain semantic input validation
 
-| Language   | Read model                                                                                                      | Application port                                                                                                                          | PostgreSQL implementation                                                                                                                    |
-| ---------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Go         | [order.go](../../../services/storefront/contexts/ordering/application/readmodels/order.go)                      | [order_read_repository.go](../../../services/storefront/contexts/ordering/application/ports/order_read_repository.go)                     | [order_read_repository.go](../../../services/storefront/contexts/ordering/adaptors/persistence/postgres/order_read_repository.go)            |
-| Python     | [ticket.py](../../../services/operations/src/operations/contexts/preparation/application/read_models/ticket.py) | [ticket_read_repository.py](../../../services/operations/src/operations/contexts/preparation/application/ports/ticket_read_repository.py) | [ticket_read_repository.py](../../../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py) |
-| TypeScript | [reward.ts](../../../services/engagement/src/contexts/loyalty/application/read-models/reward.ts)                | [reward-read-repository.ts](../../../services/engagement/src/contexts/loyalty/application/ports/reward-read-repository.ts)                | [reward-read-repository.ts](../../../services/engagement/src/contexts/loyalty/adaptors/persistence/reward-read-repository.ts)                |
+Use the generated input parser. Add UUID, authorisation or business-evidence checks
+in the owner wrapper where needed. The schema supplies structural conversions.
+Go's request validator checks input before the generated conversion; Python and
+TypeScript wrappers retain their explicit identifier validation.
 
-For an item query, preserve absence explicitly. For a list query, return every item
-unless pagination is requested; then preserve the continuation. See the
-[read repository recipe](read-repositories.md).
+## 8. Bind the generated registration in composition
 
-## 6. Use generated parsing and add owner semantic validation
-
-Generation supplies the mechanical field mapping and optional-presence handling.
-The names `rpc`, `wire` and `rewardQueries` are import aliases for owner messaging
-modules. Go registers its generated mapping directly; Python and TypeScript wrap
-generated parsers with explicit UUID validation. Reply mappings remain handwritten.
-
-### Go
-
-Source: [generated mappings](../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go).
-
-```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/request_payloads_generated.go"
-func GetOrder(value *pb.GetOrder) model.GetOrderQuery {
- result := model.GetOrderQuery{}
- result.ID = value.GetId()
- return result
-}
-```
-
-### Python
-
-Source: [ticket_requests.py](../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py).
-
-```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
-def get_ticket(value: Message) -> GetTicketQuery:
-    query = inputs.get_ticket(value)
-    identifier(query.id)
-    return query
-```
-
-### TypeScript
-
-Source: [reward-query-mapping.ts](../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-query-mapping.ts).
-
-```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-query-mapping.ts"
-export function getReward(value: unknown): GetRewardQuery {
-  const query = parseGetRewardQuery(value);
-  identifier(query.id);
-  return query;
-}
-```
-
-## 7. Map the result into its published reply
-
-Implement `GetOrderReply`, `get_reply` or `getReply` in the same owner mapper.
-A missing resource becomes the existing `not_found` reply. A present view includes
-its revision. Keep this mapping outside the query handler.
-
-### Go
-
-Source: [order_queries.go](../../../services/storefront/contexts/ordering/adaptors/messaging/order_queries.go).
-
-```go source="../../../services/storefront/contexts/ordering/adaptors/messaging/order_queries.go"
-func GetOrderReply(_ orderingcontracts.GetOrderQuery, loaded a.Loaded[view.OrderView]) envelope.Reply {
-	if !loaded.Exists {
-		return &pb.Reply{Payload: &pb.Reply_Error{Error: &envelope.RequestError{Code: "not_found"}}}
-	}
-	return &pb.Reply{Payload: &pb.Reply_Order{Order: orderReply(loaded).(*pb.LoadedOrder)}}
-}
-```
-
-### Python
-
-Source: [ticket_requests.py](../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py).
-
-```python source="../../../services/operations/src/operations/contexts/preparation/adaptors/messaging/ticket_requests.py"
-def get_reply(query: GetTicketQuery, loaded: Loaded[TicketView] | None) -> Reply:
-    """Map a missing resource or its current revision to the owner reply."""
-    if loaded is None:
-        reply = Reply()
-        reply.error.code = "not_found"
-        return reply
-    return Reply(ticket=item(loaded))
-```
-
-### TypeScript
-
-Source: [reward-query-mapping.ts](../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-query-mapping.ts).
-
-```ts source="../../../services/engagement/src/contexts/loyalty/adaptors/messaging/reward-query-mapping.ts"
-export function getReply(_query: GetRewardQuery, loaded: Loaded<RewardView> | undefined) {
-  return loaded ? { reward: reward(loaded) } : { error: { code: 'not_found' } };
-}
-```
-
-## 8. Resolve the repository and handler through DI
-
-Bind the concrete PostgreSQL read repository to its named application port, then
-construct the query handler with that repository before starting workers.
-
-- Go: [ordering.go](../../../services/storefront/apps/storefront/di/ordering.go) binds `ports.OrderReadRepository` and constructs `GetOrderQueryHandler`.
-- Python: [preparation.py](../../../services/operations/src/operations/apps/composition/preparation.py) binds `ticket_read_repository` and `get_ticket` providers.
-- TypeScript: [loyalty.ts](../../../services/engagement/src/apps/composition/loyalty.ts) binds `rewardReadRepository` and `getReward` factories.
-
-## 9. Register identifier, parser, handler and reply mapper together
-
-The registry builds the typed `QueryBusPort` dispatch. Each query has one handler;
-its repository remains a distinct persistence dependency.
+Resolve the named reader and handler before starting workers. The generated
+function fixes the routing identifier, input type, response type and encoder.
+Pass the owner parser and the plain handler. The shared registry dispatches through
+`QueryBusPort`; generated encoders preserve nested fields, presence and numeric bounds.
 
 ### Go
 
 ```go source="../../../services/storefront/apps/storefront/di/ordering_requests.go"
-	requests.Query(r, names.OrderingQueryGetOrder, rpc.GetOrder, getOrder.Execute, rpc.GetOrderReply)
+responses.RegisterGetOrder(r, rpc.GetOrder, getOrder.Execute)
 ```
 
 ### Python
 
 ```python source="../../../services/operations/src/operations/apps/composition/preparation.py"
-    registry.query(
-        PreparationQuery.GET_TICKET, wire.get_ticket, container.get_ticket().execute, wire.get_reply
-    )
+responses.register_get_ticket(registry, wire.get_ticket, container.get_ticket().execute)
 ```
 
 ### TypeScript
 
 ```ts source="../../../services/engagement/src/apps/composition/loyalty.ts"
-registry.query(LoyaltyQuery.GET_REWARD, rewardQueries.getReward, c.getReward, rewardQueries.getReply);
+responses.registerGetReward(registry, rewardQueries.getReward, c.getReward);
 ```
 
-## 10. Expose HTTP and verify the entire route
+`rpc` imports the Go owner codecs. `responses` imports the generated owner
+registration module (`adaptors/messaging/generated/queryregistration` in Go). The Go
+codec package stays independent of the request worker and its persistence wiring.
+The generated functions contain `wire.OrderingQueryGetOrder`,
+`PreparationQuery.GET_TICKET` and `LoyaltyQuery.GET_REWARD`. Those identifiers derive
+from the request envelope; the response association derives from its annotation.
+There is no per-query handwritten field-copying encoder.
 
-Add the operation to the owner's OpenAPI fragments under `http_api/`. Add its
-explicit operation-to-owner request translation to the API's
-[contract mappings](../../../services/api/adaptors/http/backend/contract_mappings.json).
-Run `pnpm generate:contracts`, then call the generated frontend operation client.
-The API sends the generated Protobuf query through RabbitMQ to this registration.
+## 9. Expose HTTP and verify
 
-Test successful reads, missing resources, corrupt state, repository failure,
-reply revision, complete lists and requested pagination. Use these registration
-examples: [Go](../../../services/storefront/apps/storefront/di/menu_queries_test.go),
-[Python](../../../services/operations/tests/test_query_registration.py),
+Add the owner OpenAPI operation and the API's explicit operation-to-owner
+[contract mapping](../../../services/api/adaptors/http/backend/contract_mappings.json).
+Generate again, then use the generated frontend operation client. HTTP remains
+its own boundary; the Go API translates the generated broker reply into it.
+
+Test successful and missing reads, repository failures, corrupt stored authority,
+nested fields, optional presence, numeric bounds and complete/paginated lists.
+Registration tests exercise the actual wire route in
+[Go](../../../services/storefront/apps/storefront/di/menu_queries_test.go),
+[Python](../../../services/operations/tests/test_query_registration.py) and
 [TypeScript](../../../services/engagement/src/apps/query-registration.test.ts).
-Run the owning `pnpm test:focused <service> --context <context>` lane, followed by
-`pnpm check --changed`, `pnpm verify` and `pnpm test:integration`.
+Run the focused owner tests, `pnpm check --changed`, `pnpm verify` and
+`pnpm test:integration`. Verify compatibility as well as generated drift.
 
-Continue with [query handlers](query-handlers.md), [read repositories](read-repositories.md),
-[realtime reconciliation](realtime-events.md) and the [end-to-end recipe](../end-to-end-recipe.md).
+Continue with [responses](responses.md), [query handlers](query-handlers.md),
+[read repositories](read-repositories.md) and the [end-to-end recipe](../end-to-end-recipe.md).

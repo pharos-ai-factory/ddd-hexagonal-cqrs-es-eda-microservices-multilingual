@@ -2,6 +2,8 @@ syntax = "proto3";
 package cafe.communication.requests.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/communication;communicationv1";
 
+import "cafe/requests/v1/validation.proto";
+
 message Notification {
   string id = 1;
   string recipient = 2;
@@ -14,7 +16,7 @@ message Notification {
 message LoadedNotification {
   bool exists = 1;
   uint64 version = 2;
-  Notification state = 3;
+  Notification state = 3 [(cafe.requests.v1.required_output) = true];
 }
 
 message Notifications {

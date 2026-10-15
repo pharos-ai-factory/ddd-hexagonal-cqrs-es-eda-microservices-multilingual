@@ -1,11 +1,5 @@
-from typing import Literal, TypedDict
+"""Use the schema-owned response representation at the read port."""
 
+from operations.contracts.requests.generated.preparation_responses import Ticket
 
-class TicketView(TypedDict):
-    """Application read contract for one ticket, independent of storage and transport."""
-
-    id: str
-    orderId: str
-    customerId: str
-    instructions: str
-    status: Literal["queued", "preparing", "ready"]
+TicketView = Ticket

@@ -1,8 +1,2 @@
-/** Application-owned read representation of an account. */
-export type AccountView = Readonly<{
-  id: string;
-  stampBalance: number;
-  collections: number;
-  grantsEarned: number;
-  lastGrant?: Readonly<{ id: string; accountId: string; benefit: string; validDays: number }>;
-}>;
+/** Schema-owned response representation used by the read repository. */
+export type { Account as AccountView } from '../../../../contracts/requests/generated/loyalty-responses.js';

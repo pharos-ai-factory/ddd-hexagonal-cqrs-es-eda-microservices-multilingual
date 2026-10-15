@@ -1,5 +1,7 @@
 # 0024 — Generated message identifiers and direct query registration
 
+Refined by [decision 0029](0029-schema-generated-command-and-query-responses.md): schema-generated response DTOs, resource aliases, checked encoders and typed query bindings.
+
 Refined by [decision 0028](0028-schema-generated-command-and-query-inputs.md):
 command/query payload types and mechanical input mappings are generated from
 annotated owner Protobuf schemas; handlers import the generated plain contracts.

@@ -26,7 +26,7 @@ from operations.adaptors.generated.cafe.requests.v1 import common_pb2 as cafe_do
 from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as cafe_dot_requests_dot_v1_dot_validation__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n=cafe/requests/v1/contexts/collection/collection_queries.proto\x12\x1b\x63\x61\x66\x65.collection.requests.v1\x1a\x1d\x63\x61\x66\x65/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"N\n\x0bListPickups\x12+\n\x04page\x18\x01 \x01(\x0b\x32\x1d.cafe.requests.v1.PageRequest:\x12\xd2\xf3\x18\x0e\n\ncollection\x10\x01\"+\n\tGetPickup\x12\n\n\x02id\x18\x01 \x01(\t:\x12\xd2\xf3\x18\x0e\n\ncollection\x10\x01\x42\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n=cafe/requests/v1/contexts/collection/collection_queries.proto\x12\x1b\x63\x61\x66\x65.collection.requests.v1\x1a\x1d\x63\x61\x66\x65/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"s\n\x0bListPickups\x12+\n\x04page\x18\x01 \x01(\x0b\x32\x1d.cafe.requests.v1.PageRequest:7\xd2\xf3\x18\x33\n\ncollection\x10\x01\x1a#cafe.collection.requests.v1.Pickups\"U\n\tGetPickup\x12\n\n\x02id\x18\x01 \x01(\t:<\xd2\xf3\x18\x38\n\ncollection\x10\x01\x1a(cafe.collection.requests.v1.LoadedPickupB\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,11 +35,11 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\264\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1'
   _globals['_LISTPICKUPS']._loaded_options = None
-  _globals['_LISTPICKUPS']._serialized_options = b'\322\363\030\016\n\ncollection\020\001'
+  _globals['_LISTPICKUPS']._serialized_options = b'\322\363\0303\n\ncollection\020\001\032#cafe.collection.requests.v1.Pickups'
   _globals['_GETPICKUP']._loaded_options = None
-  _globals['_GETPICKUP']._serialized_options = b'\322\363\030\016\n\ncollection\020\001'
+  _globals['_GETPICKUP']._serialized_options = b'\322\363\0308\n\ncollection\020\001\032(cafe.collection.requests.v1.LoadedPickup'
   _globals['_LISTPICKUPS']._serialized_start=160
-  _globals['_LISTPICKUPS']._serialized_end=238
-  _globals['_GETPICKUP']._serialized_start=240
-  _globals['_GETPICKUP']._serialized_end=283
+  _globals['_LISTPICKUPS']._serialized_end=275
+  _globals['_GETPICKUP']._serialized_start=277
+  _globals['_GETPICKUP']._serialized_end=362
 # @@protoc_insertion_point(module_scope)

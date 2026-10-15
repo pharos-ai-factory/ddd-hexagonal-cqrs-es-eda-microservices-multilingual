@@ -7,11 +7,11 @@ import "cafe/requests/v1/common.proto";
 import "cafe/requests/v1/validation.proto";
 
 message ListOrders {
-  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC response: "cafe.ordering.requests.v1.Orders" };
   cafe.requests.v1.PageRequest page = 1;
 }
 
 message GetOrder {
-  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PUBLIC response: "cafe.ordering.requests.v1.LoadedOrder" };
   string id = 1;
 }

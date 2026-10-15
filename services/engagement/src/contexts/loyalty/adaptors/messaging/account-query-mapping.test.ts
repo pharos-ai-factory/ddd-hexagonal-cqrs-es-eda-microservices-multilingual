@@ -31,9 +31,13 @@ void test('query entry points preserve missing rows, revisions, page requests an
   const reader = new MappedReadRepository(source, accountView);
   const get = new GetAccountQueryHandler(reader);
   const list = new ListAccountsQueryHandler(reader);
-  assert.equal(await get.execute({ id: 'missing' }), undefined);
-  assert.deepEqual(await get.execute(queries.getAccount({ id })), row);
-  assert.deepEqual((await list.execute(queries.listAccounts({}))).items, [row]);
-  assert.deepEqual(await list.execute(queries.listAccounts({ page })), { items: [row], nextId: id });
+  assert.deepEqual(await get.execute({ id: 'missing' }), { error: { code: 'not_found', message: '' } });
+  assert.deepEqual(await get.execute(queries.getAccount({ id })), { account: row });
+  assert.deepEqual(await list.execute(queries.listAccounts({})), {
+    accounts: { items: [row], paged: false },
+  });
+  assert.deepEqual(await list.execute(queries.listAccounts({ page })), {
+    accounts: { items: [row], nextId: id, paged: true },
+  });
   await assert.rejects(get.execute({ id: 'failed' }), failure);
 });

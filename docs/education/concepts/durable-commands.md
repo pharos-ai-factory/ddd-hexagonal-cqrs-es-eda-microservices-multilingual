@@ -117,7 +117,7 @@ func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.Command
 Add the payload and `CommandEnvelope.command` oneof case in
 [internal_commands.proto](../../../services/storefront/contexts/ordering/adaptors/messaging/internal_commands.proto).
 Declare `owner: "ordering"` and `visibility: PRIVATE`, then run `pnpm generate:contracts`.
-Import `RecordCollectionCommand` from the [generated plain contracts](../../../services/storefront/contracts/requests/model/ordering/payloads_generated.go).
+Import `RecordCollectionCommand` from the [generated plain contracts](../../../services/storefront/contracts/requests/generated/model/ordering/payloads.go).
 Use a new field number. The shared envelope fields retain the source receipt and
 command identity. This format belongs to Ordering's adaptor and is separate from
 the API's published request envelope.
@@ -134,7 +134,7 @@ message CommandEnvelope {
  oneof command { RecordCollectionCommand record_collection = 10; }
 }
 message RecordCollectionCommand {
-  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PRIVATE };
+  option (cafe.requests.v1.contract) = { owner: "ordering" visibility: PRIVATE response: "cafe.requests.v1.Outcome" };
   string customer_id = 1; }
 ```
 

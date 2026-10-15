@@ -1,6 +1,7 @@
 """Validate generated request envelopes and construct typed outcome replies."""
 
 from google.protobuf.message import Message
+from operations.adaptors.messaging.generated.response_payloads import to_outcome
 
 from operations.adaptors.generated.cafe.requests.v1.validation_pb2 import required_input
 from operations.adaptors.generated.request_registry import REPLY_TYPES, REQUEST_TYPES, Reply, Request
@@ -60,12 +61,7 @@ def validate(request: Request, owner: str) -> tuple[str, Message]:
 
 def outcome_reply(owner: str, outcome: Outcome) -> Reply:
     reply = new_reply(owner)
-    reply.outcome.aggregate_id = outcome["aggregateId"]
-    reply.outcome.version = outcome["version"]
-    reply.outcome.status = outcome["status"]
-    if "rejection" in outcome:
-        reply.outcome.rejection.code = outcome["rejection"]["code"]
-        reply.outcome.rejection.message = outcome["rejection"]["message"]
+    reply.outcome.CopyFrom(to_outcome(outcome))
     return reply
 
 

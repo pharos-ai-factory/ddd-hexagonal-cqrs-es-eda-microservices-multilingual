@@ -151,5 +151,6 @@ for directory in (python_out, ROOT / "services/engagement/src/adaptors/generated
 subprocess.run(["node", "scripts/generate-typescript.mjs"], cwd=ROOT, check=True)
 
 subprocess.run(["python3", "scripts/generate_request_payloads.py"], cwd=ROOT, check=True)
+subprocess.run(["python3", "scripts/generate_response_payloads.py"], cwd=ROOT, check=True)
 generate_migration_metadata()
 generate_http_contracts()

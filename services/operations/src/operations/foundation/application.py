@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass, field
 from collections.abc import Mapping
-from typing import Literal, NotRequired, Protocol, TypedDict
+from typing import Literal, Protocol, TypedDict
+from operations.contracts.requests.generated.shared_responses import Outcome as Outcome
 from operations.foundation.domain import Rejection, RejectionDetail
 
 
@@ -15,15 +16,6 @@ class VersionConflictApplicationError(ApplicationError):
 
     def __init__(self) -> None:
         super().__init__("version_conflict", "The expected aggregate version is stale")
-
-
-class Outcome(TypedDict):
-    """Records the committed aggregate revision or a typed business rejection for stable retries."""
-
-    aggregateId: str
-    version: int
-    status: str
-    rejection: NotRequired[RejectionDetail]
 
 
 class Loaded[S](TypedDict):

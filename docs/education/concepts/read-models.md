@@ -1,6 +1,6 @@
 # Read models
 
-A read model is an application-owned representation shaped for a question or
+A read model is an application-facing representation shaped for a question or
 screen. It exposes the facts a reader needs while keeping domain mutation and
 storage mechanics behind their own boundaries.
 
@@ -13,30 +13,16 @@ Source: [order.go](../../../services/storefront/contexts/ordering/application/re
 ```go source="../../../services/storefront/contexts/ordering/application/readmodels/order.go"
 package readmodels
 
-// SelectionView is the application-owned read representation.
-type SelectionView struct {
-	OfferCode string `json:"offerCode"`
-	Name      string `json:"name"`
-	Minor     int64  `json:"minor"`
-}
+import model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/ordering"
 
-// LineView is the application-owned read representation.
-type LineView struct {
-	ID        string        `json:"id"`
-	Selection SelectionView `json:"selection"`
-	Quantity  int           `json:"quantity"`
-}
+// SelectionView uses the schema-generated response representation.
+type SelectionView = model.Selection
 
-// OrderView is the application-owned read representation.
-type OrderView struct {
-	ID                 string     `json:"id"`
-	CustomerID         string     `json:"customerId"`
-	EditionID          string     `json:"editionId"`
-	Currency           string     `json:"currency"`
-	Status             string     `json:"status"`
-	CollectionRecorded bool       `json:"collectionRecorded"`
-	Lines              []LineView `json:"lines"`
-}
+// LineView uses the schema-generated response representation.
+type LineView = model.Line
+
+// OrderView uses the schema-generated response representation.
+type OrderView = model.Order
 ```
 
 ### Python
@@ -44,17 +30,11 @@ type OrderView struct {
 Source: [ticket.py](../../../services/operations/src/operations/contexts/preparation/application/read_models/ticket.py).
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/read_models/ticket.py"
-from typing import Literal, TypedDict
+"""Use the schema-owned response representation at the read port."""
 
+from operations.contracts.requests.generated.preparation_responses import Ticket
 
-class TicketView(TypedDict):
-    """Application read contract for one ticket, independent of storage and transport."""
-
-    id: str
-    orderId: str
-    customerId: str
-    instructions: str
-    status: Literal["queued", "preparing", "ready"]
+TicketView = Ticket
 ```
 
 ### TypeScript
@@ -62,21 +42,16 @@ class TicketView(TypedDict):
 Source: [reward.ts](../../../services/engagement/src/contexts/loyalty/application/read-models/reward.ts).
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/read-models/reward.ts"
-/** Application-owned read representation of a reward. */
-export type RewardView = Readonly<{
-  id: string;
-  grantId: string;
-  customerId: string;
-  benefit: string;
-  status: 'issued' | 'redeemed' | 'expired';
-  expiresAt: string;
-  redeemedFor?: string;
-}>;
+/** Schema-owned response representation used by the read repository. */
+export type { Reward as RewardView } from '../../../../contracts/requests/generated/loyalty-responses.js';
 ```
 
-These types belong to the application. They are separate from persisted state,
-Protobuf replies and browser publication envelopes, even when their fields overlap.
-Owner adaptors make the mappings explicit.
+These published views are aliases or re-exports of schema-generated plain response
+DTOs. Define their fields in owner Protobuf and regenerate. They contain no
+Protobuf runtime dependency. Persistence adaptors validate stored authority and
+select those fields; generated encoders handle mechanical wire conversion.
+Domain snapshots remain separate representations with their own invariants.
+See the [response recipe](responses.md).
 
 The read repository returns the view with its root revision. That revision lets
 the browser compare a query result with a later realtime update. A view must

@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as cafe_dot_requests_dot_v1_dot_validation__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n>cafe/requests/v1/contexts/collection/collection_commands.proto\x12\x1b\x63\x61\x66\x65.collection.requests.v1\x1a!cafe/requests/v1/validation.proto\"D\n\x0c\x43ollectOrder\x12\x17\n\x04\x63ode\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00\x88\x01\x01:\x12\xd2\xf3\x18\x0e\n\ncollection\x10\x01\x42\x07\n\x05_codeB\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n>cafe/requests/v1/contexts/collection/collection_commands.proto\x12\x1b\x63\x61\x66\x65.collection.requests.v1\x1a!cafe/requests/v1/validation.proto\"^\n\x0c\x43ollectOrder\x12\x17\n\x04\x63ode\x18\x01 \x01(\tB\x04\xc8\xf3\x18\x01H\x00\x88\x01\x01:,\xd2\xf3\x18(\n\ncollection\x10\x01\x1a\x18\x63\x61\x66\x65.requests.v1.OutcomeB\x07\n\x05_codeB\xb7\x01Z\xb4\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,7 +36,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_COLLECTORDER'].fields_by_name['code']._loaded_options = None
   _globals['_COLLECTORDER'].fields_by_name['code']._serialized_options = b'\310\363\030\001'
   _globals['_COLLECTORDER']._loaded_options = None
-  _globals['_COLLECTORDER']._serialized_options = b'\322\363\030\016\n\ncollection\020\001'
+  _globals['_COLLECTORDER']._serialized_options = b'\322\363\030(\n\ncollection\020\001\032\030cafe.requests.v1.Outcome'
   _globals['_COLLECTORDER']._serialized_start=130
-  _globals['_COLLECTORDER']._serialized_end=198
+  _globals['_COLLECTORDER']._serialized_end=224
 # @@protoc_insertion_point(module_scope)

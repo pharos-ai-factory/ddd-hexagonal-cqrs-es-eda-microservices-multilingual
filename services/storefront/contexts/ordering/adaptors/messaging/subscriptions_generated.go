@@ -2,7 +2,7 @@
 package messaging
 
 import broker "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/messaging/amqp"
-import names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/names"
+import names "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/events/generated/names"
 
 // Subscription resolves a consumer-owned declaration at composition.
 func Subscription(consumer names.SubscriptionName) broker.Binding {

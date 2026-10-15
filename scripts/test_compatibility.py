@@ -3,6 +3,7 @@ import unittest
 from compatibility import proto_changes
 from http_compatibility import changes, schema_changes
 from http_retirements import compatible_changes, RETIRED_STOREFRONT_OPERATIONS
+from response_compatibility import accepted_guarantees, REQUIRED_OUTPUT_TRUE
 
 
 def document():
@@ -38,6 +39,37 @@ def document():
 
 
 class CompatibilityTests(unittest.TestCase):
+    def test_declared_response_association_cannot_change_or_disappear(self):
+        old = {
+            "cafe.ordering.requests.v1.GetOrder": {
+                "fields": {},
+                "contract": {
+                    "owner": "ordering",
+                    "visibility": 1,
+                    "response": "cafe.ordering.requests.v1.LoadedOrder",
+                },
+            }
+        }
+        for change in ({}, {"response": "cafe.ordering.requests.v1.Orders"}):
+            new = copy.deepcopy(old)
+            new["cafe.ordering.requests.v1.GetOrder"]["contract"] = change
+            self.assertTrue(proto_changes(old, new))
+
+    def test_existing_response_guarantees_are_accepted_once_without_hiding_changes(self):
+        name = "cafe.ordering.requests.v1.LoadedOrder"
+        old = {name: {"fields": {"3": {"name": "state", "type": 11, "options": ""}}}}
+        new = copy.deepcopy(old)
+        new[name]["fields"]["3"]["options"] = REQUIRED_OUTPUT_TRUE
+        self.assertEqual(proto_changes(accepted_guarantees(old, new), new), [])
+        self.assertTrue(proto_changes(accepted_guarantees(new, old), old))
+        for key, value in [("name", "other"), ("type", 9), ("options", REQUIRED_OUTPUT_TRUE + "0801")]:
+            changed = copy.deepcopy(new)
+            changed[name]["fields"]["3"][key] = value
+            self.assertTrue(proto_changes(accepted_guarantees(old, changed), changed))
+        unknown_old = {"cafe.ordering.requests.v1.FutureReply": old[name]}
+        unknown_new = {"cafe.ordering.requests.v1.FutureReply": new[name]}
+        self.assertTrue(proto_changes(accepted_guarantees(unknown_old, unknown_new), unknown_new))
+
     def test_only_the_explicitly_retired_owner_operations_are_exempt(self):
         self.assertEqual(len(RETIRED_STOREFRONT_OPERATIONS), 17)
         for operation in RETIRED_STOREFRONT_OPERATIONS:

@@ -67,3 +67,24 @@ subscription: SubscriptionName = PreparationSubscription.ACCEPT_ORDER
     assert status == 1, output + errors
     for line in range(len(imports.splitlines()) + 1, len(imports.splitlines()) + len(mistakes) + 1):
         assert f"registration.py:{line}: error:" in output, output
+
+
+def test_generated_query_binding_rejects_another_response(tmp_path: Path) -> None:
+    source = tmp_path / "responses.py"
+    config = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    source.write_text("""from operations.adaptors.messaging.rabbitmq_request_registry import RabbitMQRequestRegistry
+from operations.contexts.preparation.adaptors.messaging.generated.response_payloads import register_get_ticket
+from operations.contexts.preparation.adaptors.messaging.ticket_requests import get_ticket
+from operations.contracts.requests.generated.preparation import GetTicketQuery
+from operations.contracts.requests.generated.preparation_responses import GetTicketResponse, ListTicketsResponse
+
+def handler(query: GetTicketQuery) -> GetTicketResponse:
+    return {"error": {"code": "not_found", "message": ""}}
+register_get_ticket(RabbitMQRequestRegistry("preparation"), get_ticket, handler)
+""")
+    args = ["--config-file", str(config), "--follow-imports=silent", str(source)]
+    output, errors, status = api.run(args)
+    assert status == 0, output + errors
+    source.write_text(source.read_text().replace("-> GetTicketResponse:", "-> ListTicketsResponse:"))
+    output, errors, status = api.run(args)
+    assert status == 1 and "register_get_ticket" in output and "incompatible type" in output, output + errors

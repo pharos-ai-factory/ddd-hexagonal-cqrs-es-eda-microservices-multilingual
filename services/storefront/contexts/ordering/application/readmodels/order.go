@@ -1,26 +1,12 @@
 package readmodels
 
-// SelectionView is the application-owned read representation.
-type SelectionView struct {
-	OfferCode string `json:"offerCode"`
-	Name      string `json:"name"`
-	Minor     int64  `json:"minor"`
-}
+import model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/ordering"
 
-// LineView is the application-owned read representation.
-type LineView struct {
-	ID        string        `json:"id"`
-	Selection SelectionView `json:"selection"`
-	Quantity  int           `json:"quantity"`
-}
+// SelectionView uses the schema-generated response representation.
+type SelectionView = model.Selection
 
-// OrderView is the application-owned read representation.
-type OrderView struct {
-	ID                 string     `json:"id"`
-	CustomerID         string     `json:"customerId"`
-	EditionID          string     `json:"editionId"`
-	Currency           string     `json:"currency"`
-	Status             string     `json:"status"`
-	CollectionRecorded bool       `json:"collectionRecorded"`
-	Lines              []LineView `json:"lines"`
-}
+// LineView uses the schema-generated response representation.
+type LineView = model.Line
+
+// OrderView uses the schema-generated response representation.
+type OrderView = model.Order

@@ -210,7 +210,7 @@ func commandLayout(file *ast.File, packagePath string) bool {
 func generatedInput(file *ast.File, name string) bool {
 	imports := map[string]bool{}
 	for _, item := range file.Imports {
-		if strings.Contains(item.Path.Value, "/contracts/requests/model/") {
+		if strings.Contains(item.Path.Value, "/contracts/requests/generated/model/") {
 			alias := filepath.Base(strings.Trim(item.Path.Value, "\""))
 			if item.Name != nil {
 				alias = item.Name.Name
@@ -292,10 +292,10 @@ func TestCommandPackageLayout(t *testing.T) {
 		path, source string
 		valid        bool
 	}{
-		{"fixture/contexts/ordering/application/commands", `import model "fixture/contracts/requests/model/ordering"; type PlaceOrderCommandHandler struct{}; func use(value model.PlaceOrderCommand) {}`, true},
+		{"fixture/contexts/ordering/application/commands", `import model "fixture/contracts/requests/generated/model/ordering"; type PlaceOrderCommandHandler struct{}; func use(value model.PlaceOrderCommand) {}`, true},
 		{"fixture/contexts/ordering/application/commands", "type PlaceOrderCommand struct{}; type PlaceOrderCommandHandler struct{}", false},
 		{"fixture/contexts/ordering/application/commands", "type OrderNotFoundApplicationError struct{}", true},
-		{"fixture/contexts/ordering/application/queries", `import model "fixture/contracts/requests/model/ordering"; type GetOrderQueryHandler struct{}; func use(value model.GetOrderQuery) {}`, true},
+		{"fixture/contexts/ordering/application/queries", `import model "fixture/contracts/requests/generated/model/ordering"; type GetOrderQueryHandler struct{}; func use(value model.GetOrderQuery) {}`, true},
 		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", false},
 		{"fixture/contexts/ordering/application", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}", false},
 		{"fixture/contexts/ordering/application/queries", "type GetOrderQuery struct{}; type GetOrderQueryHandler struct{}; type ListOrdersQuery struct{}; type ListOrdersQueryHandler struct{}", false},

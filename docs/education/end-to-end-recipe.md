@@ -103,7 +103,8 @@ See [Go registration](../../services/storefront/apps/storefront/di/ordering_requ
 and [TypeScript composition](../../services/engagement/src/apps/composition/loyalty.ts).
 Resolve repositories, handlers and subscribers before starting workers.
 
-The executor commits the root, outcome, receipts, exact reply bytes and selected
+The executor assembles the schema-generated command outcome and commits the root,
+outcome, receipts, exact reply bytes and selected
 outgoing intent. A technical failure rolls back; an expected rejection records
 its outcome. Read the [transaction recipe](concepts/transactions.md).
 
@@ -201,7 +202,7 @@ saving state nor publishing integration events automatically forwards to realtim
 ## 10. Expose queries and connect the frontend
 
 Implement the [complete query recipe](concepts/queries.md): query schema and reply,
-generated routing ID, generated input DTO/parser, view, read repository, handler, reply mapper,
+generated input/response DTOs and encoders, resource aliases, read repository, handler, typed binding,
 DI registration, OpenAPI operation and API translation. Call the generated browser
 operation client. The frontend attaches server-authorised subscriptions before its
 initial query and reconciles again after an unrecoverable history gap.

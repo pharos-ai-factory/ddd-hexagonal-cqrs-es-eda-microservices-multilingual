@@ -114,13 +114,13 @@ var File_cafe_requests_v1_contexts_communication_communication_queries_proto pro
 
 const file_cafe_requests_v1_contexts_communication_communication_queries_proto_rawDesc = "" +
 	"\n" +
-	"Ccafe/requests/v1/contexts/communication/communication_queries.proto\x12\x1ecafe.communication.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"]\n" +
+	"Ccafe/requests/v1/contexts/communication/communication_queries.proto\x12\x1ecafe.communication.requests.v1\x1a\x1dcafe/requests/v1/common.proto\x1a!cafe/requests/v1/validation.proto\"\x8b\x01\n" +
 	"\x11ListNotifications\x121\n" +
-	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:\x15\xd2\xf3\x18\x11\n" +
-	"\rcommunication\x10\x01\"8\n" +
+	"\x04page\x18\x01 \x01(\v2\x1d.cafe.requests.v1.PageRequestR\x04page:C\xd2\xf3\x18?\n" +
+	"\rcommunication\x10\x01\x1a,cafe.communication.requests.v1.Notifications\"k\n" +
 	"\x0fGetNotification\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id:\x15\xd2\xf3\x18\x11\n" +
-	"\rcommunication\x10\x01B\xbd\x01Z\xba\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/communication;communicationv1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id:H\xd2\xf3\x18D\n" +
+	"\rcommunication\x10\x01\x1a1cafe.communication.requests.v1.LoadedNotificationB\xbd\x01Z\xba\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/communication;communicationv1b\x06proto3"
 
 var (
 	file_cafe_requests_v1_contexts_communication_communication_queries_proto_rawDescOnce sync.Once

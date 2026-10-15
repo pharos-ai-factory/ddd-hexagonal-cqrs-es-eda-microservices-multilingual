@@ -284,3 +284,17 @@ negative callers reject string identifiers and mixed roles. Query dispatch tests
 use real handlers to preserve missing roots, revisions, complete lists, pagination,
 invalid-input rejection and retryable storage failure. Architecture fixtures and
 scaffold tests enforce the same composition pattern for new use cases.
+
+## Generated responses
+
+Response generator fixtures extend nested/repeated/optional fields and reject missing
+or invalid request associations. Native tests preserve absence, numeric bounds,
+query error alternatives and typed bindings. Architecture checks reject handwritten
+response copies and query composition bypassing the generated binding. Real command
+reply encoding, rollback and recovery remain part of the integration gate.
+
+Generated-package tests cover ordinary filenames under generated directories,
+redundant filename marker rejection, obsolete event producer removal and
+handwritten codec preservation. Request wire regeneration must preserve adjacent
+plain models while removing stale wire bindings. Go boundary fixtures admit
+owner/shared plain models and reject wire, adaptor and domain dependencies.

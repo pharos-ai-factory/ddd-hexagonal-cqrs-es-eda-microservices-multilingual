@@ -63,7 +63,8 @@
                 "CreditCollectionCommand": {
                   "options": {
                     "(cafe.requests.v1.contract).owner": "loyalty",
-                    "(cafe.requests.v1.contract).visibility": "PRIVATE"
+                    "(cafe.requests.v1.contract).visibility": "PRIVATE",
+                    "(cafe.requests.v1.contract).response": "cafe.requests.v1.Outcome"
                   },
                   "fields": {
                     "orderId": {
@@ -81,7 +82,8 @@
                 "IssueRewardCommand": {
                   "options": {
                     "(cafe.requests.v1.contract).owner": "loyalty",
-                    "(cafe.requests.v1.contract).visibility": "PRIVATE"
+                    "(cafe.requests.v1.contract).visibility": "PRIVATE",
+                    "(cafe.requests.v1.contract).response": "cafe.requests.v1.Outcome"
                   },
                   "fields": {
                     "grantId": {

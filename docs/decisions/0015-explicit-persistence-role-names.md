@@ -1,5 +1,7 @@
 # 0015 — Explicit persistence role names
 
+Refined by [decision 0029](0029-schema-generated-command-and-query-responses.md): schema-generated response DTOs, resource aliases, checked encoders and typed query bindings.
+
 Status: accepted, 9 October 2026. Refines the names introduced by decision 0014.
 
 Refined by [decision 0019](0019-durable-domain-event-publication.md): aggregate

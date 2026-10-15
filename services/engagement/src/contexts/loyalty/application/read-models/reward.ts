@@ -1,10 +1,2 @@
-/** Application-owned read representation of a reward. */
-export type RewardView = Readonly<{
-  id: string;
-  grantId: string;
-  customerId: string;
-  benefit: string;
-  status: 'issued' | 'redeemed' | 'expired';
-  expiresAt: string;
-  redeemedFor?: string;
-}>;
+/** Schema-owned response representation used by the read repository. */
+export type { Reward as RewardView } from '../../../../contracts/requests/generated/loyalty-responses.js';

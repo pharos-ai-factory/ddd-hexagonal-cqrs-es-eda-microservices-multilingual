@@ -3,18 +3,30 @@ package queries
 import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
-	view "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/readmodels"
-	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
+	model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/menu"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 )
 
-// ListEditionsQueryHandler reads editions with stable continuation semantics.
+// ListEditionsQueryHandler preserves revision, absence and pagination policy.
 type ListEditionsQueryHandler struct{ ReadRepository ports.EditionReadRepository }
 
-func (h ListEditionsQueryHandler) Execute(ctx context.Context, q menucontracts.ListEditionsQuery) (a.Page[view.EditionView], error) {
+func (h ListEditionsQueryHandler) Execute(ctx context.Context, q model.ListEditionsQuery) (model.ListEditionsResponse, error) {
+	var page a.Page[model.Edition]
+	var err error
 	if q.Page != nil {
-		return h.ReadRepository.Page(ctx, *q.Page)
+		page, err = h.ReadRepository.Page(ctx, *q.Page)
+	} else {
+		page.Items, err = h.ReadRepository.List(ctx)
 	}
-	items, err := h.ReadRepository.List(ctx)
-	return a.Page[view.EditionView]{Items: items}, err
+	if err != nil {
+		return model.ListEditionsResponse{}, err
+	}
+	result := model.Editions{Items: make([]model.LoadedEdition, 0, len(page.Items)), Paged: q.Page != nil}
+	for _, item := range page.Items {
+		result.Items = append(result.Items, model.LoadedEdition{Exists: item.Exists, Version: item.Version, State: item.State})
+	}
+	if page.NextID != "" {
+		result.NextID = &page.NextID
+	}
+	return model.ListEditionsResponse{Editions: &result}, nil
 }

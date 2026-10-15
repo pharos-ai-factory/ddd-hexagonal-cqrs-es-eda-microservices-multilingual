@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
-	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 )
 
 func TestStoredNestedScalarsRetainPresence(t *testing.T) {
@@ -52,7 +52,7 @@ func TestRecordedOutcomesValidateAuthority(t *testing.T) {
 	}
 	for _, outcome := range []a.Outcome{
 		{AggregateID: id, Version: 1, Status: "active"},
-		{AggregateID: id, Rejection: &d.Violation{Code: "not_found", Message: "Missing root"}},
+		{AggregateID: id, Rejection: &shared.Rejection{Code: "not_found", Message: "Missing root"}},
 	} {
 		raw, _ := json.Marshal(outcome)
 		if _, err := decodeOutcome(raw, id); err != nil {

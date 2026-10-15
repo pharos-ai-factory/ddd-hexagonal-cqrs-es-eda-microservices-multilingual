@@ -1,16 +1,16 @@
 # Query handlers
 
 A query handler coordinates one read use case through a named read repository.
-It returns application views and preserves their revision and missing-resource
+It returns generated response DTOs and preserves their revision and missing-resource
 semantics. It has no aggregate mutation capability.
 
 ## Creation recipe
 
 1. Follow the [query creation recipe](queries.md) through schema, envelope, generated identifier and generated plain input.
-2. Define the application-owned view and named `<Resource>ReadRepository` capability. Decide missing-resource and pagination behaviour before implementing the handler.
+2. Generate the resource DTO and use it at the named `<Resource>ReadRepository` port. Decide missing-resource and pagination behaviour before implementing the handler.
 3. Implement the handler as a plain read-repository consumer. Preserve the loaded view's revision and list continuation.
-4. Use the generated request parser, retain owner semantic validation and implement the reply mapper. The handler receives its generated plain input and returns its application result.
-5. Bind the concrete repository and handler in DI. Register generated ID, parser, handler and reply mapper together; the request registry dispatches through `QueryBusPort`.
+4. Use the generated request parser, retain owner semantic validation and use the generated response encoder. The handler receives its generated plain input and returns its generated response.
+5. Bind the concrete repository and handler in DI. Call the generated typed registration with the parser and handler; the request registry dispatches through `QueryBusPort`.
 6. Test the registered query through its transport boundary as well as read behaviour. Missing roots, corrupt state and incomplete lists must retain distinct outcomes.
 
 Follow the [end-to-end recipe](../end-to-end-recipe.md) to connect this step to the complete workflow.
@@ -27,16 +27,22 @@ package queries
 import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/ports"
-	view "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/application/readmodels"
-	orderingcontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/ordering"
-	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/ordering"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 )
 
-// GetOrderQueryHandler reads one order through its application capability.
+// GetOrderQueryHandler preserves revision, absence and pagination policy.
 type GetOrderQueryHandler struct{ ReadRepository ports.OrderReadRepository }
 
-func (h GetOrderQueryHandler) Execute(ctx context.Context, q orderingcontracts.GetOrderQuery) (a.Loaded[view.OrderView], error) {
-	return h.ReadRepository.Get(ctx, q.ID)
+func (h GetOrderQueryHandler) Execute(ctx context.Context, q model.GetOrderQuery) (model.GetOrderResponse, error) {
+	value, err := h.ReadRepository.Get(ctx, q.ID)
+	if err != nil {
+		return model.GetOrderResponse{}, err
+	}
+	if !value.Exists {
+		return model.GetOrderResponse{Error: &shared.RequestError{Code: "not_found"}}, nil
+	}
+	return model.GetOrderResponse{Order: &model.LoadedOrder{Exists: value.Exists, Version: value.Version, State: value.State}}, nil
 }
 ```
 
@@ -46,19 +52,23 @@ Source: [get_ticket.py](../../../services/operations/src/operations/contexts/pre
 
 ```python source="../../../services/operations/src/operations/contexts/preparation/application/queries/get_ticket.py"
 from operations.contracts.requests.generated.preparation import GetTicketQuery
-from operations.foundation.application import Loaded
+from operations.contracts.requests.generated.preparation_responses import GetTicketResponse, LoadedTicket
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
-from operations.contexts.preparation.application.read_models.ticket import TicketView
 
 
 class GetTicketQueryHandler:
-    """Execute the GetTicket read use case through its owning application port."""
+    """Preserve revision, missing-resource and pagination policy in a generated response."""
 
     def __init__(self, read_repository: TicketReadRepository) -> None:
         self.read_repository = read_repository
 
-    def execute(self, query: GetTicketQuery) -> Loaded[TicketView] | None:
-        return self.read_repository.get(query.id)
+    def execute(self, query: GetTicketQuery) -> GetTicketResponse:
+        value = self.read_repository.get(query.id)
+        if value is None:
+            return {"error": {"code": "not_found", "message": ""}}
+        return {
+            "ticket": LoadedTicket(exists=value["exists"], version=value["version"], state=value["state"])
+        }
 ```
 
 ### TypeScript
@@ -67,20 +77,21 @@ Source: [get-reward.ts](../../../services/engagement/src/contexts/loyalty/applic
 
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/queries/get-reward.ts"
 import type { GetRewardQuery } from '../../../../contracts/requests/generated/loyalty.js';
+import type { GetRewardResponse } from '../../../../contracts/requests/generated/loyalty-responses.js';
 import type { RewardReadRepository } from '../ports/reward-read-repository.js';
-
-/** Execute the GetReward use case through its context-owned read port. */
+/** Preserve revision, missing-resource and pagination policy in a generated response. */
 export class GetRewardQueryHandler {
   constructor(private readRepository: RewardReadRepository) {}
-  async execute(query: GetRewardQuery) {
-    return this.readRepository.get(query.id);
+  async execute(query: GetRewardQuery): Promise<GetRewardResponse> {
+    const value = await this.readRepository.get(query.id);
+    return value ? { reward: value } : { error: { code: 'not_found', message: '' } };
   }
 }
 ```
 
 These handlers are intentionally small. The [read adaptor](read-repositories.md)
-validates stored authority and creates the view; the transport reply mapper turns
-that result into the published reply. Keeping those roles explicit allows each
+validates stored authority and creates the view; the query handler selects its response and the generated encoder turns
+that DTO into the published reply. Keeping those roles explicit allows each
 boundary to be tested independently.
 
 ## Inject the read repository

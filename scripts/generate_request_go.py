@@ -9,12 +9,12 @@ def generate(root, owner, messages):
     shared = owner == "shared"
     types = [HEADER, f"package {owner}\n"]
     if any(f["type"] == 11 for m in messages for f in m["fields"]):
-        types += [f'import shared "{MODULE}/contracts/requests/model/shared"\n']
+        types += [f'import shared "{MODULE}/contracts/requests/generated/model/shared"\n']
     codecs = [
         HEADER,
         "package messaging\n",
         "import (\n",
-        f' model "{MODULE}/contracts/requests/model/{owner}"\n',
+        f' model "{MODULE}/contracts/requests/generated/model/{owner}"\n',
     ]
     if any(m["visibility"] == "PUBLIC" for m in messages):
         codecs += [f' pb "{MODULE}/contracts/requests/generated/cafe/requests/v1/contexts/{owner}"\n']
@@ -22,7 +22,7 @@ def generate(root, owner, messages):
         codecs += [f' private "{MODULE}/contexts/{owner}/adaptors/messaging/generated"\n']
     if not shared:
         codecs += [
-            f' plain "{MODULE}/contracts/requests/model/shared"\n',
+            f' plain "{MODULE}/contracts/requests/generated/model/shared"\n',
             f' wire "{MODULE}/contracts/requests/generated/cafe/requests/v1/shared"\n',
         ]
     if any(
@@ -105,9 +105,9 @@ def generate(root, owner, messages):
                 if f["optional"]:
                     codecs += [" }\n"]
             codecs += [" return result, nil\n}\n"]
-    base = root / f"services/storefront/contracts/requests/model/{owner}"
+    base = root / f"services/storefront/contracts/requests/generated/model/{owner}"
     base.mkdir(parents=True, exist_ok=True)
-    (base / "payloads_generated.go").write_text("".join(types))
+    (base / "payloads.go").write_text("".join(types))
     if not shared:
         codecs += [
             "func fromRequestPage(value *wire.PageRequest) *plain.PageRequest {\n",

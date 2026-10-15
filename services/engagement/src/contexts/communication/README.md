@@ -11,6 +11,7 @@ A notification owns its delivery status and stable provider identity.
 - [Generated plain event contracts](../../contracts/events/generated)
 - [Aggregate behaviour](domain)
 - [Generated command/query payloads](../../contracts/requests/generated/communication.ts)
+- [Generated responses and resource DTOs](../../contracts/requests/generated/communication-responses.ts)
 - [Commands and their handlers](application/commands)
 - [Queries and their handlers](application/queries)
 - [Generated command and query identifiers](../../adaptors/generated/request-names.ts)
@@ -31,16 +32,16 @@ A notification owns its delivery status and stable provider identity.
 ## Follow a use case
 
 Start with the named file in `application/commands/` or `application/queries/`.
-The handler imports its plain input from the schema-generated request contracts.
-Change command/query fields in Protobuf and run `pnpm generate:contracts` first. Follow the injected application port to the
+The handler imports its plain input and response from the schema-generated request contracts.
+Change command/query input and response fields in Protobuf and run `pnpm generate:contracts` first. Follow the injected application port to the
 context adaptor, then find its binding in the composition module.
 The composition module pairs command names/codecs with concrete handler factories.
 Its aggregate registration helper supplies the executor internally.
 Aggregate-changing event reactions enqueue owner commands durably; their handlers execute later.
-Composition registers each generated query identifier with its input mapper,
-concrete handler and reply mapper. Event and subscription identifiers come from
+Composition uses a generated query binding with its input mapper and concrete handler.
+The binding fixes the identifier, result contract and generated reply encoder. Event and subscription identifiers come from
 the published and owner-private catalogues.
-Queries use named read repository ports and return application-owned views.
+Queries use named read repository ports and return generated plain responses.
 Persistence adaptors validate stored
 authority and select the fields exposed by those views.
 

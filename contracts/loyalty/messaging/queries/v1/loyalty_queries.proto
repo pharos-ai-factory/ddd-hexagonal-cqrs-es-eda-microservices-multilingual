@@ -7,21 +7,21 @@ import "cafe/requests/v1/common.proto";
 import "cafe/requests/v1/validation.proto";
 
 message ListAccounts {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC response: "cafe.loyalty.requests.v1.Accounts" };
   cafe.requests.v1.PageRequest page = 1;
 }
 
 message GetAccount {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC response: "cafe.loyalty.requests.v1.LoadedAccount" };
   string id = 1;
 }
 
 message ListRewards {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC response: "cafe.loyalty.requests.v1.Rewards" };
   cafe.requests.v1.PageRequest page = 1;
 }
 
 message GetReward {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PUBLIC response: "cafe.loyalty.requests.v1.LoadedReward" };
   string id = 1;
 }

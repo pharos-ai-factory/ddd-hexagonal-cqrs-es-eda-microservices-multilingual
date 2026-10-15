@@ -1,5 +1,7 @@
 # 0028 — Schema-generated command and query inputs
 
+Refined by [decision 0029](0029-schema-generated-command-and-query-responses.md): schema-generated response DTOs, resource aliases, checked encoders and typed query bindings.
+
 Accepted: 15 October 2026. Refines decisions 0013, 0014, 0017, 0024 and 0027.
 
 ## Decision

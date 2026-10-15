@@ -60,7 +60,7 @@ named handler per business use-case file. It imports its schema-generated plain
 command/query input from the service-local request contracts. Go/Python filenames
 use snake_case; TypeScript uses kebab-case. Callers import those packages/modules
 directly. Event reactions and projection handlers have separate business-named
-files. Read models and named read repository ports belong to the application; decoding,
+files. Named read repository ports and generated resource aliases belong to the application; decoding,
 restoration and view mapping belong to context adaptors. Shared infrastructure
 contains technical behaviour. See decisions
 [0013](docs/decisions/0013-command-module-layout.md) and
@@ -85,7 +85,7 @@ real infrastructure proves those boundaries. See decision 0003 and `TESTING.md`.
 
 Operations uses explicit `TypedDict` commands, published DTOs, outcomes, snapshots
 and read views. Command ports retain the owning snapshot type; named read repositories
-expose application-owned views. Domain
+expose generated plain resource DTOs. Domain
 facts are immutable dataclasses owned by their context. HTTP, Protobuf and
 PostgreSQL adaptors validate external values before exposing typed application
 values. The consumer retains the original wire payload for receipt fingerprints.
@@ -105,9 +105,9 @@ defined by decision 0009. See decision 0007 and `contracts/shared/messaging/requ
 
 Owner services expose only health and authenticated diagnostics over HTTP.
 Their composition registers each command with its owner parser and plain handler
-factory through the shared command registration API. Each query registers its generated
-identifier, owner parser, concrete handler and reply mapper directly with the
-RabbitMQ request registry. Event and subscription identifiers also come from their
+factory through the shared command registration API. Each query uses its generated
+response-bound registration with an owner parser and concrete handler. The binding
+selects the generated identifier and response encoder in the RabbitMQ registry. Event and subscription identifiers also come from their
 source catalogues; domain facts stay plain types. See [decision 0024](docs/decisions/0024-generated-message-identifiers-and-direct-queries.md). Contexts have messaging adaptors for incoming business
 requests. The earlier direct owner HTTP inspection endpoints were retired by
 [decision 0016](docs/decisions/0016-owner-messaging-boundary.md); local inspection
@@ -249,7 +249,8 @@ supplies the executor internally. See [decision 0023](docs/decisions/0023-direct
 
 ## Reads and external effects
 
-Each query has a named input, handler, read repository port and application-owned read model.
+Each query has generated input/response contracts, a handler, a named read repository
+port and generated resource DTOs. The handler selects the response policy.
 Owner RabbitMQ query adaptors construct that input after the API translates HTTP to Protobuf. Persistence read repositories validate
 stored aggregate authority and select its read fields; query handlers and read
 models stay independent of aggregate implementations. The current read repositories use
@@ -352,3 +353,14 @@ The owner gateway and Centrifugo continue handling authorised technical delivery
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement
 handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).
+
+Command/query responses, their resource DTOs and mechanical encoders are generated
+from Protobuf too. Query handlers return generated responses; composition uses
+the generated typed binding. The command executor assembles the generated outcome.
+See [decision 0029](docs/decisions/0029-schema-generated-command-and-query-responses.md).
+
+Wholly generated packages live beneath `generated` directories with ordinary
+filenames. Go plain DTOs retain a separate `model` package; wire bindings and
+adaptor registrations keep their existing dependency boundaries. Mixed packages
+retain generated filename markers. See
+[decision 0030](docs/decisions/0030-generated-package-layout.md).

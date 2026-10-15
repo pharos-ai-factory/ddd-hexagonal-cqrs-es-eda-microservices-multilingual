@@ -46,7 +46,7 @@ and a dedicated topology credential.
   Keep original source revision/time; causation identifies the private event.
 - Commit one aggregate, receipts, outcome and private event/realtime intent
   atomically. API commands also persist exact reply bytes. ACK after commit.
-- Query handlers use named application read repository ports and application-owned read
+- Query handlers use named application read repository ports and schema-generated plain read
   models. Context persistence adaptors validate stored authority and map views.
   Preserve missing-resource behaviour, revisions and complete/paginated reads.
 - Use stable identifiers, immutable published revisions, typed business rejections
@@ -56,8 +56,8 @@ and a dedicated topology credential.
 
 ## Source layout and composition
 
-- Generate command/query input types from owner Protobuf schemas, including explicit
-  owner and PUBLIC/PRIVATE visibility. Put one handler in `application/commands/<action>`
+- Generate command/query input and response types from owner Protobuf schemas, including explicit
+  owner, PUBLIC/PRIVATE visibility and response association. Put one handler in `application/commands/<action>`
   or `application/queries/<question>` and import its generated plain contract. Import their concrete
   modules directly. Use snake_case files in Go/Python and kebab-case in TypeScript.
 - Give each event reaction or projection handler its own business-named file.
@@ -88,7 +88,7 @@ and a dedicated topology credential.
   factory through the shared command registration API. Configure its transaction
   once per aggregate; shared helpers construct executors internally. See decision 0023.
 - Use generated command/query/event/subscription identifiers in composition. Register
-  each query with its owner parser, named handler and reply mapper; keep its read
+  each query through its generated response-bound registration with its owner parser and named handler; keep its read
   repository in DI. See decision 0024.
 - Register each durable event/command consumer pair through the shared runtime
   helper. Keep stable typed subscription IDs aligned with owner `subscriptions.json`
@@ -112,8 +112,9 @@ and a dedicated topology credential.
 - Generate with `pnpm generate:contracts` after Protobuf/private-message changes,
   or `pnpm generate:http` for OpenAPI alone. Commit generated outputs and preserve
   historical wire identities/fixtures. Compare compatibility as well as generated drift.
-- Generated output filenames include `generated`, or live beneath a `generated`
-  folder. Dependency lockfiles and Next.js' required `next-env.d.ts` retain their
+- Wholly generated packages live beneath a `generated` folder with ordinary
+  filenames; mixed packages retain generated filename markers. Keep source headers.
+  See decision 0030. Dependency lockfiles and Next.js' required `next-env.d.ts` retain their
   standard names. Plain generated event DTOs remain in service-local contracts.
 - Browser updates use server-authorised Centrifugo subscriptions and the separate
   Protobuf projection contract. No browser polling or client-selected channels.
@@ -148,3 +149,8 @@ and a dedicated topology credential.
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement
 handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).
+
+Command/query responses, their resource DTOs and mechanical encoders are generated
+from Protobuf too. Query handlers return generated responses; composition uses
+the generated typed binding. The command executor assembles the generated outcome.
+See [decision 0029](docs/decisions/0029-schema-generated-command-and-query-responses.md).

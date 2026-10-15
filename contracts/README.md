@@ -81,7 +81,7 @@ locations are:
 | TypeScript Engagement | `services/engagement/src/adaptors/generated/`; owner-private descriptors also live in each context's `adaptors/messaging/generated/` |
 | Browser               | `services/web/src/adaptors/generated/{http.ts,realtime.json}`                                                                        |
 
-Plain event DTOs are also generated in Storefront's `contracts/events/model/`,
+Plain event DTOs are also generated in Storefront's `contracts/events/generated/model/`,
 Operations' `src/operations/contracts/events/generated/` and Engagement's
 `src/contracts/events/generated/`. Storefront's typed payload conversions live in
 `contracts/events/protobuf/*_generated.go`; its consumer bindings live beside
@@ -90,9 +90,15 @@ their context subscription manifests.
 Go/Python bindings and generated TypeScript source carry generated-file headers.
 Descriptor JSON is identified by its `generated/` directory and the explicit
 classification in the architecture checker. Generated messages describe transport;
-application commands, queries and read models remain independently owned types.
-All generated output filenames include `generated`, or live beneath a folder
-named exactly `generated`. Dependency lockfiles and Next.js' required
+application inputs, responses and resource DTOs use generated plain models.
+Storefront request models live in `contracts/requests/generated/model/<owner>/`
+as `payloads.go` and `responses.go`. Its shared response encoders live in
+`adaptors/messaging/generated/responses/`; owner query registrations live in
+`contexts/<owner>/adaptors/messaging/generated/queryregistration/`.
+Wholly generated packages use ordinary filenames beneath a folder named exactly
+`generated`. Mixed packages retain generated filename markers. See
+[decision 0030](../docs/decisions/0030-generated-package-layout.md).
+Dependency lockfiles and Next.js' required
 `next-env.d.ts` retain their standard names.
 
 A `fixtures/` directory stores known encoded messages or their expected meaning
@@ -121,3 +127,13 @@ inputs, mechanical boundary mappings and routing identifiers. Handlers import
 service-local `contracts/requests` types. Public request envelopes and private
 durable envelopes retain separate delivery protocols and their compatibility
 obligations. See [decision 0028](../docs/decisions/0028-schema-generated-command-and-query-inputs.md).
+
+## Response authority
+
+Every command/query `contract` annotation declares a fully qualified `response`.
+Commands select `cafe.requests.v1.Outcome`; queries select the matching success
+message in their owner's `Reply` envelope. Run `pnpm generate:contracts` to emit
+plain response/resource DTOs, checked encoders and typed query registrations.
+`required_output` marks required nested message values; optional fields preserve
+presence. Owner handlers select missing-resource and pagination behaviour.
+See [decision 0029](../docs/decisions/0029-schema-generated-command-and-query-responses.md).

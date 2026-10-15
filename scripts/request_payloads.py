@@ -75,6 +75,7 @@ def inspect(root=ROOT):
                         "route": field.json_name,
                         "field": field.name,
                         "source": source.name,
+                        "response": annotation.response,
                     }
                 )
     if len({(m["owner"], m["name"]) for m in payloads}) != len(payloads):
@@ -133,7 +134,10 @@ def inspect(root=ROOT):
                 }
             )
         payload["fields"] = fields
-    return {"payloads": payloads, "helpers": helpers}
+    from response_payloads import inspect_responses
+
+    responses = inspect_responses(payloads, messages, pool, fields_type)
+    return {"payloads": payloads, "helpers": helpers, "responses": responses}
 
 
 @lru_cache

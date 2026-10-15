@@ -2,6 +2,8 @@ syntax = "proto3";
 package cafe.loyalty.requests.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/loyalty;loyaltyv1";
 
+import "cafe/requests/v1/validation.proto";
+
 message Grant {
   string id = 1;
   string account_id = 2;
@@ -30,7 +32,7 @@ message Reward {
 message LoadedAccount {
   bool exists = 1;
   uint64 version = 2;
-  Account state = 3;
+  Account state = 3 [(cafe.requests.v1.required_output) = true];
 }
 
 message Accounts {
@@ -42,7 +44,7 @@ message Accounts {
 message LoadedReward {
   bool exists = 1;
   uint64 version = 2;
-  Reward state = 3;
+  Reward state = 3 [(cafe.requests.v1.required_output) = true];
 }
 
 message Rewards {

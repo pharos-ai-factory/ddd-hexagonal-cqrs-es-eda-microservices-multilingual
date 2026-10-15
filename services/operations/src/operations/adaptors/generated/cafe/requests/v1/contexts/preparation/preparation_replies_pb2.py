@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from operations.adaptors.generated.cafe.requests.v1 import validation_pb2 as cafe_dot_requests_dot_v1_dot_validation__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/requests/v1/contexts/preparation/preparation_replies.proto\x12\x1c\x63\x61\x66\x65.preparation.requests.v1\"a\n\x06Ticket\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08order_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x03 \x01(\t\x12\x14\n\x0cinstructions\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\"d\n\x0cLoadedTicket\x12\x0e\n\x06\x65xists\x18\x01 \x01(\x08\x12\x0f\n\x07version\x18\x02 \x01(\x04\x12\x33\n\x05state\x18\x03 \x01(\x0b\x32$.cafe.preparation.requests.v1.Ticket\"u\n\x07Tickets\x12\x39\n\x05items\x18\x01 \x03(\x0b\x32*.cafe.preparation.requests.v1.LoadedTicket\x12\r\n\x05paged\x18\x02 \x01(\x08\x12\x14\n\x07next_id\x18\x03 \x01(\tH\x00\x88\x01\x01\x42\n\n\x08_next_idB\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n?cafe/requests/v1/contexts/preparation/preparation_replies.proto\x12\x1c\x63\x61\x66\x65.preparation.requests.v1\x1a!cafe/requests/v1/validation.proto\"a\n\x06Ticket\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08order_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63ustomer_id\x18\x03 \x01(\t\x12\x14\n\x0cinstructions\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\"j\n\x0cLoadedTicket\x12\x0e\n\x06\x65xists\x18\x01 \x01(\x08\x12\x0f\n\x07version\x18\x02 \x01(\x04\x12\x39\n\x05state\x18\x03 \x01(\x0b\x32$.cafe.preparation.requests.v1.TicketB\x04\xd8\xf3\x18\x01\"u\n\x07Tickets\x12\x39\n\x05items\x18\x01 \x03(\x0b\x32*.cafe.preparation.requests.v1.LoadedTicket\x12\r\n\x05paged\x18\x02 \x01(\x08\x12\x14\n\x07next_id\x18\x03 \x01(\tH\x00\x88\x01\x01\x42\n\n\x08_next_idB\xb9\x01Z\xb6\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,10 +33,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'cafe.requests.v1.contexts.p
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\266\001github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1'
-  _globals['_TICKET']._serialized_start=97
-  _globals['_TICKET']._serialized_end=194
-  _globals['_LOADEDTICKET']._serialized_start=196
-  _globals['_LOADEDTICKET']._serialized_end=296
-  _globals['_TICKETS']._serialized_start=298
-  _globals['_TICKETS']._serialized_end=415
+  _globals['_LOADEDTICKET'].fields_by_name['state']._loaded_options = None
+  _globals['_LOADEDTICKET'].fields_by_name['state']._serialized_options = b'\330\363\030\001'
+  _globals['_TICKET']._serialized_start=132
+  _globals['_TICKET']._serialized_end=229
+  _globals['_LOADEDTICKET']._serialized_start=231
+  _globals['_LOADEDTICKET']._serialized_end=337
+  _globals['_TICKETS']._serialized_start=339
+  _globals['_TICKETS']._serialized_end=456
 # @@protoc_insertion_point(module_scope)

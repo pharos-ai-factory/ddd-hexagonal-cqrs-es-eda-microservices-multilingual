@@ -7,6 +7,7 @@
 package loyaltyv1
 
 import (
+	_ "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1/shared"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -501,7 +502,7 @@ var File_cafe_requests_v1_contexts_loyalty_loyalty_replies_proto protoreflect.Fi
 
 const file_cafe_requests_v1_contexts_loyalty_loyalty_replies_proto_rawDesc = "" +
 	"\n" +
-	"7cafe/requests/v1/contexts/loyalty/loyalty_replies.proto\x12\x18cafe.loyalty.requests.v1\"o\n" +
+	"7cafe/requests/v1/contexts/loyalty/loyalty_replies.proto\x12\x18cafe.loyalty.requests.v1\x1a!cafe/requests/v1/validation.proto\"o\n" +
 	"\x05Grant\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -526,21 +527,21 @@ const file_cafe_requests_v1_contexts_loyalty_loyalty_replies_proto_rawDesc = "" 
 	"\n" +
 	"expires_at\x18\x06 \x01(\tR\texpiresAt\x12&\n" +
 	"\fredeemed_for\x18\a \x01(\tH\x00R\vredeemedFor\x88\x01\x01B\x0f\n" +
-	"\r_redeemed_for\"z\n" +
+	"\r_redeemed_for\"\x80\x01\n" +
 	"\rLoadedAccount\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x127\n" +
-	"\x05state\x18\x03 \x01(\v2!.cafe.loyalty.requests.v1.AccountR\x05state\"\x89\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x12=\n" +
+	"\x05state\x18\x03 \x01(\v2!.cafe.loyalty.requests.v1.AccountB\x04\xd8\xf3\x18\x01R\x05state\"\x89\x01\n" +
 	"\bAccounts\x12=\n" +
 	"\x05items\x18\x01 \x03(\v2'.cafe.loyalty.requests.v1.LoadedAccountR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +
 	"\anext_id\x18\x03 \x01(\tH\x00R\x06nextId\x88\x01\x01B\n" +
 	"\n" +
-	"\b_next_id\"x\n" +
+	"\b_next_id\"~\n" +
 	"\fLoadedReward\x12\x16\n" +
 	"\x06exists\x18\x01 \x01(\bR\x06exists\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\x126\n" +
-	"\x05state\x18\x03 \x01(\v2 .cafe.loyalty.requests.v1.RewardR\x05state\"\x87\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\x12<\n" +
+	"\x05state\x18\x03 \x01(\v2 .cafe.loyalty.requests.v1.RewardB\x04\xd8\xf3\x18\x01R\x05state\"\x87\x01\n" +
 	"\aRewards\x12<\n" +
 	"\x05items\x18\x01 \x03(\v2&.cafe.loyalty.requests.v1.LoadedRewardR\x05items\x12\x14\n" +
 	"\x05paged\x18\x02 \x01(\bR\x05paged\x12\x1c\n" +

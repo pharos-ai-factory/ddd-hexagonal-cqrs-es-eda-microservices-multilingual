@@ -1,19 +1,9 @@
 package readmodels
 
-// OfferView is the application-owned read representation.
-type OfferView struct {
-	Code          string `json:"code"`
-	DrinkID       string `json:"drinkId"`
-	DrinkRevision uint64 `json:"drinkRevision"`
-	Name          string `json:"name"`
-	Minor         int64  `json:"minor"`
-	Currency      string `json:"currency"`
-}
+import model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/menu"
 
-// EditionView is the application-owned read representation.
-type EditionView struct {
-	ID       string      `json:"id"`
-	Currency string      `json:"currency"`
-	Status   string      `json:"status"`
-	Offers   []OfferView `json:"offers"`
-}
+// OfferView uses the schema-generated response representation.
+type OfferView = model.Offer
+
+// EditionView uses the schema-generated response representation.
+type EditionView = model.Edition

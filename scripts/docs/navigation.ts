@@ -47,6 +47,7 @@ export const sidebar: Sidebar = {
           'commands',
           'command-handlers',
           'queries',
+          'responses',
           'query-handlers',
           'ports',
           'adaptors',

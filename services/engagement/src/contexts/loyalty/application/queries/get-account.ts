@@ -1,10 +1,11 @@
 import type { GetAccountQuery } from '../../../../contracts/requests/generated/loyalty.js';
+import type { GetAccountResponse } from '../../../../contracts/requests/generated/loyalty-responses.js';
 import type { AccountReadRepository } from '../ports/account-read-repository.js';
-
-/** Execute the GetAccount use case through its context-owned read port. */
+/** Preserve revision, missing-resource and pagination policy in a generated response. */
 export class GetAccountQueryHandler {
   constructor(private readRepository: AccountReadRepository) {}
-  async execute(query: GetAccountQuery) {
-    return this.readRepository.get(query.id);
+  async execute(query: GetAccountQuery): Promise<GetAccountResponse> {
+    const value = await this.readRepository.get(query.id);
+    return value ? { account: value } : { error: { code: 'not_found', message: '' } };
   }
 }

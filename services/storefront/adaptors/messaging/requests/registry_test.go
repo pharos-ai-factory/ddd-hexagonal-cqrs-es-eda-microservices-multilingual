@@ -70,7 +70,7 @@ func TestGeneratedQueryIdentifiersRejectWrongOwnersDuplicatesAndForgedValues(t *
 	registry := New("menu")
 	parse := func(p *pb.GetDrink) string { return p.Id }
 	execute := func(context.Context, string) (string, error) { return "", nil }
-	reply := func(string, string) names.Reply { return &pb.Reply{} }
+	reply := func(string, string) (names.Reply, error) { return &pb.Reply{}, nil }
 	Query(registry, names.MenuQueryGetDrink, parse, execute, reply)
 	for _, name := range []names.QueryName{names.MenuQueryGetDrink, names.OrderingQueryGetOrder, names.MenuQuery("unknown"), nil} {
 		func() {

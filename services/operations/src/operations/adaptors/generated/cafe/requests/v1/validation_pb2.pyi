@@ -16,13 +16,17 @@ PUBLIC: Visibility
 PRIVATE: Visibility
 REQUIRED_INPUT_FIELD_NUMBER: _ClassVar[int]
 required_input: _descriptor.FieldDescriptor
+REQUIRED_OUTPUT_FIELD_NUMBER: _ClassVar[int]
+required_output: _descriptor.FieldDescriptor
 CONTRACT_FIELD_NUMBER: _ClassVar[int]
 contract: _descriptor.FieldDescriptor
 
 class RequestContract(_message.Message):
-    __slots__ = ("owner", "visibility")
+    __slots__ = ("owner", "visibility", "response")
     OWNER_FIELD_NUMBER: _ClassVar[int]
     VISIBILITY_FIELD_NUMBER: _ClassVar[int]
+    RESPONSE_FIELD_NUMBER: _ClassVar[int]
     owner: str
     visibility: Visibility
-    def __init__(self, owner: _Optional[str] = ..., visibility: _Optional[_Union[Visibility, str]] = ...) -> None: ...
+    response: str
+    def __init__(self, owner: _Optional[str] = ..., visibility: _Optional[_Union[Visibility, str]] = ..., response: _Optional[str] = ...) -> None: ...

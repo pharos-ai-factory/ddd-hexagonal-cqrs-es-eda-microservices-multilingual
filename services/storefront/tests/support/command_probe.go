@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
@@ -50,7 +51,7 @@ func (p *CommandProbe[S]) Execute(_ context.Context, m a.Metadata, decide func(a
 	if err != nil {
 		var rejection *d.Violation
 		if errors.As(err, &rejection) {
-			p.Result.Rejection = rejection
+			p.Result.Rejection = &shared.Rejection{Code: rejection.Code, Message: rejection.Message}
 			return p.Result, nil
 		}
 		return p.Result, err

@@ -110,7 +110,7 @@ def render(catalogue, language):
 
 def generate(root=ROOT):
     for service, language, target in (
-        ("storefront", "go", "services/storefront/contracts/events/names/names_generated.go"),
+        ("storefront", "go", "services/storefront/contracts/events/generated/names/names.go"),
         ("operations", "python", "services/operations/src/operations/adaptors/generated/message_names.py"),
         ("engagement", "typescript", "services/engagement/src/adaptors/generated/message-names.ts"),
     ):

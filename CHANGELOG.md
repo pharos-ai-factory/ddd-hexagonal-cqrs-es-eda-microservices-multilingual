@@ -6,6 +6,12 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Move wholly generated Go models, event identifiers, response encoders and query
+  registrations beneath generated folders with ordinary filenames. Update imports,
+  generators, cleanup scopes, boundary checks and source-linked recipes.
+
+- Generate command/query response DTOs, resource views, checked encoders and typed query bindings from Protobuf across Go, Python and TypeScript; update the recipes and scaffolds.
+
 - Generate plain public/private command and query inputs from annotated Protobuf
   schemas across Go, Python and TypeScript; remove handwritten payload copies,
   preserve presence and update owner mappings, permissions and educational recipes.

@@ -63,7 +63,8 @@
                 "RequestNotificationCommand": {
                   "options": {
                     "(cafe.requests.v1.contract).owner": "communication",
-                    "(cafe.requests.v1.contract).visibility": "PRIVATE"
+                    "(cafe.requests.v1.contract).visibility": "PRIVATE",
+                    "(cafe.requests.v1.contract).response": "cafe.requests.v1.Outcome"
                   },
                   "fields": {
                     "recipient": {
@@ -83,7 +84,8 @@
                 "DeliverNotificationCommand": {
                   "options": {
                     "(cafe.requests.v1.contract).owner": "communication",
-                    "(cafe.requests.v1.contract).visibility": "PRIVATE"
+                    "(cafe.requests.v1.contract).visibility": "PRIVATE",
+                    "(cafe.requests.v1.contract).response": "cafe.requests.v1.Outcome"
                   },
                   "fields": {
                     "notificationId": {

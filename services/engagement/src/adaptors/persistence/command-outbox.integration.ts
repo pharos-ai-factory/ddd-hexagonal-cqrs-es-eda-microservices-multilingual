@@ -82,7 +82,7 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
     await outbox.enqueue(m, command);
     await assert.rejects(outbox.enqueue({ ...m, sourceHash: 'b'.repeat(64) }, command));
     assert.equal(
-      await c.getAccount.execute({ id: target }),
+      (await c.getAccount.execute({ id: target })).account,
       undefined,
       'Event acceptance mutated an aggregate',
     );
@@ -146,16 +146,16 @@ void test('durable hand-off, rollback, lease recovery, bounded command retry and
     assert.equal(failure?.correlation, m.correlation);
     const dead = quarantined as unknown as amqp.GetMessage;
     assert.deepEqual(dead.content, saved);
-    assert.equal(await c.getAccount.execute({ id: target }), undefined);
+    assert.equal((await c.getAccount.execute({ id: target })).account, undefined);
     unavailable = false;
     const properties = { ...dead.properties, headers: { 'contract-version': 1 } };
     await confirmed(channel, 'ref.loyalty.delivery', queue, dead.content, properties);
     channel.ack(dead);
-    await until(async () => Boolean(await c.getAccount.execute({ id: target })));
+    await until(async () => Boolean((await c.getAccount.execute({ id: target })).account));
     // Lost ACK / duplicate publication reuses the committed command and source receipts.
     await confirmed(channel, 'ref.loyalty.delivery', queue, saved, properties);
     await until(async () => completed >= 2);
-    const loaded = await c.getAccount.execute({ id: target });
+    const loaded = (await c.getAccount.execute({ id: target })).account;
     assert.equal(loaded?.version, 1);
     assert.equal(loaded?.state.collections, 1);
     assert.equal(

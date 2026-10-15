@@ -7,11 +7,11 @@ import "cafe/requests/v1/common.proto";
 import "cafe/requests/v1/validation.proto";
 
 message ListTickets {
-  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC response: "cafe.preparation.requests.v1.Tickets" };
   cafe.requests.v1.PageRequest page = 1;
 }
 
 message GetTicket {
-  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC };
+  option (cafe.requests.v1.contract) = { owner: "preparation" visibility: PUBLIC response: "cafe.preparation.requests.v1.LoadedTicket" };
   string id = 1;
 }

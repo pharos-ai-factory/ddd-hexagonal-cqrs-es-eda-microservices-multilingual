@@ -43,7 +43,10 @@ func (r *RabbitMQRequestRegistry) runKind(ctx context.Context, url, kind string)
 				return nil, err
 			}
 			intent := &postgres.ReplyIntent{ID: id, Encode: func(outcome a.Outcome) ([]byte, error) {
-				reply := OutcomeReply(r.Owner, outcome)
+				reply, err := OutcomeReply(r.Owner, outcome)
+				if err != nil {
+					return nil, err
+				}
 				reply.ProtoReflect().Set(reply.ProtoReflect().Descriptor().Fields().ByName("request_id"), protoreflect.ValueOfString(id))
 				return proto.MarshalOptions{Deterministic: true}.Marshal(reply)
 			}}

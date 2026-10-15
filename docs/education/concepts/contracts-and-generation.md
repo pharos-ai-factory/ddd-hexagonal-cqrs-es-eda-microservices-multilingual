@@ -10,7 +10,7 @@ and topology. Handwritten domain and application policy remains with its owner.
 2. Edit that owner source; preserve existing wire field numbers and historical fixtures. Add envelope alternatives, annotations and constraints where the boundary requires them.
 3. For delivered reactions, update the consumer-owned `subscriptions.json`. A `realtime` entry is an explicit browser reaction; `publication` maps a private fact to integration; `command` binds a durable owner command.
 4. Run `pnpm generate:contracts` for Protobuf/catalogue changes or `pnpm generate:http` for OpenAPI alone. Commit generated files with the source changes.
-5. Import generated command/query payloads into handlers and generated identifiers into composition. Use generated mechanical input mappings; implement owner semantic validation, business mappings and handlers.
+5. Import generated command/query inputs and responses into handlers. Use generated typed query bindings and mechanical encoders; implement owner semantic validation, business mappings and handlers.
 6. Update API operation mappings and the generated operation client for HTTP exposure. Bind every declared consumer and resolve DI before starting workers.
 7. Run generated-drift and compatibility checks, focused tests and full verification. Apply new context migrations and generated broker permissions to the development composition before exercising the new route.
 
@@ -18,15 +18,15 @@ Follow the [end-to-end recipe](../end-to-end-recipe.md) to connect this step to 
 
 ## Sources and outputs
 
-| Boundary                    | Authoritative source                                       | Generated roles                                              |
-| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ |
-| Public commands and queries | Owner messaging Protobuf envelopes                         | Plain inputs, wire bindings, parsers and identifiers         |
-| Integration events          | Owner event Protobuf annotations                           | Plain DTOs, validation, codecs and publication factories     |
-| Private domain delivery     | Owner `private_messages.proto` and `private_messages.json` | Private codecs and routing identifiers                       |
-| Private commands            | Owner `internal_commands.proto`                            | Plain inputs, payload mappings, wire schemas and identifiers |
-| Subscriptions               | Consumer-owned `subscriptions.json`                        | Subscription identifiers and topology                        |
-| Realtime                    | Owner snapshot schemas and shared envelope                 | Browser projection codecs and types                          |
-| HTTP                        | Owner OpenAPI sources                                      | API/browser operation contracts                              |
+| Boundary                    | Authoritative source                                       | Generated roles                                                             |
+| --------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Public commands and queries | Owner messaging Protobuf envelopes                         | Plain inputs/responses, wire bindings, parsers, encoders and typed bindings |
+| Integration events          | Owner event Protobuf annotations                           | Plain DTOs, validation, codecs and publication factories                    |
+| Private domain delivery     | Owner `private_messages.proto` and `private_messages.json` | Private codecs and routing identifiers                                      |
+| Private commands            | Owner `internal_commands.proto`                            | Plain inputs/outcomes, payload mappings, wire schemas and identifiers       |
+| Subscriptions               | Consumer-owned `subscriptions.json`                        | Subscription identifiers and topology                                       |
+| Realtime                    | Owner snapshot schemas and shared envelope                 | Browser projection codecs and types                                         |
+| HTTP                        | Owner OpenAPI sources                                      | API/browser operation contracts                                             |
 
 ## A manifest in each language service
 
@@ -127,7 +127,14 @@ Source: [subscriptions.json](../../../services/engagement/src/contexts/loyalty/a
 5. Check historical fixtures as well as generated drift. A clean regeneration
    does not by itself establish compatibility with old stored bytes.
 
-Generated filenames include `generated`, or live beneath a generated directory.
+Wholly generated packages use ordinary filenames beneath a `generated` directory.
+Go plain request models live in `contracts/requests/generated/model/<owner>/`:
+`payloads.go` defines inputs and `responses.go` defines replies and resource DTOs.
+Event DTOs live in `contracts/events/generated/model/`. Generated encoders and
+query registrations live under adaptor generated folders; mixed codec packages
+retain `_generated.go` filenames. Keep generated headers and change the generator
+or schema when changing these files. See
+[decision 0030](../../decisions/0030-generated-package-layout.md).
 Service selection keeps generated contracts local to the services that use them.
 The application/domain never imports another service's source.
 
@@ -150,9 +157,9 @@ construct values of these types after private domain-event delivery.
 
 ### Go
 
-Source: [ordering_generated.go](../../../services/storefront/contracts/events/model/ordering_generated.go).
+Source: [ordering.go](../../../services/storefront/contracts/events/generated/model/ordering.go).
 
-```go source="../../../services/storefront/contracts/events/model/ordering_generated.go"
+```go source="../../../services/storefront/contracts/events/generated/model/ordering.go"
 // Code generated by scripts/generate_events.py. DO NOT EDIT.
 package model
 

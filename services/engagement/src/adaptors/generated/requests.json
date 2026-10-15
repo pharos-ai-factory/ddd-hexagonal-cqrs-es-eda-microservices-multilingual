@@ -109,7 +109,8 @@
                     "ListNotifications": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "communication",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.communication.requests.v1.Notifications"
                       },
                       "fields": {
                         "page": {
@@ -121,7 +122,8 @@
                     "GetNotification": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "communication",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.communication.requests.v1.LoadedNotification"
                       },
                       "fields": {
                         "id": {
@@ -181,7 +183,10 @@
                         },
                         "state": {
                           "type": "Notification",
-                          "id": 3
+                          "id": 3,
+                          "options": {
+                            "(cafe.requests.v1.required_output)": true
+                          }
                         }
                       }
                     },
@@ -333,6 +338,12 @@
                   "extend": "google.protobuf.FieldOptions",
                   "protoName": "required_input"
                 },
+                "requiredOutput": {
+                  "type": "bool",
+                  "id": 51003,
+                  "extend": "google.protobuf.FieldOptions",
+                  "protoName": "required_output"
+                },
                 "Visibility": {
                   "values": {
                     "VISIBILITY_UNSPECIFIED": 0,
@@ -349,6 +360,10 @@
                     "visibility": {
                       "type": "Visibility",
                       "id": 2
+                    },
+                    "response": {
+                      "type": "string",
+                      "id": 3
                     }
                   }
                 },
@@ -619,7 +634,10 @@
                         },
                         "state": {
                           "type": "Account",
-                          "id": 3
+                          "id": 3,
+                          "options": {
+                            "(cafe.requests.v1.required_output)": true
+                          }
                         }
                       }
                     },
@@ -663,7 +681,10 @@
                         },
                         "state": {
                           "type": "Reward",
-                          "id": 3
+                          "id": 3,
+                          "options": {
+                            "(cafe.requests.v1.required_output)": true
+                          }
                         }
                       }
                     },
@@ -698,7 +719,8 @@
                     "ListAccounts": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "loyalty",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.loyalty.requests.v1.Accounts"
                       },
                       "fields": {
                         "page": {
@@ -710,7 +732,8 @@
                     "GetAccount": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "loyalty",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.loyalty.requests.v1.LoadedAccount"
                       },
                       "fields": {
                         "id": {
@@ -722,7 +745,8 @@
                     "ListRewards": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "loyalty",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.loyalty.requests.v1.Rewards"
                       },
                       "fields": {
                         "page": {
@@ -734,7 +758,8 @@
                     "GetReward": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "loyalty",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.loyalty.requests.v1.LoadedReward"
                       },
                       "fields": {
                         "id": {
@@ -746,7 +771,8 @@
                     "RedeemReward": {
                       "options": {
                         "(cafe.requests.v1.contract).owner": "loyalty",
-                        "(cafe.requests.v1.contract).visibility": "PUBLIC"
+                        "(cafe.requests.v1.contract).visibility": "PUBLIC",
+                        "(cafe.requests.v1.contract).response": "cafe.requests.v1.Outcome"
                       },
                       "oneofs": {
                         "_orderId": {

@@ -1,5 +1,11 @@
 """Dispatch real query handlers through the production Preparation registration."""
 
+from operations.contexts.preparation.adaptors.messaging.generated.response_payloads import (
+    encode_get_ticket_response,
+)
+from operations.contracts.requests.generated.preparation_responses import GetTicketResponse
+
+
 from dependency_injector import providers
 import pytest
 from unittest.mock import Mock
@@ -91,17 +97,17 @@ def test_direct_queries_preserve_revisions_complete_lists_pagination_and_failure
 def test_query_registration_rejects_duplicate_and_foreign_identifiers() -> None:
     registry = RabbitMQRequestRegistry("preparation")
 
-    def handler(query: object) -> None:
-        return None
+    def handler(query: object) -> GetTicketResponse:
+        return {"error": {"code": "not_found", "message": ""}}
 
     registry.query(
-        PreparationQuery.GET_TICKET, ticket_requests.get_ticket, handler, ticket_requests.get_reply
+        PreparationQuery.GET_TICKET, ticket_requests.get_ticket, handler, encode_get_ticket_response
     )
     with pytest.raises(ValueError, match="Duplicate request handler"):
         registry.query(
-            PreparationQuery.GET_TICKET, ticket_requests.get_ticket, handler, ticket_requests.get_reply
+            PreparationQuery.GET_TICKET, ticket_requests.get_ticket, handler, encode_get_ticket_response
         )
     with pytest.raises(ValueError, match="identifier disagrees with owner"):
         registry.query(
-            CollectionQuery.GET_PICKUP, ticket_requests.get_ticket, handler, ticket_requests.get_reply
+            CollectionQuery.GET_PICKUP, ticket_requests.get_ticket, handler, encode_get_ticket_response
         )

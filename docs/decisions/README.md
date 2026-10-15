@@ -93,3 +93,12 @@ and Ordering's `RecordCollection` example with explicit realtime publication.
 refines 0013–0014, 0017, 0024 and 0027: Protobuf defines payloads once, including
 owner/visibility; generation supplies plain types and mechanical mappings, and
 application handlers import those generated contracts.
+
+[0029 — Schema-generated command and query responses](0029-schema-generated-command-and-query-responses.md)
+adds authoritative response associations, plain reply/resource DTOs, checked encoders
+and typed query bindings. Command executors assemble generated committed outcomes.
+
+[0030 — Generated package layout](0030-generated-package-layout.md) refines
+0017, 0028 and 0029: wholly generated packages use generated directories and
+ordinary filenames; mixed packages retain filename markers. Generator cleanup
+respects each output set and application imports stay limited to plain models.

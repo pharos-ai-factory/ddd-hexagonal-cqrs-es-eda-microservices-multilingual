@@ -1,5 +1,7 @@
 # 0009 — Contract enforcement and durable command replies
 
+Refined by [decision 0029](0029-schema-generated-command-and-query-responses.md): schema-generated response DTOs, resource aliases, checked encoders and typed query bindings.
+
 Status: accepted, 8 October 2026. Refines request packages and acknowledgement
 rules in 0007 and technical sharing in 0008. Addresses the six items in
 [contract improvements](../contract-improvements.md).

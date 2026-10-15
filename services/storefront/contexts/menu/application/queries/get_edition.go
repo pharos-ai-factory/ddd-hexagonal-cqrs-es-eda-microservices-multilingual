@@ -3,14 +3,20 @@ package queries
 import (
 	"context"
 	"github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/ports"
-	view "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/menu/application/readmodels"
-	menucontracts "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/menu"
-	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	model "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/menu"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 )
 
-// GetEditionQueryHandler reads one edition through its application capability.
+// GetEditionQueryHandler preserves revision, absence and pagination policy.
 type GetEditionQueryHandler struct{ ReadRepository ports.EditionReadRepository }
 
-func (h GetEditionQueryHandler) Execute(ctx context.Context, q menucontracts.GetEditionQuery) (a.Loaded[view.EditionView], error) {
-	return h.ReadRepository.Get(ctx, q.ID)
+func (h GetEditionQueryHandler) Execute(ctx context.Context, q model.GetEditionQuery) (model.GetEditionResponse, error) {
+	value, err := h.ReadRepository.Get(ctx, q.ID)
+	if err != nil {
+		return model.GetEditionResponse{}, err
+	}
+	if !value.Exists {
+		return model.GetEditionResponse{Error: &shared.RequestError{Code: "not_found"}}, nil
+	}
+	return model.GetEditionResponse{Edition: &model.LoadedEdition{Exists: value.Exists, Version: value.Version, State: value.State}}, nil
 }

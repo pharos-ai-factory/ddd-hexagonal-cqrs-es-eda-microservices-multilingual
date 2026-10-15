@@ -1,4 +1,5 @@
-import { LoyaltyCommand, CommunicationQuery } from '../generated/request-names.js';
+import { registerListNotifications } from '../../contexts/communication/adaptors/messaging/generated/response-payloads.js';
+import { LoyaltyCommand } from '../generated/request-names.js';
 import * as queries from '../../contexts/communication/adaptors/messaging/notification-query-mapping.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -61,17 +62,12 @@ void test('foreign context, missing command fields and missing expected version 
 });
 void test('owner query pagination and an absent next identity remain explicit', async () => {
   const registry = new RabbitMQRequestRegistry('communication');
-  registry.query(
-    CommunicationQuery.LIST_NOTIFICATIONS,
-    queries.listNotifications,
-    {
-      execute: async (query) => {
-        assert.deepEqual(query.page, { limit: 1, after: id });
-        return { items: [] };
-      },
+  registerListNotifications(registry, queries.listNotifications, {
+    execute: async (query) => {
+      assert.deepEqual(query.page, { limit: 1, after: id });
+      return { notifications: { items: [], paged: true } };
     },
-    queries.listReply,
-  );
+  });
   const type = root.lookupType('cafe.communication.requests.v1.Request');
   const request = decodeRequest(
     Buffer.from(

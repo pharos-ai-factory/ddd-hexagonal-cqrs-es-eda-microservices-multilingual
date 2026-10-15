@@ -17,8 +17,8 @@ message CommandEnvelope {
   }
 }
 message CreditCollectionCommand {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PRIVATE };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PRIVATE response: "cafe.requests.v1.Outcome" };
   string order_id = 1; string customer_id = 2; }
 message IssueRewardCommand {
-  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PRIVATE };
+  option (cafe.requests.v1.contract) = { owner: "loyalty" visibility: PRIVATE response: "cafe.requests.v1.Outcome" };
   string grant_id = 1; string account_id = 2; string benefit = 3; int32 valid_days = 4; }

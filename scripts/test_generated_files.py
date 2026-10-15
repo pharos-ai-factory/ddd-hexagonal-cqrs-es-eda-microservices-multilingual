@@ -10,9 +10,19 @@ class GeneratedFileTests(unittest.TestCase):
             "services/example/generated.json",
             "services/example/model_generated.go",
             "services/example/generated/events/payload.py",
+            "services/example/generated/model/ordering/payloads.go",
+            "services/example/generated/cafe/requests.pb.go",
         ):
             with self.subTest(path=path):
                 self.assertIsNone(violation(path, "", classified=True))
+
+    def test_generated_directory_makes_filename_markers_redundant(self):
+        for filename in ("payloads_generated.go", "generated_payloads.py", "payloads.generated.ts"):
+            with self.subTest(filename=filename):
+                self.assertIn(
+                    "redundant filename marker",
+                    violation("services/example/generated/model/" + filename, "", classified=True),
+                )
 
     def test_unmarked_outputs_and_similarly_named_folders_fail(self):
         for path in (

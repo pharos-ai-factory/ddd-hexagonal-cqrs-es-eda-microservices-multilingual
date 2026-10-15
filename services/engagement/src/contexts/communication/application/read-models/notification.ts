@@ -1,9 +1,2 @@
-/** Application-owned read representation of a notification. */
-export type NotificationView = Readonly<{
-  id: string;
-  recipient: string;
-  subject: string;
-  body: string;
-  status: 'requested' | 'sent';
-  providerReceipt?: string;
-}>;
+/** Schema-owned response representation used by the read repository. */
+export type { Notification as NotificationView } from '../../../../contracts/requests/generated/communication-responses.js';

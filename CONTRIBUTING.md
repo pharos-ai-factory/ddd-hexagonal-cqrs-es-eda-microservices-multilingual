@@ -33,7 +33,7 @@ Paths in this table are relative to the owning context.
 | Command                                   | `application/commands/<action>`; one named `CommandHandler` importing its generated contract                                                                    |
 | Query                                     | `application/queries/<question>`; one named `QueryHandler` importing its generated contract                                                                     |
 | Read repository                           | `application/ports/<resource>_read_repository` (Go/Python) or `<resource>-read-repository` (TypeScript); name the interface/protocol `<Resource>ReadRepository` |
-| Read representation                       | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript)                                                                            |
+| Read representation (generated alias)     | `application/readmodels/` (Go), `read_models/` (Python), `read-models/` (TypeScript)                                                                            |
 | Event reaction                            | One file in `application/event_handlers/` (Python) or `event-handlers/` (TypeScript)                                                                            |
 | Projection update                         | Go projection handlers live in `application/projections/`                                                                                                       |
 | Protobuf input mapping                    | `adaptors/messaging/`; HTTP mapping lives in `services/api/adaptors/http/backend/` relative to the repository root                                              |
@@ -89,11 +89,11 @@ its private codec, event/command consumers and plain handler factory. Follow the
 
 Use generated context-specific command/query enums, event identifiers and
 subscription IDs in composition. Register each query explicitly with its owner
-input parser, concrete handler and reply mapper. Generate from the published
+input parser and concrete handler through the generated response binding. Generate from the published
 Protobuf definitions and owner private-message/subscription catalogues. See
 [decision 0024](docs/decisions/0024-generated-message-identifiers-and-direct-queries.md).
 
-Queries use application-owned read models and named read repository ports. Persistence
+Queries use schema-generated plain read models and named read repository ports. Persistence
 adaptors restore and validate stored authority before mapping it into a view.
 Preserve absent-resource behaviour, revisions and continuation identities. An
 unpaginated list remains complete; pagination is explicit.
@@ -213,3 +213,8 @@ the [end-to-end recipe](docs/education/end-to-end-recipe.md).
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement
 handlers and semantic validation. See [decision 0028](docs/decisions/0028-schema-generated-command-and-query-inputs.md).
+
+Command/query responses, their resource DTOs and mechanical encoders are generated
+from Protobuf too. Query handlers return generated responses; composition uses
+the generated typed binding. The command executor assembles the generated outcome.
+See [decision 0029](docs/decisions/0029-schema-generated-command-and-query-responses.md).

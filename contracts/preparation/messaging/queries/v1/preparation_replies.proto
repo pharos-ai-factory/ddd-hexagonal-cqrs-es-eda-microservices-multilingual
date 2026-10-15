@@ -2,6 +2,8 @@ syntax = "proto3";
 package cafe.preparation.requests.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/preparation;preparationv1";
 
+import "cafe/requests/v1/validation.proto";
+
 message Ticket {
   string id = 1;
   string order_id = 2;
@@ -13,7 +15,7 @@ message Ticket {
 message LoadedTicket {
   bool exists = 1;
   uint64 version = 2;
-  Ticket state = 3;
+  Ticket state = 3 [(cafe.requests.v1.required_output) = true];
 }
 
 message Tickets {

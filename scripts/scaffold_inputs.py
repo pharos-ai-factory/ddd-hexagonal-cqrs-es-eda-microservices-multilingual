@@ -14,9 +14,9 @@ def generated_inputs(files, service, context, name, role):
             content = re.sub(r"//[^\n]*\n(type " + typename + r" struct \{[^}]*\})\n", "", content)
             content = re.sub(r"(?<![\w.])" + typename + r"\b", "inputs." + typename, content)
             content = content.replace(
-                "import (", f'import (\n inputs "{MODULE}/contracts/requests/model/{context}"'
+                "import (", f'import (\n inputs "{MODULE}/contracts/requests/generated/model/{context}"'
             )
-        elif service == "operations" and f"class {typename}" in content:
+        elif service == "operations" and re.search(r"class " + typename + r"(?:\(|:)", content):
             content = re.sub(
                 r"(?:@dataclass\(frozen=True\)\n)?class "
                 + typename
@@ -46,10 +46,11 @@ def generated_inputs(files, service, context, name, role):
         if role == "Query"
         else "  // Define the business input fields and required presence rules.\n"
     )
+    response = f"cafe.{context}.requests.v1.Loaded{name}" if role == "Query" else "cafe.requests.v1.Outcome"
     files["contract.proto.txt"] = (
         f"// Add to the owning {role.lower()} schema and its request-envelope oneof.\n"
         'import "cafe/requests/v1/validation.proto";\n'
-        f'message {name} {{\n  option (cafe.requests.v1.contract) = {{ owner: "{context}" visibility: PUBLIC }};\n'
+        f'message {name} {{\n  option (cafe.requests.v1.contract) = {{ owner: "{context}" visibility: PUBLIC response: "{response}" }};\n'
         + fields
         + "}\n"
     )
@@ -57,6 +58,6 @@ def generated_inputs(files, service, context, name, role):
         "Choose PUBLIC for a supported external capability or PRIVATE for an owner-only durable command.\n"
         "Place private commands in the owner internal_commands.proto envelope.\n"
         "Run pnpm generate:contracts before copying the handler; import its generated payload and identifier.\n"
-        "Keep semantic validation and reply mapping in owner adaptors; mechanical input mappings are generated.\n"
+        "Keep semantic validation and response selection explicit; payloads, encoders and query bindings are generated.\n"
     )
     return files

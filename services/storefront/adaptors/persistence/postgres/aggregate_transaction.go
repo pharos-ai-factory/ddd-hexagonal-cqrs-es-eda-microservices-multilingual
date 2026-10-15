@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	execution "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/adaptors/command"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
 	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 	"time"
@@ -67,7 +68,7 @@ func (s *AggregateTransaction[S, A]) Execute(ctx context.Context, m a.Metadata, 
 	if err == nil {
 		if savedHash != hash {
 			detail := (&a.ApplicationError{Code: "idempotency_conflict", Message: "The command identity was reused with different input"}).Rejection()
-			return commitOutcome(ctx, tx, a.Outcome{AggregateID: m.AggregateID, Rejection: &detail})
+			return commitOutcome(ctx, tx, a.Outcome{AggregateID: m.AggregateID, Rejection: &shared.Rejection{Code: detail.Code, Message: detail.Message}})
 		}
 		outcome, err := decodeOutcome(saved, m.AggregateID)
 		if err != nil {
@@ -91,7 +92,7 @@ func (s *AggregateTransaction[S, A]) Execute(ctx context.Context, m a.Metadata, 
 	var result execution.Result
 	if m.ExpectedVersion != nil && *m.ExpectedVersion != loaded.Version {
 		detail := (&a.ApplicationError{Code: "version_conflict", Message: "The expected aggregate version is stale"}).Rejection()
-		outcome.Rejection = &detail
+		outcome.Rejection = &shared.Rejection{Code: detail.Code, Message: detail.Message}
 	} else {
 		ownerRepository := &execution.EventRecordingRepository[A]{Source: s.repository(repository), Map: s.publications}
 		result, err = work(ownerRepository)
@@ -103,7 +104,7 @@ func (s *AggregateTransaction[S, A]) Execute(ctx context.Context, m a.Metadata, 
 				return a.Outcome{}, err
 			}
 			detail := expected.Rejection()
-			outcome.Rejection = &detail
+			outcome.Rejection = &shared.Rejection{Code: detail.Code, Message: detail.Message}
 		} else {
 			outcome.Status = result.Status
 			if err = s.persistResult(ctx, tx, m, repository, result, &outcome); err != nil {

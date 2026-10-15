@@ -2,7 +2,7 @@ package application
 
 import (
 	"context"
-	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/model/shared"
+	shared "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/model/shared"
 )
 
 // PageRequest opts into a bounded keyset scan. List remains an unpaginated query.

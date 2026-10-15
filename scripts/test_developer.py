@@ -110,7 +110,16 @@ class DeveloperTests(unittest.TestCase):
         for context in ("ordering", "preparation", "loyalty"):
             _, files = render("query", context, "FindResource")
             registration = files["registration.txt"]
-            self.assertIn(context.title() + "Query", registration)
+            self.assertIn(
+                "register_find_resource"
+                if context == "preparation"
+                else "RegisterFindResource"
+                if context == "ordering"
+                else "registerFindResource",
+                registration,
+            )
+            self.assertIn("response:", files["contract.proto.txt"])
+            self.assertIn("required_output", files["replies.proto.txt"])
             self.assertIn("FindResourceQueryHandler", registration)
             self.assertIn("wire.", registration)
             self.assertNotIn("QueryEndpoints", registration)

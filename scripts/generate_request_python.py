@@ -20,7 +20,8 @@ def clean_imports(source):
             replacement = (
                 (
                     "from "
-                    + node.module
+                    + "." * node.level
+                    + (node.module or "")
                     + " import "
                     + ", ".join(a.name + (" as " + a.asname if a.asname else "") for a in names)
                     + "\n"

@@ -206,11 +206,11 @@ const file_ordering_commands_proto_rawDesc = "" +
 	"\x10receipt_material\x18\a \x01(\fR\x0freceiptMaterial\x12^\n" +
 	"\x11record_collection\x18\n" +
 	" \x01(\v2/.cafe.ordering.internal.RecordCollectionCommandH\x00R\x10recordCollectionB\t\n" +
-	"\acommand\"L\n" +
+	"\acommand\"f\n" +
 	"\x17RecordCollectionCommand\x12\x1f\n" +
 	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerId:\x10\xd2\xf3\x18\f\n" +
-	"\bordering\x10\x02B\xa8\x01Z\xa5\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternalb\x06proto3"
+	"customerId:*\xd2\xf3\x18&\n" +
+	"\bordering\x10\x02\x1a\x18cafe.requests.v1.OutcomeB\xa8\x01Z\xa5\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contexts/ordering/adaptors/messaging/generated;orderinginternalb\x06proto3"
 
 var (
 	file_ordering_commands_proto_rawDescOnce sync.Once

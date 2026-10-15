@@ -6,6 +6,8 @@ import "google/protobuf/descriptor.proto";
 // Presence is a published input rule. Fields without this annotation may be absent.
 extend google.protobuf.FieldOptions {
   bool required_input = 51001;
+  // A successful response must include this message value.
+  bool required_output = 51003;
 }
 
 // Every command/query payload declares its owner and supported caller scope.
@@ -17,6 +19,8 @@ enum Visibility {
 message RequestContract {
   string owner = 1;
   Visibility visibility = 2;
+  // Fully qualified response payload; public requests bind it to their Reply oneof.
+  string response = 3;
 }
 extend google.protobuf.MessageOptions {
   RequestContract contract = 51002;

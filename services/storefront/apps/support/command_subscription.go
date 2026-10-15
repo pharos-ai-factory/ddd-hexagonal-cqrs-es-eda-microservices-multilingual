@@ -42,7 +42,7 @@ func SubscribeCommandPair[P, C any](s *StorefrontRuntime, binding broker.Binding
 				return err
 			}
 			if outcome.Rejection != nil {
-				return outcome.Rejection
+				return &a.ApplicationError{Code: outcome.Rejection.Code, Message: outcome.Rejection.Message}
 			}
 			return nil
 		},

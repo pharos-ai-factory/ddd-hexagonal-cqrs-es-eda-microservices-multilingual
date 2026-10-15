@@ -2,6 +2,8 @@ syntax = "proto3";
 package cafe.collection.requests.v1;
 option go_package = "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/requests/generated/cafe/requests/v1/contexts/collection;collectionv1";
 
+import "cafe/requests/v1/validation.proto";
+
 message Pickup {
   string id = 1;
   string order_id = 2;
@@ -13,7 +15,7 @@ message Pickup {
 message LoadedPickup {
   bool exists = 1;
   uint64 version = 2;
-  Pickup state = 3;
+  Pickup state = 3 [(cafe.requests.v1.required_output) = true];
 }
 
 message Pickups {

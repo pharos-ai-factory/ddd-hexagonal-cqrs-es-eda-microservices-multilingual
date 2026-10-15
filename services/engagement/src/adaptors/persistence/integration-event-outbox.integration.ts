@@ -80,7 +80,7 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
       metadata: { id: randomUUID(), target, name: 'redeemReward', correlation, input: {}, expected: 1 },
       body: { orderId: randomUUID() },
     });
-    assert.equal((await c.getReward.execute({ id: target }))?.version, 2);
+    assert.equal((await c.getReward.execute({ id: target })).reward?.version, 2);
     await admin.query(
       `ALTER TABLE cafe.consumer_receipts ADD CONSTRAINT reject_publication_probe CHECK(event_id <> '${event.id}') NOT VALID`,
     );
@@ -134,7 +134,7 @@ void test('publication receipt and exact outbox bytes commit atomically per subs
     );
     assert.equal(await count('consumer_receipts', 'event_id', event.id), 2);
     assert.equal(await count('outbox_events', 'aggregate_id', target), 3);
-    assert.equal((await c.getReward.execute({ id: target }))?.version, 2);
+    assert.equal((await c.getReward.execute({ id: target })).reward?.version, 2);
   } finally {
     await container.dispose();
     await admin.end();

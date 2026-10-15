@@ -29,7 +29,7 @@ Source: [aggregate_transaction.go](../../../services/storefront/adaptors/persist
 ```go source="../../../services/storefront/adaptors/persistence/postgres/aggregate_transaction.go"
 if m.ExpectedVersion != nil && *m.ExpectedVersion != loaded.Version {
 	detail := (&a.ApplicationError{Code: "version_conflict", Message: "The expected aggregate version is stale"}).Rejection()
-	outcome.Rejection = &detail
+	outcome.Rejection = &shared.Rejection{Code: detail.Code, Message: detail.Message}
 } else {
 	ownerRepository := &execution.EventRecordingRepository[A]{Source: s.repository(repository), Map: s.publications}
 	result, err = work(ownerRepository)
@@ -41,7 +41,7 @@ if m.ExpectedVersion != nil && *m.ExpectedVersion != loaded.Version {
 			return a.Outcome{}, err
 		}
 		detail := expected.Rejection()
-		outcome.Rejection = &detail
+		outcome.Rejection = &shared.Rejection{Code: detail.Code, Message: detail.Message}
 	} else {
 		outcome.Status = result.Status
 		if err = s.persistResult(ctx, tx, m, repository, result, &outcome); err != nil {
