@@ -23,27 +23,27 @@ func menuRequestsProvider(drinkTransaction execution.Transaction[*d.Drink], edit
 	r := requests.New("menu")
 	drinkCommands := registration.New(r, drinkTransaction)
 	editionCommands := registration.New(r, editionTransaction)
-	registration.Register(drinkCommands, names.MenuCommandCreateDrink, rpc.CreateDrink, func(repository ports.DrinkWriteRepository) menucommands.CreateDrinkCommandHandler {
-		return menucommands.CreateDrinkCommandHandler{Repository: repository}
+	registration.Register(drinkCommands, names.MenuCommandCreateDrink, rpc.CreateDrink, func(repository ports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateDrinkCommandHandler {
+		return menucommands.CreateDrinkCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	registration.Register(drinkCommands, names.MenuCommandPublishDrink, rpc.PublishDrink, func(repository ports.DrinkWriteRepository) menucommands.PublishDrinkCommandHandler {
-		return menucommands.PublishDrinkCommandHandler{Repository: repository}
+	registration.Register(drinkCommands, names.MenuCommandPublishDrink, rpc.PublishDrink, func(repository ports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.PublishDrinkCommandHandler {
+		return menucommands.PublishDrinkCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	registration.Register(drinkCommands, names.MenuCommandReviseDrink, rpc.ReviseDrink, func(repository ports.DrinkWriteRepository) menucommands.ReviseDrinkCommandHandler {
-		return menucommands.ReviseDrinkCommandHandler{Repository: repository}
+	registration.Register(drinkCommands, names.MenuCommandReviseDrink, rpc.ReviseDrink, func(repository ports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.ReviseDrinkCommandHandler {
+		return menucommands.ReviseDrinkCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	registration.Register(editionCommands, names.MenuCommandCreateEdition, rpc.CreateEdition, func(repository ports.EditionWriteRepository) menucommands.CreateEditionCommandHandler {
-		return menucommands.CreateEditionCommandHandler{Repository: repository}
+	registration.Register(editionCommands, names.MenuCommandCreateEdition, rpc.CreateEdition, func(repository ports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateEditionCommandHandler {
+		return menucommands.CreateEditionCommandHandler{Repository: repository, Realtime: realtime}
 	})
 	registration.RegisterProjection(editionCommands, names.MenuCommandAddOffer, rpc.AddOffer, directory, func(c menucommands.AddOfferCommand) string { return fmt.Sprintf("%s/%d", c.DrinkID, c.DrinkRevision) },
-		func(repository ports.EditionWriteRepository, directory a.ProjectionPort[app.DrinkPublishedDomainEvent]) menucommands.AddOfferCommandHandler {
-			return menucommands.AddOfferCommandHandler{Repository: repository, Drinks: directory}
+		func(repository ports.EditionWriteRepository, directory a.ProjectionPort[app.DrinkPublishedDomainEvent], realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.AddOfferCommandHandler {
+			return menucommands.AddOfferCommandHandler{Repository: repository, Realtime: realtime, Drinks: directory}
 		})
-	registration.Register(editionCommands, names.MenuCommandChangePrice, rpc.ChangePrice, func(repository ports.EditionWriteRepository) menucommands.ChangePriceCommandHandler {
-		return menucommands.ChangePriceCommandHandler{Repository: repository}
+	registration.Register(editionCommands, names.MenuCommandChangePrice, rpc.ChangePrice, func(repository ports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.ChangePriceCommandHandler {
+		return menucommands.ChangePriceCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	registration.Register(editionCommands, names.MenuCommandPublishEdition, rpc.PublishEdition, func(repository ports.EditionWriteRepository) menucommands.PublishEditionCommandHandler {
-		return menucommands.PublishEditionCommandHandler{Repository: repository}
+	registration.Register(editionCommands, names.MenuCommandPublishEdition, rpc.PublishEdition, func(repository ports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.PublishEditionCommandHandler {
+		return menucommands.PublishEditionCommandHandler{Repository: repository, Realtime: realtime}
 	})
 	requests.Query(r, names.MenuQueryGetDrink, rpc.GetDrink, getDrink.Execute, rpc.GetDrinkReply)
 	requests.Query(r, names.MenuQueryListDrinks, rpc.ListDrinks, listDrinks.Execute, rpc.ListDrinksReply)

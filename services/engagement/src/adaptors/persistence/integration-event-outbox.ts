@@ -1,11 +1,16 @@
-import type { DurablePublicationPort, Metadata, Outcome, Publication } from '../../foundation/application.js';
+import type {
+  IntegrationEventBusPort,
+  Metadata,
+  Outcome,
+  Publication,
+} from '../../foundation/application.js';
 import { identifier } from '../../foundation/domain.js';
 import type { PostgresContextDatabase } from './postgres-database.js';
 import { encode } from '../messaging/event-codec.js';
 import { outcome as restoredOutcome } from './receipt-outcome.js';
 
 /** Complete a private subscription and stage exact integration bytes in one transaction. */
-export class PostgresPublicationOutbox<P> implements DurablePublicationPort<P> {
+export class PostgresPublicationOutbox<P> implements IntegrationEventBusPort<P> {
   constructor(
     private db: PostgresContextDatabase,
     private consumer: string,

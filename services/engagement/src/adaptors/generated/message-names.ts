@@ -30,6 +30,7 @@ export enum LoyaltySubscription {
   CREDIT_COLLECTION = 'loyalty.credit-collection',
   ISSUE_REWARD = 'loyalty.issue-reward',
   PUBLISH_REWARD_ISSUED = 'loyalty.publish-reward-issued',
+  REALTIME_REWARD_ISSUED = 'loyalty.realtime-reward-issued',
 }
 export type IntegrationEventName = CollectionIntegrationEvent | LoyaltyIntegrationEvent;
 export type DomainEventName = CommunicationDomainEvent | LoyaltyDomainEvent;

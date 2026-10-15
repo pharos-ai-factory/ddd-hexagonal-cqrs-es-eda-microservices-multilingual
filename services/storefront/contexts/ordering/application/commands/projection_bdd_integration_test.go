@@ -37,8 +37,8 @@ type projectionWorld struct {
 
 func (w *projectionWorld) request() error {
 	w.m.Input = w.input
-	result, err := (execution.Bind(orderpg.NewOrderTransaction(w.db), func(repository orderingports.OrderWriteRepository) orderingcommands.CreateOrderCommandHandler {
-		return orderingcommands.CreateOrderCommandHandler{Repository: repository, Menus: w.menus}
+	result, err := (execution.Bind(orderpg.NewOrderTransaction(w.db), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.CreateOrderCommandHandler {
+		return orderingcommands.CreateOrderCommandHandler{Repository: repository, Realtime: realtime, Menus: w.menus}
 	})).Execute(context.Background(), w.m, w.input)
 	w.last = result
 	return err

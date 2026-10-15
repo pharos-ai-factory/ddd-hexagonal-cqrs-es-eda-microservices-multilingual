@@ -62,6 +62,16 @@
     "command": true
   },
   {
+    "name": "loyalty.reward-issued",
+    "owner": "loyalty",
+    "kind": "reward",
+    "version": 1,
+    "visibility": "integration",
+    "type": "cafe.v1.RewardIssued",
+    "consumer": "loyalty.realtime-reward-issued",
+    "command": false
+  },
+  {
     "name": "loyalty.reward-issued.domain",
     "owner": "loyalty",
     "visibility": "domain",
@@ -114,6 +124,14 @@
     "command": false
   },
   {
+    "name": "ordering.order-placed.domain",
+    "owner": "ordering",
+    "visibility": "domain",
+    "kind": "order",
+    "consumer": "ordering.realtime-order-placed",
+    "command": false
+  },
+  {
     "name": "preparation.drinks-ready",
     "owner": "preparation",
     "kind": "ticket",
@@ -129,6 +147,14 @@
     "visibility": "domain",
     "kind": "ticket",
     "consumer": "preparation.publish-drinks-ready",
+    "command": false
+  },
+  {
+    "name": "preparation.drinks-ready.domain",
+    "owner": "preparation",
+    "visibility": "domain",
+    "kind": "ticket",
+    "consumer": "preparation.realtime-drinks-ready",
     "command": false
   }
 ]

@@ -55,7 +55,10 @@ func (p *probeRepository[S, A]) Save(_ context.Context, aggregate A) error {
 }
 
 // SnapshotDecisionFixture exercises the real transaction using technical snapshot fixtures.
-type SnapshotDecisionFixture[S any] struct{ Transaction execution.Transaction[S] }
+type SnapshotDecisionFixture[S any] struct {
+	Transaction execution.Transaction[S]
+	Realtime    bool
+}
 
 func (p SnapshotDecisionFixture[S]) Execute(ctx context.Context, m a.Metadata, decide func(a.Loaded[S]) (a.Mutation[S], error)) (a.Outcome, error) {
 	return p.Transaction.Execute(ctx, m, func(repo a.WriteRepository[S]) (execution.Result, error) {
@@ -72,6 +75,10 @@ func (p SnapshotDecisionFixture[S]) Execute(ctx context.Context, m a.Metadata, d
 				return execution.Result{}, err
 			}
 		}
-		return execution.Result{Status: change.Status, Publications: change.Publications}, nil
+		var realtime []a.RealtimeEvent
+		if p.Realtime && change.Changed {
+			realtime = []a.RealtimeEvent{{Snapshot: change.State}}
+		}
+		return execution.Result{Status: change.Status, Publications: change.Publications, Realtime: realtime}, nil
 	})
 }

@@ -152,7 +152,8 @@ void test('corrupt rewards do not become durable business rejections', async () 
         restoreRewardSnapshot,
         (source) => new PostgresRewardWriteRepository(source),
       ),
-      (repository) => new RedeemRewardCommandHandler(repository, () => new Date('2026-09-27T12:00:00Z')),
+      (repository, realtime) =>
+        new RedeemRewardCommandHandler(repository, realtime, () => new Date('2026-09-27T12:00:00Z')),
     );
     await assert.rejects(
       handler.execute(metadata, command),

@@ -115,7 +115,7 @@ def subscriptions(container: CollectionContainer) -> tuple[SubscriptionWorker, .
             DRINKS_READY,
             lambda event: derived_id("pickup", event["orderId"]),
             container.ready().handle,
-            lambda repository: OpenPickupCommandHandler(repository, derived_id),
+            lambda repository, realtime: OpenPickupCommandHandler(repository, realtime, derived_id),
         )
         + publication_subscription(
             "collection",

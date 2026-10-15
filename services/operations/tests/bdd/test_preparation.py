@@ -62,7 +62,7 @@ def accept(probe: PreparationProbe, metadata: Metadata) -> None:
     OrderPlacedIntegrationEventHandler(QueueProbe()).handle(metadata, probe.incoming())
     CommandExecutor(
         probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications),
-        lambda repository: AcceptOrderCommandHandler(repository),
+        lambda repository, realtime: AcceptOrderCommandHandler(repository, realtime),
     ).execute(metadata, commands[0])
 
 
@@ -76,7 +76,7 @@ def accepted(probe: PreparationProbe, metadata: Metadata) -> None:
 def start(probe: PreparationProbe, metadata: Metadata) -> None:
     CommandExecutor(
         probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications),
-        lambda repository: StartPreparationCommandHandler(repository),
+        lambda repository, realtime: StartPreparationCommandHandler(repository, realtime),
     ).execute(metadata, {})
 
 
@@ -91,7 +91,7 @@ def preparing(probe: PreparationProbe, metadata: Metadata) -> None:
 def complete(probe: PreparationProbe, metadata: Metadata) -> None:
     CommandExecutor(
         probe.transaction(PreparationTicket.restore, PreparationTicket.snapshot, ticket_publications),
-        lambda repository: CompletePreparationCommandHandler(repository),
+        lambda repository, realtime: CompletePreparationCommandHandler(repository),
     ).execute(metadata, {})
 
 

@@ -68,6 +68,10 @@ export class CommandProbe<S> implements QueryPort<S> {
           }),
         );
         if ('aggregateId' in result) return result;
+        if (result.rejection)
+          return this.execute(metadata, () => {
+            throw new Rejection(result.rejection!.code, result.rejection!.message);
+          });
         return this.execute(metadata, () => ({
           state: saved ?? (loaded?.state as S),
           changed: saved !== undefined,

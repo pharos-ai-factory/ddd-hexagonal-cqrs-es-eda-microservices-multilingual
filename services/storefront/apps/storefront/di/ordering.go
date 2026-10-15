@@ -20,6 +20,9 @@ import (
 
 func orderingModule() fx.Option {
 	return fx.Module("ordering", fx.Provide(
+		func(s *support.StorefrontRuntime, orders ports.OrderReadRepository) reactions.OrderPlacedRealtimeDomainEventHandler {
+			return reactions.OrderPlacedRealtimeDomainEventHandler{Orders: orders, Realtime: store.NewRealtimeEventBus(s.Databases["ordering"], names.OrderingSubscriptionRealtimeOrderPlaced.String(), "order")}
+		},
 		func(s *support.StorefrontRuntime) reactions.OrderPlacedDomainEventHandler {
 			return reactions.OrderPlacedDomainEventHandler{Publications: store.NewPublicationOutbox[model.OrderPlacedIntegrationEvent](s.Databases["ordering"], names.OrderingSubscriptionPublishOrderPlaced.String(), "order", codec.PublishOrderPlaced)}
 		},
@@ -42,8 +45,9 @@ func orderingModule() fx.Option {
 	), fx.Invoke(mountOrdering))
 }
 
-func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler) {
+func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], publication reactions.OrderPlacedDomainEventHandler, realtime reactions.OrderPlacedRealtimeDomainEventHandler) {
 	support.SubscribePrivate(s, rpc.Subscription(names.OrderingSubscriptionPublishOrderPlaced), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, publication.Handle)
+	support.SubscribePrivate(s, rpc.Subscription(names.OrderingSubscriptionRealtimeOrderPlaced), func(event d.OrderPlacedDomainEvent) string { return event.State.ID }, realtime.Handle)
 	s.RequestWorkers["ordering"] = requests.Run
 	support.Subscribe(s, rpc.Subscription(names.OrderingSubscriptionMenuDirectory), func(p model.MenuPublishedIntegrationEvent) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))
 }

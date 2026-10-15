@@ -1,5 +1,12 @@
 """Preparation's explicit providers and typed subscription declaration."""
 
+from operations.adaptors.persistence.realtime_event_bus import PostgresRealtimeEventBus
+from operations.contexts.preparation.application.event_handlers.realtime_drinks_ready import (
+    DrinksReadyRealtimeDomainEventHandler,
+)
+from operations.apps.runtime import realtime_subscription
+
+
 from operations.adaptors.generated.message_names import PreparationIntegrationEvent, PreparationSubscription
 
 from operations.contexts.preparation.adaptors.persistence.ticket_write_repository import (
@@ -76,6 +83,12 @@ class PreparationContainer(containers.DeclarativeContainer):
         "ticket",
         publish_DrinksReady,
     )
+    realtime_bus = providers.Singleton(
+        PostgresRealtimeEventBus, database, PreparationSubscription.REALTIME_DRINKS_READY, "ticket"
+    )
+    realtime_drinks_ready = providers.Singleton(
+        DrinksReadyRealtimeDomainEventHandler, ticket_read_repository, realtime_bus
+    )
     publish_drinks_ready = providers.Singleton(DrinksReadyDomainEventHandler, drinks_ready_publications)
 
 
@@ -87,7 +100,10 @@ def requests(container: PreparationContainer) -> RabbitMQRequestRegistry:
         registry, PreparationCommand.START_PREPARATION, wire.start, StartPreparationCommandHandler
     )
     commands.request(
-        registry, PreparationCommand.COMPLETE_PREPARATION, wire.complete, CompletePreparationCommandHandler
+        registry,
+        PreparationCommand.COMPLETE_PREPARATION,
+        wire.complete,
+        lambda repository, _realtime: CompletePreparationCommandHandler(repository),
     )
     registry.query(
         PreparationQuery.GET_TICKET, wire.get_ticket, container.get_ticket().execute, wire.get_reply
@@ -118,5 +134,13 @@ def subscriptions(container: PreparationContainer) -> tuple[SubscriptionWorker, 
             DRINKS_READY_DOMAIN,
             PreparationIntegrationEvent.DRINKS_READY,
             container.publish_drinks_ready().handle,
+        )
+        + realtime_subscription(
+            "preparation",
+            PreparationSubscription.REALTIME_DRINKS_READY,
+            definitions,
+            DRINKS_READY_DOMAIN,
+            "ticket",
+            container.realtime_drinks_ready().handle,
         ),
     )

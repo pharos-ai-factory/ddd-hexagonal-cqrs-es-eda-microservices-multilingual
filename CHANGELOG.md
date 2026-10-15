@@ -6,6 +6,21 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Name command, query, domain-event, integration-event and realtime bus ports across
+  Go, Python and TypeScript. Make browser publication explicit in command and event
+  handlers, with durable subscription receipts and typed application rejection messages.
+  Add owner migrations, late-delivery and transaction tests, decision 0026 and
+  source-linked creation recipes covering the full command-to-browser workflow.
+
+- Add an educational learning path covering strategic and tactical DDD, hexagonal
+  architecture, CQRS, EDA, reliable delivery, event sourcing, service boundaries
+  and testing, with café examples, diagrams, exercises and a glossary. Add 31
+  linked concept pages tracing the implementation in Go, Python and TypeScript.
+
+- Add a local Rspress 2.0.23 documentation site over the existing Markdown sources,
+  with search, SVG Mermaid diagrams, context/decision navigation, Markdown exports
+  and documentation checks in the shared verification gate.
+
 - Generate context-specific command, query, event and subscription identifiers;
   register queries directly with their handlers across Go, Python and TypeScript.
 

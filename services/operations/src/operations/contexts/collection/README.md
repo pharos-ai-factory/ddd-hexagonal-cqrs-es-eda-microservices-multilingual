@@ -17,6 +17,7 @@ A pickup verifies its collection code and permits one handover.
 - [Event reactions](application/event_handlers)
 - [Read models](application/read_models)
 - [Application ports](application/ports)
+- [Shared bus port contracts](../../foundation/application.py)
 - [Pickup write repository](adaptors/persistence/pickup_write_repository.py)
 - [Pickup read repository](adaptors/persistence/pickup_read_repository.py)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
@@ -63,6 +64,16 @@ Keep semantic evidence checks and domain-to-publication mappings in its adaptors
 The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
 bytes with the root. [Publication handlers](application/event_handlers) consume those
 facts independently and map them to generated `*IntegrationEvent` DTOs. Their
-publication port commits the subscription receipt, integration bytes and dispatch
+`IntegrationEventBusPort` commits the subscription receipt, integration bytes and dispatch
 together before ACK. A committed root awaiting integration publication is a
 permitted pending state; the original fact supplies its revision and terms.
+
+## Explicit browser publication
+
+Pickup commands explicitly publish through `RealtimeBusPort` after saving.
+`CollectOrder` can also select a recorded business rejection for the browser.
+The executor commits selected bytes with the command outcome; `CommandBusPort`
+continues accepting the durable owner commands requested by event reactions.
+
+The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
+producers; composition binds their read repositories and durable realtime buses.

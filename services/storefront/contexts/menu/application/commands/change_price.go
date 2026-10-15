@@ -15,6 +15,7 @@ type ChangePriceCommand struct {
 
 // ChangePriceCommandHandler applies ChangePrice through one aggregate command transaction.
 type ChangePriceCommandHandler struct {
+	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
 	Repository ports.EditionWriteRepository
 }
 
@@ -32,6 +33,9 @@ func (h ChangePriceCommandHandler) Execute(ctx context.Context, m a.CommandConte
 	}
 	if len(edition.Events()) > 0 {
 		if err = h.Repository.Save(ctx, edition); err != nil {
+			return a.CommandResult{}, err
+		}
+		if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: edition.Snapshot()}); err != nil {
 			return a.CommandResult{}, err
 		}
 	}

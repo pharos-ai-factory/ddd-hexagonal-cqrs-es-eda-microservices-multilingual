@@ -2,7 +2,8 @@
 
 [v1/realtime.proto](v1/realtime.proto) defines
 the shared `Publication` envelope. It imports typed snapshots owned by each
-context, separately from delivered domain and integration events.
+context and a typed `OperationRejected` outcome, separately from delivered domain
+and integration events.
 
 Use this contract when changing the update applied by a browser after a root
 transition. Context ownership follows the HTTP contract:
@@ -28,8 +29,16 @@ The envelope identifies the owning context, kind, root, revision and publication
 The snapshot ID must match the envelope root ID. Channel authorisation comes from
 the API session, not from these payload fields. Each context uses `cafe:<context>`.
 
-Store exact encoded bytes and dispatch intent in the root transaction. Never
-re-read current state later to fabricate a publication for an earlier revision.
+Publish explicitly through the owner's `RealtimeBusPort`. Command handlers stage
+exact bytes and dispatch intent in their root/outcome transaction. Declared domain
+or integration subscribers commit their browser bytes with a receiving receipt.
+A delayed subscriber reads the current owner view and uses that view's actual
+revision. Keep the original source-event revision separate from the snapshot revision.
+
+`OperationRejected` carries command ID, correlation ID, stable code and a safe
+message. Its revision can be zero for a missing root. Display it separately from
+snapshot state; preserve uncertain command recovery through the recorded reply.
+Snapshot publications require a positive revision.
 The relay may deliver duplicates or different roots out of order. Consumers apply
 only a newer revision for the same root. Centrifugo recovery positions belong to
 the whole context stream, not to an individual root.
@@ -39,4 +48,6 @@ the owning service's transport ring. Run `pnpm generate:contracts` after schema
 changes. Do not reuse field numbers; reserve removed fields. A breaking change
 requires a version and explicit client/server transition.
 
-See [CLIENT-SUBSCRIPTIONS.md](../../../CLIENT-SUBSCRIPTIONS.md) for authority, recovery and browser evidence.
+See [the explicit publication recipe](../../../docs/education/concepts/realtime-events.md),
+[decision 0026](../../../docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md)
+and [CLIENT-SUBSCRIPTIONS.md](../../../CLIENT-SUBSCRIPTIONS.md) for authority, recovery and browser evidence.

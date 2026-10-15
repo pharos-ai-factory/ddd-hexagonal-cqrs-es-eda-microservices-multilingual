@@ -7,5 +7,10 @@
     "consumer": "ordering.publish-order-placed",
     "event": "ordering.order-placed.domain",
     "publication": "ordering.order-placed"
+  },
+  {
+    "consumer": "ordering.realtime-order-placed",
+    "event": "ordering.order-placed.domain",
+    "realtime": "order"
   }
 ]

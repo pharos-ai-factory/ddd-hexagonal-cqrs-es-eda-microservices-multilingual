@@ -5,6 +5,10 @@ Status: accepted, 14 October 2026. Refines decisions 0010, 0015 and 0016.
 [Decision 0024](0024-generated-message-identifiers-and-direct-queries.md) extends
 registration to queries and generates command, query, event and subscription identifiers.
 
+Realtime publication and bus naming are refined by [decision 0026](0026-explicit-bus-ports-and-realtime-publication.md).
+Browser messages are explicitly selected; event subscribers commit their output
+with a receiving receipt, and command publications commit with the command outcome.
+
 ## Decision
 
 Feature composition declares the incoming command name or private codec, its

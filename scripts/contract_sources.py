@@ -109,6 +109,18 @@ def catalogue(service: str | None = None, root=ROOT) -> list[dict]:
                 raise ValueError("Subscription names an unknown event: " + sub["event"])
             if event["visibility"] == "domain" and not sub["consumer"].startswith(event["owner"] + "."):
                 raise ValueError("Private subscription crossed its owner")
+            if "realtime" in sub:
+                owner = sub["consumer"].split(".")[0]
+                allowed = {
+                    "menu": {"drink", "edition"},
+                    "ordering": {"order"},
+                    "preparation": {"ticket"},
+                    "collection": {"pickup"},
+                    "loyalty": {"account", "reward"},
+                    "communication": {"notification"},
+                }
+                if "command" in sub or "publication" in sub or sub["realtime"] not in allowed[owner]:
+                    raise ValueError("Invalid realtime subscription")
             if "publication" in sub:
                 outgoing = definitions.get(sub["publication"])
                 if (

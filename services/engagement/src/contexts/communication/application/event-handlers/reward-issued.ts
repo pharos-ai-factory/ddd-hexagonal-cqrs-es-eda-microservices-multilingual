@@ -1,10 +1,10 @@
-import type { DurableCommandPort, Metadata } from '../../../../foundation/application.js';
+import type { CommandBusPort, Metadata } from '../../../../foundation/application.js';
 import type { RewardIssuedIntegrationEvent } from '../../../../contracts/events/generated/loyalty.js';
 import type { RequestNotificationCommand } from '../commands/request-notification.js';
 
 /** Translates a published reward into Communication's durable notification intent. */
 export class RewardIssuedIntegrationEventHandler {
-  constructor(private commands: DurableCommandPort<RequestNotificationCommand>) {}
+  constructor(private commands: CommandBusPort<RequestNotificationCommand>) {}
   handle(m: Metadata, event: RewardIssuedIntegrationEvent) {
     return this.commands.enqueue(m, {
       recipient: event.customerId,

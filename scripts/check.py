@@ -17,6 +17,7 @@ def commands(services, full=False):
     """Yield complete project checks so edits are also checked against their callers."""
     if full:
         yield [sys.executable, "scripts/format.py", "--check", "--all"], ROOT, None
+        yield ["pnpm", "docs:check"], ROOT, None
     for service in services:
         folder = ROOT / "services" / service
         if not full:

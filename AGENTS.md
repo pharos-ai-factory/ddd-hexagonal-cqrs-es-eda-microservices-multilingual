@@ -33,7 +33,7 @@ and a dedicated topology credential.
   invocation transaction; feature code has no transaction callbacks.
   Domain tests, read-only rehydration, projections and migrations have distinct roles.
 - Application handlers never invoke another command handler. Integration and
-  private domain event handlers enqueue owner commands through `DurableCommandPort`.
+  private domain event handlers enqueue owner commands through `CommandBusPort`.
   Persist receiving evidence, exact private command bytes and dispatch intent
   before ACK. The command consumer owns subsequent execution and retries.
 - Delivered domain events and integration events use the same transactional
@@ -41,7 +41,7 @@ and a dedicated topology credential.
   bounded retries, dead-letter and replay mechanisms.
 - Aggregates queue plain `*DomainEvent` facts; saves stage only private events.
   Publication `*DomainEventHandler`s map delivered facts to generated
-  `*IntegrationEvent` DTOs through `DurablePublicationPort`. Commit the subscription
+  `*IntegrationEvent` DTOs through `IntegrationEventBusPort`. Commit the subscription
   receipt, integration bytes and dispatch together, then ACK that queue delivery.
   Keep original source revision/time; causation identifies the private event.
 - Commit one aggregate, receipts, outcome and private event/realtime intent
@@ -116,7 +116,8 @@ and a dedicated topology credential.
   standard names. Plain generated event DTOs remain in service-local contracts.
 - Browser updates use server-authorised Centrifugo subscriptions and the separate
   Protobuf projection contract. No browser polling or client-selected channels.
-- Persist exact realtime bytes atomically with the root transition. Test recovery,
+- Publish realtime explicitly through `RealtimeBusPort`. Command publications commit
+  with the root/outcome; event subscribers commit exact bytes with their receipt. Test recovery,
   stale revisions, independent windows and durable session revocation.
 - Browser features follow business tasks; reusable command recovery/realtime code
   stays under `shared/`. HTTP calls use the generated operation client. Preserve

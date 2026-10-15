@@ -11,7 +11,7 @@ import { pause } from '../../foundation/abortable-delay.js';
 
 import { COMMAND_NAMES, QUERY_NAMES, type CommandName, type QueryName } from '../generated/request-names.js';
 
-import type { Metadata, Outcome } from '../../foundation/application.js';
+import type { Metadata, Outcome, QueryBusPort } from '../../foundation/application.js';
 
 type Handler = (request: Request) => Promise<Record<string, unknown>>;
 
@@ -52,9 +52,10 @@ export class RabbitMQRequestRegistry {
   ) {
     if (!QUERY_NAMES[this.owner]?.includes(name)) throw new Error('Query identifier disagrees with owner');
     if (this.handlers.has(name)) throw new Error('Duplicate request handler: ' + name);
+    const bus: QueryBusPort<Q, R> = { ask: (query) => handler.execute(query) };
     this.handlers.set(name, async (request) => {
       const query = parse(request.body);
-      return reply(query, await handler.execute(query));
+      return reply(query, await bus.ask(query));
     });
   }
   async handle(request: Request): Promise<Buffer> {

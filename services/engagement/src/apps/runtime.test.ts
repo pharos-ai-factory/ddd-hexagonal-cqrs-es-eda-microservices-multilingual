@@ -28,7 +28,7 @@ void test('manifest completeness rejects missing, duplicate and mislabelled cons
       definitions,
       (e) => e.customerId,
       c.collected,
-      (repository) => new CreditCollectionCommandHandler(repository, derivedId),
+      (repository, realtime) => new CreditCollectionCommandHandler(repository, realtime, derivedId),
     );
     assert.equal(completeSubscriptions('loyalty', definitions, pair).length, 2);
     for (const workers of [
@@ -46,7 +46,7 @@ void test('manifest completeness rejects missing, duplicate and mislabelled cons
         [{ ...definitions[0]!, event: 'incorrect' }],
         (e) => e.customerId,
         c.collected,
-        (repository) => new CreditCollectionCommandHandler(repository, derivedId),
+        (repository, realtime) => new CreditCollectionCommandHandler(repository, realtime, derivedId),
       ),
     );
   } finally {
@@ -70,7 +70,7 @@ function incompatibleHandler(container: ReturnType<typeof createLoyaltyContainer
     (e) => e.customerId,
     // @ts-expect-error RewardIssuedIntegrationEvent cannot handle an OrderCollectedIntegrationEvent subscription.
     wrong,
-    (repository) => new CreditCollectionCommandHandler(repository, derivedId),
+    (repository, realtime) => new CreditCollectionCommandHandler(repository, realtime, derivedId),
   );
 }
 void incompatibleHandler;

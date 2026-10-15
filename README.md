@@ -4,6 +4,9 @@ A runnable café for learning tactical DDD, hexagonal architecture, CQRS and
 reliable event-driven workflows. **Three domain microservices, three languages,
 six bounded contexts**, with a separate Go API and a Next.js operator frontend.
 
+Start with the [educational learning path](docs/education/index.md) for explanations,
+café examples, diagrams and exercises covering the architectural concepts.
+
 This project builds on the original
 [Bitloops `ddd-hexagonal-cqrs-es-eda` repository](https://github.com/bitloops/ddd-hexagonal-cqrs-es-eda/)
 and its work explaining these architectural patterns through a runnable example.
@@ -32,6 +35,11 @@ Despite `es` in the repository name, this version uses **current-state
 persistence**, not event-sourced aggregate reconstruction.
 
 ## Run it
+
+Read these guides locally with `pnpm docs:dev` after installing dependencies.
+The documentation site runs at **http://127.0.0.1:3001** and includes search,
+context navigation, architecture decisions and Mermaid diagrams. See
+[the documentation guide](docs/documentation.md) for authoring and build commands.
 
 Prerequisites: Docker with Compose, Python 3.13+, Node.js 24, pnpm 10.34.5 and
 uv 0.12.19. Go 1.27.1 is recommended for local checks; the wrapper can use a

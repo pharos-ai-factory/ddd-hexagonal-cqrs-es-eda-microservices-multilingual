@@ -25,7 +25,7 @@ function handoffProbe(w: W) {
       for (const { m, command } of commands)
         await bindCommand(
           w.noticesTransaction,
-          (repository) => new RequestNotificationCommandHandler(repository),
+          (repository, realtime) => new RequestNotificationCommandHandler(repository, realtime),
         ).execute(m, command);
     },
   };
@@ -50,7 +50,7 @@ async function deliver(w: W) {
     const receipt = await new NotificationDeliveryPreparation(w.notices, w.provider).prepare(command);
     await bindCommand(
       w.noticesTransaction,
-      (repository) => new DeliverNotificationCommandHandler(repository, receipt),
+      (repository, realtime) => new DeliverNotificationCommandHandler(repository, realtime, receipt),
     ).execute(metadata(notification), command);
   } catch (error) {
     w.deliveryError = error;

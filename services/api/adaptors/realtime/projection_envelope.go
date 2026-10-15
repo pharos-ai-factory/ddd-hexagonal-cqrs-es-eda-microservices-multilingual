@@ -40,7 +40,7 @@ func validEnvelope(body []byte, owner, id string) bool {
 			}
 			numbers[field], n = value, consumed
 		default:
-			if field >= 10 && field <= 17 {
+			if field >= 10 && field <= 18 {
 				if kind != protowire.BytesType {
 					return false
 				}
@@ -53,5 +53,5 @@ func validEnvelope(body []byte, owner, id string) bool {
 		}
 		body = body[n:]
 	}
-	return strings[1] == id && strings[3] == owner && strings[4] != "" && strings[5] != "" && numbers[2] == 1 && numbers[6] > 0 && snapshots == 1
+	return strings[1] == id && strings[3] == owner && strings[4] != "" && strings[5] != "" && numbers[2] == 1 && (numbers[6] > 0 || seen[18]) && snapshots == 1
 }

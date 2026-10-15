@@ -2,13 +2,13 @@
 
 from operations.contexts.preparation.domain.preparation_ticket import DrinksReadyDomainEvent
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
-from operations.foundation.application import DurablePublicationPort, Metadata, Outcome
+from operations.foundation.application import IntegrationEventBusPort, Metadata, Outcome
 
 
 class DrinksReadyDomainEventHandler:
     """Translate a committed private fact through the atomic receipt/publication port."""
 
-    def __init__(self, publications: DurablePublicationPort[DrinksReadyIntegrationEvent]) -> None:
+    def __init__(self, publications: IntegrationEventBusPort[DrinksReadyIntegrationEvent]) -> None:
         self.publications = publications
 
     def handle(self, metadata: Metadata, event: DrinksReadyDomainEvent) -> Outcome:

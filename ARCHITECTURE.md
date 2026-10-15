@@ -166,7 +166,7 @@ aggregate operation and never expose a SQL transaction or an arbitrary collectio
 of repositories.
 
 Application handlers never invoke another command handler. An aggregate-changing event reaction
-persists an owner command through `DurableCommandPort`; a separate command consumer
+persists an owner command through `CommandBusPort`; a separate command consumer
 executes it. Projection updates, rehydration, domain tests and migrations retain
 their distinct roles. Decisions 0011 and 0012 define this stricter convention.
 
@@ -184,7 +184,7 @@ Delivered domain and integration events share the delivery infrastructure.
 An aggregate-changing reaction follows two receiving stages:
 
 ```text
-producer command → aggregate + receipts + outcome + private domain/realtime intent → commit
+producer command → aggregate + receipts + outcome + private facts + explicit realtime intent → commit
 private event outbox → mandatory RabbitMQ publication → publisher confirm
 publication subscriber → receipt + integration event bytes + dispatch → commit → private ACK
 integration outbox → mandatory RabbitMQ publication → publisher confirm
@@ -202,7 +202,7 @@ their projection and receipt before ACK without introducing an aggregate command
 Domain facts are plain `*DomainEvent` types queued by their aggregate. Repository
 adaptors stage owner-private delivery values. Dedicated `*DomainEventHandler`
 subscribers map those delivered facts to generated `*IntegrationEvent` DTOs through
-`DurablePublicationPort`. Each handler commits its receipt and integration outbox
+`IntegrationEventBusPort`. Each handler commits its receipt and integration outbox
 entry together before acknowledging its own subscription's RabbitMQ delivery.
 Other subscriptions retain independent deliveries and receipts. A relay publishes
 the integration bytes afterwards and waits for a separate publisher confirm.
@@ -269,9 +269,9 @@ The provider's idempotency receipt protects the crash window after acceptance.
 Current-state persistence is authoritative. Event history provides publication
 and audit evidence; aggregates are not reconstructed from that history.
 
-The Next.js frontend uses Centrifugo with Protobuf browser projections. Context
-transactions also write exact browser projection bytes and a realtime dispatch
-intent atomically. A fenced relay publishes those bytes to Centrifugo. Server-side
+The Next.js frontend uses Centrifugo with Protobuf browser projections. Commands explicitly publish through `RealtimeBusPort`; their transactions commit
+exact bytes with the root/outcome. Declared domain/integration subscribers instead
+commit browser bytes with their own receipt. A saved root can await that publication. A fenced relay publishes those bytes to Centrifugo. Server-side
 subscriptions come from the Go API's session authority; each window reconciles
 from owner queries at initial attachment or a history gap. Recoverable history
 requires no additional business GET. See `CLIENT-SUBSCRIPTIONS.md`.
@@ -333,3 +333,12 @@ context adaptors restore stored authority and map transport arguments. Individua
 event reactions and domain aggregates have business-named files. Browser features
 follow user tasks, with reusable delivery/recovery code in `shared/`.
 See [decision 0014](docs/decisions/0014-context-navigation-and-query-layout.md).
+
+## Explicit bus and browser publication policy
+
+[Decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md)
+names the command, query, domain-event, integration-event and realtime bus ports.
+Each context explicitly selects browser messages in application handlers. Command
+publications commit with their outcome; declared event subscribers commit exact
+bytes with their receipt. Saving state alone produces no realtime publication.
+The owner gateway and Centrifugo continue handling authorised technical delivery.

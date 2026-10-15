@@ -5,6 +5,10 @@ are refined by [0004](0004-runtime-authority-and-queries.md). Clarifies the depl
 0001; API request dispatch is superseded by [0007](0007-api-broker-requests.md). Its aggregate and event-delivery decisions remain in force. Shared specification
 ownership is refined by [0008](0008-published-contract-ownership.md).
 
+Realtime publication and bus naming are refined by [decision 0026](0026-explicit-bus-ports-and-realtime-publication.md).
+Browser messages are explicitly selected; event subscribers commit their output
+with a receiving receipt, and command publications commit with the command outcome.
+
 ## Service boundary
 
 Use three domain microservices with two contexts each: Go Storefront (Menu,

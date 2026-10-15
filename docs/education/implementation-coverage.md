@@ -1,0 +1,85 @@
+# Implementation coverage and gaps
+
+This report distinguishes working implementation from teaching examples. The
+[concept catalogue](concepts/index.md) includes Go, Python and TypeScript snippets
+on every concept page; illustrative snippets are labelled and are not wired into
+the running services.
+
+## Common implemented path
+
+All three services implement command definition and registration, plain handler
+injection, aggregate restoration and mutation, named write/read repositories,
+query handlers, atomic state/outbox persistence, domain-to-integration publication,
+receipts, optimistic concurrency and realtime snapshot delivery. Each concept
+page links directly to the relevant source.
+
+## Gaps in the three-language examples
+
+| Concept                                   | Go                                        | Python                | TypeScript                    | Implication                                                                                                    |
+| ----------------------------------------- | ----------------------------------------- | --------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Aggregate-changing durable event reaction | Missing                                   | Implemented           | Implemented                   | A new Go reaction needs a private command codec, receiving outbox and paired consumers                         |
+| Event-fed consumer projection             | Implemented for Ordering's menu directory | No equivalent example | No equivalent example         | Python and TypeScript currently query owner state directly; a projection needs a specific consumer use case    |
+| Standalone domain service                 | No named example                          | No named example      | No named example              | Current business rules have natural aggregate/value owners; introduce a service for a concrete new domain rule |
+| Named business value-object wrapper       | Money, Quantity and menu terms            | CollectionCode        | No equivalent wrapper example | TypeScript uses validated primitive terms and read-only domain records; its Money example is illustrative      |
+
+### Go: durable command reactions
+
+The current [MenuDirectoryProjectionHandler](../../services/storefront/contexts/ordering/application/projections/menu_published.go)
+records a projection. The [Ordering composition](../../services/storefront/apps/storefront/di/ordering.go)
+registers that projection and private integration publication. It has no equivalent
+of Python's [command outbox](../../services/operations/src/operations/adaptors/persistence/command_outbox.py)
+and [paired AcceptOrder consumers](../../services/operations/src/operations/apps/composition/preparation.py).
+
+This is the main missing Go example if the reference should demonstrate the same
+aggregate-changing reaction pattern in every language. The current Go use cases
+do not require such a reaction. Adding one requires the complete durability and
+compatibility path described in [durable commands](concepts/durable-commands.md),
+plus real broker/database recovery tests.
+
+### Python: event-fed projections
+
+Preparation's [read repository](../../services/operations/src/operations/contexts/preparation/adaptors/persistence/ticket_read_repository.py)
+maps current ticket authority to a view. Its [OrderPlaced handler](../../services/operations/src/operations/contexts/preparation/application/event_handlers/order_placed.py)
+enqueues a command that creates the ticket. Neither is an independent event-fed
+query projection equivalent to Ordering's menu directory.
+
+The illustrative Python [projection example](concepts/projections.md) shows the
+application shape. A real implementation also needs a consumer-owned contract,
+receipt and projection transaction, subscription registration, ordering/freshness
+rules and recovery tests. Engagement has the same teaching-coverage gap.
+
+### Domain services and value objects
+
+The [domain service page](concepts/domain-services.md) links the existing aggregate
+rules in all three languages and shows a possible separate policy as a teaching
+example. Its absence reflects the current business model. Adding a class solely
+to fill a diagram would add no business behaviour.
+
+Go's [Money](../../services/storefront/foundation/domain/domain.go) and Python's
+[CollectionCode](../../services/operations/src/operations/contexts/collection/domain/pickup.py)
+provide concrete value-object implementations. TypeScript's
+[Reward](../../services/engagement/src/contexts/loyalty/domain/reward.ts) validates
+plain terms. A read-only Grant with an identity is not automatically a value object.
+
+## Deliberately outside the running reference
+
+Event-sourced aggregate reconstruction and compensating payment/cancellation
+sagas are absent in all three languages. The current implementation uses saved
+aggregate state and durable forward workflows. The [event sourcing](event-sourcing.md)
+and [modelling](modelling-and-boundaries.md) guides explain those concepts and
+label hypothetical extensions. Production deployment is also outside the
+development-only scope.
+
+## Explicit buses and realtime publication
+
+All three application foundations define `CommandBusPort`, `QueryBusPort`,
+`DomainEventBusPort`, `IntegrationEventBusPort` and `RealtimeBusPort`. Query registries
+use typed query dispatch; aggregate fact recording uses the private domain bus.
+Existing Python/TypeScript durable command adaptors implement the renamed command
+port. The Go aggregate-changing private-command example remains the gap listed above.
+
+Explicit command publication, scoped buffers, event-subscriber realtime outboxes
+and typed rejection publication are implemented in all three languages. Ordering
+and Preparation demonstrate domain-to-realtime subscribers. Loyalty demonstrates
+an explicitly declared integration-to-realtime subscriber. The
+[realtime recipe](concepts/realtime-events.md) links the source and tests.

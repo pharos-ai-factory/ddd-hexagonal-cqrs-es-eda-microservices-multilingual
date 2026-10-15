@@ -8,5 +8,5 @@ import (
 )
 
 func snapshotDecisions[S any](db *ContextDatabase, kind string) s.SnapshotDecisionFixture[S] {
-	return s.SnapshotDecisionFixture[S]{Transaction: NewAggregateTransaction[S, S](db, kind, func(repo a.WriteRepository[S]) a.WriteRepository[S] { return repo })}
+	return s.SnapshotDecisionFixture[S]{Realtime: db.realtime != nil, Transaction: NewAggregateTransaction[S, S](db, kind, func(repo a.WriteRepository[S]) a.WriteRepository[S] { return repo })}
 }

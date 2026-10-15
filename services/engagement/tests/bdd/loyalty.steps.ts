@@ -19,7 +19,7 @@ async function credit(w: W, count: number) {
     const orderId = derivedId('scenario-order', String(++w.credits));
     await bindCommand(
       w.accountsTransaction,
-      (repository) => new CreditCollectionCommandHandler(repository, derivedId),
+      (repository, realtime) => new CreditCollectionCommandHandler(repository, realtime, derivedId),
     ).execute(metadata(customer), { orderId, customerId: customer });
     w.accounts.succeeded();
     w.earned.push(...w.accounts.publications);
@@ -44,7 +44,7 @@ async function redeem(w: W, instant: string) {
   assert.ok(w.rewards.loaded);
   await bindCommand(
     w.rewardsTransaction,
-    (repository) => new RedeemRewardCommandHandler(repository, () => w.now),
+    (repository, realtime) => new RedeemRewardCommandHandler(repository, realtime, () => w.now),
   ).execute(metadata(w.rewards.loaded.state.id), { orderId: selectedOrder });
 }
 

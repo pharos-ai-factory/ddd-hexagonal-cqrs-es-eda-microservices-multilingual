@@ -171,7 +171,7 @@ export function communicationSubscriptions(c: CommunicationDependencies) {
       definitions,
       (event) => derivedId('pickup-notice', event.pickupId),
       c.pickup,
-      (repository) => new RequestNotificationCommandHandler(repository),
+      (repository, realtime) => new RequestNotificationCommandHandler(repository, realtime),
       (m, command) => ({ ...m, input: command }),
     ),
     ...c.commands.subscription(
@@ -180,7 +180,7 @@ export function communicationSubscriptions(c: CommunicationDependencies) {
       definitions,
       (event) => derivedId('reward-notice', event.rewardId),
       c.reward,
-      (repository) => new RequestNotificationCommandHandler(repository),
+      (repository, realtime) => new RequestNotificationCommandHandler(repository, realtime),
       (m, command) => ({ ...m, input: command }),
     ),
     ...c.commands.preparedSubscription(
@@ -190,7 +190,7 @@ export function communicationSubscriptions(c: CommunicationDependencies) {
       (event) => event.notificationId,
       c.requested,
       (command) => preparation.prepare(command),
-      (repository, receipt) => new DeliverNotificationCommandHandler(repository, receipt),
+      (repository, receipt, realtime) => new DeliverNotificationCommandHandler(repository, realtime, receipt),
     ),
   ]);
 }

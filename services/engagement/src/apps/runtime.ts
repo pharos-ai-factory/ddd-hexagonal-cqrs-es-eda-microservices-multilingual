@@ -16,7 +16,13 @@ import type { EventSubscription } from '../adaptors/messaging/rabbitmq-consumer.
 export function commandSubscription<K extends EventName & keyof EventPayloads, C extends object>(
   event: K,
   codec: InternalCommandCodec<C>,
-  definitions: readonly { consumer: string; event: string; command?: string; publication?: string }[],
+  definitions: readonly {
+    consumer: string;
+    event: string;
+    command?: string;
+    publication?: string;
+    realtime?: string;
+  }[],
   target: (event: EventPayloads[K]) => string,
   eventHandler: { handle: (m: Metadata, event: NoInfer<EventPayloads[K]>) => Promise<Outcome> },
   commandHandler: { execute: (m: Metadata, command: NoInfer<C>) => Promise<Outcome> },
@@ -25,8 +31,9 @@ export function commandSubscription<K extends EventName & keyof EventPayloads, C
   if (
     !definition ||
     definition.publication ||
+    definition.realtime ||
     definition.command !== codec.command ||
-    definition.event !== event
+    definition.event !== String(event)
   )
     throw new Error('Subscription manifest disagrees with command binding');
   const shared = {
@@ -56,13 +63,19 @@ export type ContextRuntime = {
 /** Reject missing, duplicate, foreign and mismatched bindings before starting workers. */
 export function completeSubscriptions(
   owner: string,
-  definitions: readonly { consumer: string; event: string; command?: string; publication?: string }[],
+  definitions: readonly {
+    consumer: string;
+    event: string;
+    command?: string;
+    publication?: string;
+    realtime?: string;
+  }[],
   workers: EventSubscription[],
 ): EventSubscription[] {
   const expected = new Set(definitions.map((d) => d.consumer));
   if (expected.size !== definitions.length) throw Error('Duplicate subscription declaration');
   for (const definition of definitions) {
-    if (Boolean(definition.command) === Boolean(definition.publication))
+    if ([definition.command, definition.publication, definition.realtime].filter(Boolean).length !== 1)
       throw Error('Subscription requires exactly one reaction mode');
     const actual = workers.filter((w) => w.consumer === definition.consumer);
     if (
@@ -82,18 +95,60 @@ export function publicationSubscription<K extends EventName & keyof EventPayload
   consumer: SubscriptionName,
   event: K,
   publication: IntegrationEventName,
-  definitions: readonly { consumer: string; event: string; command?: string; publication?: string }[],
+  definitions: readonly {
+    consumer: string;
+    event: string;
+    command?: string;
+    publication?: string;
+    realtime?: string;
+  }[],
   handler: { handle(m: Metadata, event: NoInfer<EventPayloads[K]>): Promise<Outcome> },
 ): EventSubscription {
   const definition = definitions.find((d) => d.consumer === String(consumer));
   if (
     !definition ||
     definition.command ||
-    definition.event !== event ||
+    definition.realtime ||
+    definition.event !== String(event) ||
     definition.publication !== publication ||
     !consumer.startsWith(owner + '.')
   )
     throw new Error('Subscription manifest disagrees with publication binding');
+  return {
+    owner,
+    consumer,
+    event,
+    sourceTarget: true,
+    target: () => '',
+    handle: (m, value) => handler.handle(m, value as EventPayloads[K]),
+  };
+}
+
+/** Bind a declared domain or integration reaction to browser publication. */
+export function realtimeSubscription<K extends EventName & keyof EventPayloads>(
+  owner: string,
+  consumer: SubscriptionName,
+  event: K,
+  kind: string,
+  definitions: readonly {
+    consumer: string;
+    event: string;
+    command?: string;
+    publication?: string;
+    realtime?: string;
+  }[],
+  handler: { handle(m: Metadata, event: NoInfer<EventPayloads[K]>): Promise<Outcome> },
+): EventSubscription {
+  const definition = definitions.find((d) => d.consumer === String(consumer));
+  if (
+    !definition ||
+    definition.command ||
+    definition.publication ||
+    definition.event !== String(event) ||
+    definition.realtime !== kind ||
+    !consumer.startsWith(owner + '.')
+  )
+    throw new Error('Subscription manifest disagrees with realtime binding');
   return {
     owner,
     consumer,

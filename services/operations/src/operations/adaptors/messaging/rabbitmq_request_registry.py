@@ -19,7 +19,7 @@ from operations.adaptors.messaging.request_envelope import (
     validate,
 )
 from operations.adaptors.persistence.command_reply_outbox import ReplyIntent, current
-from operations.foundation.application import Metadata, Outcome
+from operations.foundation.application import Metadata, Outcome, QueryBusPort
 from operations.adaptors.generated.request_names import CommandName, QueryName, COMMAND_TYPES, QUERY_TYPES
 
 
@@ -86,9 +86,11 @@ class RabbitMQRequestRegistry:
         if name in self.handlers:
             raise ValueError("Duplicate request handler: " + name)
 
+        bus: QueryBusPort[Q, R] = HandlerQueryBus(execute)
+
         def handle(request: Request, body: Message) -> Reply:
             query = parse(body)
-            return reply(query, execute(query))
+            return reply(query, bus.ask(query))
 
         self.handlers[name] = handle
 
@@ -187,3 +189,13 @@ class RabbitMQRequestRegistry:
             except Exception as error:
                 failure(self.owner, "requests.reconnect", error)
                 stop.wait(1)
+
+
+class HandlerQueryBus[Q, R]:
+    """Route the application query after its owner parser has checked the wire payload."""
+
+    def __init__(self, execute: Callable[[Q], R]) -> None:
+        self._execute = execute
+
+    def ask(self, query: Q) -> R:
+        return self._execute(query)

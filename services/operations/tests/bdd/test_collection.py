@@ -59,7 +59,7 @@ def open_pickup(probe: CollectionProbe, metadata: Metadata) -> None:
     DrinksReadyIntegrationEventHandler(QueueProbe()).handle(metadata, probe.incoming())
     CommandExecutor(
         probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications),
-        lambda repository: OpenPickupCommandHandler(repository, derived_id),
+        lambda repository, realtime: OpenPickupCommandHandler(repository, realtime, derived_id),
     ).execute(metadata, commands[0])
 
 
@@ -73,7 +73,7 @@ def opened(probe: CollectionProbe, metadata: Metadata) -> None:
 def collect(probe: CollectionProbe, metadata: Metadata) -> None:
     CommandExecutor(
         probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications),
-        lambda repository: CollectOrderCommandHandler(repository),
+        lambda repository, realtime: CollectOrderCommandHandler(repository, realtime),
     ).execute(metadata, {"code": probe.current()["code"]})
 
 
@@ -89,7 +89,7 @@ def wrong_code(probe: CollectionProbe, metadata: Metadata) -> None:
     assert probe.current()["code"] != "WRONG1"
     CommandExecutor(
         probe.transaction(Pickup.restore, Pickup.snapshot, pickup_publications),
-        lambda repository: CollectOrderCommandHandler(repository),
+        lambda repository, realtime: CollectOrderCommandHandler(repository, realtime),
     ).execute(metadata, {"code": "WRONG1"})
 
 

@@ -78,13 +78,41 @@ class QueryPort[S](Protocol):
     def list(self) -> list[Loaded[S]]: ...
 
 
-class DurableCommandPort[C](Protocol):
+class CommandBusPort[C](Protocol):
     """Commit a receiving receipt and outgoing command before returning acceptance."""
 
     def enqueue(self, metadata: Metadata, command: C) -> Outcome: ...
 
 
-class DurablePublicationPort[P](Protocol):
+class IntegrationEventBusPort[P](Protocol):
     """Commit this subscription's receipt and exact outgoing integration event together."""
 
     def publish(self, metadata: Metadata, event: P) -> Outcome: ...
+
+
+class QueryBusPort[Q, R](Protocol):
+    """Dispatch a typed query to one registered handler and return its result."""
+
+    def ask(self, query: Q) -> R: ...
+
+
+class DomainEventBusPort[E](Protocol):
+    """Stage private domain facts inside their owning transaction."""
+
+    def publish(self, event: E) -> None: ...
+
+
+class RealtimeBusPort[E](Protocol):
+    """Explicitly stage a browser message; the surrounding transaction commits it."""
+
+    def publish(self, event: E) -> None: ...
+
+
+@dataclass(frozen=True)
+class RealtimeEvent:
+    """Select a snapshot or committed rejection; owner infrastructure supplies its envelope."""
+
+    source: Metadata | None = None
+    revision: int = 0
+    snapshot: Mapping[str, object] | None = None
+    rejection: RejectionDetail | None = None

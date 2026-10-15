@@ -9,7 +9,7 @@ import (
 // BindProjection reads an immutable owner projection before opening the write transaction.
 // This avoids taking a second pooled connection while holding the aggregate lock.
 func BindProjection[A, C, S any, H FeatureHandler[C]](transaction Transaction[A], source a.ProjectionPort[S], key func(C) string,
-	factory func(a.WriteRepository[A], a.ProjectionPort[S]) H) Executor[C] {
+	factory func(a.WriteRepository[A], a.ProjectionPort[S], a.RealtimeBusPort[a.RealtimeEvent]) H) Executor[C] {
 	return Executor[C]{run: func(ctx context.Context, m a.Metadata, c C) (a.Outcome, error) {
 		identity := key(c)
 		value, found, err := source.Find(ctx, identity)
@@ -17,7 +17,9 @@ func BindProjection[A, C, S any, H FeatureHandler[C]](transaction Transaction[A]
 			return a.Outcome{}, err
 		}
 		projection := preparedProjection[S]{identity, value, found}
-		return Bind(transaction, func(repository a.WriteRepository[A]) H { return factory(repository, projection) }).Execute(ctx, m, c)
+		return Bind(transaction, func(repository a.WriteRepository[A], realtime a.RealtimeBusPort[a.RealtimeEvent]) H {
+			return factory(repository, projection, realtime)
+		}).Execute(ctx, m, c)
 	}}
 }
 

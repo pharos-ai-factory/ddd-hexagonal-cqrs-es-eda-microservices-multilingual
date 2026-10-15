@@ -17,6 +17,7 @@ A menu edition owns its offers; every offer pins a published drink revision.
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
 - [Application ports](application/ports)
+- [Shared bus port contracts](../../foundation/application/buses.go)
 - [Drink write repository](adaptors/persistence/postgres/drink_write_repository.go)
 - [Drink read repository](adaptors/persistence/postgres/drink_read_repository.go)
 - [Edition read repository](adaptors/persistence/postgres/edition_read_repository.go)
@@ -65,6 +66,15 @@ Keep semantic evidence checks and domain-to-publication mappings in its adaptors
 The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
 bytes with the root. [Publication handlers](application/eventhandlers) consume those
 facts independently and map them to generated `*IntegrationEvent` DTOs. Their
-publication port commits the subscription receipt, integration bytes and dispatch
+`IntegrationEventBusPort` commits the subscription receipt, integration bytes and dispatch
 together before ACK. A committed root awaiting integration publication is a
 permitted pending state; the original fact supplies its revision and terms.
+
+## Explicit browser publication
+
+Menu command handlers explicitly publish drink and edition snapshots through
+`RealtimeBusPort` after saving. The executor commits those selected bytes with the
+root. Menu integration publication remains an independent domain subscription.
+
+The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
+producers; composition binds their read repositories and durable realtime buses.

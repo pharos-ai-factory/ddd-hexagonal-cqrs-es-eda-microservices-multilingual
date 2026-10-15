@@ -11,6 +11,11 @@ language lint rules and architectural boundaries. It runs without live services.
 files. Shared contracts, configuration and tooling select all consumers.
 Independent checks continue after a failure and the command exits unsuccessfully.
 
+The complete gate also runs `pnpm docs:check`: documentation tooling types, lint,
+source-link regression checks and the Rspress build. This checks the site in pull
+requests through the existing `pnpm verify` job. See
+[decision 0025](0025-repository-documentation-site.md).
+
 `pnpm verify` starts with this same gate, followed by generated drift,
 compatibility, negative fixtures and native/race/Gherkin tests. CI invokes
 `pnpm verify`. Real transaction, delivery and browser evidence remains in

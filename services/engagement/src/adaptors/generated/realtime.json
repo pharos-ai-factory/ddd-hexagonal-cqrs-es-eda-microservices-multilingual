@@ -129,7 +129,8 @@
                       "oneof": [
                         "account",
                         "reward",
-                        "notification"
+                        "notification",
+                        "operationRejected"
                       ]
                     }
                   },
@@ -173,6 +174,11 @@
                     "notification": {
                       "type": ".cafe.realtime.v1.Notification",
                       "id": 17
+                    },
+                    "operationRejected": {
+                      "type": ".cafe.realtime.v1.OperationRejected",
+                      "id": 18,
+                      "protoName": "operation_rejected"
                     }
                   },
                   "reserved": [
@@ -202,6 +208,28 @@
                     "ticket",
                     "pickup"
                   ]
+                },
+                "OperationRejected": {
+                  "fields": {
+                    "commandId": {
+                      "type": "string",
+                      "id": 1,
+                      "protoName": "command_id"
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "id": 2,
+                      "protoName": "correlation_id"
+                    },
+                    "code": {
+                      "type": "string",
+                      "id": 3
+                    },
+                    "message": {
+                      "type": "string",
+                      "id": 4
+                    }
+                  }
                 }
               }
             }

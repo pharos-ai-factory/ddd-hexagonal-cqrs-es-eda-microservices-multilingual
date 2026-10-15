@@ -4,7 +4,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 from operations.adaptors.generated.private_event_registry import PRIVATE_CODECS
-from operations.foundation.application import Loaded, Metadata, Outcome, Publication
+from operations.foundation.application import (
+    Loaded,
+    Metadata,
+    Outcome,
+    Publication,
+    RealtimeBusPort,
+    RealtimeEvent,
+    DomainEventBusPort,
+)
+from operations.foundation.domain import Rejection, RejectionDetail
+from operations.adaptors.realtime.publication_buffer import RealtimeBuffer
 from operations.foundation.write_repository import CommandContext, CommandResult, WriteRepository
 
 
@@ -14,6 +24,8 @@ class TransactionResult:
 
     status: str
     publications: tuple[Publication, ...] = ()
+    realtime: tuple[RealtimeEvent, ...] = ()
+    rejection: RejectionDetail | None = None
 
 
 class AggregateTransaction[A](Protocol):
@@ -36,15 +48,20 @@ class CommandExecutor[A, C]:
     def __init__(
         self,
         transaction: AggregateTransaction[A],
-        handler: Callable[[WriteRepository[A]], FeatureCommandHandler[C]],
+        handler: Callable[[WriteRepository[A], RealtimeBusPort[RealtimeEvent]], FeatureCommandHandler[C]],
     ) -> None:
         self._transaction, self._handler = transaction, handler
 
     def execute(self, metadata: Metadata, command: C) -> Outcome:
         def work(repository: WriteRepository[A]) -> TransactionResult:
-            return TransactionResult(
-                self._handler(repository).execute(CommandContext(metadata.target), command).status
-            )
+            bus = RealtimeBuffer()
+            try:
+                result = self._handler(repository, bus).execute(CommandContext(metadata.target), command)
+                return TransactionResult(result.status, realtime=tuple(bus.events))
+            except Rejection as rejection:
+                return TransactionResult("", realtime=tuple(bus.events), rejection=rejection.outcome())
+            finally:
+                bus.close()
 
         return self._transaction.execute(metadata, work)
 
@@ -63,7 +80,14 @@ class EventRecordingWriteRepository[A]:
 
     def save(self, aggregate: A) -> None:
         publications = self._map(aggregate)
-        if any(p.name not in PRIVATE_CODECS for p in publications):
-            raise ValueError("Aggregate saves may stage only private domain events")
+        self.publications = ()
+        bus: DomainEventBusPort[Publication] = self
+        for publication in publications:
+            bus.publish(publication)
         self._source.save(aggregate)
-        self.publications = publications
+
+    def publish(self, event: Publication) -> None:
+        """Stage one owner-private fact for the transaction."""
+        if event.name not in PRIVATE_CODECS:
+            raise ValueError("Aggregate saves may stage only private domain events")
+        self.publications += (event,)

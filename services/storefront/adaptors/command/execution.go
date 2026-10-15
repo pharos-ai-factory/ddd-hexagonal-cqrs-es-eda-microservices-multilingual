@@ -11,6 +11,7 @@ import (
 type Result struct {
 	Status       string
 	Publications []a.Publication
+	Realtime     []a.RealtimeEvent
 }
 
 // Transaction coordinates one aggregate in one context database.
@@ -37,18 +38,20 @@ func (e Executor[C]) Execute(ctx context.Context, m a.Metadata, c C) (a.Outcome,
 
 type executor[A, C any, H FeatureHandler[C]] struct {
 	transaction Transaction[A]
-	factory     func(a.WriteRepository[A]) H
+	factory     func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeEvent]) H
 }
 
 // Bind constructs a fresh handler with its invocation's repository inside the transaction.
-func Bind[A, C any, H FeatureHandler[C]](transaction Transaction[A], factory func(a.WriteRepository[A]) H) Executor[C] {
+func Bind[A, C any, H FeatureHandler[C]](transaction Transaction[A], factory func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeEvent]) H) Executor[C] {
 	bound := &executor[A, C, H]{transaction, factory}
 	return Executor[C]{run: bound.Execute}
 }
 func (e *executor[A, C, H]) Execute(ctx context.Context, m a.Metadata, c C) (a.Outcome, error) {
 	return e.transaction.Execute(ctx, m, func(repository a.WriteRepository[A]) (Result, error) {
-		result, err := e.factory(repository).Execute(ctx, a.CommandContext{Target: m.AggregateID}, c)
-		return Result{Status: result.Status}, err
+		bus := &RealtimeBuffer{active: true}
+		defer bus.Close()
+		result, err := e.factory(repository, bus).Execute(ctx, a.CommandContext{Target: m.AggregateID}, c)
+		return Result{Status: result.Status, Realtime: bus.Events}, err
 	})
 }
 
@@ -67,14 +70,24 @@ func (r *EventRecordingRepository[A]) Save(ctx context.Context, aggregate A) err
 	if r.Map != nil {
 		publications = r.Map(aggregate)
 	}
+	r.Publications = nil
+	var bus a.DomainEventBusPort[a.Publication] = r
 	for _, publication := range publications {
-		if publication.Visibility != a.Private {
-			return fmt.Errorf("aggregate saves may stage only private domain events")
+		if err := bus.Publish(ctx, publication); err != nil {
+			return err
 		}
 	}
 	if err := r.Source.Save(ctx, aggregate); err != nil {
 		return err
 	}
-	r.Publications = publications
+	return nil
+}
+
+// Publish stages a private fact for the transaction; public contracts require their own subscriber.
+func (r *EventRecordingRepository[A]) Publish(_ context.Context, publication a.Publication) error {
+	if publication.Visibility != a.Private {
+		return fmt.Errorf("aggregate saves may stage only private domain events")
+	}
+	r.Publications = append(r.Publications, publication)
 	return nil
 }

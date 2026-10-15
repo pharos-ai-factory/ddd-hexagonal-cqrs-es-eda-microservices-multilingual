@@ -47,9 +47,10 @@ not query business state or create browser polling.
 
 ## Atomic publication
 
-A changed root, its version, command outcome/receipts, private domain-event outbox
-and **exact Protobuf browser snapshot bytes** commit in the same PostgreSQL
-transaction. The browser contract is `contracts/shared/realtime/v1/realtime.proto`.
+A command explicitly publishing through `RealtimeBusPort` commits its root,
+version, outcome/receipts, private facts and **exact Protobuf browser bytes** together.
+A save alone produces no browser message. Declared domain/integration event handlers
+commit their receiving receipt and outgoing browser bytes in a separate transaction. The browser contract is `contracts/shared/realtime/v1/realtime.proto`.
 It is separate from the broker's domain/integration envelope.
 
 Immutable `realtime_publications` and mutable `realtime_dispatches` are separate.
@@ -66,8 +67,11 @@ be sent again; the browser's revision guard independently makes duplicates safe.
 Each publication carries an event ID, contract version, owning context, aggregate
 kind/ID, monotonic root revision and one explicit typed snapshot. The decoder
 checks the channel, context, kind, identity and revision before applying it.
-This demonstration publishes snapshots directly from authoritative root state;
-it does not expose private domain event payloads as browser messages.
+Context handlers publish authoritative snapshots. A delayed event handler reads
+an owner view and uses that view's actual revision. `OperationRejected` messages carry
+command/correlation identity and a stable rejection independently of snapshot ordering.
+They may carry revision zero when the root is absent. The frontend displays them
+without changing aggregate state or clearing uncertain command attempts.
 
 ## Revisions, history and reconciliation
 
@@ -143,5 +147,8 @@ tests check mapping/reconciliation; the full integration lane verifies independe
 windows, uncertain-command recovery and in-flight session revocation.
 
 Integration publication has its own private subscriber receipt/outbox transaction.
-The root's realtime update may arrive while integration publication remains pending;
-browser revisions continue to describe the committed root. See decision 0019.
+Ordering and Preparation have separate domain-to-realtime subscriptions; Loyalty
+explicitly subscribes to `RewardIssued` integration events for its issuance update.
+Other commands publish selected updates within their transaction. These paths have
+different delivery timing and share revision-aware recovery. See
+[decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md).

@@ -3,6 +3,7 @@
 import re
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 from contract_sources import ROOT, PRIVATE, catalogue, sources
 from request_contracts import OWNED, envelopes
 
@@ -35,6 +36,23 @@ class ContractSourcesTests(unittest.TestCase):
                 list(sources(owner + "_private").values()), [ROOT / directory / "private_messages.proto"]
             )
             self.assertFalse(Path(directory).is_relative_to(Path("contracts")))
+
+    def test_realtime_subscriptions_require_an_owned_resource_and_single_mode(self):
+        valid = {
+            "consumer": "ordering.realtime-order-placed",
+            "event": "ordering.order-placed.domain",
+            "realtime": "order",
+        }
+        with patch("contract_sources.subscriptions", return_value=[valid]):
+            self.assertEqual(len(catalogue("topology")), 1)
+        for change in (
+            {"realtime": "ticket"},
+            {"command": "placeOrder"},
+            {"publication": "ordering.order-placed"},
+        ):
+            with patch("contract_sources.subscriptions", return_value=[{**valid, **change}]):
+                with self.assertRaisesRegex(ValueError, "Invalid realtime"):
+                    catalogue("topology")
 
     def test_request_packages_are_owned_and_independently_importable(self):
         self.assertFalse((ROOT / "contracts/shared/messaging/v1/requests.proto").exists())

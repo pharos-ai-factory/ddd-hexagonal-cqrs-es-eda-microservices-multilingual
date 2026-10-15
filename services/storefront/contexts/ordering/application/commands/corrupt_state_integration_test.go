@@ -75,7 +75,7 @@ func TestStoredOrderPriceMustBeExplicit(t *testing.T) {
 			m := a.Metadata{ID: pg.NewID(), AggregateID: id, Name: "ordering.PlaceOrder",
 				ExpectedVersion: a.Expected(1), CorrelationID: pg.NewID(), Input: struct{}{},
 				Consumer: "ordering.test-corrupt-price", SourceEventID: pg.NewID(), SourceHash: "fixture"}
-			handler := execution.Bind(orderpg.NewOrderTransaction(db), func(repository orderingports.OrderWriteRepository) orderingcommands.PlaceOrderCommandHandler {
+			handler := execution.Bind(orderpg.NewOrderTransaction(db), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
 				return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 			})
 			outcome, failure := handler.Execute(t.Context(), m, struct{}{})
@@ -155,8 +155,12 @@ func orderEvidence(t *testing.T, admin *pgxpool.Pool, m a.Metadata, want int) {
 		if err := admin.QueryRow(t.Context(), query, m.AggregateID).Scan(&count); err != nil {
 			t.Fatal(err)
 		}
-		if count != want {
-			t.Errorf("%s: want %d, got %d", name, want, count)
+		expected := want
+		if name == "browser publications" {
+			expected = 0
+		} // Placement's declared subscriber publishes later.
+		if count != expected {
+			t.Errorf("%s: want %d, got %d", name, expected, count)
 		}
 	}
 	var consumers int

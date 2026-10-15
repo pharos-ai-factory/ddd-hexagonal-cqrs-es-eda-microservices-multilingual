@@ -17,6 +17,7 @@ An order owns its lines and enforces the five-drink limit.
 - [Projection handlers](application/projections)
 - [Read models](application/readmodels)
 - [Application ports](application/ports)
+- [Shared bus port contracts](../../foundation/application/buses.go)
 - [Order write repository](adaptors/persistence/postgres/order_write_repository.go)
 - [Order read repository](adaptors/persistence/postgres/order_read_repository.go)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
@@ -64,6 +65,18 @@ Keep semantic evidence checks and domain-to-publication mappings in its adaptors
 The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
 bytes with the root. [Publication handlers](application/eventhandlers) consume those
 facts independently and map them to generated `*IntegrationEvent` DTOs. Their
-publication port commits the subscription receipt, integration bytes and dispatch
+`IntegrationEventBusPort` commits the subscription receipt, integration bytes and dispatch
 together before ACK. A committed root awaiting integration publication is a
 permitted pending state; the original fact supplies its revision and terms.
+
+## Explicit browser publication
+
+`PlaceOrder` stages its private fact. The declared
+[OrderPlaced realtime domain handler](application/eventhandlers/realtime_order_placed.go)
+reads the current order view and publishes its actual revision through `RealtimeBusPort`.
+A placed order awaiting browser publication is a permitted pending state. Other
+order commands explicitly stage snapshots; quantity changes can also publish a
+recorded business rejection.
+
+The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
+producers; composition binds their read repositories and durable realtime buses.

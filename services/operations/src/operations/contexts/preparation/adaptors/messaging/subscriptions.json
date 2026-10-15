@@ -8,5 +8,10 @@
     "consumer": "preparation.publish-drinks-ready",
     "event": "preparation.drinks-ready.domain",
     "publication": "preparation.drinks-ready"
+  },
+  {
+    "consumer": "preparation.realtime-drinks-ready",
+    "event": "preparation.drinks-ready.domain",
+    "realtime": "ticket"
   }
 ]

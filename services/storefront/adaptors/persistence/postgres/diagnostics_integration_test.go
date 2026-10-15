@@ -36,7 +36,9 @@ func TestDiagnosticsReportsDurableBacklogAndUnavailableAuthority(t *testing.T) {
 	t.Cleanup(owner.Close)
 	id := NewID()
 	clean(t, owner, id)
-	if err := db.EnableRealtime(t.Context(), func(_, _, _, _ string, _ uint64, state []byte) ([]byte, error) { return state, nil }); err != nil {
+	if err := db.EnableRealtime(t.Context(), func(_, _, _, _ string, _ uint64, event a.RealtimeEvent) ([]byte, error) {
+		return json.Marshal(event.Snapshot)
+	}); err != nil {
 		t.Fatal(err)
 	}
 	before, err := db.Diagnostics(t.Context())

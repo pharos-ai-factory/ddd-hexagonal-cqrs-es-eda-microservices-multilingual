@@ -2,13 +2,13 @@
 
 from operations.contexts.collection.domain.pickup import PickupOpenedDomainEvent
 from operations.contracts.events.generated.collection import PickupOpenedIntegrationEvent
-from operations.foundation.application import DurablePublicationPort, Metadata, Outcome
+from operations.foundation.application import IntegrationEventBusPort, Metadata, Outcome
 
 
 class PickupOpenedDomainEventHandler:
     """Translate a committed private fact through the atomic receipt/publication port."""
 
-    def __init__(self, publications: DurablePublicationPort[PickupOpenedIntegrationEvent]) -> None:
+    def __init__(self, publications: IntegrationEventBusPort[PickupOpenedIntegrationEvent]) -> None:
         self.publications = publications
 
     def handle(self, metadata: Metadata, event: PickupOpenedDomainEvent) -> Outcome:

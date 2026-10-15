@@ -78,7 +78,7 @@ void test('local command transaction bounds repository identity and lifetime and
       (SELECT count(*) FROM cafe.realtime_publications WHERE aggregate_id=$1) AS publications`,
       [id],
     );
-    assert.deepEqual(counts, { receipts: '2', publications: '1' });
+    assert.deepEqual(counts, { receipts: '2', publications: '0' });
   } finally {
     await db.pool.end();
   }

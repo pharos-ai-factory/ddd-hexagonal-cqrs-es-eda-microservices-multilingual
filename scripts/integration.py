@@ -65,6 +65,7 @@ def execute(env_file, keep=False):
                 "-q",
                 "services/operations/tests/persistence_integration.py",
                 "services/operations/tests/command_transaction_integration.py",
+                "services/operations/tests/realtime_bus_integration.py",
                 "services/operations/tests/delivery_integration.py",
                 "services/operations/tests/identity_integration.py",
                 "services/operations/tests/internal_commands_integration.py",
@@ -83,6 +84,7 @@ def execute(env_file, keep=False):
                 "--test",
                 "src/adaptors/persistence/postgres-database.integration.ts",
                 "src/adaptors/persistence/command-transaction.integration.ts",
+                "src/adaptors/persistence/realtime-bus.integration.ts",
                 "src/adaptors/messaging/rabbitmq-consumer.integration.ts",
                 "src/adaptors/persistence/corrupt-receipts.integration.ts",
                 "src/adaptors/persistence/command-outbox.integration.ts",
@@ -106,7 +108,7 @@ def execute(env_file, keep=False):
                 "-v",
                 "ON_ERROR_STOP=1",
                 "-c",
-                "TRUNCATE cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections,cafe.command_replies"
+                "TRUNCATE cafe.realtime_publications,cafe.aggregates,cafe.command_receipts,cafe.consumer_receipts,cafe.projections,cafe.command_replies"
                 + (
                     ",cafe.internal_commands"
                     if owner in ("preparation", "collection", "loyalty", "communication")

@@ -10,7 +10,7 @@ import (
 
 // OrderPlacedDomainEventHandler publishes the integration contract through an atomic receipt/outbox port.
 type OrderPlacedDomainEventHandler struct {
-	Publications a.DurablePublicationPort[model.OrderPlacedIntegrationEvent]
+	Publications a.IntegrationEventBusPort[model.OrderPlacedIntegrationEvent]
 }
 
 func (h OrderPlacedDomainEventHandler) Handle(ctx context.Context, metadata a.Metadata, event d.OrderPlacedDomainEvent) (a.Outcome, error) {

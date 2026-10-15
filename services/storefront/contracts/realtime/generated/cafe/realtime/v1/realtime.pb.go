@@ -34,6 +34,7 @@ type Publication struct {
 	//	*Publication_Drink
 	//	*Publication_Edition
 	//	*Publication_Order
+	//	*Publication_OperationRejected
 	Snapshot      isPublication_Snapshot `protobuf_oneof:"snapshot"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -145,6 +146,15 @@ func (x *Publication) GetOrder() *Order {
 	return nil
 }
 
+func (x *Publication) GetOperationRejected() *OperationRejected {
+	if x != nil {
+		if x, ok := x.Snapshot.(*Publication_OperationRejected); ok {
+			return x.OperationRejected
+		}
+	}
+	return nil
+}
+
 type isPublication_Snapshot interface {
 	isPublication_Snapshot()
 }
@@ -161,17 +171,91 @@ type Publication_Order struct {
 	Order *Order `protobuf:"bytes,12,opt,name=order,proto3,oneof"`
 }
 
+type Publication_OperationRejected struct {
+	OperationRejected *OperationRejected `protobuf:"bytes,18,opt,name=operation_rejected,json=operationRejected,proto3,oneof"`
+}
+
 func (*Publication_Drink) isPublication_Snapshot() {}
 
 func (*Publication_Edition) isPublication_Snapshot() {}
 
 func (*Publication_Order) isPublication_Snapshot() {}
 
+func (*Publication_OperationRejected) isPublication_Snapshot() {}
+
+type OperationRejected struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	CorrelationId string                 `protobuf:"bytes,2,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	Code          string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
+	Message       string                 `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OperationRejected) Reset() {
+	*x = OperationRejected{}
+	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OperationRejected) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OperationRejected) ProtoMessage() {}
+
+func (x *OperationRejected) ProtoReflect() protoreflect.Message {
+	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OperationRejected.ProtoReflect.Descriptor instead.
+func (*OperationRejected) Descriptor() ([]byte, []int) {
+	return file_cafe_realtime_v1_realtime_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *OperationRejected) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *OperationRejected) GetCorrelationId() string {
+	if x != nil {
+		return x.CorrelationId
+	}
+	return ""
+}
+
+func (x *OperationRejected) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *OperationRejected) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_cafe_realtime_v1_realtime_proto protoreflect.FileDescriptor
 
 const file_cafe_realtime_v1_realtime_proto_rawDesc = "" +
 	"\n" +
-	"\x1fcafe/realtime/v1/realtime.proto\x12\x10cafe.realtime.v1\x1a3cafe/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\"\xc5\x03\n" +
+	"\x1fcafe/realtime/v1/realtime.proto\x12\x10cafe.realtime.v1\x1a3cafe/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\"\x9b\x04\n" +
 	"\vPublication\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12)\n" +
 	"\x10contract_version\x18\x02 \x01(\rR\x0fcontractVersion\x12\x18\n" +
@@ -182,9 +266,16 @@ const file_cafe_realtime_v1_realtime_proto_rawDesc = "" +
 	"\x05drink\x18\n" +
 	" \x01(\v2\x17.cafe.realtime.v1.DrinkH\x00R\x05drink\x125\n" +
 	"\aedition\x18\v \x01(\v2\x19.cafe.realtime.v1.EditionH\x00R\aedition\x12/\n" +
-	"\x05order\x18\f \x01(\v2\x17.cafe.realtime.v1.OrderH\x00R\x05orderB\n" +
+	"\x05order\x18\f \x01(\v2\x17.cafe.realtime.v1.OrderH\x00R\x05order\x12T\n" +
+	"\x12operation_rejected\x18\x12 \x01(\v2#.cafe.realtime.v1.OperationRejectedH\x00R\x11operationRejectedB\n" +
 	"\n" +
-	"\bsnapshotJ\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x06ticketR\x06pickupR\aaccountR\x06rewardR\fnotificationB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3"
+	"\bsnapshotJ\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x06ticketR\x06pickupR\aaccountR\x06rewardR\fnotification\"\x87\x01\n" +
+	"\x11OperationRejected\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12%\n" +
+	"\x0ecorrelation_id\x18\x02 \x01(\tR\rcorrelationId\x12\x12\n" +
+	"\x04code\x18\x03 \x01(\tR\x04code\x12\x18\n" +
+	"\amessage\x18\x04 \x01(\tR\amessageB\xa1\x01Z\x9e\x01github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/contracts/realtime/generated/cafe/realtime/v1;realtimev1b\x06proto3"
 
 var (
 	file_cafe_realtime_v1_realtime_proto_rawDescOnce sync.Once
@@ -198,22 +289,24 @@ func file_cafe_realtime_v1_realtime_proto_rawDescGZIP() []byte {
 	return file_cafe_realtime_v1_realtime_proto_rawDescData
 }
 
-var file_cafe_realtime_v1_realtime_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_cafe_realtime_v1_realtime_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cafe_realtime_v1_realtime_proto_goTypes = []any{
-	(*Publication)(nil), // 0: cafe.realtime.v1.Publication
-	(*Drink)(nil),       // 1: cafe.realtime.v1.Drink
-	(*Edition)(nil),     // 2: cafe.realtime.v1.Edition
-	(*Order)(nil),       // 3: cafe.realtime.v1.Order
+	(*Publication)(nil),       // 0: cafe.realtime.v1.Publication
+	(*OperationRejected)(nil), // 1: cafe.realtime.v1.OperationRejected
+	(*Drink)(nil),             // 2: cafe.realtime.v1.Drink
+	(*Edition)(nil),           // 3: cafe.realtime.v1.Edition
+	(*Order)(nil),             // 4: cafe.realtime.v1.Order
 }
 var file_cafe_realtime_v1_realtime_proto_depIdxs = []int32{
-	1, // 0: cafe.realtime.v1.Publication.drink:type_name -> cafe.realtime.v1.Drink
-	2, // 1: cafe.realtime.v1.Publication.edition:type_name -> cafe.realtime.v1.Edition
-	3, // 2: cafe.realtime.v1.Publication.order:type_name -> cafe.realtime.v1.Order
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	2, // 0: cafe.realtime.v1.Publication.drink:type_name -> cafe.realtime.v1.Drink
+	3, // 1: cafe.realtime.v1.Publication.edition:type_name -> cafe.realtime.v1.Edition
+	4, // 2: cafe.realtime.v1.Publication.order:type_name -> cafe.realtime.v1.Order
+	1, // 3: cafe.realtime.v1.Publication.operation_rejected:type_name -> cafe.realtime.v1.OperationRejected
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_cafe_realtime_v1_realtime_proto_init() }
@@ -227,6 +320,7 @@ func file_cafe_realtime_v1_realtime_proto_init() {
 		(*Publication_Drink)(nil),
 		(*Publication_Edition)(nil),
 		(*Publication_Order)(nil),
+		(*Publication_OperationRejected)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -234,7 +328,7 @@ func file_cafe_realtime_v1_realtime_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cafe_realtime_v1_realtime_proto_rawDesc), len(file_cafe_realtime_v1_realtime_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -3,6 +3,10 @@
 Status: accepted for the initial reference, 26 September 2026. Private message
 ownership is clarified by [0008](0008-published-contract-ownership.md).
 
+Realtime publication and bus naming are refined by [decision 0026](0026-explicit-bus-ports-and-realtime-publication.md).
+Browser messages are explicitly selected; event subscribers commit their output
+with a receiving receipt, and command publications commit with the command outcome.
+
 ## Decision
 
 One command or consumed-event transaction changes at most one aggregate, along

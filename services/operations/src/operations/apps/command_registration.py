@@ -10,7 +10,7 @@ from operations.adaptors.messaging.incoming_event import IncomingEvent
 from operations.adaptors.messaging.internal_command_codec import InternalCommandCodec
 from operations.adaptors.messaging.rabbitmq_request_registry import RabbitMQRequestRegistry
 from operations.apps.runtime import SubscriptionDefinition, SubscriptionWorker, command_subscription
-from operations.foundation.application import Metadata, Outcome
+from operations.foundation.application import Metadata, Outcome, RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import WriteRepository
 
 
@@ -25,7 +25,7 @@ class CommandRegistration[A]:
         registry: RabbitMQRequestRegistry,
         name: CommandName,
         parse: Callable[[Message], C],
-        handler: Callable[[WriteRepository[A]], FeatureCommandHandler[C]],
+        handler: Callable[[WriteRepository[A], RealtimeBusPort[RealtimeEvent]], FeatureCommandHandler[C]],
     ) -> None:
         """Connect a published command and its parser directly to its feature handler."""
         registry.command(name, parse, CommandExecutor(self._transaction, handler).execute)
@@ -37,7 +37,7 @@ class CommandRegistration[A]:
         incoming_event: IncomingEvent[E],
         target: Callable[[E], str],
         on_event: Callable[[Metadata, E], Outcome],
-        handler: Callable[[WriteRepository[A]], FeatureCommandHandler[C]],
+        handler: Callable[[WriteRepository[A], RealtimeBusPort[RealtimeEvent]], FeatureCommandHandler[C]],
     ) -> tuple[SubscriptionWorker, SubscriptionWorker]:
         """Connect a private command codec to its handler and durable event reaction."""
         return command_subscription(

@@ -17,6 +17,8 @@ func Subscription(consumer names.SubscriptionName) broker.Binding {
 		return broker.Binding{Consumer: consumer.String(), Event: "menu.edition-published", Visibility: "integration", Context: "ordering"}
 	case "ordering.publish-order-placed":
 		return broker.Binding{Consumer: consumer.String(), Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"}
+	case "ordering.realtime-order-placed":
+		return broker.Binding{Consumer: consumer.String(), Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"}
 	}
 	panic("undeclared subscription: " + consumer.String())
 }

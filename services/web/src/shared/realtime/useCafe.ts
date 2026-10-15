@@ -23,6 +23,7 @@ export function useCafe(active: boolean, sessionEnded: () => void) {
     }
     let alive = true,
       forceReconcile = false;
+    const seenOutcomes = new Set<string>();
     const abort = new AbortController();
     const barrier = subscriptionBarrier([...new Set(Object.values(owners).map((owner) => `cafe:${owner}`))]);
     const websocket = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/connection/websocket`;
@@ -59,7 +60,16 @@ export function useCafe(active: boolean, sessionEnded: () => void) {
     });
     client.on('publication', (context) => {
       try {
-        if (alive) dispatch(decode(context.channel, context.data));
+        if (alive) {
+          const update = decode(context.channel, context.data);
+          if ('type' in update) {
+            if (!seenOutcomes.has(update.eventId)) {
+              seenOutcomes.add(update.eventId);
+              if (seenOutcomes.size > 1000) seenOutcomes.delete(seenOutcomes.values().next().value!);
+              setProblem(`${update.message} (${update.code}; command ${update.commandId})`);
+            }
+          } else dispatch(update);
+        }
       } catch {
         if (alive) setProblem('An unrecognised update was rejected. Reconnect to reconcile.');
       }

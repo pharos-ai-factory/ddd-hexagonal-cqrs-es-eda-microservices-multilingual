@@ -80,6 +80,8 @@ class CommandProbe[S, E]:
 
                     repository = EventRecordingWriteRepository(Repository(), publications)
                     result = work(repository)
+                    if result.rejection is not None:
+                        raise Rejection(result.rejection["code"], result.rejection["message"])
                     if not saved:
                         # The placeholder is ignored for a no-op; its type follows the existing snapshot fixture.
                         from typing import cast

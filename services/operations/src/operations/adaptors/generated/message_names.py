@@ -24,6 +24,7 @@ class PreparationPrivateCommand(StrEnum):
 class PreparationSubscription(StrEnum):
     ACCEPT_ORDER = 'preparation.accept-order'
     PUBLISH_DRINKS_READY = 'preparation.publish-drinks-ready'
+    REALTIME_DRINKS_READY = 'preparation.realtime-drinks-ready'
 type IntegrationEventName = CollectionIntegrationEvent | OrderingIntegrationEvent | PreparationIntegrationEvent
 type DomainEventName = CollectionDomainEvent | PreparationDomainEvent
 type SubscriptionName = CollectionSubscription | PreparationSubscription

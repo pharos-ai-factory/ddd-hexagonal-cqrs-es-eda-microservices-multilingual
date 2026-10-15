@@ -17,6 +17,7 @@ A preparation ticket moves from queued to preparing to ready.
 - [Event reactions](application/event_handlers)
 - [Read models](application/read_models)
 - [Application ports](application/ports)
+- [Shared bus port contracts](../../foundation/application.py)
 - [Ticket write repository](adaptors/persistence/ticket_write_repository.py)
 - [Ticket read repository](adaptors/persistence/ticket_read_repository.py)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
@@ -63,6 +64,17 @@ Keep semantic evidence checks and domain-to-publication mappings in its adaptors
 The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
 bytes with the root. [Publication handlers](application/event_handlers) consume those
 facts independently and map them to generated `*IntegrationEvent` DTOs. Their
-publication port commits the subscription receipt, integration bytes and dispatch
+`IntegrationEventBusPort` commits the subscription receipt, integration bytes and dispatch
 together before ACK. A committed root awaiting integration publication is a
 permitted pending state; the original fact supplies its revision and terms.
+
+## Explicit browser publication
+
+`CompletePreparation` stages its private fact. The declared
+[DrinksReady realtime domain handler](application/event_handlers/realtime_drinks_ready.py)
+reads the current ticket view and publishes its actual revision through `RealtimeBusPort`.
+A ready ticket awaiting browser publication is a permitted pending state. Accepting
+and starting preparation explicitly stage browser snapshots in their command transactions.
+
+The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
+producers; composition binds their read repositories and durable realtime buses.

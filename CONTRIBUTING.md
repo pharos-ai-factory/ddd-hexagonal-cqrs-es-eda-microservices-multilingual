@@ -79,7 +79,7 @@ bytes. Domain tests can exercise aggregate behaviour directly; rehydration,
 projection updates and migrations have separate responsibilities.
 
 Application handlers never invoke another command handler. An event reaction
-maps a fact to an owner command and calls `DurableCommandPort`. Its receiving
+maps a fact to an owner command and calls `CommandBusPort`. Its receiving
 transaction records acceptance, exact private Protobuf command bytes and dispatch
 intent before ACK. The command queue then owns execution, bounded retries and
 replay. This applies between roots in one context as well as across contexts.
@@ -202,3 +202,9 @@ before ACK. Add codec compatibility fixtures, mapping tests and a manifest entry
 with `publication`. Verify rollback at the final receipt insert, concurrent
 redelivery, unchanged outgoing bytes and independent subscribers using real
 PostgreSQL/RabbitMQ. Repository negative tests prohibit direct integration staging.
+
+Use `CommandBusPort`, `QueryBusPort`, `DomainEventBusPort`, `IntegrationEventBusPort`
+and `RealtimeBusPort` for messaging capabilities. Declare realtime subscriptions
+and explicit command publications; a save alone produces no browser update. Follow
+[decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md) and
+the [end-to-end recipe](docs/education/end-to-end-recipe.md).

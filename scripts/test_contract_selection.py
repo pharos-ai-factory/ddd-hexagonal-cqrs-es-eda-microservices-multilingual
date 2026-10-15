@@ -87,6 +87,12 @@ assert 'cafe/requests/v1/common.proto' in request_files
 assert 'cafe/requests/v1/validation.proto' in request_files
 assert 'google/protobuf/descriptor.proto' in request_files
 assert all('/collection/' in name for name in request_files if '/contexts/' in name)
+realtime = select(compile_descriptors('realtime'), 'realtime', roots('realtime', ['preparation']))
+envelope = next(f for f in realtime.file if f.name == 'cafe/realtime/v1/realtime.proto')
+fields = {f.name:f.number for f in next(m for m in envelope.message_type if m.name == 'Publication').field}
+assert fields['ticket'] == 13 and fields['operation_rejected'] == 18
+assert 'order' not in fields and 'reward' not in fields
+
 """
         result = subprocess.run(
             ["uv", "run", "--no-project", "--with", "grpcio-tools==1.84.0", "python", "-c", script],
@@ -123,7 +129,9 @@ assert all('/collection/' in name for name in request_files if '/contexts/' in n
                 (ROOT / f"services/{service}/src/adaptors/generated/realtime.json").read_text()
             )
             namespace = document["nested"]["cafe"]["nested"]["realtime"]["nested"]["v1"]["nested"]
-            self.assertEqual(set(namespace["Publication"]["oneofs"]["snapshot"]["oneof"]), expected)
+            self.assertEqual(
+                set(namespace["Publication"]["oneofs"]["snapshot"]["oneof"]), expected | {"operationRejected"}
+            )
             if service == "engagement":
                 self.assertNotIn("Drink", namespace)
                 self.assertNotIn("Ticket", namespace)

@@ -18,7 +18,7 @@ def render(kind, context, name):
         return service, render_query(service, context, name, snake)
     role = {"command": "CommandHandler", "subscription": "IntegrationEventHandler"}[kind]
     if service == "engagement":
-        port = {"command": "WriteRepository<S>", "subscription": "DurableCommandPort<C>"}[kind]
+        port = {"command": "WriteRepository<S>", "subscription": "CommandBusPort<C>"}[kind]
         generic = "<C extends object>" if kind == "subscription" else "<S>"
         body = {
             "command": "throw new Error('Load the owner aggregate, apply behaviour and save through this.port');",
@@ -31,7 +31,7 @@ def render(kind, context, name):
         method = "handle" if kind == "subscription" else "execute"
         imports = {
             "command": "CommandContext, WriteRepository",
-            "subscription": "DurableCommandPort, Metadata",
+            "subscription": "CommandBusPort, Metadata",
         }[kind]
         source = f"""import type {{{imports}}} from '../../../foundation/application.js';
 /** Define the owner-local inputs for {name}. */
@@ -50,7 +50,7 @@ export class {name}{role}{generic} {{
         files = {snake + ".ts": source, snake + ".test.ts": test}
         registration = f"// Add to the context's typed dependency record and container.register:\n{name[0].lower() + name[1:]}: asFunction(c => new {name}{role}(c.owningPort)).singleton(),\n"
     elif service == "operations":
-        port = {"command": "WriteRepository[S]", "subscription": "DurableCommandPort[C]"}[kind]
+        port = {"command": "WriteRepository[S]", "subscription": "CommandBusPort[C]"}[kind]
         generic = "[C]" if kind == "subscription" else "[S]"
         args = {
             "command": f"context: CommandContext, command: {name}Command",
@@ -64,7 +64,7 @@ export class {name}{role}{generic} {{
         method = "handle" if kind == "subscription" else "execute"
         imports = {
             "command": "CommandContext, CommandResult, WriteRepository",
-            "subscription": "DurableCommandPort, Metadata, Outcome",
+            "subscription": "CommandBusPort, Metadata, Outcome",
         }[kind]
         source = f'''from typing import TypedDict
 from operations.foundation.application import {imports}

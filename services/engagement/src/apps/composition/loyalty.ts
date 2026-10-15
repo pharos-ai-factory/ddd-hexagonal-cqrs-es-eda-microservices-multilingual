@@ -1,3 +1,6 @@
+import { PostgresRealtimeEventBus } from '../../adaptors/persistence/realtime-event-bus.js';
+import { RewardIssuedRealtimeIntegrationEventHandler } from '../../contexts/loyalty/application/event-handlers/realtime-reward-issued.js';
+import { realtimeSubscription } from '../runtime.js';
 import {
   CollectionIntegrationEvent,
   LoyaltyDomainEvent,
@@ -70,6 +73,7 @@ export type LoyaltyDependencies = {
   collected: OrderCollectedIntegrationEventHandler;
   earned: RewardEarnedDomainEventHandler;
   publishIssued: RewardIssuedDomainEventHandler;
+  realtimeIssued: RewardIssuedRealtimeIntegrationEventHandler;
   clock: () => Date;
 };
 
@@ -133,6 +137,13 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
           new PostgresDurableCommandOutbox(c.database, c.creditCodec),
         ),
     ).singleton(),
+    realtimeIssued: asFunction(
+      (c: LoyaltyDependencies) =>
+        new RewardIssuedRealtimeIntegrationEventHandler(
+          c.rewardReadRepository,
+          new PostgresRealtimeEventBus(c.database, LoyaltySubscription.REALTIME_REWARD_ISSUED, 'reward'),
+        ),
+    ).singleton(),
     publishIssued: asFunction(
       (c: LoyaltyDependencies) =>
         new RewardIssuedDomainEventHandler(
@@ -176,7 +187,7 @@ export function loyaltyRequests(c: LoyaltyDependencies) {
     registry,
     LoyaltyCommand.REDEEM_REWARD,
     wire.redeem,
-    (repository) => new RedeemRewardCommandHandler(repository, clock),
+    (repository, realtime) => new RedeemRewardCommandHandler(repository, realtime, clock),
   );
   registry.query(LoyaltyQuery.GET_ACCOUNT, accountQueries.getAccount, c.getAccount, accountQueries.getReply);
   registry.query(
@@ -199,6 +210,14 @@ export function loyaltyRequests(c: LoyaltyDependencies) {
 export function loyaltySubscriptions(c: LoyaltyDependencies) {
   const clock = c.clock;
   return completeSubscriptions('loyalty', definitions, [
+    realtimeSubscription(
+      'loyalty',
+      LoyaltySubscription.REALTIME_REWARD_ISSUED,
+      LoyaltyIntegrationEvent.REWARD_ISSUED,
+      'reward',
+      definitions,
+      c.realtimeIssued,
+    ),
     publicationSubscription(
       'loyalty',
       LoyaltySubscription.PUBLISH_REWARD_ISSUED,
@@ -213,7 +232,7 @@ export function loyaltySubscriptions(c: LoyaltyDependencies) {
       definitions,
       (event) => event.customerId,
       c.collected,
-      (repository) => new CreditCollectionCommandHandler(repository, derivedId),
+      (repository, realtime) => new CreditCollectionCommandHandler(repository, realtime, derivedId),
       (m, command) => ({ ...m, id: derivedId('collection-credit', command.orderId) }),
     ),
     ...c.rewardCommands.subscription(

@@ -15,6 +15,11 @@
       "version": 3,
       "file": "0003_internal_commands.sql",
       "checksum": "48d0cf768e0f434d25ce4ff6cc6fb5830827dee1adc29d73f37fedbee6ea6ae3"
+    },
+    {
+      "version": 4,
+      "file": "0004_explicit_realtime.sql",
+      "checksum": "0be3ec80dc70ac3ff50b510e3909fff5c031f2c725200633a408c5d8a22f2791"
     }
   ]
 }

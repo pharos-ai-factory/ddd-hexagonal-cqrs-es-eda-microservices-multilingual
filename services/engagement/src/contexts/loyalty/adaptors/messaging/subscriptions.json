@@ -13,5 +13,10 @@
     "consumer": "loyalty.publish-reward-issued",
     "event": "loyalty.reward-issued.domain",
     "publication": "loyalty.reward-issued"
+  },
+  {
+    "consumer": "loyalty.realtime-reward-issued",
+    "event": "loyalty.reward-issued",
+    "realtime": "reward"
   }
 ]

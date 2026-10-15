@@ -111,6 +111,9 @@ func (s *AggregateTransaction[S, A]) Execute(ctx context.Context, m a.Metadata, 
 			}
 		}
 	}
+	if err = s.db.persistRealtime(ctx, tx, s.kind, m, outcome, repository.pending, result.Realtime); err != nil {
+		return a.Outcome{}, err
+	}
 	data, err := json.Marshal(outcome)
 	if err != nil {
 		return a.Outcome{}, err
@@ -132,7 +135,7 @@ func (s *AggregateTransaction[S, A]) persistResult(ctx context.Context, tx pgx.T
 		}
 		return nil
 	}
-	version, state, err := repository.flush(ctx)
+	version, _, err := repository.flush(ctx)
 	if err != nil {
 		return err
 	}
@@ -142,9 +145,6 @@ func (s *AggregateTransaction[S, A]) persistResult(ctx context.Context, tx pgx.T
 		if err = s.db.appendEvent(ctx, tx, message); err != nil {
 			return err
 		}
-	}
-	if s.db.realtime != nil {
-		return s.db.appendRealtime(ctx, tx, s.kind, m.AggregateID, outcome.Version, state)
 	}
 	return nil
 }

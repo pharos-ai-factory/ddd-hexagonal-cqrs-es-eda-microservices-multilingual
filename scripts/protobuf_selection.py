@@ -67,6 +67,7 @@ def select(descriptors, kind, selected_roots):
             if not field.HasField("oneof_index")
             or field.oneof_index != index
             or type_files[field.type_name] in selected
+            or type_files[field.type_name] == envelope.name
         ]
         # Reserve omitted alternatives in the local view. The published source
         # remains complete and owns every original field number and name.

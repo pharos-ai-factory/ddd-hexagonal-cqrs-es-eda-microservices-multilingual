@@ -9,9 +9,10 @@ from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.foundation.write_repository import CommandContext, WriteRepository
+from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 
-def caller(pickups: WriteRepository[Pickup], tickets: WriteRepository[PreparationTicket], metadata: CommandContext) -> None:
-    collect = CollectOrderCommandHandler(pickups)
+def caller(pickups: WriteRepository[Pickup], tickets: WriteRepository[PreparationTicket], metadata: CommandContext, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+    collect = CollectOrderCommandHandler(pickups, realtime)
     collect.execute(metadata, {"code": "ABC123"})
     ready: DrinksReadyIntegrationEvent = {"orderId": metadata.target, "customerId": metadata.target}
 """
@@ -28,7 +29,8 @@ def test_type_gate_rejects_wrong_commands_events_states_and_ports(tmp_path: Path
     mistakes = [
         '    collect.execute(metadata, {"code": 123})',
         "    collect.execute(metadata, {})",
-        "    CollectOrderCommandHandler(tickets)",
+        "    CollectOrderCommandHandler(tickets, realtime)",
+        "    CollectOrderCommandHandler(pickups, pickups)",
         '    missing_order: DrinksReadyIntegrationEvent = {"customerId": metadata.target}',
         '    wrong_status: PickupSnapshot = {"id": metadata.target, "orderId": metadata.target, '
         '"customerId": metadata.target, "code": "ABC123", "status": "queued"}',

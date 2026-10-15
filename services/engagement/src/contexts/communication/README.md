@@ -17,6 +17,7 @@ A notification owns its delivery status and stable provider identity.
 - [Event reactions](application/event-handlers)
 - [Read models](application/read-models)
 - [Application ports](application/ports)
+- [Shared bus port contracts](../../foundation/application.ts)
 - [Notification write repository](adaptors/persistence/notification-write-repository.ts)
 - [Notification read repository](adaptors/persistence/notification-read-repository.ts)
 - [Messaging boundary, codecs and subscriptions](adaptors/messaging)
@@ -62,3 +63,13 @@ Keep semantic evidence checks and domain-to-publication mappings in its adaptors
 `NotificationRequestedDomainEvent` remains private to this context. Its durable
 subscription requests the delivery command. Communication currently publishes no
 integration event and needs no integration publication subscriber.
+
+## Explicit browser publication
+
+Notification commands explicitly publish snapshots through `RealtimeBusPort`
+after saving. Selected bytes commit with the command outcome. Event reactions use
+`CommandBusPort` to request owner commands, including provider delivery; each
+publication remains an explicit application decision.
+
+The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
+producers; composition binds their read repositories and durable realtime buses.

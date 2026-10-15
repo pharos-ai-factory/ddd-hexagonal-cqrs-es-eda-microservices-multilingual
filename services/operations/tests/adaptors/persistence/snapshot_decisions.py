@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
-from operations.foundation.application import Change, Metadata, Outcome
+from operations.foundation.application import Change, Metadata, Outcome, RealtimeEvent
 from operations.foundation.write_repository import WriteRepository
 from operations.adaptors.command_execution import TransactionResult as CommandResult
 
@@ -22,6 +22,10 @@ class SnapshotDecisionFixture[S: Mapping[str, object]]:
             change = decide(loaded["state"] if loaded else None)
             if change.changed:
                 repository.save(change.state)
-            return CommandResult(change.status, change.publications)
+            return CommandResult(
+                change.status,
+                change.publications,
+                realtime=(RealtimeEvent(snapshot=change.state),) if change.changed else (),
+            )
 
         return self.transaction.execute(metadata, work)

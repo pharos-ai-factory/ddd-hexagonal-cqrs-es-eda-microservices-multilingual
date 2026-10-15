@@ -12,6 +12,7 @@ type PublishDrinkCommand struct{}
 
 // PublishDrinkCommandHandler applies PublishDrink through one aggregate command transaction.
 type PublishDrinkCommandHandler struct {
+	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
 	Repository ports.DrinkWriteRepository
 }
 
@@ -28,6 +29,9 @@ func (h PublishDrinkCommandHandler) Execute(ctx context.Context, m a.CommandCont
 		return a.CommandResult{}, err
 	}
 	if err = h.Repository.Save(ctx, drink); err != nil {
+		return a.CommandResult{}, err
+	}
+	if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: drink.Snapshot()}); err != nil {
 		return a.CommandResult{}, err
 	}
 	return a.Result("published"), nil

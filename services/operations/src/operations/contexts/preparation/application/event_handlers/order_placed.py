@@ -1,12 +1,12 @@
 from operations.contracts.events.generated import ordering as events
-from operations.foundation.application import DurableCommandPort, Metadata, Outcome
+from operations.foundation.application import CommandBusPort, Metadata, Outcome
 from operations.contexts.preparation.application.commands.accept_order import AcceptOrderCommand
 
 
 class OrderPlacedIntegrationEventHandler:
     """Translate a published order into a durable Preparation command."""
 
-    def __init__(self, commands: DurableCommandPort[AcceptOrderCommand]) -> None:
+    def __init__(self, commands: CommandBusPort[AcceptOrderCommand]) -> None:
         self.commands = commands
 
     def handle(self, metadata: Metadata, event: events.OrderPlacedIntegrationEvent) -> Outcome:

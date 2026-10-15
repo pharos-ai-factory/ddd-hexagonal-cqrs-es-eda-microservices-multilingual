@@ -53,7 +53,7 @@ def test_published_registration_runs_the_concrete_handler_in_its_transaction() -
     assert [fact.name for fact in probe.publications] == [CollectionDomainEvent.ORDER_COLLECTED]
     with pytest.raises(ValueError, match="Duplicate request handler"):
         container.commands().request(
-            registry, CollectionCommand.COLLECT_ORDER, lambda _: {}, lambda _: Mock()
+            registry, CollectionCommand.COLLECT_ORDER, lambda _: {}, lambda _repository, _realtime: Mock()
         )
 
 
@@ -67,6 +67,7 @@ def test_private_registration_uses_the_declared_codec_and_owner_handler() -> Non
     )
     container.accepted.override(providers.Object(Mock()))
     container.publish_drinks_ready.override(providers.Object(Mock()))
+    container.realtime_drinks_ready.override(providers.Object(Mock()))
     worker = next(worker for worker in subscriptions(container) if worker.command)
     value: AcceptOrderCommand = {"orderId": ID, "customerId": ID, "instructions": "No sugar"}
     metadata = Metadata(

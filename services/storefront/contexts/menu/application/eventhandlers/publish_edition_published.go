@@ -10,7 +10,7 @@ import (
 
 // MenuEditionPublishedDomainEventHandler publishes the integration contract through an atomic receipt/outbox port.
 type MenuEditionPublishedDomainEventHandler struct {
-	Publications a.DurablePublicationPort[model.MenuPublishedIntegrationEvent]
+	Publications a.IntegrationEventBusPort[model.MenuPublishedIntegrationEvent]
 }
 
 func (h MenuEditionPublishedDomainEventHandler) Handle(ctx context.Context, metadata a.Metadata, event d.MenuEditionPublishedDomainEvent) (a.Outcome, error) {

@@ -8,4 +8,5 @@ var expectedSubscriptions = map[string]broker.Binding{
 	"ordering.menu-directory":        {Consumer: "ordering.menu-directory", Event: "menu.edition-published", Visibility: "integration", Context: "ordering"},
 	"menu.publish-edition-published": {Consumer: "menu.publish-edition-published", Event: "menu.edition-published.domain", Visibility: "domain", Context: "menu"},
 	"ordering.publish-order-placed":  {Consumer: "ordering.publish-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"},
+	"ordering.realtime-order-placed": {Consumer: "ordering.realtime-order-placed", Event: "ordering.order-placed.domain", Visibility: "domain", Context: "ordering"},
 }

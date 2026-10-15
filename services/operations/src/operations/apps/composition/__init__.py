@@ -31,7 +31,8 @@ def subscription_definitions(owner: str) -> list[SubscriptionDefinition]:
             raise ValueError("Foreign subscription")
         command = text(item["command"]) if "command" in item else ""
         publication = text(item["publication"]) if "publication" in item else ""
-        if bool(command) == bool(publication):
-            raise ValueError("Declare exactly one command or publication reaction")
-        result.append(SubscriptionDefinition(consumer, text(item["event"]), command, publication))
+        realtime = text(item["realtime"]) if "realtime" in item else ""
+        if sum(map(bool, (command, publication, realtime))) != 1:
+            raise ValueError("Declare exactly one command, publication or realtime reaction")
+        result.append(SubscriptionDefinition(consumer, text(item["event"]), command, publication, realtime))
     return result

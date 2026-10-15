@@ -6,7 +6,14 @@ import { newId } from '../../foundation/identity.js';
 
 const realtimeType = protobuf.Root.fromJSON(realtimeSchema).lookupType('cafe.realtime.v1.Publication');
 
-export function realtime(owner: string, kind: string, id: string, revision: number, state: unknown) {
+export function realtime(
+  owner: string,
+  kind: string,
+  id: string,
+  revision: number,
+  state: unknown,
+  field = kind,
+) {
   if (!realtimeType.fields[kind]) throw new Error('Undeclared realtime contract');
   const eventId = newId();
   const value = {
@@ -16,7 +23,7 @@ export function realtime(owner: string, kind: string, id: string, revision: numb
     aggregateKind: kind,
     aggregateId: id,
     revision,
-    [kind]: state,
+    [field]: state,
   };
   const error = realtimeType.verify(value);
   if (error) throw new Error(error);

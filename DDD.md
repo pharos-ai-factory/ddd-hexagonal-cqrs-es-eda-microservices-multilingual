@@ -130,6 +130,10 @@ facts together with technical receipt/outcome records. This local transaction
 belongs to one aggregate and one context database. Feature code carries no
 transaction callbacks or delivery bookkeeping. See [decision 0015](docs/decisions/0015-explicit-persistence-role-names.md).
 
-Publication handlers use `DurablePublicationPort` without changing a root. Their
+Publication handlers use `IntegrationEventBusPort` without changing a root. Their
 receipts and integration bytes commit separately from the original command. See
 [decision 0019](docs/decisions/0019-durable-domain-event-publication.md).
+
+Realtime message selection belongs to application handlers through `RealtimeBusPort`.
+Aggregates queue private facts; domain/integration handlers and command use cases
+explicitly choose browser messages. See [decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md).

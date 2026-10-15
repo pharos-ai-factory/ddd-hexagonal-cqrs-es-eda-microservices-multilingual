@@ -16,7 +16,7 @@ import { identifier, Rejection } from '../../foundation/domain.js';
 import { PostgresContextDatabase } from './postgres-database.js';
 import { PostgresSnapshotWriteRepository } from './snapshot-write-repository.js';
 import { encode } from '../messaging/event-codec.js';
-import { realtime } from '../realtime/projection-codec.js';
+import { persistRealtime } from './realtime-publication.js';
 import { commitOutcome } from './command-reply-outbox.js';
 import { outcome as decodeOutcome } from './receipt-outcome.js';
 
@@ -111,13 +111,23 @@ export class PostgresAggregateTransaction<S, A> implements AggregateTransaction<
           publications: [...(result.publications ?? []), ...ownerRepository.publications],
         };
         outcome.status = result.status;
+        if (result.rejection) outcome.rejection = result.rejection;
       } catch (error) {
         if (!(error instanceof Rejection)) throw error;
         outcome.rejection = error.outcome();
       } finally {
         repository.close();
       }
-      if (result) await this.persistResult(client, m, repository, result, outcome);
+      if (result && !result.rejection) await this.persistResult(client, m, repository, result, outcome);
+      await persistRealtime(
+        client,
+        this.db.owner,
+        this.kind,
+        m,
+        outcome,
+        repository.pending,
+        result?.realtime ?? [],
+      );
       await client.query(
         `INSERT INTO cafe.command_receipts(kind,aggregate_id,command_name,command_id,
         fingerprint,outcome,correlation_id,causation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
@@ -164,13 +174,6 @@ export class PostgresAggregateTransaction<S, A> implements AggregateTransaction<
       );
       await client.query('INSERT INTO cafe.dispatches(event_id) VALUES($1)', [event.id]);
     }
-    const publication = realtime(this.db.owner, this.kind, m.target, outcome.version, repository.pending);
-    await client.query(
-      `INSERT INTO cafe.realtime_publications(id,channel,aggregate_kind,aggregate_id,revision,body)
-      VALUES($1,$2,$3,$4,$5,$6)`,
-      [publication.id, 'cafe:' + this.db.owner, this.kind, m.target, outcome.version, publication.body],
-    );
-    await client.query('INSERT INTO cafe.realtime_dispatches(event_id) VALUES($1)', [publication.id]);
   }
 }
 async function incoming(client: PoolClient, m: Metadata, target: string, outcome: Outcome) {

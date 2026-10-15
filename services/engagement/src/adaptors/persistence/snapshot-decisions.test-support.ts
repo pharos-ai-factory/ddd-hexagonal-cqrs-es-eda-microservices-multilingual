@@ -12,7 +12,11 @@ export class SnapshotDecisionFixture<S> {
     return this.transaction.execute(metadata, async (repository) => {
       const change = decide(await repository.get(metadata.target));
       if (change.changed) await repository.save(change.state);
-      return { status: change.status, publications: change.publications ?? [] };
+      return {
+        status: change.status,
+        publications: change.publications ?? [],
+        realtime: change.changed ? [{ snapshot: change.state as object }] : [],
+      };
     });
   }
 }

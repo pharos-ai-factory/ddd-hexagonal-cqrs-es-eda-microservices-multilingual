@@ -45,3 +45,20 @@ def test_publication_subscriptions_require_one_worker_and_one_reaction_mode() ->
     )
     with pytest.raises(ValueError, match="one reaction"):
         complete_subscriptions("preparation", [ambiguous], (worker,))
+
+
+def test_realtime_subscriptions_require_one_explicit_output() -> None:
+    definition = SubscriptionDefinition(
+        PreparationSubscription.REALTIME_DRINKS_READY, PreparationDomainEvent.DRINKS_READY, realtime="ticket"
+    )
+    worker = SubscriptionWorker("preparation", definition.consumer, Mock(), definition.event, False)
+    assert complete_subscriptions("preparation", [definition], (worker,)) == (worker,)
+    for invalid in (
+        replace(definition, publication=PreparationIntegrationEvent.DRINKS_READY),
+        replace(definition, command="acceptOrder"),
+        replace(definition, realtime=""),
+    ):
+        with pytest.raises(ValueError, match="one reaction"):
+            complete_subscriptions("preparation", [invalid], (worker,))
+    with pytest.raises(ValueError, match="Incomplete"):
+        complete_subscriptions("preparation", [definition], ())

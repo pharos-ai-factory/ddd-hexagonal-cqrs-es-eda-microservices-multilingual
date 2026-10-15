@@ -27,5 +27,14 @@ message Publication {
     Account account = 15;
     Reward reward = 16;
     Notification notification = 17;
+    OperationRejected operation_rejected = 18;
   }
+}
+
+// A durable application outcome. Its identity is the command, independently of root revision.
+message OperationRejected {
+  string command_id = 1;
+  string correlation_id = 2;
+  string code = 3;
+  string message = 4;
 }

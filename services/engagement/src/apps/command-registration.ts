@@ -7,12 +7,15 @@ import {
 } from '../adaptors/command-execution.js';
 import type { InternalCommandCodec } from '../adaptors/messaging/internal-command-codec.js';
 import type { RabbitMQRequestRegistry } from '../adaptors/messaging/rabbitmq-request-registry.js';
-import type { Metadata, Outcome } from '../foundation/application.js';
+import type { Metadata, Outcome, RealtimeBusPort, RealtimeEvent } from '../foundation/application.js';
 import type { WriteRepository } from '../foundation/write-repository.js';
 import { commandSubscription, type EventPayloads } from './runtime.js';
 
 type Definitions = readonly { consumer: string; event: string; command?: string; publication?: string }[];
-type Factory<A, C> = (repository: WriteRepository<A>) => FeatureCommandHandler<C>;
+type Factory<A, C> = (
+  repository: WriteRepository<A>,
+  realtime: RealtimeBusPort<RealtimeEvent>,
+) => FeatureCommandHandler<C>;
 type Reaction<K extends EventName & keyof EventPayloads> = {
   handle(metadata: Metadata, event: NoInfer<EventPayloads[K]>): Promise<Outcome>;
 };
@@ -58,15 +61,18 @@ export class CommandRegistration<A> {
     target: (event: EventPayloads[K]) => string,
     reaction: Reaction<K>,
     prepare: (command: NoInfer<C>) => Promise<P>,
-    handler: (repository: WriteRepository<A>, prepared: P) => FeatureCommandHandler<NoInfer<C>>,
+    handler: (
+      repository: WriteRepository<A>,
+      prepared: P,
+      realtime: RealtimeBusPort<RealtimeEvent>,
+    ) => FeatureCommandHandler<NoInfer<C>>,
   ) {
     return commandSubscription(event, codec, definitions, target, reaction, {
       execute: async (metadata, command) => {
         const prepared = await prepare(command);
-        return bindCommand(this.transaction, (repository) => handler(repository, prepared)).execute(
-          metadata,
-          command,
-        );
+        return bindCommand(this.transaction, (repository, realtime) =>
+          handler(repository, prepared, realtime),
+        ).execute(metadata, command);
       },
     });
   }

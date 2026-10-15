@@ -28,15 +28,18 @@ class MigrationTests(unittest.TestCase):
     def test_owner_versions_evolve_independently(self):
         directory = self.owner()
         manifest = json.loads((directory / "manifest.json").read_text())
+        previous = metadata(self.root)
+        next_version = len(manifest["migrations"]) + 1
+        filename = f"{next_version:04d}_next.sql"
         source = "CREATE INDEX test_next ON cafe.aggregates(version);\n"
-        (directory / "0003_next.sql").write_text(source)
+        (directory / filename).write_text(source)
         manifest["migrations"].append(
-            {"version": 3, "file": "0003_next.sql", "checksum": sha256(source.encode()).hexdigest()}
+            {"version": next_version, "file": filename, "checksum": sha256(source.encode()).hexdigest()}
         )
         (directory / "manifest.json").write_text(json.dumps(manifest))
         generated = metadata(self.root)
-        self.assertEqual(len(generated["storefront"]["ordering"]), 3)
-        self.assertEqual(len(generated["storefront"]["menu"]), 2)
+        self.assertEqual(len(generated["storefront"]["ordering"]), next_version)
+        self.assertEqual(generated["storefront"]["menu"], previous["storefront"]["menu"])
         self.assertEqual(set(generated["engagement"]), {"loyalty", "communication"})
         self.assertIn("test_next", migration_sql("ordering", self.root))
 

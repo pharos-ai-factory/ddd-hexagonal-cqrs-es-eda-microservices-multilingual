@@ -31,6 +31,7 @@ class SubscriptionDefinition:
     event: str
     command: str = ""
     publication: str = ""
+    realtime: str = ""
 
 
 def command_subscription[E, C: Mapping[str, object]](
@@ -46,6 +47,7 @@ def command_subscription[E, C: Mapping[str, object]](
     if (
         definition is None
         or definition.publication
+        or definition.realtime
         or definition.command != command_name
         or definition.event != incoming_event.name
     ):
@@ -77,7 +79,7 @@ def complete_subscriptions(
     if len(expected) != len(definitions):
         raise ValueError("Duplicate subscription declaration")
     for definition in definitions:
-        if bool(definition.command) == bool(definition.publication):
+        if sum(map(bool, (definition.command, definition.publication, definition.realtime))) != 1:
             raise ValueError("Subscription requires exactly one reaction mode")
         actual = [worker for worker in workers if worker.consumer == definition.consumer]
         if (
@@ -104,11 +106,41 @@ def publication_subscription[E](
     if (
         definition is None
         or definition.command
+        or definition.realtime
         or definition.event != incoming_event.name
         or definition.publication != publication
         or not consumer.startswith(owner + ".")
     ):
         raise ValueError("Subscription manifest disagrees with publication binding")
+    incoming = EventSubscription(
+        owner, consumer, incoming_event.name, incoming_event.parse, lambda _: "", on_event, source_target=True
+    )
+    return (
+        SubscriptionWorker(
+            owner, consumer, lambda url, stop: consume(url, incoming, stop), incoming_event.name, False
+        ),
+    )
+
+
+def realtime_subscription[E](
+    owner: str,
+    consumer: SubscriptionName,
+    definitions: Sequence[SubscriptionDefinition],
+    incoming_event: IncomingEvent[E],
+    kind: str,
+    on_event: Callable[[Metadata, E], Outcome],
+) -> tuple[SubscriptionWorker]:
+    """Bind an explicitly declared domain or integration reaction to browser publication."""
+    definition = next((item for item in definitions if item.consumer == consumer), None)
+    if (
+        definition is None
+        or definition.command
+        or definition.publication
+        or definition.realtime != kind
+        or definition.event != incoming_event.name
+        or not consumer.startswith(owner + ".")
+    ):
+        raise ValueError("Subscription manifest disagrees with realtime binding")
     incoming = EventSubscription(
         owner, consumer, incoming_event.name, incoming_event.parse, lambda _: "", on_event, source_target=True
     )

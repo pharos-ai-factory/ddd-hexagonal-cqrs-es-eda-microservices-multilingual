@@ -16,7 +16,7 @@ from operations.adaptors.persistence import receipt_outcome as receipts
 from operations.adaptors.persistence.command_reply_outbox import append as append_reply
 from operations.adaptors.persistence.postgres_database import PostgresContextDatabase, Row, fingerprint
 from operations.adaptors.persistence.snapshot_write_repository import PostgresSnapshotWriteRepository
-from operations.adaptors.realtime import projection_codec
+from operations.adaptors.persistence.realtime_publication import persist_realtime
 from operations.foundation.application import Metadata, Outcome, Publication, VersionConflictApplicationError
 from operations.foundation.domain import Rejection, identifier
 from operations.foundation.write_repository import WriteRepository
@@ -84,6 +84,7 @@ class PostgresAggregateTransaction[S: Mapping[str, object], A](AggregateTransact
             repository = PostgresSnapshotWriteRepository(connection, self.kind, m.target, self.restore)
             version = repository.version
             outcome = {"aggregateId": m.target, "version": version, "status": ""}
+            result = TransactionResult("")
             try:
                 if m.expected is not None and m.expected != version:
                     raise VersionConflictApplicationError()
@@ -96,11 +97,17 @@ class PostgresAggregateTransaction[S: Mapping[str, object], A](AggregateTransact
                 finally:
                     repository.close()
                 outcome["status"] = result.status
+                if result.rejection is not None:
+                    outcome["rejection"] = result.rejection
             except Rejection as rejection:
                 repository.close()
                 outcome["rejection"] = rejection.outcome()
             else:
-                outcome["version"] = self._persist_result(connection, m, repository, result)
+                if result.rejection is None:
+                    outcome["version"] = self._persist_result(connection, m, repository, result)
+            persist_realtime(
+                connection, self.database.owner, self.kind, m, outcome, repository.pending, result.realtime
+            )
             connection.execute(
                 """INSERT INTO cafe.command_receipts(kind,aggregate_id,command_name,command_id,
                 fingerprint,outcome,correlation_id,causation_id) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
@@ -149,15 +156,6 @@ class PostgresAggregateTransaction[S: Mapping[str, object], A](AggregateTransact
                 ),
             )
             connection.execute("INSERT INTO cafe.dispatches(event_id) VALUES(%s)", (event.id,))
-        event_id, body = projection_codec.encode(
-            self.database.owner, self.kind, m.target, version, repository.pending
-        )
-        connection.execute(
-            """INSERT INTO cafe.realtime_publications
-            (id,channel,aggregate_kind,aggregate_id,revision,body) VALUES(%s,%s,%s,%s,%s,%s)""",
-            (event_id, "cafe:" + self.database.owner, self.kind, m.target, version, body),
-        )
-        connection.execute("INSERT INTO cafe.realtime_dispatches(event_id) VALUES(%s)", (event_id,))
         return version
 
     @staticmethod

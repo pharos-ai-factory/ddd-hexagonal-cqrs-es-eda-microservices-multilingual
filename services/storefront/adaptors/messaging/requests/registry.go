@@ -74,13 +74,14 @@ func Query[P proto.Message, Q, R any](r *RabbitMQRequestRegistry, name pb.QueryN
 	if name == nil || name.Owner() != r.Owner || !name.Valid() {
 		panic("query identifier disagrees with owner")
 	}
+	var bus a.QueryBusPort[Q, R] = handlerQueryBus[Q, R]{execute}
 	r.bind(name.String(), func(ctx context.Context, _ RequestEnvelope, body proto.Message) (pb.Reply, error) {
 		value, ok := body.(P)
 		if !ok {
 			return nil, fmt.Errorf("query payload type disagrees with its mapping")
 		}
 		query := parse(value)
-		result, err := execute(ctx, query)
+		result, err := bus.Ask(ctx, query)
 		if err != nil {
 			return nil, err
 		}
@@ -101,4 +102,13 @@ func OutcomeReply(owner string, result a.Outcome) pb.Reply {
 		panic(err)
 	}
 	return reply
+}
+
+// handlerQueryBus routes the application DTO after owner transport parsing.
+type handlerQueryBus[Q, R any] struct {
+	execute func(context.Context, Q) (R, error)
+}
+
+func (b handlerQueryBus[Q, R]) Ask(ctx context.Context, query Q) (R, error) {
+	return b.execute(ctx, query)
 }

@@ -17,6 +17,7 @@ A loyalty account earns each third-collection grant; a reward independently cont
 - [Event reactions](application/event-handlers)
 - [Read models](application/read-models)
 - [Application ports](application/ports)
+- [Shared bus port contracts](../../foundation/application.ts)
 - [Account write repository](adaptors/persistence/account-write-repository.ts)
 - [Account read repository](adaptors/persistence/account-read-repository.ts)
 - [Reward read repository](adaptors/persistence/reward-read-repository.ts)
@@ -63,6 +64,19 @@ Keep semantic evidence checks and domain-to-publication mappings in its adaptors
 The aggregate queues explicit `*DomainEvent` facts. Its save stages private event
 bytes with the root. [Publication handlers](application/event-handlers) consume those
 facts independently and map them to generated `*IntegrationEvent` DTOs. Their
-publication port commits the subscription receipt, integration bytes and dispatch
+`IntegrationEventBusPort` commits the subscription receipt, integration bytes and dispatch
 together before ACK. A committed root awaiting integration publication is a
 permitted pending state; the original fact supplies its revision and terms.
+
+## Explicit browser publication
+
+`IssueReward` stages a private fact, whose publication handler produces the
+integration event. The separately declared
+[RewardIssued realtime integration handler](application/event-handlers/realtime-reward-issued.ts)
+reads the current reward view and publishes its actual revision through `RealtimeBusPort`.
+An issued reward awaiting integration delivery and browser publication is a permitted
+pending state. Account credits and redemption explicitly stage command snapshots;
+redemption can also publish a recorded business rejection.
+
+The [subscription manifest](adaptors/messaging/subscriptions.json) declares event
+producers; composition binds their read repositories and durable realtime buses.

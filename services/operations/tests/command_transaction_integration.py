@@ -87,6 +87,6 @@ def test_local_transaction_scope_lifetime_and_rejected_save() -> None:
                 "SELECT count(*) AS n FROM cafe.realtime_publications WHERE aggregate_id=%s", (identity,)
             ).fetchone()
             assert receipt and receipt["n"] == 2
-            assert realtime and realtime["n"] == 1
+            assert realtime and realtime["n"] == 0  # A save alone does not publish.
     finally:
         database.pool.close()

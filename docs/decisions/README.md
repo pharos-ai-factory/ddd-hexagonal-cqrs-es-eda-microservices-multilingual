@@ -57,7 +57,15 @@ shared registration helpers supply execution policy for each aggregate.
 extends 0014, 0017, 0019 and 0023 with generated message/subscription identifiers
 and explicit query-to-handler registration in every owner service.
 
+[0026 — Explicit buses and realtime publication](0026-explicit-bus-ports-and-realtime-publication.md)
+refines the application bus names, explicit context-owned browser publication and
+separate command/subscriber transactions.
+
 ## Foundations and public boundaries
+
+[0025 — Repository documentation site](0025-repository-documentation-site.md)
+adds Rspress over the existing Markdown sources, browser-rendered Mermaid SVGs
+and documentation verification through the shared static gate.
 
 | Decision                                                                                   | Scope and later refinement                                                                                               |
 | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |

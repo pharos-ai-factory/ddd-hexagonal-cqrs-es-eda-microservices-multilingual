@@ -10,6 +10,10 @@ Refined by [decision 0023](0023-direct-command-registration.md): shared registra
 helpers construct executors internally; feature declarations pair commands directly
 with plain handler factories. The factory names below describe the earlier wiring.
 
+Realtime publication and bus naming are refined by [decision 0026](0026-explicit-bus-ports-and-realtime-publication.md).
+Browser messages are explicitly selected; event subscribers commit their output
+with a receiving receipt, and command publications commit with the command outcome.
+
 ## Decision
 
 Use `<Resource>ReadRepository` for application query persistence ports in all

@@ -21,6 +21,7 @@ from migrate import migration_sql
 class ContextMigrations(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.versions = {owner: len(value[2]["migrations"]) for owner, value in manifests().items()}
         cls.env_file = Path(os.environ["CAFE_ENV_FILE"])
         if not load(cls.env_file)["COMPOSE_PROJECT_NAME"].startswith("cafe-reference-test-"):
             raise RuntimeError("Migration probes require the disposable integration project")
@@ -60,9 +61,11 @@ class ContextMigrations(unittest.TestCase):
     def append(self, root, source):
         directory = manifests(root)["ordering"][1]
         manifest = json.loads((directory / "manifest.json").read_text())
-        (directory / "0003_probe.sql").write_text(source)
+        version = len(manifest["migrations"]) + 1
+        filename = f"{version:04}_probe.sql"
+        (directory / filename).write_text(source)
         manifest["migrations"].append(
-            {"version": 3, "file": "0003_probe.sql", "checksum": sha256(source.encode()).hexdigest()}
+            {"version": version, "file": filename, "checksum": sha256(source.encode()).hexdigest()}
         )
         (directory / "manifest.json").write_text(json.dumps(manifest))
 
@@ -75,8 +78,15 @@ class ContextMigrations(unittest.TestCase):
  SELECT set_config('cafe.command_target','migration_probe:{identity}',true);
  INSERT INTO cafe.aggregates(kind,id,version,state) VALUES('migration_probe','{identity}',1,'{{"kept":true}}');
  COMMIT;
- DROP TABLE cafe.command_reply_dispatches,cafe.command_replies,cafe.context_migrations,cafe.context_identity;
- DROP INDEX cafe.ordering_order_status;""")
+ ALTER TABLE cafe.realtime_publications
+   DROP CONSTRAINT realtime_payload_revision,
+   DROP COLUMN message_kind,
+   ADD CONSTRAINT realtime_publications_revision_check CHECK(revision>0),
+   ADD CONSTRAINT realtime_publications_aggregate_kind_aggregate_id_fkey
+     FOREIGN KEY(aggregate_kind,aggregate_id) REFERENCES cafe.aggregates(kind,id),
+   ADD CONSTRAINT realtime_publications_aggregate_kind_aggregate_id_revision_key
+     UNIQUE(aggregate_kind,aggregate_id,revision);
+ DELETE FROM cafe.context_migrations WHERE version={self.versions["ordering"]};""")
         self.addCleanup(self.sql, migration_sql("ordering"))
         self.sql(migration_sql("ordering"))
         applied = self.sql("SELECT applied_at FROM cafe.context_migrations WHERE version=1;")
@@ -98,7 +108,9 @@ class ContextMigrations(unittest.TestCase):
             self.sql(migration_sql("ordering", root))
         self.assertIn("checksum changed", failure.exception.stderr)
         self.assertEqual(self.sql("SELECT to_regclass('cafe.migration_probe') IS NULL;"), "t")
-        self.assertEqual(self.sql("SELECT count(*) FROM cafe.context_migrations;"), "2")
+        self.assertEqual(
+            self.sql("SELECT count(*) FROM cafe.context_migrations;"), str(self.versions["ordering"])
+        )
 
     def test_failing_migration_rolls_back_schema_and_ledger(self):
         root = self.copy_sources()
@@ -106,18 +118,24 @@ class ContextMigrations(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError):
             self.sql(migration_sql("ordering", root))
         self.assertEqual(self.sql("SELECT to_regclass('cafe.migration_probe') IS NULL;"), "t")
-        self.assertEqual(self.sql("SELECT count(*) FROM cafe.context_migrations;"), "2")
+        self.assertEqual(
+            self.sql("SELECT count(*) FROM cafe.context_migrations;"), str(self.versions["ordering"])
+        )
 
     def test_context_evolves_without_advancing_sibling(self):
         root = self.copy_sources()
         self.append(root, "CREATE TABLE cafe.migration_probe(id int);\n")
         self.addCleanup(
             self.sql,
-            "DROP TABLE IF EXISTS cafe.migration_probe; DELETE FROM cafe.context_migrations WHERE version=3;",
+            f"DROP TABLE IF EXISTS cafe.migration_probe; DELETE FROM cafe.context_migrations WHERE version={self.versions['ordering'] + 1};",
         )
         self.sql(migration_sql("ordering", root))
-        self.assertEqual(self.sql("SELECT max(version) FROM cafe.context_migrations;"), "3")
-        self.assertEqual(self.sql("SELECT max(version) FROM cafe.context_migrations;", "menu"), "2")
+        self.assertEqual(
+            self.sql("SELECT max(version) FROM cafe.context_migrations;"), str(self.versions["ordering"] + 1)
+        )
+        self.assertEqual(
+            self.sql("SELECT max(version) FROM cafe.context_migrations;", "menu"), str(self.versions["menu"])
+        )
         self.sql(migration_sql("menu"), "menu")
 
     def test_identity_mismatch_is_rejected(self):

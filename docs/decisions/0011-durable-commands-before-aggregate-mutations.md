@@ -2,6 +2,10 @@
 
 Status: accepted, 9 October 2026. Refines event handling in 0007–0009.
 
+Realtime publication and bus naming are refined by [decision 0026](0026-explicit-bus-ports-and-realtime-publication.md).
+Browser messages are explicitly selected; event subscribers commit their output
+with a receiving receipt, and command publications commit with the command outcome.
+
 ## Decision
 
 Every business transition of an aggregate, including creation, is initiated by

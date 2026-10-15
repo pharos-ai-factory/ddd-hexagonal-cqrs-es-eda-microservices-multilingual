@@ -8,6 +8,11 @@ see [TESTING.md](../TESTING.md) for host-networking requirements and
 
 ## Find the business capability
 
+`pnpm docs:dev` serves the repository guides at `http://127.0.0.1:3001` without
+starting the café services. Run `pnpm docs:check` after documentation changes;
+the complete static gate also runs it. The [documentation guide](documentation.md)
+explains navigation, diagrams, source links and generated Markdown output.
+
 Run `pnpm context` for the context catalogue or `pnpm context ordering` to list
 its current use cases, contracts, scenarios and focused test command. Each
 context has a README at its source root. The catalogue and its links are checked
@@ -121,18 +126,26 @@ field numbers or silently register unfinished policy.
 
 ## Go: add an Ordering command
 
+The [command recipe](education/concepts/commands.md) shows the exact schema,
+generated identifier, parser and registration for each language.
+
 1. Add the named command DTO and handler together in
    `services/storefront/contexts/ordering/application/commands/cancel_order.go`.
    Use `package commands`; follow `change_quantity.go` for the load, mutate and save flow.
 2. Implement and test the root behaviour in `domain/order.go`. Use `OrderWriteRepository` to load the root, call its method and save it.
    The aggregate records facts; the owner publication mapper selects outgoing messages.
-3. Register the command name, owner parser and handler factory together in
+3. Add the published payload in `contracts/ordering/messaging/commands/v1/`
+   and its `Command.payload` case in `contracts/ordering/messaging/v1/`.
+   Run `pnpm generate:contracts` to produce the wire types and routing identifier.
+4. Write the owner parser in `contexts/ordering/adaptors/messaging/ordering_requests.go`.
+   It accepts the generated payload and returns the application command.
+5. Register the generated command name, owner parser and handler factory together in
    `apps/storefront/di/ordering_requests.go` with `registration.Register`. The
    aggregate registry supplies its transaction and invocation-scoped repository.
    Use `RegisterProjection` when immutable projection data must be prepared first.
-4. For an API operation, update Ordering's OpenAPI and Protobuf request sources,
-   owner messaging translation and API mapping. Run contract generation.
-5. Add a Gherkin example and native binding. Run the focused Ordering lane.
+6. For an API operation, update Ordering's OpenAPI and API field mapping sources,
+   then rerun contract generation.
+7. Add a composition dispatch test, Gherkin example and native binding. Run the focused Ordering lane.
 
 Go's existing event handlers update projections. A future aggregate-changing Go
 subscription needs an owner durable command port, private codec/outbox and paired
@@ -157,16 +170,22 @@ generator and run `pnpm generate:contracts` when extending that catalogue.
    `application/commands/<action>.py` module.
    Inject `TicketWriteRepository`; load the root, invoke its behaviour and save it.
 2. Change `PreparationTicket` through its public behaviour and test the invariant.
-3. In `apps/composition/preparation.py`, use the configured aggregate registration:
+3. For a published command, add its payload and `Command.payload` case under
+   `contracts/preparation/messaging/`, then run `pnpm generate:contracts`.
+   Write its parser in `adaptors/messaging/ticket_requests.py`; import the generated
+   payload and return the application TypedDict. See the [complete recipe](education/concepts/commands.md).
+4. In `apps/composition/preparation.py`, use the configured aggregate registration:
    `commands.request(registry, PreparationCommand.START_PREPARATION, wire.start, StartPreparationCommandHandler)`.
    The shared helper creates the executor and supplies each invocation's repository.
-4. For an event reaction, use the context's typed definition in
+5. For a private command triggered by an event, follow the subscription path
+   instead of the published-request steps. Use the context's typed definition in
    `adaptors/messaging/order_placed_subscription.py`.
    Map its payload in the application event handler and enqueue the owner command.
-5. Add the private Protobuf payload, codec, stable subscription declaration and
+6. Add the private Protobuf payload, codec, stable subscription declaration and
    historical fixture. Register its codec and handler factory through `container.commands().subscription`, then pass
    the complete context set through `complete_subscriptions`.
-6. Add scenario/type/codec tests and run the focused Preparation lane.
+7. Run contract generation for private schema changes. Add composition dispatch,
+   scenario/type/codec tests and run the focused Preparation lane.
 
 The simple context registration supplies the typed incoming event, target,
 event-handler method and plain command-handler factory to the common registration helper.
@@ -178,18 +197,24 @@ It receives no Pika connection or SQL transaction.
    `application/commands/<action>.ts`. Follow `credit-collection.ts`; its
    constructor receives application ports.
 2. Implement the aggregate rule and its domain test.
-3. Extend `LoyaltyDependencies` and the explicit Awilix factory in
+3. For a published command, add its payload and `Command.payload` case under
+   `contracts/loyalty/messaging/`, then run `pnpm generate:contracts`.
+   Write its parser in `adaptors/messaging/reward-requests.ts`; validate the wire
+   input and return the application command shape. See the [complete recipe](education/concepts/commands.md).
+4. Extend `LoyaltyDependencies` and the explicit Awilix factory in
    `apps/composition/loyalty.ts` for any new dependency. Register the command name,
    parser and handler factory together through `c.rewardCommands.request(...)`
    or the aggregate registration's `subscription(...)` method.
    Select concrete adaptors in composition; keep
    decoding and restoration in the owning adaptor modules.
-4. For a reaction, use the generated published name/payload association,
+5. For a private command triggered by an event, follow the subscription path
+   instead of the published-request steps. Use the generated published name/payload association,
    map it in the event handler, and add its private command codec/manifest/fixture.
-5. Register the codec and plain handler factory through the aggregate registration's
+6. Register the codec and plain handler factory through the aggregate registration's
    `subscription` method and validate the complete context set.
    The type checker rejects a handler for an incompatible event payload.
-6. Resolve the provider in a composition test and run the focused Loyalty lane.
+7. Run contract generation for private schema changes. Resolve the provider and
+   dispatch the command in a composition test, then run the focused Loyalty lane.
 
 ## Wire an aggregate-changing subscription
 
@@ -201,7 +226,7 @@ codec and command handler. Keep these responsibilities explicit:
 2. Define the incoming event-to-payload association at the boundary. In Python,
    use the owner's typed `IncomingEvent` definition; in TypeScript, use
    `EventPayloads` and the supported event name.
-3. Put the reaction in its own application module. Inject `DurableCommandPort`
+3. Put the reaction in its own application module. Inject `CommandBusPort`
    and map the fact to the command. Constructor injection also supplies test doubles.
 4. Add the private Protobuf command and codec in the owner's messaging adaptor.
    Use stable typed subscription IDs and add the `subscriptions.json` entry.
@@ -362,7 +387,7 @@ produce the plain DTO, typed conversion, publication factory and registry.
 Queue a plain `*DomainEvent` on the aggregate and define its owner-private codec.
 The repository adaptor stages that private event when saving. Add an independent
 `*DomainEventHandler` that maps the delivered fact to the generated
-`*IntegrationEvent` DTO through `DurablePublicationPort`. Its concrete outbox
+`*IntegrationEvent` DTO through `IntegrationEventBusPort`. Its concrete outbox
 adaptor uses the typed publication factory and commits the subscription receipt
 with outgoing bytes and dispatch. ACK follows that commit; a relay handles the
 later broker publication. Declare the private consumer's `publication` in its
@@ -384,3 +409,15 @@ to apply the catalogue permissions with the dedicated topology credential. The
 launcher restarts managed broker clients; restart separately launched host workers
 to replace cached authorisation. See [broker permissions](broker-permissions.md)
 for queue families, private-event ownership and real-broker verification.
+
+## Publish browser messages explicitly
+
+Follow the [end-to-end recipe](education/end-to-end-recipe.md) and
+[realtime recipe](education/concepts/realtime-events.md). Inject `RealtimeBusPort`
+into a command use case for atomic state/outcome publication, or declare a dedicated
+`realtime` subscriber for a domain/integration event. Bind the bus and handler in
+owner composition, generate contracts/topology, and validate the complete worker set.
+A saved root produces no browser message unless application code selects it.
+Event-driven refreshes publish the owner view's actual revision. Expected business
+rejections may publish a matching typed outcome; technical failures remain retryable.
+See [decision 0026](decisions/0026-explicit-bus-ports-and-realtime-publication.md).

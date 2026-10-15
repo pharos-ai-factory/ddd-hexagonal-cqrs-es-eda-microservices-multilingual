@@ -76,8 +76,9 @@ func (OrderingIntegrationEvent) Owner() string         { return "ordering" }
 type OrderingSubscription string
 
 const (
-	OrderingSubscriptionMenuDirectory      OrderingSubscription = "ordering.menu-directory"
-	OrderingSubscriptionPublishOrderPlaced OrderingSubscription = "ordering.publish-order-placed"
+	OrderingSubscriptionMenuDirectory       OrderingSubscription = "ordering.menu-directory"
+	OrderingSubscriptionPublishOrderPlaced  OrderingSubscription = "ordering.publish-order-placed"
+	OrderingSubscriptionRealtimeOrderPlaced OrderingSubscription = "ordering.realtime-order-placed"
 )
 
 func (OrderingSubscription) subscriptionName() {}

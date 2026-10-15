@@ -1,11 +1,11 @@
 import { type InternalCommandCodec } from '../messaging/internal-command-codec.js';
 
-import type { Metadata, Outcome, DurableCommandPort } from '../../foundation/application.js';
+import type { Metadata, Outcome, CommandBusPort } from '../../foundation/application.js';
 
 import type { PostgresContextDatabase } from './postgres-database.js';
 
 /** Commits the event receipt and immutable command before allowing the event ACK. */
-export class PostgresDurableCommandOutbox<C extends object> implements DurableCommandPort<C> {
+export class PostgresDurableCommandOutbox<C extends object> implements CommandBusPort<C> {
   constructor(
     private db: PostgresContextDatabase,
     private codec: InternalCommandCodec<C>,

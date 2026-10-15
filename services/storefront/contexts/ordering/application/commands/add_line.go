@@ -19,6 +19,7 @@ type AddLineCommand struct {
 
 // AddLineCommandHandler applies AddLine through one aggregate command transaction.
 type AddLineCommandHandler struct {
+	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
 	Repository ports.OrderWriteRepository
 	Menus      a.ProjectionPort[model.MenuPublishedIntegrationEvent]
 }
@@ -45,6 +46,9 @@ func (h AddLineCommandHandler) Execute(ctx context.Context, m a.CommandContext, 
 				return a.CommandResult{}, err
 			}
 			if err = h.Repository.Save(ctx, order); err != nil {
+				return a.CommandResult{}, err
+			}
+			if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: order.Snapshot()}); err != nil {
 				return a.CommandResult{}, err
 			}
 			return a.Result("draft"), nil

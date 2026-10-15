@@ -40,9 +40,12 @@ Use `POST /api/v1/ordering/orders/{id}/place` as the example:
 3. `services/storefront/contexts/ordering/application/commands/place_order.go` loads through
    the Order port, restores the root, calls `Place`, and selects outgoing facts.
 4. `services/storefront/contexts/ordering/domain/order.go` enforces the invariant.
-5. The PostgreSQL adaptor commits state, receipt, outcome, outgoing events,
-   realtime bytes and reply intent. Confirmed reply publication completes the
-   API's HTTP response; downstream workflows continue independently.
+5. The PostgreSQL adaptor commits state, receipt, outcome, private domain events
+   and reply intent. Confirmed reply publication completes the API's HTTP response.
+6. Separate declared domain subscribers publish the integration event and an order
+   browser refresh through `IntegrationEventBusPort` and `RealtimeBusPort`. Each
+   commits its own receipt and outgoing bytes; downstream work can remain pending.
+   Follow the [complete creation recipe](education/end-to-end-recipe.md).
 
 The application never receives `pgx.Tx`, an AMQP delivery or a generated Protobuf
 message. Its callback cannot obtain another aggregate repository from the port.

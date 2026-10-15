@@ -34,6 +34,7 @@ bin/
 node_modules/
 .venv/
 .next/
+.rspress/
 dist/
 out/
 *.tsbuildinfo

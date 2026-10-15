@@ -1,3 +1,4 @@
+from operations.foundation.application import RealtimeBusPort, RealtimeEvent
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
 from typing import TypedDict
@@ -15,8 +16,9 @@ class AcceptOrderCommand(TypedDict):
 class AcceptOrderCommandHandler:
     """Create one PreparationTicket; redelivery preserves the existing ticket."""
 
-    def __init__(self, repository: TicketWriteRepository) -> None:
+    def __init__(self, repository: TicketWriteRepository, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
         self.repository = repository
+        self.realtime = realtime
 
     def execute(self, context: CommandContext, command: AcceptOrderCommand) -> CommandResult:
         loaded = self.repository.get(context.target)
@@ -28,4 +30,5 @@ class AcceptOrderCommandHandler:
             TicketState(context.target, command["orderId"], command["customerId"], command["instructions"])
         )
         self.repository.save(ticket)
+        self.realtime.publish(RealtimeEvent(snapshot=ticket.snapshot()))
         return CommandResult("queued")
