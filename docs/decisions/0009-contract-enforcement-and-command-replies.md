@@ -87,3 +87,18 @@ frontend schema mutation tests and all language compilation/testing gates.
 all owner languages, leased reply fencing, denied response rewrites, independent
 command/query consumption and recovery of exact bytes after unroutable publication.
 Execution results and environment limits live in [verification](../verification.md).
+
+## Connection routing and authenticated actors — 16 October 2026
+
+Each API connection owns exclusive classic reply queues and supplies its UUIDv4
+address in AMQP `ReplyTo`. Queries publish there directly; command transactions
+save that validated route with the immutable response. Context migration version
+five adds `reply_route` with an empty legacy default. A reused transport ID must
+retain both bytes and route. Old durable reply queues remain for rollout traffic.
+
+The additive `actor_id` command metadata field carries the API-authenticated
+subject, including a separate server-provisioned CLI identity. The owner passes
+it to the application handler's command context and includes a present actor in
+receipt fingerprints. Internal/legacy absence preserves old wire and receipt
+behaviour and grants no user authority. See the [request contract](../../contracts/shared/messaging/requests.md)
+for upgrade ordering and uncertain pre-upgrade retries.

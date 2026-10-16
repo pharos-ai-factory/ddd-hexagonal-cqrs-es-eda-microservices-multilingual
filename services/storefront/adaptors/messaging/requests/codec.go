@@ -123,7 +123,7 @@ func Validate(request RequestEnvelope, owner string) (string, proto.Message, err
 	}
 	if kind.JSONName() == "command" {
 		metadata := CommandMetadata(request)
-		if metadata == nil || !ValidID(metadata.CommandId) || !ValidID(metadata.AggregateId) || !ValidID(metadata.CorrelationId) || metadata.ExpectedVersion == nil {
+		if metadata == nil || !ValidID(metadata.CommandId) || !ValidID(metadata.AggregateId) || !ValidID(metadata.CorrelationId) || metadata.ExpectedVersion == nil || (metadata.ActorId != "" && !ValidID(metadata.ActorId)) {
 			return "", nil, fmt.Errorf("invalid command metadata")
 		}
 		if err := RequiredInputs(body); err != nil {

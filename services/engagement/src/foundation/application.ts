@@ -16,6 +16,7 @@ export type Metadata = {
   target: string;
   name: string;
   correlation: string;
+  actorId?: string;
   input: unknown;
   expected?: number;
   causation?: string;

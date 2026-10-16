@@ -104,17 +104,18 @@ func ServeRequests(ctx context.Context, url, owner, kind string, handle RequestH
 				return fmt.Errorf("request consumer closed")
 			}
 			var body []byte
-			if delivery.ContentType != "application/x-protobuf" || delivery.DeliveryMode != rabbit.Persistent || delivery.Type != kind || delivery.AppId != "api" || delivery.MessageId == "" || delivery.CorrelationId != delivery.MessageId || delivery.RoutingKey != "request."+owner+"."+kind || len(delivery.Body) > 65536 {
+			route, routeErr := validateReplyRoute(owner, delivery.ReplyTo)
+			if routeErr != nil || delivery.ContentType != "application/x-protobuf" || delivery.DeliveryMode != rabbit.Persistent || delivery.Type != kind || delivery.AppId != "api" || delivery.MessageId == "" || delivery.CorrelationId != delivery.MessageId || delivery.RoutingKey != "request."+owner+"."+kind || len(delivery.Body) > 65536 {
 				err = fmt.Errorf("invalid request delivery")
 			} else {
-				body, err = handle(ctx, delivery.MessageId, delivery.Body)
+				body, err = handle(withReplyRoute(ctx, owner, route), delivery.MessageId, delivery.Body)
 			}
 			publishCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			if err != nil {
-				outgoing := rabbit.Publishing{ContentType: delivery.ContentType, DeliveryMode: rabbit.Persistent, MessageId: delivery.MessageId, Type: delivery.Type, AppId: delivery.AppId, CorrelationId: delivery.CorrelationId, Body: delivery.Body, Headers: delivery.Headers}
+				outgoing := rabbit.Publishing{ContentType: delivery.ContentType, DeliveryMode: rabbit.Persistent, MessageId: delivery.MessageId, Type: delivery.Type, AppId: delivery.AppId, CorrelationId: delivery.CorrelationId, ReplyTo: delivery.ReplyTo, Body: delivery.Body, Headers: delivery.Headers}
 				err = publisher.send(publishCtx, DeliveryExchange(owner), RequestQueue(owner, kind)+".dead", outgoing)
 			} else if len(body) > 0 {
-				err = publisher.send(publishCtx, RepliesExchange, "reply."+owner, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: delivery.MessageId, CorrelationId: delivery.MessageId, Type: "reply", AppId: owner, Body: body})
+				err = publisher.PublishReply(publishCtx, owner, delivery.MessageId, route, body)
 			}
 			cancel()
 			if err != nil {
@@ -126,8 +127,4 @@ func ServeRequests(ctx context.Context, url, owner, kind string, handle RequestH
 			}
 		}
 	}
-}
-
-func (p *ConfirmedPublisher) PublishReply(ctx context.Context, owner, id string, body []byte) error {
-	return p.send(ctx, RepliesExchange, "reply."+owner, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: id, CorrelationId: id, Type: "reply", AppId: owner, Body: body})
 }

@@ -8,6 +8,7 @@ from operations.adaptors.messaging.request_envelope import validate
 from operations.adaptors.messaging.request_envelope import new_reply, parse_request
 from operations.adaptors.generated.cafe.requests.v1.contexts.collection.collection_requests_pb2 import Request
 from operations.foundation.application import Metadata, Outcome
+from operations.foundation.domain import Rejection
 from operations.contracts.requests.generated.collection import CollectOrderCommand
 
 ID = "11111111-1111-4111-8111-111111111111"
@@ -37,6 +38,7 @@ def command() -> Request:
     request.command.metadata.command_id = ID
     request.command.metadata.aggregate_id = ID
     request.command.metadata.correlation_id = ID
+    request.command.metadata.actor_id = ID
     request.command.metadata.expected_version = 0
     request.command.collect_order.code = "1234"
     return request
@@ -53,6 +55,7 @@ def test_wire_command_maps_to_plain_input_and_preserves_zero_version() -> None:
     registry = RabbitMQRequestRegistry("collection")
     registry.command(CollectionCommand.COLLECT_ORDER, collection_wire.collect, execute)
     reply = registry.handle(Request.FromString(command().SerializeToString()))
+    assert captured[0].actor_id == ID
     assert captured[0].expected == 0
     assert captured[0].name == "collection.CollectOrder"
     assert captured[0].input == {"code": "1234"}
@@ -102,3 +105,20 @@ def test_future_optional_input_is_not_required_and_explicit_zero_is_present() ->
     required_inputs(value)
     setattr(value, "note", "Optional addition")
     required_inputs(value)
+
+
+def test_reply_routes_are_scoped_to_owner_and_connection() -> None:
+    from operations.adaptors.messaging.reply_address import reply_route
+
+    assert reply_route("collection", None) == "reply.collection"
+    assert reply_route("collection", "reply.collection." + ID) == "reply.collection." + ID
+    for route in ("reply.foreign." + ID, "reply.collection.#", "reply.collection.extra"):
+        with pytest.raises(ValueError):
+            reply_route("collection", route)
+
+
+def test_invalid_actor_is_rejected_before_dispatch() -> None:
+    request = command()
+    request.command.metadata.actor_id = "not-an-identity"
+    with pytest.raises(Rejection):
+        validate(request, "collection")

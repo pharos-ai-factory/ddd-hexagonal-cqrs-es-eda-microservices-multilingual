@@ -11,6 +11,7 @@ import (
 // ReplyIntent is infrastructure-local. Applications remain unaware of RPC transport.
 type ReplyIntent struct {
 	ID        string
+	Route     string
 	Encode    func(a.Outcome) ([]byte, error)
 	Committed bool
 }
@@ -31,15 +32,16 @@ func commitOutcome(ctx context.Context, tx pgx.Tx, outcome a.Outcome) (a.Outcome
 		if len(body) == 0 {
 			return a.Outcome{}, fmt.Errorf("empty command reply")
 		}
-		if _, err = tx.Exec(ctx, `INSERT INTO cafe.command_replies(id,body) VALUES($1,$2) ON CONFLICT DO NOTHING`, intent.ID, body); err != nil {
+		if _, err = tx.Exec(ctx, `INSERT INTO cafe.command_replies(id,body,reply_route) VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, intent.ID, body, intent.Route); err != nil {
 			return a.Outcome{}, err
 		}
 		var saved []byte
-		if err = tx.QueryRow(ctx, `SELECT body FROM cafe.command_replies WHERE id=$1`, intent.ID).Scan(&saved); err != nil {
+		var route string
+		if err = tx.QueryRow(ctx, `SELECT body,reply_route FROM cafe.command_replies WHERE id=$1`, intent.ID).Scan(&saved, &route); err != nil {
 			return a.Outcome{}, err
 		}
-		if !bytes.Equal(body, saved) {
-			return a.Outcome{}, fmt.Errorf("request identity reused with different reply bytes")
+		if !bytes.Equal(body, saved) || route != intent.Route {
+			return a.Outcome{}, fmt.Errorf("request identity reused with different reply bytes or route")
 		}
 		if _, err = tx.Exec(ctx, `INSERT INTO cafe.command_reply_dispatches(event_id) VALUES($1) ON CONFLICT DO NOTHING`, intent.ID); err != nil {
 			return a.Outcome{}, err

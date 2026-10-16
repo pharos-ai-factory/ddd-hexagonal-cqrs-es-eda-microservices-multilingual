@@ -17,7 +17,7 @@ func priceRequest() *pb.Request {
 	zero := uint64(0)
 	price := int64(0)
 	code := "coffee"
-	return &pb.Request{ContractVersion: 1, RequestId: id, Context: "menu", Payload: &pb.Request_Command{Command: &pb.Command{Metadata: &shared.CommandMetadata{CommandId: id, AggregateId: id, ExpectedVersion: &zero, CorrelationId: id}, Payload: &pb.Command_ChangePrice{ChangePrice: &pb.ChangePrice{Code: &code, Minor: &price}}}}}
+	return &pb.Request{ContractVersion: 1, RequestId: id, Context: "menu", Payload: &pb.Request_Command{Command: &pb.Command{Metadata: &shared.CommandMetadata{CommandId: id, AggregateId: id, ExpectedVersion: &zero, CorrelationId: id, ActorId: id}, Payload: &pb.Command_ChangePrice{ChangePrice: &pb.ChangePrice{Code: &code, Minor: &price}}}}}
 }
 func TestCommandTranslationRetainsPlainReceiptMaterialAndZero(t *testing.T) {
 	type input struct {
@@ -26,7 +26,7 @@ func TestCommandTranslationRetainsPlainReceiptMaterialAndZero(t *testing.T) {
 	}
 	registry := New("menu")
 	Command(registry, names.MenuCommandChangePrice, func(p *pb.ChangePrice) input { return input{Code: p.GetCode(), Minor: p.GetMinor()} }, func(_ context.Context, m a.Metadata, c input) (a.Outcome, error) {
-		if c.Code != "coffee" || c.Minor != 0 || m.Input != c || m.Name != "menu.ChangePrice" || m.ID != id || m.ExpectedVersion == nil || *m.ExpectedVersion != 0 {
+		if c.Code != "coffee" || c.Minor != 0 || m.Input != c || m.Name != "menu.ChangePrice" || m.ID != id || m.ActorID != id || m.ExpectedVersion == nil || *m.ExpectedVersion != 0 {
 			t.Fatal("application command material changed")
 		}
 		if _, wire := m.Input.(proto.Message); wire {

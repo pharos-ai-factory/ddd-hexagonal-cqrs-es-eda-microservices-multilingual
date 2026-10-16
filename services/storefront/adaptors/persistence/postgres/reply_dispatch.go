@@ -11,6 +11,7 @@ import (
 type ReplyDispatch struct {
 	Dispatch
 	Expired bool
+	Route   string
 }
 
 func (db *ContextDatabase) ClaimReply(ctx context.Context) (ReplyDispatch, bool, error) {
@@ -22,7 +23,7 @@ func (db *ContextDatabase) ClaimReply(ctx context.Context) (ReplyDispatch, bool,
  ), claimed AS (
  UPDATE cafe.command_reply_dispatches d SET lease_token=$1,lease_until=clock_timestamp()+interval '8 seconds',generation=generation+1,attempts=attempts+1
  FROM candidate c WHERE d.event_id=c.event_id RETURNING d.event_id,d.generation
- ) SELECT o.id,o.body,c.generation,o.expires_at<=clock_timestamp() FROM claimed c JOIN cafe.command_replies o ON o.id=c.event_id`, token).Scan(&row.EventID, &row.Body, &row.Generation, &row.Expired)
+ ) SELECT o.id,o.body,c.generation,o.expires_at<=clock_timestamp(),o.reply_route FROM claimed c JOIN cafe.command_replies o ON o.id=c.event_id`, token).Scan(&row.EventID, &row.Body, &row.Generation, &row.Expired, &row.Route)
 	row.Token = token
 	if errors.Is(err, pgx.ErrNoRows) {
 		return row, false, nil

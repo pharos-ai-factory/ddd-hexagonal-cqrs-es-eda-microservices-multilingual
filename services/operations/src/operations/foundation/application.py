@@ -43,6 +43,7 @@ class Metadata:
     source_kind: str = ""
     source_version: int = 0
     source_time: str = ""
+    actor_id: str = ""
 
 
 @dataclass(frozen=True)

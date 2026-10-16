@@ -55,6 +55,7 @@ export function decodeRequest(body: Buffer, owner: string): Request {
       target: identifier(metadata.aggregateId),
       name: owner + '.' + name[0]!.toUpperCase() + name.slice(1),
       correlation: identifier(metadata.correlationId),
+      ...(metadata.actorId ? { actorId: identifier(metadata.actorId) } : {}),
       expected,
       input: payload,
     };

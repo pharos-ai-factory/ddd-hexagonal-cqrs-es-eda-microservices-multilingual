@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pika
 
 from operations.adaptors.diagnostics import failure
+from operations.adaptors.messaging.reply_address import reply_route
 from operations.adaptors.messaging.rabbitmq_connection import broker_connection
 from operations.adaptors.persistence.dispatch_leases import binary
 from operations.adaptors.persistence.command_reply_outbox import claim_reply, finish_reply
@@ -36,7 +37,7 @@ def relay(database: "PostgresContextDatabase", url: str, stop: Event) -> None:
                             identity = str(row["id"])
                             channel.basic_publish(
                                 "cafe.replies",
-                                "reply." + database.owner,
+                                reply_route(database.owner, str(row["reply_route"])),
                                 binary(row["body"]),
                                 properties=pika.BasicProperties(
                                     content_type="application/x-protobuf",

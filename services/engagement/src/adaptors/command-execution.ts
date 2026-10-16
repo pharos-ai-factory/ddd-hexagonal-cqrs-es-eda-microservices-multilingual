@@ -49,7 +49,10 @@ export function bindCommand<A, C>(
       return transaction.execute(m, async (repository) => {
         const bus = new RealtimeBuffer();
         try {
-          const result = await handler(repository, bus).execute({ target: m.target }, command);
+          const result = await handler(repository, bus).execute(
+            { target: m.target, ...(m.actorId ? { actorId: m.actorId } : {}) },
+            command,
+          );
           return { ...result, realtime: bus.events };
         } catch (error) {
           if (!(error instanceof Rejection)) throw error;

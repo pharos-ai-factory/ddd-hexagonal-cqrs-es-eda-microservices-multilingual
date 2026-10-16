@@ -61,7 +61,7 @@ func Command[P proto.Message, I any](r *RabbitMQRequestRegistry, name pb.Command
 		}
 		input := convert(value)
 		wire := CommandMetadata(request)
-		metadata := a.Metadata{ID: wire.CommandId, AggregateID: wire.AggregateId, ExpectedVersion: wire.ExpectedVersion, CorrelationID: wire.CorrelationId, Name: r.Owner + "." + string(body.ProtoReflect().Descriptor().Name()), Input: input}
+		metadata := a.Metadata{ID: wire.CommandId, AggregateID: wire.AggregateId, ExpectedVersion: wire.ExpectedVersion, CorrelationID: wire.CorrelationId, ActorID: wire.ActorId, Name: r.Owner + "." + string(body.ProtoReflect().Descriptor().Name()), Input: input}
 		result, err := handle(ctx, metadata, input)
 		if err != nil {
 			return nil, err

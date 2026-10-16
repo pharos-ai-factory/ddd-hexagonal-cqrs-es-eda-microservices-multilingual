@@ -52,11 +52,17 @@ class BrokerPermissionsTests(unittest.TestCase):
         for owner in (*OWNERS, "api"):
             authority = self.policy["users"]["cafe_" + owner]
             for exchange in self.policy["exchanges"]:
-                self.assertFalse(self.allows(owner, "read", exchange))
+                self.assertEqual(
+                    self.allows(owner, "read", exchange), owner == "api" and exchange == "cafe.replies"
+                )
                 self.assertFalse(self.allows(owner, "configure", exchange))
             self.assertFalse(self.allows(owner, "write", "amq.default"))
             for topic in authority["topics"]:
-                self.assertEqual(topic["read"], "^$")
+                if owner != "api" or topic["exchange"] != "cafe.replies":
+                    self.assertEqual(topic["read"], "^$")
+                else:
+                    self.assertNotRegex("#", topic["read"])
+                    self.assertNotRegex("reply.foreign", topic["read"])
                 for key in (
                     "#",
                     "domain.foreign.event",

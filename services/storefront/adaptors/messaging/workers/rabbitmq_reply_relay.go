@@ -30,7 +30,7 @@ func Replies(ctx context.Context, db *postgres.ContextDatabase, url, owner strin
 					reason = "expired"
 				} else {
 					publishCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-					err = publisher.PublishReply(publishCtx, owner, row.EventID, row.Body)
+					err = publisher.PublishReply(publishCtx, owner, row.EventID, row.Route, row.Body)
 					cancel()
 					if err != nil {
 						reason = "publication_failed"

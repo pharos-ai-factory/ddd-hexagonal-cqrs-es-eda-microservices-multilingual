@@ -38,6 +38,8 @@ else:
         "GOPATH=/cache",
         "-e",
         "GOCACHE=/cache/build",
+        "-e",
+        "STATICCHECK_CACHE=/cache/staticcheck",
         "-v",
         f"{ROOT}:/src",
         "-v",

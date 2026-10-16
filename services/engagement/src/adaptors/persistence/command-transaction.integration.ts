@@ -46,7 +46,7 @@ void test('local command transaction bounds repository identity and lifetime and
     await assert.rejects(escaped.at(-1)!.save(state), /outside its command transaction/);
     const loaded = await queries.get(id);
     assert.equal(loaded?.state.collections, 0);
-    const rejectedMetadata = { ...metadata, id: randomUUID(), expected: 1 };
+    const rejectedMetadata = { ...metadata, id: randomUUID(), expected: 1, actorId: randomUUID() };
     const rejected = await unit.execute(rejectedMetadata, async (repository) => {
       escaped.push(repository);
       await repository.save(state);
@@ -59,6 +59,10 @@ void test('local command transaction bounds repository identity and lifetime and
       await unit.execute(rejectedMetadata, async () => assert.fail('Rejected replay ran again')),
       rejected,
     );
+    const conflict = await unit.execute({ ...rejectedMetadata, actorId: randomUUID() }, async () =>
+      assert.fail('Foreign actor executed'),
+    );
+    assert.equal(conflict.rejection?.code, 'idempotency_conflict');
     await assert.rejects(escaped.at(-1)!.save(state), /outside its command transaction/);
     await assert.rejects(
       unit.execute({ ...metadata, id: randomUUID(), expected: 1 }, async (repository) => {

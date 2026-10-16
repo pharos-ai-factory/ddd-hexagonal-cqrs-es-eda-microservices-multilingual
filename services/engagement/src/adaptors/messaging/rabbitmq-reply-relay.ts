@@ -4,6 +4,8 @@ import amqp from 'amqplib';
 
 import type { PostgresContextDatabase } from '../persistence/postgres-database.js';
 
+import { replyRoute } from './reply-address.js';
+
 import { confirmed } from './rabbitmq-publisher.js';
 
 import { failure } from '../diagnostics.js';
@@ -28,7 +30,7 @@ export async function replyRelay(db: PostgresContextDatabase, url: string, signa
         try {
           if (row.expired) reason = 'expired';
           else
-            await confirmed(channel, 'cafe.replies', 'reply.' + db.owner, row.body, {
+            await confirmed(channel, 'cafe.replies', replyRoute(db.owner, row.reply_route), row.body, {
               contentType: 'application/x-protobuf',
               type: 'reply',
               appId: db.owner,

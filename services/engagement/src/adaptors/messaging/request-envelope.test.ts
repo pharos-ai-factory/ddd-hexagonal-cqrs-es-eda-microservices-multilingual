@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import protobuf from 'protobufjs';
 import schema from '../generated/requests.json' with { type: 'json' };
+import { replyRoute } from './reply-address.js';
 import { decodeRequest, requiredInputs } from './request-envelope.js';
 import { RabbitMQRequestRegistry } from './rabbitmq-request-registry.js';
 import type { Metadata } from '../../foundation/application.js';
@@ -18,7 +19,7 @@ const wire = {
   requestId: id,
   context: 'loyalty',
   command: {
-    metadata: { commandId: id, aggregateId: id, expectedVersion: 0, correlationId: id },
+    metadata: { commandId: id, aggregateId: id, expectedVersion: 0, correlationId: id, actorId: id },
     redeemReward: { orderId: id },
   },
 };
@@ -40,6 +41,7 @@ void test('wire command becomes a plain application command with explicit zero v
     replyType.decode(await registry.handle(decodeRequest(encode(wire), 'loyalty'))),
     { longs: Number },
   ) as { outcome: { version: number } };
+  assert.equal(captured?.actorId, id);
   assert.equal(captured?.expected, 0);
   assert.equal(captured?.name, 'loyalty.RedeemReward');
   assert.deepEqual(captured?.input, { orderId: id });
@@ -105,4 +107,22 @@ void test('future optional fields remain optional and required zero values remai
   assert.throws(() => requiredInputs(type, {}), /Missing command field/);
   requiredInputs(type, { price: 0 });
   requiredInputs(type, { price: 0, note: 'Optional addition' });
+});
+
+void test('reply routes remain within the owning context and exact connection', () => {
+  assert.equal(replyRoute('loyalty', undefined), 'reply.loyalty');
+  assert.equal(replyRoute('loyalty', 'reply.loyalty.' + id), 'reply.loyalty.' + id);
+  for (const route of ['reply.foreign.' + id, 'reply.loyalty.#', 'reply.loyalty.extra'])
+    assert.throws(() => replyRoute('loyalty', route));
+});
+void test('malformed actor identity is rejected before dispatch', () => {
+  assert.throws(() =>
+    decodeRequest(
+      encode({
+        ...wire,
+        command: { ...wire.command, metadata: { ...wire.command.metadata, actorId: 'invalid' } },
+      }),
+      'loyalty',
+    ),
+  );
 });

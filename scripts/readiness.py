@@ -4,6 +4,8 @@ import argparse
 import base64
 import json
 import os
+import re
+from broker_permissions import reply_addresses
 from pathlib import Path
 import urllib.request
 from urllib.parse import quote
@@ -43,8 +45,6 @@ def expected_queues(services, paused=()):
             queues.add("ref." + consumer)
             if consumer in commands and consumer + ".command" not in paused:
                 queues.add("ref." + consumer + ".command")
-    if "API" in services:
-        queues.update("ref.api." + owner + ".replies" for service in OWNERS.values() for owner in service)
     return sorted(queues)
 
 
@@ -72,6 +72,14 @@ def report(values, services=tuple(OWNERS), paused=None, fetch=request, queues_fe
             checks[queue] = (
                 "ready" if actual.get(queue, {}).get("consumers", 0) > 0 else "consumer unavailable"
             )
+        if "API" in services:
+            for owner in (owner for group in OWNERS.values() for owner in group):
+                pattern = reply_addresses([owner], queue=True)
+                connected = any(
+                    re.fullmatch(pattern, name) and item.get("consumers", 0) > 0
+                    for name, item in actual.items()
+                )
+                checks["api.reply." + owner] = "ready" if connected else "consumer unavailable"
     except Exception:
         checks["rabbitmq"] = "management connection unavailable"
     return {

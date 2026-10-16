@@ -14,16 +14,18 @@ class PageRequest(_message.Message):
     def __init__(self, limit: _Optional[int] = ..., after: _Optional[str] = ...) -> None: ...
 
 class CommandMetadata(_message.Message):
-    __slots__ = ("command_id", "aggregate_id", "expected_version", "correlation_id")
+    __slots__ = ("command_id", "aggregate_id", "expected_version", "correlation_id", "actor_id")
     COMMAND_ID_FIELD_NUMBER: _ClassVar[int]
     AGGREGATE_ID_FIELD_NUMBER: _ClassVar[int]
     EXPECTED_VERSION_FIELD_NUMBER: _ClassVar[int]
     CORRELATION_ID_FIELD_NUMBER: _ClassVar[int]
+    ACTOR_ID_FIELD_NUMBER: _ClassVar[int]
     command_id: str
     aggregate_id: str
     expected_version: int
     correlation_id: str
-    def __init__(self, command_id: _Optional[str] = ..., aggregate_id: _Optional[str] = ..., expected_version: _Optional[int] = ..., correlation_id: _Optional[str] = ...) -> None: ...
+    actor_id: str
+    def __init__(self, command_id: _Optional[str] = ..., aggregate_id: _Optional[str] = ..., expected_version: _Optional[int] = ..., correlation_id: _Optional[str] = ..., actor_id: _Optional[str] = ...) -> None: ...
 
 class Rejection(_message.Message):
     __slots__ = ("code", "message")

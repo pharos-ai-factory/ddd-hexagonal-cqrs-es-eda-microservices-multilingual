@@ -17,4 +17,7 @@ type WriteRepository[A any] interface {
 func Result(status string) CommandResult { return CommandResult{Status: status} }
 
 // CommandContext identifies the aggregate targeted by a business operation.
-type CommandContext struct{ Target string }
+type CommandContext struct {
+	Target  string
+	ActorID string
+}

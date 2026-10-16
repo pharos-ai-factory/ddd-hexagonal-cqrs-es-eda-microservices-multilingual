@@ -35,10 +35,16 @@ func (s *AggregateTransaction[S, A]) Execute(ctx context.Context, m a.Metadata, 
 			return a.Outcome{}, err
 		}
 	}
+	if m.ActorID != "" {
+		if err := d.ValidateID(m.ActorID); err != nil {
+			return a.Outcome{}, err
+		}
+	}
 	hash, err := fingerprint(struct {
 		Expected *uint64
 		Input    any
-	}{m.ExpectedVersion, m.Input})
+		ActorID  string `json:",omitempty"`
+	}{m.ExpectedVersion, m.Input, m.ActorID})
 	if err != nil {
 		return a.Outcome{}, err
 	}

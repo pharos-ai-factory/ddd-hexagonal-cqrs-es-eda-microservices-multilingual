@@ -6,6 +6,13 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Isolate API replies per broker connection across all three owner runtimes,
+  retain reply routes in immutable command storage and scope temporary queue
+  authority. Qualify overlapping API instances and reconnects against RabbitMQ.
+- Carry the authenticated API subject into command metadata and handler context;
+  include present actors in idempotency fingerprints and reject actor spoofing.
+- Give UID-mapped Docker Go tools a writable Staticcheck cache under `/cache`.
+
 - Move wholly generated Go models, event identifiers, response encoders and query
   registrations beneath generated folders with ordinary filenames. Update imports,
   generators, cleanup scopes, boundary checks and source-linked recipes.

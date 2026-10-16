@@ -49,3 +49,21 @@ class ReadinessTests(unittest.TestCase):
         state = report(values, ("WEB",), (), fetch, lambda *a: [])
         self.assertFalse(state["ready"])
         self.assertEqual(state["checks"]["realtime"], "realtime endpoint unavailable")
+
+    def test_api_requires_active_connection_scoped_replies(self):
+        values = {"API_KEY": "unused", "API_PORT": "1"}
+        owners = ("menu", "ordering", "preparation", "collection", "loyalty", "communication")
+        instance = "11111111-1111-4111-8111-111111111111"
+        queues = [{"name": "ref.api." + owner + ".replies." + instance, "consumers": 1} for owner in owners]
+
+        def probe():
+            return report(values, ("API",), (), lambda *a: {}, lambda *a: queues)
+
+        self.assertTrue(probe()["ready"])
+        queues[0]["consumers"] = 0
+        self.assertFalse(probe()["ready"])
+        queues[0]["consumers"] = 1
+        queues[0]["name"] = "ref.api.menu.replies"
+        self.assertFalse(probe()["ready"])
+        queues[0]["name"] += ".invalid"
+        self.assertFalse(probe()["ready"])

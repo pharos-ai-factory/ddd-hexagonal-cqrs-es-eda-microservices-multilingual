@@ -20,6 +20,11 @@
       "version": 4,
       "file": "0004_explicit_realtime.sql",
       "checksum": "0be3ec80dc70ac3ff50b510e3909fff5c031f2c725200633a408c5d8a22f2791"
+    },
+    {
+      "version": 5,
+      "file": "0005_reply_routes.sql",
+      "checksum": "bd2b2ebe7e55dba1751076564a6258cd1ecf5db9fc041423506c8402f9405dd8"
     }
   ]
 }

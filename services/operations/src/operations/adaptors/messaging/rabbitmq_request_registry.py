@@ -9,6 +9,7 @@ from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic
 
 from operations.adaptors.diagnostics import failure
+from operations.adaptors.messaging.reply_address import reply_route
 from operations.adaptors.generated.request_registry import Reply, Request
 from operations.adaptors.messaging.rabbitmq_connection import broker_connection
 from operations.adaptors.messaging.request_envelope import (
@@ -62,6 +63,7 @@ class RabbitMQRequestRegistry:
                 target=wire.aggregate_id,
                 name=self.owner + "." + body.DESCRIPTOR.name,
                 correlation=wire.correlation_id,
+                actor_id=wire.actor_id,
                 expected=wire.expected_version,
                 input=value,
             )
@@ -133,6 +135,7 @@ class RabbitMQRequestRegistry:
                                 or len(body) > 65536
                             ):
                                 raise ValueError("Invalid request properties")
+                            route = reply_route(self.owner, properties.reply_to)
                             request = parse_request(self.owner, body)
                             if request.request_id != properties.message_id:
                                 raise ValueError("Request identity mismatch")
@@ -157,7 +160,11 @@ class RabbitMQRequestRegistry:
                                 response.request_id = request.request_id
                                 return response.SerializeToString(deterministic=True)
 
-                            intent = ReplyIntent(request.request_id, encode)
+                            intent = ReplyIntent(
+                                request.request_id,
+                                encode,
+                                route="" if route == "reply." + self.owner else route,
+                            )
                             token = current.set(intent if kind == "command" else None)
                             try:
                                 reply = self.handle(request)
@@ -168,7 +175,7 @@ class RabbitMQRequestRegistry:
                                 return
                             channel.basic_publish(
                                 "cafe.replies",
-                                "reply." + self.owner,
+                                route,
                                 reply.SerializeToString(),
                                 properties=pika.BasicProperties(
                                     content_type="application/x-protobuf",
