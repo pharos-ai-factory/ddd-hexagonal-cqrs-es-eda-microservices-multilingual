@@ -32,6 +32,7 @@ func TestPriceZeroRetainsPresenceAndCommandIdentityAcrossAttempts(t *testing.T) 
 	var first pb.Request
 	for i := 0; i < 2; i++ {
 		r := httptest.NewRequest("POST", "/api/v1/menu/editions/"+id+"/prices", strings.NewReader(`{"code":"coffee","minor":0}`))
+		r = r.WithContext(context.WithValue(r.Context(), actorKey{}, id))
 		r.SetPathValue("id", id)
 		r.Header.Set("Idempotency-Key", id)
 		r.Header.Set("If-Match", "0")

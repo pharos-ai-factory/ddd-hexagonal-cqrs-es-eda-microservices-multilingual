@@ -79,8 +79,10 @@ type CommandMetadata struct {
 	AggregateId     string                 `protobuf:"bytes,2,opt,name=aggregate_id,json=aggregateId,proto3" json:"aggregate_id,omitempty"`
 	ExpectedVersion *uint64                `protobuf:"varint,3,opt,name=expected_version,json=expectedVersion,proto3,oneof" json:"expected_version,omitempty"`
 	CorrelationId   string                 `protobuf:"bytes,4,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Authenticated subject supplied by the API; absent for internal or legacy commands.
+	ActorId       string `protobuf:"bytes,5,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CommandMetadata) Reset() {
@@ -137,6 +139,13 @@ func (x *CommandMetadata) GetExpectedVersion() uint64 {
 func (x *CommandMetadata) GetCorrelationId() string {
 	if x != nil {
 		return x.CorrelationId
+	}
+	return ""
+}
+
+func (x *CommandMetadata) GetActorId() string {
+	if x != nil {
+		return x.ActorId
 	}
 	return ""
 }
@@ -321,13 +330,14 @@ const file_cafe_requests_v1_common_proto_rawDesc = "" +
 	"\vPageRequest\x12\x14\n" +
 	"\x05limit\x18\x01 \x01(\rR\x05limit\x12\x19\n" +
 	"\x05after\x18\x02 \x01(\tH\x00R\x05after\x88\x01\x01B\b\n" +
-	"\x06_after\"\xbf\x01\n" +
+	"\x06_after\"\xda\x01\n" +
 	"\x0fCommandMetadata\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12!\n" +
 	"\faggregate_id\x18\x02 \x01(\tR\vaggregateId\x12.\n" +
 	"\x10expected_version\x18\x03 \x01(\x04H\x00R\x0fexpectedVersion\x88\x01\x01\x12%\n" +
-	"\x0ecorrelation_id\x18\x04 \x01(\tR\rcorrelationIdB\x13\n" +
+	"\x0ecorrelation_id\x18\x04 \x01(\tR\rcorrelationId\x12\x19\n" +
+	"\bactor_id\x18\x05 \x01(\tR\aactorIdB\x13\n" +
 	"\x11_expected_version\"9\n" +
 	"\tRejection\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +

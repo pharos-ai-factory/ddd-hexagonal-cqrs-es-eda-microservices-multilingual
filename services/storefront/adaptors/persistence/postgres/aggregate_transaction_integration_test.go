@@ -51,6 +51,7 @@ func TestCommandRepositoryScopeLifetimeAndRejectedSave(t *testing.T) {
 		t.Fatalf("snapshot alias escaped staging: %+v %v", loaded, err)
 	}
 	rejectedMetadata := metadata(id, 1)
+	rejectedMetadata.ActorID = NewID()
 	rejected, err := transaction.Execute(t.Context(), rejectedMetadata, func(repo a.WriteRepository[scopedState]) (execution.Result, error) {
 		escaped = repo
 		if err := repo.Save(t.Context(), state); err != nil {
@@ -67,6 +68,15 @@ func TestCommandRepositoryScopeLifetimeAndRejectedSave(t *testing.T) {
 	})
 	if err != nil || replay.Rejection == nil || replay.Rejection.Code != "fixture_rejection" {
 		t.Fatalf("replay: %+v %v", replay, err)
+	}
+	foreignActor := rejectedMetadata
+	foreignActor.ActorID = NewID()
+	conflict, conflictErr := transaction.Execute(t.Context(), foreignActor, func(a.WriteRepository[scopedState]) (execution.Result, error) {
+		t.Fatal("another actor reran the command")
+		return execution.Result{}, nil
+	})
+	if conflictErr != nil || conflict.Rejection == nil || conflict.Rejection.Code != "idempotency_conflict" {
+		t.Fatalf("actor receipt isolation: %+v %v", conflict, conflictErr)
 	}
 	if err = escaped.Save(t.Context(), state); err == nil {
 		t.Fatal("rejected repository escaped")

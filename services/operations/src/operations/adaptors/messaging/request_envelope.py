@@ -43,6 +43,8 @@ def validate(request: Request, owner: str) -> tuple[str, Message]:
         identifier(metadata.command_id)
         identifier(metadata.aggregate_id)
         identifier(metadata.correlation_id)
+        if metadata.actor_id:
+            identifier(metadata.actor_id)
         if not metadata.HasField("expected_version"):
             raise ValueError("Expected version is required")
         required_inputs(body)

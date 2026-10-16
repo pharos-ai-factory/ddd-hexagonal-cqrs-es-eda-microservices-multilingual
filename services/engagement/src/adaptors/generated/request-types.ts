@@ -9,6 +9,7 @@ export interface CommandMetadata {
   aggregateId: string;
   expectedVersion?: number;
   correlationId: string;
+  actorId: string;
 }
 export interface Rejection {
   code: string;

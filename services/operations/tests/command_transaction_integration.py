@@ -52,7 +52,7 @@ def test_local_transaction_scope_lifetime_and_rejected_save() -> None:
             escaped[-1].save(state)
         loaded = queries.get(identity)
         assert loaded and loaded["state"]["instructions"] == "Coffee"
-        rejection_metadata = replace(metadata, id=new_id(), expected=1)
+        rejection_metadata = replace(metadata, id=new_id(), expected=1, actor_id=new_id())
 
         def reject(repository: WriteRepository[TicketSnapshot]) -> CommandResult:
             escaped.append(repository)
@@ -66,6 +66,10 @@ def test_local_transaction_scope_lifetime_and_rejected_save() -> None:
         assert (
             unit.execute(rejection_metadata, lambda _: pytest.fail("Rejected replay ran again")) == rejected
         )
+        conflict = unit.execute(
+            replace(rejection_metadata, actor_id=new_id()), lambda _: pytest.fail("Foreign actor executed")
+        )
+        assert conflict["rejection"]["code"] == "idempotency_conflict"
         with pytest.raises(RuntimeError):
             escaped[-1].save(state)
 

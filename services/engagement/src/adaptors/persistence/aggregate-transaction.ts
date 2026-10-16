@@ -44,8 +44,17 @@ export class PostgresAggregateTransaction<S, A> implements AggregateTransaction<
     work: (repository: WriteRepository<A>) => Promise<TransactionResult>,
   ): Promise<Outcome> {
     [m.id, m.target, m.correlation].forEach(identifier);
+    if (m.actorId) identifier(m.actorId);
     const digest = createHash('sha256')
-      .update(JSON.stringify(canonical({ expected: m.expected ?? null, input: m.input })))
+      .update(
+        JSON.stringify(
+          canonical({
+            expected: m.expected ?? null,
+            input: m.input,
+            ...(m.actorId ? { actorId: m.actorId } : {}),
+          }),
+        ),
+      )
       .digest('hex');
     const target = this.kind + ':' + m.target,
       client = await this.db.pool.connect();

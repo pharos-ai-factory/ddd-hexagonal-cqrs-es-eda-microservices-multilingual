@@ -56,7 +56,9 @@ class CommandExecutor[A, C]:
         def work(repository: WriteRepository[A]) -> TransactionResult:
             bus = RealtimeBuffer()
             try:
-                result = self._handler(repository, bus).execute(CommandContext(metadata.target), command)
+                result = self._handler(repository, bus).execute(
+                    CommandContext(metadata.target, metadata.actor_id), command
+                )
                 return TransactionResult(result.status, realtime=tuple(bus.events))
             except Rejection as rejection:
                 return TransactionResult("", realtime=tuple(bus.events), rejection=rejection.outcome())

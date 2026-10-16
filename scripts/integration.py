@@ -172,6 +172,21 @@ def execute(env_file, keep=False):
                 CAFE_HTTP_API_KEY=values["API_KEY"],
             ),
         )
+        check(
+            "Overlapping API instances and reconnects",
+            [
+                sys.executable,
+                "scripts/go.py",
+                "test",
+                "-race",
+                "-tags",
+                "integration",
+                "-count=1",
+                "-timeout=120s",
+                "./adaptors/messaging",
+            ],
+            dict(test_environment(values), CAFE_GO_PROJECT="services/api"),
+        )
         check("RabbitMQ request recovery", [sys.executable, "tests/infrastructure/request_recovery.py"], live)
         check(
             "Gherkin live workflows",

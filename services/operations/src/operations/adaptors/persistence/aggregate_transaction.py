@@ -41,7 +41,11 @@ class PostgresAggregateTransaction[S: Mapping[str, object], A](AggregateTransact
         for value in (m.id, m.target, m.correlation):
             identifier(value)
         target = self.kind + ":" + m.target
-        digest = fingerprint({"expected": m.expected, "input": dict(m.input)})
+        material: dict[str, object] = {"expected": m.expected, "input": dict(m.input)}
+        if m.actor_id:
+            identifier(m.actor_id)
+            material["actor_id"] = m.actor_id
+        digest = fingerprint(material)
         with self.database.pool.connection() as connection, connection.transaction():
             connection.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (target,))
             connection.execute("SELECT set_config('cafe.command_target',%s,true)", (target,))

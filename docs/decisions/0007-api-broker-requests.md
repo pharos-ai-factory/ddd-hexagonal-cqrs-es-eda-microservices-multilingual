@@ -71,3 +71,7 @@ a command can commit while HTTP reports uncertainty, then return the same outcom
 on retry with one receipt, one event and one root transition.
 
 Executed results and environment limits are recorded in [verification](../verification.md).
+
+The connection-specific reply design in [decision 0009](0009-contract-enforcement-and-command-replies.md#connection-routing-and-authenticated-actors--16-october-2026)
+replaces the single-API constraint above. Exclusive classic queues isolate each
+connection; quorum request queues remain durable.

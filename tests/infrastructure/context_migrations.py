@@ -78,8 +78,7 @@ class ContextMigrations(unittest.TestCase):
  SELECT set_config('cafe.command_target','migration_probe:{identity}',true);
  INSERT INTO cafe.aggregates(kind,id,version,state) VALUES('migration_probe','{identity}',1,'{{"kept":true}}');
  COMMIT;
- DROP TABLE cafe.internal_command_dispatches;
- DROP TABLE cafe.internal_commands;
+ ALTER TABLE cafe.command_replies DROP COLUMN reply_route;
  DELETE FROM cafe.context_migrations WHERE version={self.versions["ordering"]};""")
         self.addCleanup(self.sql, migration_sql("ordering"))
         self.sql(migration_sql("ordering"))

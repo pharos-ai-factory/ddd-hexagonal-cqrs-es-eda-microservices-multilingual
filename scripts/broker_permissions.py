@@ -9,11 +9,20 @@ from contract_sources import ROOT, OWNERS, catalogue, subscriptions
 
 GENERATED = "services/storefront/apps/topology/permissions.generated.json"
 TOPICS = ("cafe.events", "cafe.requests", "cafe.replies")
+INSTANCE = r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
 
 
 def exact(names):
     """Escape and anchor an explicit resource or routing-key allow-list."""
     return "^(" + "|".join(re.escape(name) for name in sorted(set(names))) + ")$" if names else "^$"
+
+
+def reply_addresses(owners, queue=False, legacy=False):
+    patterns = []
+    for owner in sorted(owners):
+        name = f"ref.api.{owner}.replies" if queue else f"reply.{owner}"
+        patterns.append(re.escape(name) + (rf"(\.{INSTANCE})?" if legacy else rf"\.{INSTANCE}"))
+    return "^(" + "|".join(patterns) + ")$" if patterns else "^$"
 
 
 def build(root=ROOT):
@@ -80,7 +89,7 @@ def build(root=ROOT):
             [name for name, context in queues.items() if context == owner],
             {
                 "cafe.events": rf"^(domain|integration)\.{re.escape(owner)}\..+$",
-                "cafe.replies": exact([f"reply.{owner}"] if owner in request_owners else []),
+                "cafe.replies": reply_addresses([owner], legacy=True) if owner in request_owners else "^$",
             },
         )
     user(
@@ -90,6 +99,15 @@ def build(root=ROOT):
         [name for name, context in queues.items() if context == "api"],
         {"cafe.requests": exact(request_keys)},
     )
+    caller = users["cafe_api"]
+    caller["permissions"] = {
+        "configure": reply_addresses(request_owners, queue=True),
+        "write": "^(cafe\\.requests|" + reply_addresses(request_owners, queue=True)[1:-1] + ")$",
+        "read": "^(cafe\\.replies|" + reply_addresses(request_owners, queue=True, legacy=True)[1:-1] + ")$",
+    }
+    for topic in caller["topics"]:
+        if topic["exchange"] == "cafe.replies":
+            topic["read"] = reply_addresses(request_owners)
     # RabbitMQ requires queue read and DLX write when declaring dead-letter arguments.
     user(
         "topology",

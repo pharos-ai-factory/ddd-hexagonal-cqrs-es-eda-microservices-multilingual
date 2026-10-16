@@ -49,18 +49,22 @@ once published; additive evolution requires compatible defaults or a new version
 
 ## Delivery and uncertainty
 
-The bootstrap owns durable quorum queues and the topic exchanges `cafe.requests`
-and `cafe.replies`. Each context has independent `ref.<owner>.commands` and
-`ref.<owner>.queries` queues and consumers and publishes `reply.<owner>`.
-The API publishes `request.<owner>.command` or `request.<owner>.query` and exclusively consumes
-`ref.api.<owner>.replies`. Runtime credentials cannot declare, bind or delete
-resources. Topic permissions prevent owners from sending requests or forging
-another owner's reply. The API cannot publish domain/integration events.
+The bootstrap owns durable quorum request queues and the topic exchanges
+`cafe.requests` and `cafe.replies`. Each context has independent command and query
+queues. Every API broker connection generates a UUIDv4 and owns an exclusive,
+auto-deleting classic reply queue per owner:
+`ref.api.<owner>.replies.<connection>`, bound to `reply.<owner>.<connection>`.
+The request carries that address in AMQP `ReplyTo`. Replies reach the originating
+connection during overlapping deployments; reconnecting creates fresh addresses.
 
-The current development composition has one API process, with concurrent callers
-matched by a fresh transport request ID. Its exclusive reply consumers enforce
-that deployment constraint. Multiple API processes would require a reviewed
-reply-addressing and queue-ownership design.
+API authority permits only that temporary queue family and exact owner-scoped
+UUIDv4 binding keys. Owner runtime credentials retain no topology authority and
+cannot publish another owner's replies. Legacy `reply.<owner>` routes remain
+available for in-flight requests from old API binaries. Upgrade owner responders,
+apply context migration version five and provision permissions before new API
+callers. Command reply storage retains the validated route with its immutable
+bytes; retries with a fresh transport ID create a new reply intent for the current
+connection. Disconnected destinations expire under the existing reply lifetime.
 
 Requests and replies use persistent, mandatory publication with publisher
 confirms. Command consumers acknowledge after their receiving transaction commits
@@ -127,3 +131,20 @@ plain response/resource DTOs, checked encoders and typed query registrations.
 `required_output` marks required nested message values; optional fields preserve
 presence. Owner handlers select missing-resource and pagination behaviour.
 See [decision 0029](../../../docs/decisions/0029-schema-generated-command-and-query-responses.md).
+
+## Authenticated command actor
+
+The API maps the session's canonical subject to `CommandMetadata.actor_id` (field
+five). CLI commands use the server-provisioned CLI actor. Body fields and request
+headers cannot choose the actor. The owner validates the identity, retains it in
+plain command metadata and gives it to the feature handler in `CommandContext`.
+Owner business authorisation can use this identity without importing HTTP/session
+providers. Session tokens and access credentials never enter the message.
+
+Receipt fingerprints include a present actor, so changing the actor while reusing
+a command ID returns `idempotency_conflict`. Empty actors preserve the existing
+fingerprint format for trusted internal and legacy commands. New HTTP commands
+always require an actor; absence conveys no authenticated-user authority. A retry
+of a pre-upgrade receipt with a newly supplied actor conflicts rather than claiming
+ownership of that old receipt. Resolve uncertain pre-upgrade commands before
+resubmitting them under a new identity. Event reactions retain their system origin.

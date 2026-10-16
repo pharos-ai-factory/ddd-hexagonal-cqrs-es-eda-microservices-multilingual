@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -14,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 from dev import broker_request, compose, load
+from broker_permissions import reply_addresses
 
 
 def main():
@@ -131,16 +133,27 @@ def main():
                 pass
         blocked.result(timeout=15)
     print("A blocked command transaction leaves its owner's query consumer responsive")
-    resource = "bindings/reference/e/cafe.replies/q/ref.api.menu.replies"
-    broker_request(values, "DELETE", resource + "/reply.menu", {})
+    queues = json.loads(broker_request(values, "GET", "queues/reference", {}))
+    active = [
+        item["name"]
+        for item in queues
+        if re.fullmatch(reply_addresses(["menu"], queue=True), item["name"]) and item.get("consumers", 0) > 0
+    ]
+    assert len(active) == 1, "Recovery fixture requires one live API connection"
+    resource = "bindings/reference/e/cafe.replies/q/" + active[0]
+    bindings = json.loads(broker_request(values, "GET", resource, {}))
+    assert len(bindings) == 1
+    route = bindings[0]["routing_key"]
+    broker_request(values, "DELETE", resource + "/" + bindings[0]["properties_key"], {})
     try:
         uncertain = command("/publish", {}, 1, publish_id, 503)
         assert uncertain == {"code": "temporarily_unavailable"}
         pending = json.loads(
             sql(
-                f"SELECT json_build_object('id',r.id,'body',encode(r.body,'hex'),'attempts',d.attempts) FROM cafe.command_replies r JOIN cafe.command_reply_dispatches d ON d.event_id=r.id WHERE d.completed_at IS NULL AND position(convert_to('{drink}','UTF8') in r.body)>0 ORDER BY r.created_at DESC LIMIT 1"
+                f"SELECT json_build_object('id',r.id,'body',encode(r.body,'hex'),'route',r.reply_route,'attempts',d.attempts) FROM cafe.command_replies r JOIN cafe.command_reply_dispatches d ON d.event_id=r.id WHERE d.completed_at IS NULL AND position(convert_to('{drink}','UTF8') in r.body)>0 ORDER BY r.created_at DESC LIMIT 1"
             )
         )
+        assert pending["route"] == route, "Committed reply lost its originating connection"
         assert pending["attempts"] > 0, "Committed reply did not survive failed mandatory publication"
         deadline = time.monotonic() + 5
         while True:
@@ -155,7 +168,7 @@ def main():
             "The command did not commit before its lost reply"
         )
     finally:
-        broker_request(values, "POST", resource, {"routing_key": "reply.menu", "arguments": {}})
+        broker_request(values, "POST", resource, {"routing_key": route, "arguments": {}})
     recovered = command("/publish", {}, 1, publish_id, 200)
     assert recovered == {"aggregateId": drink, "version": 2, "status": "published"}
     assert command("/publish", {}, 1, publish_id, 200) == recovered

@@ -77,15 +77,18 @@ func (c Config) Mount(mux *contract.Mux) {
 	}
 }
 
+type actorKey struct{}
+
 func (c Config) authoriseBackend(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodPost {
 			w.WriteHeader(405)
 			return
 		}
-		cli := security.Equal(r.Header.Get("Authorization"), "Bearer "+c.CLIKey)
+		actor := a.CLIActorID
+		cli := c.CLIKey != "" && security.Equal(r.Header.Get("Authorization"), "Bearer "+c.CLIKey)
 		if !cli {
-			_, ok, err := c.Sessions.Authenticate(r.Context(), security.Token(r))
+			principal, ok, err := c.Sessions.Authenticate(r.Context(), security.Token(r))
 			if err != nil {
 				response.SessionUnavailable.Write(w)
 				return
@@ -94,12 +97,13 @@ func (c Config) authoriseBackend(next http.Handler) http.Handler {
 				response.Unauthorised.Write(w)
 				return
 			}
+			actor = principal.Subject
 			if r.Method == http.MethodPost && !security.Origin(r, c.Origins) {
 				response.OriginDenied.Write(w)
 				return
 			}
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, 65536)
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), actorKey{}, actor)))
 	})
 }

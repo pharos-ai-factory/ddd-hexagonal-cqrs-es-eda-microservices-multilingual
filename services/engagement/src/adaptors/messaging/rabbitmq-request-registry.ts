@@ -2,6 +2,8 @@ import { toOutcome } from './generated/response-payloads.js';
 import { replyType, decodeRequest, type Request } from './request-envelope.js';
 import amqp from 'amqplib';
 
+import { replyRoute } from './reply-address.js';
+
 import { confirmed } from './rabbitmq-publisher.js';
 
 import { failure } from '../diagnostics.js';
@@ -104,6 +106,7 @@ export class RabbitMQRequestRegistry {
             }
             const work = (async () => {
               let request: Request;
+              let route: string;
               try {
                 const properties = message.properties;
                 if (
@@ -115,6 +118,7 @@ export class RabbitMQRequestRegistry {
                   message.fields.routingKey !== 'request.' + this.owner + '.' + kind
                 )
                   throw new Error('Invalid request properties');
+                route = replyRoute(this.owner, properties.replyTo);
                 request = decodeRequest(message.content, this.owner);
                 if (
                   request.kind !== kind ||
@@ -136,6 +140,7 @@ export class RabbitMQRequestRegistry {
               }
               const intent: ReplyIntent = {
                 id: request.id,
+                route: route === 'reply.' + this.owner ? '' : route,
                 committed: false,
                 encode: (outcome) => {
                   const result = toOutcome(outcome);
@@ -162,7 +167,7 @@ export class RabbitMQRequestRegistry {
                 channel.ack(message);
                 return;
               }
-              await confirmed(channel, 'cafe.replies', 'reply.' + this.owner, reply, {
+              await confirmed(channel, 'cafe.replies', route, reply, {
                 contentType: 'application/x-protobuf',
                 type: 'reply',
                 appId: this.owner,

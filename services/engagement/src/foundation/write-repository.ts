@@ -10,4 +10,4 @@ export interface WriteRepository<A> {
 }
 
 /** The aggregate targeted by a business operation. */
-export type CommandContext = { target: string };
+export type CommandContext = { target: string; actorId?: string };

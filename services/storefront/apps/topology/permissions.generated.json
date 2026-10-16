@@ -475,7 +475,7 @@
         },
         {
           "exchange": "cafe.replies",
-          "write": "^(reply\\.menu)$",
+          "write": "^(reply\\.menu(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?)$",
           "read": "^$"
         }
       ]
@@ -500,7 +500,7 @@
         },
         {
           "exchange": "cafe.replies",
-          "write": "^(reply\\.ordering)$",
+          "write": "^(reply\\.ordering(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?)$",
           "read": "^$"
         }
       ]
@@ -525,7 +525,7 @@
         },
         {
           "exchange": "cafe.replies",
-          "write": "^(reply\\.preparation)$",
+          "write": "^(reply\\.preparation(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?)$",
           "read": "^$"
         }
       ]
@@ -550,7 +550,7 @@
         },
         {
           "exchange": "cafe.replies",
-          "write": "^(reply\\.collection)$",
+          "write": "^(reply\\.collection(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?)$",
           "read": "^$"
         }
       ]
@@ -575,7 +575,7 @@
         },
         {
           "exchange": "cafe.replies",
-          "write": "^(reply\\.loyalty)$",
+          "write": "^(reply\\.loyalty(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?)$",
           "read": "^$"
         }
       ]
@@ -600,7 +600,7 @@
         },
         {
           "exchange": "cafe.replies",
-          "write": "^(reply\\.communication)$",
+          "write": "^(reply\\.communication(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?)$",
           "read": "^$"
         }
       ]
@@ -608,9 +608,9 @@
     "cafe_api": {
       "password_key": "API_BROKER_PASSWORD",
       "permissions": {
-        "configure": "^$",
-        "write": "^(cafe\\.requests)$",
-        "read": "^(ref\\.api\\.collection\\.replies|ref\\.api\\.communication\\.replies|ref\\.api\\.loyalty\\.replies|ref\\.api\\.menu\\.replies|ref\\.api\\.ordering\\.replies|ref\\.api\\.preparation\\.replies)$"
+        "configure": "^(ref\\.api\\.collection\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.communication\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.loyalty\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.menu\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.ordering\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.preparation\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$",
+        "write": "^(cafe\\.requests|(ref\\.api\\.collection\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.communication\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.loyalty\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.menu\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.ordering\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|ref\\.api\\.preparation\\.replies\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}))$",
+        "read": "^(cafe\\.replies|(ref\\.api\\.collection\\.replies(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?|ref\\.api\\.communication\\.replies(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?|ref\\.api\\.loyalty\\.replies(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?|ref\\.api\\.menu\\.replies(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?|ref\\.api\\.ordering\\.replies(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?|ref\\.api\\.preparation\\.replies(\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})?))$"
       },
       "topics": [
         {
@@ -626,7 +626,7 @@
         {
           "exchange": "cafe.replies",
           "write": "^$",
-          "read": "^$"
+          "read": "^(reply\\.collection\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|reply\\.communication\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|reply\\.loyalty\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|reply\\.menu\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|reply\\.ordering\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|reply\\.preparation\\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$"
         }
       ]
     },

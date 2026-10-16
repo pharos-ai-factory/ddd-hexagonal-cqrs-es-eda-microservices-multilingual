@@ -31,6 +31,8 @@ type Metadata struct {
 	ExpectedVersion *uint64
 	CorrelationID   string
 	CausationID     string
+	// ActorID is the authenticated subject; empty for internal or legacy commands.
+	ActorID string
 	// Input retains the original material input used for receipt fingerprints.
 	Input         any
 	Consumer      string

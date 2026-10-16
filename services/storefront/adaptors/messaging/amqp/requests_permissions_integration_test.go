@@ -41,7 +41,7 @@ func TestRequestReplyPermissionsCoverEveryOwner(t *testing.T) {
 				}
 				assertProbe(t, ownerReader, RequestQueue(owner, kind), key)
 			}
-			if err = replies.PublishReply(ctx, owner, "permission-probe", []byte(owner)); err != nil {
+			if err = replies.PublishReply(ctx, owner, "permission-probe", "", []byte(owner)); err != nil {
 				t.Fatal(err)
 			}
 			assertProbe(t, reader, ReplyQueue(owner), owner)

@@ -39,6 +39,10 @@ func translate(r *http.Request, owner, path string, operation *openapi3.Operatio
 		return nil, err
 	}
 	if r.Method == http.MethodPost {
+		actor, _ := r.Context().Value(actorKey{}).(string)
+		if !rpc.ValidID(actor) {
+			return nil, requestError{"unauthorised", 401}
+		}
 		id, key, correlation := r.PathValue("id"), r.Header.Get("Idempotency-Key"), r.Header.Get("X-Correlation-ID")
 		if correlation == "" {
 			correlation = key
@@ -62,7 +66,7 @@ func translate(r *http.Request, owner, path string, operation *openapi3.Operatio
 		if err = schema.VisitJSON(object); err != nil {
 			return nil, requestError{"invalid_request", 400}
 		}
-		command, err := mapping.Command(operation.OperationID, data, &pb.CommandMetadata{CommandId: key, AggregateId: id, ExpectedVersion: &version, CorrelationId: correlation})
+		command, err := mapping.Command(operation.OperationID, data, &pb.CommandMetadata{CommandId: key, AggregateId: id, ExpectedVersion: &version, CorrelationId: correlation, ActorId: actor})
 		if err != nil {
 			return nil, requestError{"invalid_request", 400}
 		}

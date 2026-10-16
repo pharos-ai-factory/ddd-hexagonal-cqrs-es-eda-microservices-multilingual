@@ -42,7 +42,7 @@ func (r *RabbitMQRequestRegistry) runKind(ctx context.Context, url, kind string)
 			if _, _, err := Validate(request, r.Owner); err != nil {
 				return nil, err
 			}
-			intent := &postgres.ReplyIntent{ID: id, Encode: func(outcome a.Outcome) ([]byte, error) {
+			intent := &postgres.ReplyIntent{ID: id, Route: broker.ReplyRoute(ctx), Encode: func(outcome a.Outcome) ([]byte, error) {
 				reply, err := OutcomeReply(r.Owner, outcome)
 				if err != nil {
 					return nil, err

@@ -24,3 +24,4 @@ class CommandContext:
     """Identifies the aggregate targeted by this business operation."""
 
     target: str
+    actor_id: str = ""

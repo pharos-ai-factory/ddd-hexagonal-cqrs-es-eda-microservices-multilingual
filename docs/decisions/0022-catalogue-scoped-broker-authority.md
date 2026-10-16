@@ -49,3 +49,12 @@ restricted topology, denied binding changes, publication spoofing and arbitrary
 queue access. Delivery recovery tests across all three owner runtimes use their
 actual credentials and declared queues. See the
 [permission model and workflow](../broker-permissions.md).
+
+## Temporary API reply authority — 16 October 2026
+
+API connections may configure their owner-scoped UUIDv4 reply queue family, write
+those queues for binding and read `cafe.replies` with exact UUIDv4 topic keys.
+Exclusive classic queues prevent another connection consuming those replies.
+Owner publication permission covers its legacy reply key and its UUIDv4 reply
+keys. Owner topology privileges remain empty. The production permission probes
+and overlapping API connection tests enforce this exception.

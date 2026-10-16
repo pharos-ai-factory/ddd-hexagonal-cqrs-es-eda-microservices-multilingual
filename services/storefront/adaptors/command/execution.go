@@ -50,7 +50,7 @@ func (e *executor[A, C, H]) Execute(ctx context.Context, m a.Metadata, c C) (a.O
 	return e.transaction.Execute(ctx, m, func(repository a.WriteRepository[A]) (Result, error) {
 		bus := &RealtimeBuffer{active: true}
 		defer bus.Close()
-		result, err := e.factory(repository, bus).Execute(ctx, a.CommandContext{Target: m.AggregateID}, c)
+		result, err := e.factory(repository, bus).Execute(ctx, a.CommandContext{Target: m.AggregateID, ActorID: m.ActorID}, c)
 		return Result{Status: result.Status, Realtime: bus.Events}, err
 	})
 }

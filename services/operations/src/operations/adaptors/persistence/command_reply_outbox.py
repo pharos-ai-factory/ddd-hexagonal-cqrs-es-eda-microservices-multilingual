@@ -20,6 +20,7 @@ class ReplyIntent:
     identity: str
     encode: Callable[[Outcome], bytes]
     persisted: bool = False
+    route: str = ""
 
 
 current: ContextVar[ReplyIntent | None] = ContextVar("command_reply", default=None)
@@ -32,13 +33,13 @@ def append(connection: "Connection[Row]", outcome: Outcome) -> Outcome:
         if not body:
             raise ValueError("Empty command reply")
         connection.execute(
-            "INSERT INTO cafe.command_replies(id,body) VALUES(%s,%s) ON CONFLICT DO NOTHING",
-            (intent.identity, body),
+            "INSERT INTO cafe.command_replies(id,body,reply_route) VALUES(%s,%s,%s) ON CONFLICT DO NOTHING",
+            (intent.identity, body, intent.route),
         )
         row = connection.execute(
-            "SELECT body FROM cafe.command_replies WHERE id=%s", (intent.identity,)
+            "SELECT body,reply_route FROM cafe.command_replies WHERE id=%s", (intent.identity,)
         ).fetchone()
-        if row is None or bytes(row["body"]) != body:  # type: ignore[call-overload]
+        if row is None or row["reply_route"] != intent.route or bytes(row["body"]) != body:  # type: ignore[call-overload]
             raise ValueError("Request identity reused with different reply bytes")
         connection.execute(
             "INSERT INTO cafe.command_reply_dispatches(event_id) VALUES(%s) ON CONFLICT DO NOTHING",

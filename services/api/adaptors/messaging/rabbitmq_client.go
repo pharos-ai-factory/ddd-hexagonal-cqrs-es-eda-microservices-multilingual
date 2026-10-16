@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	pb "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/api/adaptors/messaging/generated/cafe/requests/v1"
 	rabbit "github.com/rabbitmq/amqp091-go"
@@ -23,6 +24,7 @@ type RabbitMQRequestClient struct {
 	publishing chan struct{}
 	channel    *rabbit.Channel
 	returns    <-chan rabbit.Return
+	routes     map[string]string
 	waiting    map[string]pending
 }
 
@@ -43,8 +45,8 @@ func (c *RabbitMQRequestClient) Call(ctx context.Context, request pb.Request) (p
 	}
 	response := make(chan pb.Reply, 1)
 	c.mu.Lock()
-	channel, returns := c.channel, c.returns
-	if channel == nil {
+	channel, returns, route := c.channel, c.returns, c.routes[request.GetContext()]
+	if channel == nil || route == "" {
 		c.mu.Unlock()
 		return nil, fmt.Errorf("request broker unavailable")
 	}
@@ -64,7 +66,7 @@ func (c *RabbitMQRequestClient) Call(ctx context.Context, request pb.Request) (p
 		<-c.publishing
 		return nil, ctx.Err()
 	}
-	confirmation, err := channel.PublishWithDeferredConfirmWithContext(ctx, "cafe.requests", "request."+request.GetContext()+"."+kind, true, false, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: request.GetRequestId(), CorrelationId: request.GetRequestId(), AppId: "api", Type: kind, Expiration: "15000", Body: data})
+	confirmation, err := channel.PublishWithDeferredConfirmWithContext(ctx, "cafe.requests", "request."+request.GetContext()+"."+kind, true, false, rabbit.Publishing{ContentType: "application/x-protobuf", DeliveryMode: rabbit.Persistent, MessageId: request.GetRequestId(), CorrelationId: request.GetRequestId(), AppId: "api", ReplyTo: route, Type: kind, Expiration: "15000", Body: data})
 	if err == nil {
 		if confirmation == nil {
 			err = fmt.Errorf("publisher confirms unavailable")
@@ -98,13 +100,13 @@ func (c *RabbitMQRequestClient) Call(ctx context.Context, request pb.Request) (p
 		return nil, ctx.Err()
 	}
 }
-func (c *RabbitMQRequestClient) receive(owner string, delivery rabbit.Delivery) {
+func (c *RabbitMQRequestClient) receive(owner, route string, delivery rabbit.Delivery) {
 	reply, err := pb.NewReply(owner, "")
 	if err != nil {
 		_ = delivery.Ack(false)
 		return
 	}
-	valid := delivery.ContentType == "application/x-protobuf" && delivery.DeliveryMode == rabbit.Persistent && delivery.Type == "reply" && delivery.AppId == owner && delivery.RoutingKey == "reply."+owner && delivery.MessageId == delivery.CorrelationId && proto.Unmarshal(delivery.Body, reply) == nil && reply.GetContractVersion() == 1 && reply.GetContext() == owner && reply.GetRequestId() == delivery.CorrelationId
+	valid := delivery.ContentType == "application/x-protobuf" && delivery.DeliveryMode == rabbit.Persistent && delivery.Type == "reply" && delivery.AppId == owner && delivery.RoutingKey == route && delivery.MessageId == delivery.CorrelationId && proto.Unmarshal(delivery.Body, reply) == nil && reply.GetContractVersion() == 1 && reply.GetContext() == owner && reply.GetRequestId() == delivery.CorrelationId
 	if valid {
 		c.mu.Lock()
 		attempt, exists := c.waiting[reply.GetRequestId()]
@@ -151,14 +153,25 @@ func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owner
 	if err = receiver.Qos(128, 0, false); err != nil {
 		return err
 	}
+	instance := newConnectionID()
+	routes := make(map[string]string, len(owners))
 	for _, owner := range owners {
-		deliveries, err := receiver.Consume("ref.api."+owner+".replies", "", false, true, false, false, nil)
+		queue, route := "ref.api."+owner+".replies."+instance, "reply."+owner+"."+instance
+		if _, err = receiver.QueueDeclare(queue, false, true, true, false,
+			rabbit.Table{"x-queue-type": "classic", "x-message-ttl": int32(30000)}); err != nil {
+			return err
+		}
+		if err = receiver.QueueBind(queue, route, "cafe.replies", false, nil); err != nil {
+			return err
+		}
+		routes[owner] = route
+		deliveries, err := receiver.Consume(queue, "", false, true, false, false, nil)
 		if err != nil {
 			return err
 		}
 		go func() {
 			for delivery := range deliveries {
-				c.receive(owner, delivery)
+				c.receive(owner, route, delivery)
 			}
 		}()
 	}
@@ -167,11 +180,13 @@ func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owner
 	receiverClosed := receiver.NotifyClose(make(chan *rabbit.Error, 1))
 	c.mu.Lock()
 	c.channel = channel
+	c.routes = routes
 	c.returns = channel.NotifyReturn(make(chan rabbit.Return, 1))
 	c.mu.Unlock()
 	defer func() {
 		c.mu.Lock()
 		c.channel = nil
+		c.routes = nil
 		for _, attempt := range c.waiting {
 			select {
 			case attempt.reply <- nil:
@@ -197,4 +212,15 @@ func (c *RabbitMQRequestClient) connected(ctx context.Context, url string, owner
 		}
 	}
 	return fmt.Errorf("request connection closed")
+}
+
+// Reconnects get a fresh address so retired connections cannot consume new replies.
+func newConnectionID() string {
+	var id [16]byte
+	if _, err := rand.Read(id[:]); err != nil {
+		panic(err)
+	}
+	id[6] = id[6]&15 | 64
+	id[8] = id[8]&63 | 128
+	return fmt.Sprintf("%x-%x-%x-%x-%x", id[:4], id[4:6], id[6:8], id[8:10], id[10:])
 }
