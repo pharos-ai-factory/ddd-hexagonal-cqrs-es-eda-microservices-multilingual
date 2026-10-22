@@ -56,7 +56,6 @@ GENERATED = {
     "services/engagement/src/adaptors/generated/requests.json",
     "services/engagement/src/adaptors/generated/request-types.ts",
     "services/web/src/adaptors/generated/realtime.json",
-    "services/web/src/adaptors/generated/http.ts",
     "services/api/adaptors/http/backend/generated/mapping.go",
     "services/storefront/adaptors/persistence/postgres/migrations/generated/contexts.json",
     "services/storefront/adaptors/persistence/postgres/migrations/generated/0001_initial.sql",
@@ -152,6 +151,7 @@ for pattern in (
     "services/operations/src/operations/adaptors/generated/*_names.py",
     "services/storefront/contracts/events/generated/names/*.go",
     "services/*/**/generated/cafe/requests/v1/names.go",
+    "services/web/src/adaptors/generated/http/**/*.ts",
 ):
     GENERATED.update(path.relative_to(ROOT).as_posix() for path in ROOT.glob(pattern))
 

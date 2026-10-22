@@ -3,6 +3,7 @@
     "x-owner": "ordering",
     "get": {
       "operationId": "listOrders",
+      "tags": ["ordering"],
       "summary": "List orders",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -95,6 +96,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getOrder",
+      "tags": ["ordering"],
       "summary": "Get Order",
       "responses": {
         "200": {
@@ -141,6 +143,7 @@
     },
     "post": {
       "operationId": "createOrder",
+      "tags": ["ordering"],
       "summary": "createOrder",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -197,6 +200,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "addLine",
+      "tags": ["ordering"],
       "summary": "addLine",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -255,6 +259,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "changeQuantity",
+      "tags": ["ordering"],
       "summary": "changeQuantity",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -311,6 +316,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "placeOrder",
+      "tags": ["ordering"],
       "summary": "placeOrder",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },

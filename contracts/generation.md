@@ -12,7 +12,9 @@ service document for OpenAPI. Both roles select one copy of the required binding
 | `realtime` | Context-owned Protobuf snapshots and the publication envelope. Each domain service produces its own snapshots; Web consumes all six contexts.                                                                                                                                  |
 | `openapi`  | Assembled HTTP documents. API and Storefront generate their existing server/technical bundles; Web generates its HTTP operation client from the API document. API field mappings retain their Protobuf request dependencies.                                                   |
 
-The browser's OpenAPI client serves HTTP commands and queries. Its separate
+The browser's Orval client supplies tag-split fetch functions, TanStack Query
+hooks/options, models, MSW handlers and Faker fixtures for HTTP commands and
+queries. Its separate
 realtime Protobuf descriptor decodes Centrifugo publications. Backend integration
 events and request/reply Protobuf remain outside the browser outputs.
 
@@ -70,6 +72,9 @@ unexpected outputs. `pnpm check:compatibility` checks the complete authoritative
 schemas and historical fixtures independently of local generation selections.
 Selection tests preserve envelope identities and transitive dependencies, reject
 invalid declarations and check browser/API category boundaries.
+
+See the [browser OpenAPI client guide](../docs/openapi-client.md) for tag rules,
+the generated layout and consumption examples.
 
 RewardIssued remains a runtime contract in Engagement. Its historical fixture is
 also compiled and round-tripped through Go and Python in disposable test outputs;

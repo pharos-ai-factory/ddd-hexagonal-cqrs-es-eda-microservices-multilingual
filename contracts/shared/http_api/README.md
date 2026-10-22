@@ -227,8 +227,8 @@ share SQL table layouts or Go struct names.
 
 ## Enforcement commands
 
-`pnpm generate:http` rebuilds embedded OpenAPI bundles, frontend
-`services/web/src/adaptors/generated/http.ts` and typed API mappings under
+`pnpm generate:http` rebuilds embedded OpenAPI bundles, the Orval tree under
+`services/web/src/adaptors/generated/http/` and typed API mappings under
 `services/api/adaptors/http/backend/generated/`. Edit
 `services/api/adaptors/http/backend/contract_mappings.json` when an HTTP operation
 needs a different wire mapping. Owner command/query DTO mappings live in each
@@ -240,3 +240,8 @@ drift checks, frontend type checking and real-feature compilation tests with
 incompatible schema changes, plus Go startup coverage, request validation and
 operation/response conformance examples. `pnpm test:integration` checks live
 business responses through RabbitMQ for all 31 OpenAPI operations.
+
+Every API operation has one declared tag. Orval uses that tag to split generated
+TanStack Query clients, models, MSW handlers and Faker factories by business
+context or technical API group. See the
+[browser OpenAPI client guide](../../../docs/openapi-client.md).

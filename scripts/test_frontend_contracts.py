@@ -7,8 +7,8 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from frontend_contracts import generated
 from http_contracts import ROOT, SOURCE, DOCUMENTS, bundle
+from orval_contracts import OUTPUT, generate
 
 
 class FrontendContractsTests(unittest.TestCase):
@@ -20,7 +20,7 @@ class FrontendContractsTests(unittest.TestCase):
             configuration["extends"] = str(ROOT / "tsconfig.strict.json")
             (target / "tsconfig.json").write_text(json.dumps(configuration))
             (target / "node_modules").symlink_to(ROOT / "services/web/node_modules", target_is_directory=True)
-            (target / "src/adaptors/generated/http.ts").write_text(generated(document))
+            generate(ROOT, document, target / OUTPUT.relative_to("services/web"))
             (target / "src/contract-probe.ts").write_text(probe)
             return subprocess.run(
                 [
@@ -91,12 +91,12 @@ class FrontendContractsTests(unittest.TestCase):
         document["paths"]["/api/v1/menu/drinks/{id}"]["get"].setdefault("parameters", []).append(
             {"in": "query", "name": "reason", "required": True, "schema": {"type": "string"}}
         )
-        probe = "import {request} from './adaptors/http/operation-client';\nrequest('getDrink', {path: {id: 'test'}});"
+        probe = "import {getDrink} from './adaptors/generated/http/menu/menu';\ngetDrink('test');"
         rejected = self.compile(document, probe)
         self.assertNotEqual(rejected.returncode, 0)
-        self.assertIn("query", rejected.stdout)
+        self.assertIn("src/contract-probe.ts", rejected.stdout)
         accepted = self.compile(
-            document, probe.replace("{path: {id: 'test'}}", "{path: {id: 'test'}, query: {reason: 'test'}}")
+            document, probe.replace("getDrink('test')", "getDrink('test', {reason: 'test'})")
         )
         self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
 

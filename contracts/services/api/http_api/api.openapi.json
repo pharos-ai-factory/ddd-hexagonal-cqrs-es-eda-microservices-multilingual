@@ -5,6 +5,17 @@
     "version": "1.0.0",
     "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
   },
+  "tags": [
+    { "name": "menu", "description": "Menu context operations." },
+    { "name": "ordering", "description": "Ordering context operations." },
+    { "name": "preparation", "description": "Preparation context operations." },
+    { "name": "collection", "description": "Collection context operations." },
+    { "name": "loyalty", "description": "Loyalty context operations." },
+    { "name": "communication", "description": "Customer Communication context operations." },
+    { "name": "session", "description": "Browser session operations." },
+    { "name": "realtime", "description": "Internal realtime gateway operations." },
+    { "name": "operational", "description": "Health and diagnostics operations." }
+  ],
   "paths": {
     "/api/v1/menu/drinks": { "$ref": "../../../menu/http_api/drinks.paths.json#/list" },
     "/api/v1/menu/drinks/{id}": { "$ref": "../../../menu/http_api/drinks.paths.json#/item" },

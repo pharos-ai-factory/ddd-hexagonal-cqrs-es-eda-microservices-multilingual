@@ -3,6 +3,7 @@
     "x-owner": "menu",
     "get": {
       "operationId": "listDrinks",
+      "tags": ["menu"],
       "summary": "List drinks",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -93,6 +94,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getDrink",
+      "tags": ["menu"],
       "summary": "Get Drink",
       "responses": {
         "200": {
@@ -137,6 +139,7 @@
     },
     "post": {
       "operationId": "createDrink",
+      "tags": ["menu"],
       "summary": "createDrink",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -192,6 +195,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "reviseDrink",
+      "tags": ["menu"],
       "summary": "reviseDrink",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -247,6 +251,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "publishDrink",
+      "tags": ["menu"],
       "summary": "publishDrink",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },

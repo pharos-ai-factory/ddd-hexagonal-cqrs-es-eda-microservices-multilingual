@@ -32,6 +32,9 @@ def check():
                 target / name,
                 ignore=lambda _, names: [name for name in names if name in IGNORED],
             )
+        for name in ("tsconfig.strict.json",):
+            if (ROOT / name).exists():
+                shutil.copyfile(ROOT / name, target / name)
         (target / "node_modules").symlink_to(ROOT / "node_modules", target_is_directory=True)
         if (ROOT / ".tools").is_dir():
             (target / ".tools").symlink_to(ROOT / ".tools", target_is_directory=True)

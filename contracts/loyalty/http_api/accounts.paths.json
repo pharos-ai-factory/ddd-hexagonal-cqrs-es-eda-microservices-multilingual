@@ -3,6 +3,7 @@
     "x-owner": "loyalty",
     "get": {
       "operationId": "listAccounts",
+      "tags": ["loyalty"],
       "summary": "List accounts",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -93,6 +94,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getAccount",
+      "tags": ["loyalty"],
       "summary": "Get Account",
       "responses": {
         "200": {

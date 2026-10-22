@@ -3,8 +3,14 @@
 import argparse
 import copy
 import json
+import shutil
 from typed_http_boundaries import OUTPUT as MAPPING_OUTPUT, generate as mapping_generated
-from frontend_contracts import OUTPUT as FRONTEND_OUTPUT, generated as frontend_generated
+from orval_contracts import (
+    LEGACY_OUTPUT as LEGACY_FRONTEND_OUTPUT,
+    OUTPUT as FRONTEND_OUTPUT,
+    check as check_frontend,
+    generate as generate_frontend,
+)
 from pathlib import Path
 from contract_selection import declarations
 
@@ -86,8 +92,6 @@ def generated() -> dict[Path, str]:
         for name, directory in OUTPUTS.items()
         if name in produced
     }
-    if "api" in usage.get("web", {}).get("consumes", []):
-        outputs[ROOT / FRONTEND_OUTPUT] = frontend_generated(bundle(SOURCE / DOCUMENTS["api"]))
     if "api" not in produced:
         return outputs
     mapping = mapping_generated(ROOT, bundle(SOURCE / DOCUMENTS["api"]))
@@ -105,7 +109,10 @@ def generated() -> dict[Path, str]:
 
 def generate(check=False):
     expected_outputs = generated()
-    managed = {ROOT / FRONTEND_OUTPUT, ROOT / MAPPING_OUTPUT}
+    usage = declarations(ROOT)["openapi"]
+    frontend = "api" in usage.get("web", {}).get("consumes", [])
+    frontend_document = bundle(SOURCE / DOCUMENTS["api"]) if frontend else None
+    managed = {ROOT / MAPPING_OUTPUT}
     for directory in set(OUTPUTS.values()):
         managed.update((ROOT / directory).glob("*.openapi.json"))
     for path in managed - expected_outputs.keys():
@@ -119,8 +126,22 @@ def generate(check=False):
                 raise ValueError(f"OpenAPI bundle drift: {path.relative_to(ROOT)}; run pnpm generate:http")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(expected)
+    legacy = ROOT / LEGACY_FRONTEND_OUTPUT
+    if check:
+        if frontend_document is not None:
+            check_frontend(ROOT, frontend_document)
+        elif (ROOT / FRONTEND_OUTPUT).exists() or legacy.exists():
+            raise ValueError("Stale frontend OpenAPI output")
+    elif frontend_document is not None:
+        if legacy.exists():
+            legacy.unlink()
+        generate_frontend(ROOT, frontend_document, ROOT / FRONTEND_OUTPUT)
+    else:
+        if legacy.exists():
+            legacy.unlink()
+        if (ROOT / FRONTEND_OUTPUT).exists():
+            shutil.rmtree(ROOT / FRONTEND_OUTPUT)
 
 
 if __name__ == "__main__":

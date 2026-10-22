@@ -2,6 +2,7 @@
   "login": {
     "post": {
       "operationId": "login",
+      "tags": ["session"],
       "security": [],
       "parameters": [
         {
@@ -71,6 +72,7 @@
   "session": {
     "get": {
       "operationId": "session",
+      "tags": ["session"],
       "security": [
         {
           "OperatorSession": []
@@ -127,6 +129,7 @@
   "logout": {
     "post": {
       "operationId": "logout",
+      "tags": ["session"],
       "security": [],
       "parameters": [
         {

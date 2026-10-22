@@ -306,10 +306,16 @@ and reply schema fragments and imports their generated types.
    Keep generated messages outside application/domain packages. The API sends
    business commands and queries through RabbitMQ. Owner services expose only
    health and diagnostics over HTTP; inspect business state through the API.
-3. Run `pnpm generate:contracts` for a combined change, or `pnpm generate:http`
-   for OpenAPI alone. Review generated frontend types, Go bundles and wire mappings.
-4. Update the feature and relevant conformance examples. Feature requests use
-   `adaptors/http/operation-client`; incompatible schema changes must fail real callers.
+3. Give each operation one declared tag: its context name for business HTTP, or
+   `session`, `realtime` or `operational` for technical HTTP. Run
+   `pnpm generate:contracts` for a combined change, or `pnpm generate:http` for
+   OpenAPI alone. Review the Orval tag modules, models, MSW/Faker outputs, Go
+   bundles and wire mappings.
+4. Update the feature and relevant conformance examples. Queries use the generated
+   TanStack functions, hooks or query options. Durable commands use
+   `adaptors/http/operation-client`, which retains their raw response while taking
+   its operation and input/output types from the generated manifest. Incompatible
+   schema changes must fail real callers.
 5. Run generation/compatibility checks, the focused service/web tests and both
    hand-off gates. The integration lane exercises the actual browser and owner DTOs.
 
@@ -320,6 +326,8 @@ Shared command recovery, realtime reconciliation and display helpers live under
 the saved uncertain command across reload/sign-in. Reconciliation runs after
 subscription attachment or a history gap. Business polling and client-selected
 channels remain prohibited. See [the browser contract](../CLIENT-SUBSCRIPTIONS.md).
+See the [browser OpenAPI client guide](openapi-client.md) for generated paths,
+cache ownership and MSW/Faker examples.
 
 ## Keep the DI boundary explicit
 

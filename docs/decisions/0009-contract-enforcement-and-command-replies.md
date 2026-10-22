@@ -36,15 +36,19 @@ The API generates typed HTTP-to-wire mappings from OpenAPI, compiler-produced
 Protobuf descriptors (including required-input options) and its
 explicit operation/field map. Unsupported operations, unmapped HTTP inputs,
 incompatible scalar types and required-input disagreements fail generation.
-Frontend operation, input and response types and route metadata are generated
-from the same assembled OpenAPI document. Feature code calls a typed operation
-client. Architecture checks reject direct frontend fetch calls outside the HTTP
-adaptor. Verification mutates real request/response schemas and proves actual
-frontend callers fail compilation for incompatible changes. Required headers and
-query objects participate in these input types. Shared command and list callers
-must satisfy every operation they can select. Fetch supplies the browser's Origin
-header for same-origin POSTs; application headers are explicitly typed and sent.
-Unsupported parameter locations fail generation.
+Frontend functions, TanStack Query hooks, input/output models, mock handlers,
+fixtures and route metadata are generated with Orval from the same assembled
+OpenAPI document. One tag per operation drives context and technical modules
+through `tags-split`; MSW and Faker outputs accompany each module. Feature code
+calls the generated client or the typed durable-command adaptor. Architecture
+checks reject direct frontend fetch calls outside HTTP adaptors. Verification
+mutates real request/response schemas and proves actual frontend callers fail
+compilation for incompatible changes. Required headers and query objects
+participate in these input types. Shared command and list callers must satisfy
+every operation they can select. Fetch supplies the browser's Origin header for
+same-origin POSTs; the browser transformer omits that managed header from client
+signatures. Application headers remain explicitly typed and sent. Unsupported
+parameter locations fail generation.
 
 Each owner has separate command and query queues, routing keys, connections and
 consumers: `ref.<owner>.commands`/`request.<owner>.command` and
@@ -78,8 +82,8 @@ unchanged. Runtime startup checks migration identities and checksums.
 
 ## Verification
 
-`pnpm generate:contracts` regenerates bindings, descriptors, frontend HTTP types,
-API mappings and migration metadata. `pnpm check:contracts` regenerates in an
+`pnpm generate:contracts` regenerates bindings, descriptors, the Orval browser
+client, API mappings and migration metadata. `pnpm check:contracts` regenerates in an
 isolated directory and rejects changed, deleted or newly generated files, including
 untracked outputs. `pnpm verify` includes this check, native presence/mapping tests,
 frontend schema mutation tests and all language compilation/testing gates.
@@ -87,6 +91,20 @@ frontend schema mutation tests and all language compilation/testing gates.
 all owner languages, leased reply fencing, denied response rewrites, independent
 command/query consumption and recovery of exact bytes after unroutable publication.
 Execution results and environment limits live in [verification](../verification.md).
+
+## Browser query and mock generation — 22 October 2026
+
+The web application uses TanStack Query v5 as its HTTP query cache. Global browser
+defaults disable retries and automatic refetch triggers; explicit reconciliation
+uses generated request functions and query keys, while realtime handlers merge
+revision-checked updates into the application cache. This retains the accepted
+subscription and no-polling behaviour.
+
+Orval generates committed MSW 3 handlers, Faker 10 factories and typed fixtures.
+These are test inputs derived from the wire schema. Live OpenAPI conformance and
+integration tests remain the authority for runtime behaviour. The detailed
+workflow and import boundaries are documented in the
+[browser OpenAPI client guide](../openapi-client.md).
 
 ## Connection routing and authenticated actors — 16 October 2026
 

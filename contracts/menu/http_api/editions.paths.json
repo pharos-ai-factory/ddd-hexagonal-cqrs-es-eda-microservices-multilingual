@@ -3,6 +3,7 @@
     "x-owner": "menu",
     "get": {
       "operationId": "listEditions",
+      "tags": ["menu"],
       "summary": "List editions",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -93,6 +94,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getEdition",
+      "tags": ["menu"],
       "summary": "Get Edition",
       "responses": {
         "200": {
@@ -137,6 +139,7 @@
     },
     "post": {
       "operationId": "createEdition",
+      "tags": ["menu"],
       "summary": "createEdition",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -192,6 +195,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "addOffer",
+      "tags": ["menu"],
       "summary": "addOffer",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -250,6 +254,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "changePrice",
+      "tags": ["menu"],
       "summary": "changePrice",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -306,6 +311,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "publishEdition",
+      "tags": ["menu"],
       "summary": "publishEdition",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },

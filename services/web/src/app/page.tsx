@@ -2,7 +2,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useCafe } from '../shared/realtime/useCafe';
 import { RealtimeProvider } from '../shared/realtime';
-import { request } from '../adaptors/http/operation-client';
+import {
+  login as loginSession,
+  logout as logoutSession,
+  session as loadSession,
+} from '../adaptors/generated/http/session/session';
+import { httpStatus } from '../adaptors/http/operation-client';
 import { useCommand } from '../shared/commands/useCommand';
 import { MenuPanel } from '../features/menu/MenuPanel';
 import { OrderingPanel } from '../features/ordering/OrderingPanel';
@@ -19,11 +24,14 @@ export default function Cafe() {
   const [customer, setCustomer] = useState('');
   const sessionEnded = useCallback(() => setPrincipalId(''), []);
   useEffect(() => {
-    void request('session', {})
-      .then(async (response) => {
-        if (response.ok) setPrincipalId(((await response.json()) as { subject: string }).subject);
+    void loadSession()
+      .then((response) => {
+        setPrincipalId(response.data.subject);
       })
-      .catch(() => setLoginError('The café API is unavailable. Try opening the café again.'))
+      .catch((error: unknown) => {
+        if (httpStatus(error) !== 401)
+          setLoginError('The café API is unavailable. Try opening the café again.');
+      })
       .finally(() => setChecking(false));
     let identity = localStorage.getItem('cafe:customer');
     if (!identity) {
@@ -36,17 +44,16 @@ export default function Cafe() {
     event.preventDefault();
     setLoginError('');
     try {
-      const response = await request('login', { body: { password } });
-      if (!response.ok) {
-        setLoginError('The access code was not accepted.');
-        return;
-      }
+      await loginSession({ password });
       setPassword('');
-      const session = await request('session', {});
-      if (!session.ok) throw new Error('Session unavailable');
-      setPrincipalId(((await session.json()) as { subject: string }).subject);
-    } catch {
-      setLoginError('The café API is unavailable.');
+      const current = await loadSession();
+      setPrincipalId(current.data.subject);
+    } catch (error) {
+      setLoginError(
+        [401, 403].includes(httpStatus(error) ?? 0)
+          ? 'The access code was not accepted.'
+          : 'The café API is unavailable.',
+      );
     }
   }
   if (checking)
@@ -85,6 +92,7 @@ export default function Cafe() {
   return (
     <RealtimeProvider principalId={principalId} sessionEnded={sessionEnded}>
       <CafeWorkspace
+        principalId={principalId}
         customer={customer}
         setCustomer={setCustomer}
         sessionEnded={sessionEnded}
@@ -95,17 +103,19 @@ export default function Cafe() {
 }
 
 function CafeWorkspace({
+  principalId,
   customer,
   setCustomer,
   sessionEnded,
   signOut,
 }: {
+  principalId: string;
   customer: string;
   setCustomer: (customer: string) => void;
   sessionEnded: () => void;
   signOut: () => void;
 }) {
-  const { snapshot, connection, problem } = useCafe();
+  const { snapshot, connection, problem } = useCafe(principalId);
   const command = useCommand(sessionEnded);
   const disabled = command.busy || Boolean(command.pending) || connection !== 'connected';
   return (
@@ -127,10 +137,8 @@ function CafeWorkspace({
           <button
             className="quiet"
             onClick={() => {
-              void request('logout', {})
-                .then((response) => {
-                  if (response.ok) signOut();
-                })
+              void logoutSession()
+                .then(() => signOut())
                 .catch(() => sessionEnded());
             }}
           >

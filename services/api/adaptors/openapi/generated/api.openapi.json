@@ -5,11 +5,52 @@
     "version": "1.0.0",
     "description": "Development-only HTTP contract. This document is authoritative for route registration and wire conformance."
   },
+  "tags": [
+    {
+      "name": "menu",
+      "description": "Menu context operations."
+    },
+    {
+      "name": "ordering",
+      "description": "Ordering context operations."
+    },
+    {
+      "name": "preparation",
+      "description": "Preparation context operations."
+    },
+    {
+      "name": "collection",
+      "description": "Collection context operations."
+    },
+    {
+      "name": "loyalty",
+      "description": "Loyalty context operations."
+    },
+    {
+      "name": "communication",
+      "description": "Customer Communication context operations."
+    },
+    {
+      "name": "session",
+      "description": "Browser session operations."
+    },
+    {
+      "name": "realtime",
+      "description": "Internal realtime gateway operations."
+    },
+    {
+      "name": "operational",
+      "description": "Health and diagnostics operations."
+    }
+  ],
   "paths": {
     "/api/v1/menu/drinks": {
       "x-owner": "menu",
       "get": {
         "operationId": "listDrinks",
+        "tags": [
+          "menu"
+        ],
         "summary": "List drinks",
         "parameters": [
           {
@@ -135,6 +176,9 @@
       ],
       "get": {
         "operationId": "getDrink",
+        "tags": [
+          "menu"
+        ],
         "summary": "Get Drink",
         "responses": {
           "200": {
@@ -197,6 +241,9 @@
       },
       "post": {
         "operationId": "createDrink",
+        "tags": [
+          "menu"
+        ],
         "summary": "createDrink",
         "parameters": [
           {
@@ -282,6 +329,9 @@
       ],
       "post": {
         "operationId": "reviseDrink",
+        "tags": [
+          "menu"
+        ],
         "summary": "reviseDrink",
         "parameters": [
           {
@@ -367,6 +417,9 @@
       ],
       "post": {
         "operationId": "publishDrink",
+        "tags": [
+          "menu"
+        ],
         "summary": "publishDrink",
         "parameters": [
           {
@@ -445,6 +498,9 @@
       "x-owner": "menu",
       "get": {
         "operationId": "listEditions",
+        "tags": [
+          "menu"
+        ],
         "summary": "List editions",
         "parameters": [
           {
@@ -570,6 +626,9 @@
       ],
       "get": {
         "operationId": "getEdition",
+        "tags": [
+          "menu"
+        ],
         "summary": "Get Edition",
         "responses": {
           "200": {
@@ -632,6 +691,9 @@
       },
       "post": {
         "operationId": "createEdition",
+        "tags": [
+          "menu"
+        ],
         "summary": "createEdition",
         "parameters": [
           {
@@ -717,6 +779,9 @@
       ],
       "post": {
         "operationId": "addOffer",
+        "tags": [
+          "menu"
+        ],
         "summary": "addOffer",
         "parameters": [
           {
@@ -805,6 +870,9 @@
       ],
       "post": {
         "operationId": "changePrice",
+        "tags": [
+          "menu"
+        ],
         "summary": "changePrice",
         "parameters": [
           {
@@ -891,6 +959,9 @@
       ],
       "post": {
         "operationId": "publishEdition",
+        "tags": [
+          "menu"
+        ],
         "summary": "publishEdition",
         "parameters": [
           {
@@ -969,6 +1040,9 @@
       "x-owner": "ordering",
       "get": {
         "operationId": "listOrders",
+        "tags": [
+          "ordering"
+        ],
         "summary": "List orders",
         "parameters": [
           {
@@ -1096,6 +1170,9 @@
       ],
       "get": {
         "operationId": "getOrder",
+        "tags": [
+          "ordering"
+        ],
         "summary": "Get Order",
         "responses": {
           "200": {
@@ -1160,6 +1237,9 @@
       },
       "post": {
         "operationId": "createOrder",
+        "tags": [
+          "ordering"
+        ],
         "summary": "createOrder",
         "parameters": [
           {
@@ -1246,6 +1326,9 @@
       ],
       "post": {
         "operationId": "addLine",
+        "tags": [
+          "ordering"
+        ],
         "summary": "addLine",
         "parameters": [
           {
@@ -1334,6 +1417,9 @@
       ],
       "post": {
         "operationId": "changeQuantity",
+        "tags": [
+          "ordering"
+        ],
         "summary": "changeQuantity",
         "parameters": [
           {
@@ -1420,6 +1506,9 @@
       ],
       "post": {
         "operationId": "placeOrder",
+        "tags": [
+          "ordering"
+        ],
         "summary": "placeOrder",
         "parameters": [
           {
@@ -1498,6 +1587,9 @@
       "x-owner": "preparation",
       "get": {
         "operationId": "listTickets",
+        "tags": [
+          "preparation"
+        ],
         "summary": "List tickets",
         "parameters": [
           {
@@ -1624,6 +1716,9 @@
       ],
       "get": {
         "operationId": "getTicket",
+        "tags": [
+          "preparation"
+        ],
         "summary": "Get Ticket",
         "responses": {
           "200": {
@@ -1695,6 +1790,9 @@
       ],
       "post": {
         "operationId": "startPreparation",
+        "tags": [
+          "preparation"
+        ],
         "summary": "startPreparation",
         "parameters": [
           {
@@ -1778,6 +1876,9 @@
       ],
       "post": {
         "operationId": "completePreparation",
+        "tags": [
+          "preparation"
+        ],
         "summary": "completePreparation",
         "parameters": [
           {
@@ -1856,6 +1957,9 @@
       "x-owner": "collection",
       "get": {
         "operationId": "listPickups",
+        "tags": [
+          "collection"
+        ],
         "summary": "List pickups",
         "parameters": [
           {
@@ -1982,6 +2086,9 @@
       ],
       "get": {
         "operationId": "getPickup",
+        "tags": [
+          "collection"
+        ],
         "summary": "Get Pickup",
         "responses": {
           "200": {
@@ -2053,6 +2160,9 @@
       ],
       "post": {
         "operationId": "collectOrder",
+        "tags": [
+          "collection"
+        ],
         "summary": "collectOrder",
         "parameters": [
           {
@@ -2133,6 +2243,9 @@
       "x-owner": "loyalty",
       "get": {
         "operationId": "listAccounts",
+        "tags": [
+          "loyalty"
+        ],
         "summary": "List accounts",
         "parameters": [
           {
@@ -2258,6 +2371,9 @@
       ],
       "get": {
         "operationId": "getAccount",
+        "tags": [
+          "loyalty"
+        ],
         "summary": "Get Account",
         "responses": {
           "200": {
@@ -2323,6 +2439,9 @@
       "x-owner": "loyalty",
       "get": {
         "operationId": "listRewards",
+        "tags": [
+          "loyalty"
+        ],
         "summary": "List rewards",
         "parameters": [
           {
@@ -2450,6 +2569,9 @@
       ],
       "get": {
         "operationId": "getReward",
+        "tags": [
+          "loyalty"
+        ],
         "summary": "Get Reward",
         "responses": {
           "200": {
@@ -2522,6 +2644,9 @@
       ],
       "post": {
         "operationId": "redeemReward",
+        "tags": [
+          "loyalty"
+        ],
         "summary": "redeemReward",
         "parameters": [
           {
@@ -2602,6 +2727,9 @@
       "x-owner": "communication",
       "get": {
         "operationId": "listNotifications",
+        "tags": [
+          "communication"
+        ],
         "summary": "List notifications",
         "parameters": [
           {
@@ -2728,6 +2856,9 @@
       ],
       "get": {
         "operationId": "getNotification",
+        "tags": [
+          "communication"
+        ],
         "summary": "Get Notification",
         "responses": {
           "200": {
@@ -2793,6 +2924,9 @@
     "/healthz": {
       "get": {
         "operationId": "apiHealth",
+        "tags": [
+          "operational"
+        ],
         "security": [],
         "responses": {
           "200": {
@@ -2830,6 +2964,9 @@
     "/diagnostics": {
       "get": {
         "operationId": "apiDiagnostics",
+        "tags": [
+          "operational"
+        ],
         "security": [
           {
             "CLIKey": []
@@ -2858,6 +2995,9 @@
     "/auth/login": {
       "post": {
         "operationId": "login",
+        "tags": [
+          "session"
+        ],
         "security": [],
         "parameters": [
           {
@@ -2941,6 +3081,9 @@
     "/auth/session": {
       "get": {
         "operationId": "session",
+        "tags": [
+          "session"
+        ],
         "security": [
           {
             "OperatorSession": []
@@ -3009,6 +3152,9 @@
     "/auth/logout": {
       "post": {
         "operationId": "logout",
+        "tags": [
+          "session"
+        ],
         "security": [],
         "parameters": [
           {
@@ -3055,6 +3201,9 @@
     "/api/realtime/connect": {
       "post": {
         "operationId": "realtimeConnect",
+        "tags": [
+          "realtime"
+        ],
         "security": [
           {
             "RealtimeProxy": []
@@ -3154,6 +3303,9 @@
     "/api/realtime/refresh": {
       "post": {
         "operationId": "realtimeRefresh",
+        "tags": [
+          "realtime"
+        ],
         "security": [
           {
             "RealtimeProxy": []

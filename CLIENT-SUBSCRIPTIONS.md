@@ -136,8 +136,14 @@ Feature folders under `services/web/src/features/` follow user tasks: menu,
 ordering, preparation, collection, rewards and notifications. The page composes
 these views; business invariants remain in their owning services.
 
-Use `adaptors/http/operation-client` and its generated operation/request/response types for
-HTTP. Change the owning OpenAPI source and regenerate before adjusting a caller.
+Use the Orval tag modules under `adaptors/generated/http/` for queries, sessions
+and technical HTTP. TanStack Query owns the browser snapshot cache; realtime
+handlers merge revision-checked messages into that cache and reconciliation uses
+generated query keys and requests. Durable business commands use
+`adaptors/http/operation-client`, which retains the raw response for uncertainty
+handling and takes its operation/request/response types from Orval's manifest.
+Change the owning OpenAPI source and regenerate before adjusting a caller. See the
+[browser OpenAPI client guide](docs/openapi-client.md).
 Keep command persistence/retry in `shared/commands/`, message validation and
 reconciliation in `shared/realtime/`, and common formatting in `shared/ui/`.
 `RealtimeProvider` owns the Centrifugo connection. Features register typed handlers

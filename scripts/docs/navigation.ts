@@ -156,6 +156,7 @@ export const sidebar: Sidebar = {
       items: [
         { text: 'Published contracts', link: '/contracts/README' },
         { text: 'Generation', link: '/contracts/generation' },
+        { text: 'Browser OpenAPI client', link: '/docs/openapi-client' },
         { text: 'HTTP', link: '/contracts/shared/http_api/README' },
         { text: 'Commands and queries', link: '/contracts/shared/messaging/requests' },
         { text: 'Events', link: '/contracts/shared/messaging/events' },

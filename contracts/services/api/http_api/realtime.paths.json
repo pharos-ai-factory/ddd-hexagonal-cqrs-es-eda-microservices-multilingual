@@ -2,6 +2,7 @@
   "connect": {
     "post": {
       "operationId": "realtimeConnect",
+      "tags": ["realtime"],
       "security": [
         {
           "RealtimeProxy": []
@@ -88,6 +89,7 @@
   "refresh": {
     "post": {
       "operationId": "realtimeRefresh",
+      "tags": ["realtime"],
       "security": [
         {
           "RealtimeProxy": []

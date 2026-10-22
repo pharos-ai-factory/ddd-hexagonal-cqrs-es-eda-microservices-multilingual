@@ -143,6 +143,9 @@ assert 'order' not in fields and 'reward' not in fields
             config = declarations(root)
             config["openapi"] = {"web": {"produces": [], "consumes": ["api"]}}
             (root / "contracts/generation.json").write_text(json.dumps(config))
+            (root / "services/web").mkdir(parents=True)
+            shutil.copyfile(ROOT / "services/web/orval.config.ts", root / "services/web/orval.config.ts")
+            (root / "node_modules").symlink_to(ROOT / "node_modules", target_is_directory=True)
             stale = root / http_contracts.OUTPUTS["storefront"] / "storefront.openapi.json"
             stale.parent.mkdir(parents=True)
             stale.write_text("{}")
@@ -154,7 +157,7 @@ assert 'order' not in fields and 'reward' not in fields
                     http_contracts.generate(check=True)
                 http_contracts.generate()
                 self.assertFalse(stale.exists())
-                self.assertTrue((root / http_contracts.FRONTEND_OUTPUT).exists())
+                self.assertTrue((root / http_contracts.FRONTEND_OUTPUT / "operations.ts").exists())
                 self.assertFalse((root / http_contracts.MAPPING_OUTPUT).exists())
                 http_contracts.generate(check=True)
 

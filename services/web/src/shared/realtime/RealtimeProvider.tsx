@@ -12,7 +12,8 @@ import {
   type ReactNode,
 } from 'react';
 import { decodeRealtimeMessage } from '../../adaptors/realtime/message-codec';
-import { request, SessionEnded } from '../../adaptors/http/operation-client';
+import { session } from '../../adaptors/generated/http/session/session';
+import { httpStatus, SessionEnded } from '../../adaptors/http/operation-client';
 import { owners } from './model';
 import type { RealtimeMessage } from './messages';
 import { subscriptionBarrier } from './queries';
@@ -115,11 +116,9 @@ export function RealtimeProvider({
     client.on('disconnected', () => {
       if (!alive) return;
       setConnection('disconnected');
-      void request('session', {})
-        .then((response) => {
-          if (alive && response.status === 401) sessionEnded();
-        })
-        .catch(() => {});
+      void session().catch((error: unknown) => {
+        if (alive && httpStatus(error) === 401) sessionEnded();
+      });
     });
     const reconnect = () => {
       forceReconcile = true;

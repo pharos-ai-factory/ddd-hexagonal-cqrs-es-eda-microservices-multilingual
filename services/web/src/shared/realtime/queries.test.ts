@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createQueryClient } from '../query-provider';
 import { subscriptionBarrier } from './queries';
 import { scan } from './state-loader';
 import { mergeState, type Snapshot } from './model';
@@ -28,7 +29,7 @@ void test('paginated scans load every row beyond 100 and preserve newer live rev
       }),
     );
   });
-  const loaded = await scan('listDrinks', new AbortController().signal);
+  const loaded = await scan('listDrinks', createQueryClient(), new AbortController().signal);
   loaded.forEach((row) => {
     state = mergeState(state, { ...row, kind: 'drink' });
   });
@@ -47,19 +48,22 @@ void test('a failed continuation fails the scan and repeated cursors cannot loop
     if (++calls === 2) throw new Error('unavailable');
     return new Response(JSON.stringify({ items: [], nextCursor: 'next' }));
   });
-  await assert.rejects(scan('listDrinks', new AbortController().signal), /unavailable/);
+  await assert.rejects(scan('listDrinks', createQueryClient(), new AbortController().signal), /unavailable/);
   t.mock.method(
     globalThis,
     'fetch',
     async () => new Response(JSON.stringify({ items: [], nextCursor: 'same' })),
   );
-  await assert.rejects(scan('listDrinks', new AbortController().signal), /did not advance/);
+  await assert.rejects(
+    scan('listDrinks', createQueryClient(), new AbortController().signal),
+    /did not advance/,
+  );
   t.mock.method(
     globalThis,
     'fetch',
     async () => new Response(JSON.stringify({ items: [], nextCursor: null })),
   );
-  assert.deepEqual(await scan('listDrinks', new AbortController().signal), []);
+  assert.deepEqual(await scan('listDrinks', createQueryClient(), new AbortController().signal), []);
 });
 
 void test('all subscriptions must attach before initial or gap scans; recovered history needs none', () => {

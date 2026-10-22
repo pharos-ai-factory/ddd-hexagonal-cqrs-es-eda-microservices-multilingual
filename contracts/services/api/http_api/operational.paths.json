@@ -2,6 +2,7 @@
   "health": {
     "get": {
       "operationId": "apiHealth",
+      "tags": ["operational"],
       "security": [],
       "responses": {
         "200": {
@@ -32,6 +33,7 @@
   "diagnostics": {
     "get": {
       "operationId": "apiDiagnostics",
+      "tags": ["operational"],
       "security": [
         {
           "CLIKey": []

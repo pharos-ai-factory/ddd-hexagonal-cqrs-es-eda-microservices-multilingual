@@ -3,6 +3,7 @@
     "x-owner": "preparation",
     "get": {
       "operationId": "listTickets",
+      "tags": ["preparation"],
       "summary": "List tickets",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -94,6 +95,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getTicket",
+      "tags": ["preparation"],
       "summary": "Get Ticket",
       "responses": {
         "200": {
@@ -143,6 +145,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "startPreparation",
+      "tags": ["preparation"],
       "summary": "startPreparation",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },
@@ -196,6 +199,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "completePreparation",
+      "tags": ["preparation"],
       "summary": "completePreparation",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },

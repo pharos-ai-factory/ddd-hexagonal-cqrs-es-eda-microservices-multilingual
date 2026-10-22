@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { request, commandRequest } from './operation-client';
+import { listDrinks } from '../generated/http/menu/menu';
+import { commandRequest } from './operation-client';
 
 void test('typed headers, query values and command bodies reach the HTTP boundary', async () => {
   const original = globalThis.fetch;
@@ -10,7 +11,7 @@ void test('typed headers, query values and command bodies reach the HTTP boundar
     return new Response('{}');
   };
   try {
-    await request('listDrinks', { query: { limit: 2, cursor: 'a/b+c' } });
+    await listDrinks({ limit: 2, cursor: 'a/b+c' });
     await commandRequest(
       'createDrink',
       { name: 'Tea' },

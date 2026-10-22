@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { commandRequest, success } from '../../adaptors/http/operation-client';
 import {
+  commandRequest,
+  commandSuccess,
   routes,
   type CommandOperation,
   type CommandBody,
   type SendCommand,
-} from '../../adaptors/generated/http';
+} from '../../adaptors/http/operation-client';
 type Attempt = {
   operation: CommandOperation;
   id: string;
@@ -56,7 +57,7 @@ export function useCommand(sessionEnded: () => void) {
         setMessage(rejected.rejection?.message ?? rejected.message ?? rejected.code ?? 'Command rejected');
         return false;
       }
-      const outcome = await success(attempt.operation, response);
+      const outcome = await commandSuccess(attempt.operation, response);
       sessionStorage.removeItem(storage);
       setPending(null);
       setMessage(`Command accepted at version ${outcome.version}. Live messages show the resulting state.`);

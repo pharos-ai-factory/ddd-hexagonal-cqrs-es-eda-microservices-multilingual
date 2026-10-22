@@ -3,6 +3,7 @@
     "x-owner": "loyalty",
     "get": {
       "operationId": "listRewards",
+      "tags": ["loyalty"],
       "summary": "List rewards",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -95,6 +96,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getReward",
+      "tags": ["loyalty"],
       "summary": "Get Reward",
       "responses": {
         "200": {
@@ -145,6 +147,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "post": {
       "operationId": "redeemReward",
+      "tags": ["loyalty"],
       "summary": "redeemReward",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/CommandID" },

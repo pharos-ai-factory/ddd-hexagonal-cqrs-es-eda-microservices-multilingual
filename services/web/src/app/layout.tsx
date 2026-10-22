@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { QueryProvider } from '../shared/query-provider';
 import './style.css';
 export const metadata: Metadata = {
   title: 'Café Lab',
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-GB">
-      <body>{children}</body>
+      <body>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

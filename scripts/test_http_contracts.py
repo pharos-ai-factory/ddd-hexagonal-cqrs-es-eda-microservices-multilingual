@@ -27,6 +27,18 @@ class HTTPContractsTests(unittest.TestCase):
             if path.suffix == ".json":
                 visit(json.loads(content))
 
+    def test_api_operations_have_one_declared_generation_tag(self):
+        document = http_contracts.bundle(http_contracts.SOURCE / http_contracts.DOCUMENTS["api"])
+        declared = {tag["name"] for tag in document["tags"]}
+        used = set()
+        for path_item in document["paths"].values():
+            for method, operation in path_item.items():
+                if method not in {"get", "post", "put", "patch", "delete"}:
+                    continue
+                self.assertEqual(len(operation.get("tags", [])), 1, operation.get("operationId"))
+                used.update(operation["tags"])
+        self.assertEqual(used, declared)
+
     def test_changed_bundle_fails_verification(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "api.openapi.json"
@@ -34,6 +46,7 @@ class HTTPContractsTests(unittest.TestCase):
             with (
                 patch.object(http_contracts, "ROOT", Path(directory)),
                 patch.object(http_contracts, "generated", return_value={path: "current"}),
+                patch.object(http_contracts, "declarations", return_value={"openapi": {}}),
             ):
                 with self.assertRaisesRegex(ValueError, "bundle drift"):
                     http_contracts.generate(check=True)

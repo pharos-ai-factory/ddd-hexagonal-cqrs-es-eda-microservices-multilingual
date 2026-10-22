@@ -3,6 +3,7 @@
     "x-owner": "communication",
     "get": {
       "operationId": "listNotifications",
+      "tags": ["communication"],
       "summary": "List notifications",
       "parameters": [
         { "$ref": "../../shared/http_api/parameters.json#/parameters/Limit" },
@@ -94,6 +95,7 @@
     "parameters": [{ "$ref": "../../shared/http_api/parameters.json#/parameters/ID" }],
     "get": {
       "operationId": "getNotification",
+      "tags": ["communication"],
       "summary": "Get Notification",
       "responses": {
         "200": {

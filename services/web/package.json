@@ -10,16 +10,19 @@
     "test": "tsx --test 'src/**/*.test.ts'"
   },
   "dependencies": {
-    "next": "16.3.3",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "@tanstack/react-query": "5.104.5",
     "centrifuge": "5.7.0",
-    "protobufjs": "8.8.0"
+    "next": "16.3.3",
+    "protobufjs": "8.8.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@faker-js/faker": "10.6.0",
     "@types/node": "24.5.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
+    "msw": "3.0.3",
     "tsx": "4.20.5",
     "typescript": "5.9.2"
   }
