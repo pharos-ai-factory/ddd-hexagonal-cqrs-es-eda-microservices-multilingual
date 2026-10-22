@@ -1,5 +1,5 @@
 import * as responses from '../../contexts/loyalty/adaptors/messaging/generated/response-payloads.js';
-import { PostgresRealtimeEventBus } from '../../adaptors/persistence/realtime-event-bus.js';
+import { PostgresRealtimeMessageBus } from '../../adaptors/persistence/realtime-event-bus.js';
 import { RewardIssuedRealtimeIntegrationEventHandler } from '../../contexts/loyalty/application/event-handlers/realtime-reward-issued.js';
 import { realtimeSubscription } from '../runtime.js';
 import {
@@ -138,7 +138,7 @@ export function createLoyaltyContainer(databaseURL: string, clock: () => Date = 
       (c: LoyaltyDependencies) =>
         new RewardIssuedRealtimeIntegrationEventHandler(
           c.rewardReadRepository,
-          new PostgresRealtimeEventBus(c.database, LoyaltySubscription.REALTIME_REWARD_ISSUED, 'reward'),
+          new PostgresRealtimeMessageBus(c.database, LoyaltySubscription.REALTIME_REWARD_ISSUED, 'reward'),
         ),
     ).singleton(),
     publishIssued: asFunction(

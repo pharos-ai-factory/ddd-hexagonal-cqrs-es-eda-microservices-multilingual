@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// Relay publishes committed projection bytes to Centrifugo.
+// Relay publishes committed realtime message bytes through the authority gateway.
 func Relay(ctx context.Context, db *postgres.ContextDatabase, url, key string) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	for ctx.Err() == nil {
@@ -43,7 +43,7 @@ func Relay(ctx context.Context, db *postgres.ContextDatabase, url, key string) {
 	}
 }
 func publishRealtime(ctx context.Context, client *http.Client, url, key string, d postgres.RealtimeDispatch) error {
-	body, _ := json.Marshal(map[string]string{"channel": d.Channel, "b64data": base64.StdEncoding.EncodeToString(d.Body), "idempotency_key": d.ID})
+	body, _ := json.Marshal(map[string]string{"b64data": base64.StdEncoding.EncodeToString(d.Body), "idempotency_key": d.ID})
 	request, err := http.NewRequestWithContext(ctx, "POST", url+"/api/publish", bytes.NewReader(body))
 	if err != nil {
 		return err

@@ -24,21 +24,21 @@ type orderWorld struct {
 }
 
 func (w *orderWorld) add(id, edition, code string, quantity int) error {
-	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.AddLineCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.AddLineCommandHandler {
 		return orderingcommands.AddLineCommandHandler{Repository: repository, Realtime: realtime, Menus: &w.menus}
 	})).Execute(context.Background(), s.Metadata(s.Order),
 		orderingcontracts.AddLineCommand{LineID: id, EditionID: edition, OfferCode: code, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) quantity(quantity int) error {
-	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.ChangeQuantityCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.ChangeQuantityCommandHandler {
 		return orderingcommands.ChangeQuantityCommandHandler{Repository: repository, Realtime: realtime}
 	})).Execute(context.Background(), s.Metadata(s.Order),
 		orderingcontracts.ChangeQuantityCommand{LineID: s.FirstLine, Quantity: quantity})
 	return err
 }
 func (w *orderWorld) place() error {
-	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.PlaceOrderCommandHandler {
 		return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 	})).Execute(context.Background(), s.Metadata(s.Order), struct{}{})
 	return err
@@ -57,7 +57,7 @@ func TestOrderingFeatures(t *testing.T) {
 					{Code: "C1", DrinkID: s.Drink, DrinkRevision: 1, Name: name, Minor: minor, Currency: "EUR"}}}
 			})
 			sc.Step(`^a customer has a draft order for that edition$`, func() error {
-				_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.CreateOrderCommandHandler {
+				_, err := (execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.CreateOrderCommandHandler {
 					return orderingcommands.CreateOrderCommandHandler{Repository: repository, Realtime: realtime, Menus: &w.menus}
 				})).Execute(context.Background(), s.Metadata(s.Order),
 					orderingcontracts.CreateOrderCommand{CustomerID: s.Customer, EditionID: s.Edition})
@@ -85,7 +85,7 @@ func TestOrderingFeatures(t *testing.T) {
 				if who == "another customer" {
 					customer = s.SecondLine
 				}
-				_, err := execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.RecordCollectionCommandHandler {
+				_, err := execution.Bind(s.ForAggregate(&w.orders, d.Restore, (*d.Order).Snapshot, orderingpub.Order), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.RecordCollectionCommandHandler {
 					return orderingcommands.RecordCollectionCommandHandler{Repository: repository, Realtime: realtime}
 				}).Execute(context.Background(), s.Metadata(s.Order), orderingcontracts.RecordCollectionCommand{CustomerID: customer})
 				return err

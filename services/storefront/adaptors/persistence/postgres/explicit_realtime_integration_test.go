@@ -15,7 +15,7 @@ import (
 
 func TestExplicitRealtimeTransactionsAndSubscriberRecovery(t *testing.T) {
 	db := fixtureDB(t)
-	encoder := func(_, _, _, _ string, _ uint64, event a.RealtimeEvent) ([]byte, error) { return json.Marshal(event) }
+	encoder := func(_, _, _, _ string, _ uint64, event a.RealtimeMessage) ([]byte, error) { return json.Marshal(event) }
 	if err := db.EnableRealtime(t.Context(), encoder); err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestExplicitRealtimeTransactionsAndSubscriberRecovery(t *testing.T) {
 			err := r.Save(t.Context(), counter{value})
 			result := execution.Result{Status: "changed"}
 			if publish {
-				result.Realtime = []a.RealtimeEvent{{Snapshot: counter{value}}}
+				result.Realtime = []a.RealtimeMessage{a.SnapshotMessage(a.ContextTarget(db.owner), counter{value})}
 			}
 			return result, err
 		}
@@ -46,7 +46,7 @@ func TestExplicitRealtimeTransactionsAndSubscriberRecovery(t *testing.T) {
 		t.Fatal("saving implicitly published realtime")
 	}
 	m := metadata(target, 1)
-	db.realtime = func(_, _, _, _ string, _ uint64, _ a.RealtimeEvent) ([]byte, error) {
+	db.realtime = func(_, _, _, _ string, _ uint64, _ a.RealtimeMessage) ([]byte, error) {
 		return nil, errors.New("encoding failure")
 	}
 	if _, err := transaction.Execute(t.Context(), m, run(2, true)); err == nil {
@@ -70,8 +70,9 @@ func TestExplicitRealtimeTransactionsAndSubscriberRecovery(t *testing.T) {
 		t.Fatal("command publication duplicated")
 	}
 	source := a.Metadata{ID: NewID(), AggregateID: target, Consumer: "ordering.realtime-test", SourceEventID: NewID(), SourceHash: strings.Repeat("a", 64), CorrelationID: NewID()}
-	bus := NewRealtimeEventBus(db, source.Consumer, "test_counter")
-	event := a.RealtimeEvent{Source: &source, Revision: loaded.Version + 1, Snapshot: counter{2}}
+	bus := NewRealtimeMessageBus(db, source.Consumer, "test_counter")
+	event := a.SnapshotMessage(a.ContextTarget(db.owner), counter{2})
+	event.Source, event.Revision = &source, loaded.Version+1
 	for range 2 {
 		if err := bus.Publish(t.Context(), event); err != nil {
 			t.Fatal(err)
@@ -87,9 +88,10 @@ func TestExplicitRealtimeTransactionsAndSubscriberRecovery(t *testing.T) {
 
 	// A recorded rejection can publish without creating an aggregate.
 	missing := metadata(NewID(), 0)
+	missing.ActorID = NewID()
 	rejected := d.Violation{Code: "not_found", Message: "The resource does not exist"}
 	outcome, err := transaction.Execute(t.Context(), missing, func(a.WriteRepository[counter]) (execution.Result, error) {
-		return execution.Result{Realtime: []a.RealtimeEvent{{Rejection: &rejected}}}, &rejected
+		return execution.Result{Realtime: []a.RealtimeMessage{a.RejectionMessage(a.PrincipalTarget(missing.ActorID), rejected)}}, &rejected
 	})
 	if err != nil || outcome.Rejection == nil || outcome.Version != 0 {
 		t.Fatalf("rejection publication: %+v %v", outcome, err)

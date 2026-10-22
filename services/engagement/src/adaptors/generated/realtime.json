@@ -163,6 +163,10 @@
                       "type": "uint64",
                       "id": 6
                     },
+                    "target": {
+                      "type": ".cafe.realtime.v1.DeliveryTarget",
+                      "id": 7
+                    },
                     "account": {
                       "type": ".cafe.realtime.v1.Account",
                       "id": 15
@@ -208,6 +212,26 @@
                     "ticket",
                     "pickup"
                   ]
+                },
+                "DeliveryTarget": {
+                  "oneofs": {
+                    "target": {
+                      "oneof": [
+                        "context",
+                        "principal"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "context": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "principal": {
+                      "type": "string",
+                      "id": 2
+                    }
+                  }
                 },
                 "OperationRejected": {
                   "fields": {

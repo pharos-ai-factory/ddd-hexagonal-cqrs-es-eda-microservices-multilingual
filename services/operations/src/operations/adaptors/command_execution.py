@@ -10,7 +10,7 @@ from operations.foundation.application import (
     Outcome,
     Publication,
     RealtimeBusPort,
-    RealtimeEvent,
+    RealtimeMessage,
     DomainEventBusPort,
 )
 from operations.foundation.domain import Rejection, RejectionDetail
@@ -24,7 +24,7 @@ class TransactionResult:
 
     status: str
     publications: tuple[Publication, ...] = ()
-    realtime: tuple[RealtimeEvent, ...] = ()
+    realtime: tuple[RealtimeMessage, ...] = ()
     rejection: RejectionDetail | None = None
 
 
@@ -48,7 +48,7 @@ class CommandExecutor[A, C]:
     def __init__(
         self,
         transaction: AggregateTransaction[A],
-        handler: Callable[[WriteRepository[A], RealtimeBusPort[RealtimeEvent]], FeatureCommandHandler[C]],
+        handler: Callable[[WriteRepository[A], RealtimeBusPort[RealtimeMessage]], FeatureCommandHandler[C]],
     ) -> None:
         self._transaction, self._handler = transaction, handler
 

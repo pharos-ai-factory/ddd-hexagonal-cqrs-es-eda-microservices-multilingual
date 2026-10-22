@@ -53,7 +53,7 @@ class FrontendContractsTests(unittest.TestCase):
                 self.assertIn(
                     "src/features/menu/MenuPanel.tsx"
                     if component.endswith("DrinkCommand")
-                    else "src/shared/realtime/httpProjection.ts",
+                    else "src/shared/realtime/state-loader.ts",
                     result.stdout,
                 )
 
@@ -82,7 +82,7 @@ class FrontendContractsTests(unittest.TestCase):
                 self.assertIn(
                     "src/shared/commands/useCommand.ts"
                     if method == "post"
-                    else "src/shared/realtime/httpProjection.ts",
+                    else "src/shared/realtime/state-loader.ts",
                     result.stdout,
                 )
 

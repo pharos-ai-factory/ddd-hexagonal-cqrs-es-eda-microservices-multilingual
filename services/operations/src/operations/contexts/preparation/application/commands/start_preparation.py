@@ -1,5 +1,10 @@
 from operations.contracts.requests.generated.preparation import StartPreparationCommand
-from operations.foundation.application import RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import (
+    RealtimeBusPort,
+    RealtimeMessage,
+    context_target,
+    snapshot_message,
+)
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.preparation.application.ports.ticket_write_repository import TicketWriteRepository
 from operations.foundation.domain import Rejection
@@ -8,7 +13,7 @@ from operations.foundation.domain import Rejection
 class StartPreparationCommandHandler:
     """Loads one ticket and applies its start rule within a command transaction."""
 
-    def __init__(self, repository: TicketWriteRepository, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+    def __init__(self, repository: TicketWriteRepository, realtime: RealtimeBusPort[RealtimeMessage]) -> None:
         self.repository = repository
         self.realtime = realtime
 
@@ -20,5 +25,5 @@ class StartPreparationCommandHandler:
         ticket = state
         ticket.start()
         self.repository.save(ticket)
-        self.realtime.publish(RealtimeEvent(snapshot=ticket.snapshot()))
+        self.realtime.publish(snapshot_message(context_target("preparation"), ticket.snapshot()))
         return CommandResult("preparing")

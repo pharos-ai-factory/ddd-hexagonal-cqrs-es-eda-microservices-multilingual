@@ -1,15 +1,21 @@
-"""Encode authoritative browser snapshots into the separate realtime contract."""
+"""Encode typed messages into the separate realtime contract."""
 
 from collections.abc import Mapping
 
 from google.protobuf.json_format import ParseDict
 
 from operations.adaptors.generated.cafe.realtime.v1.realtime_pb2 import Publication as Realtime
+from operations.foundation.application import RealtimeTarget
 from operations.foundation.identity import new_id
 
 
 def encode(
-    owner: str, kind: str, identity: str, version: int, state: Mapping[str, object]
+    owner: str,
+    kind: str,
+    identity: str,
+    version: int,
+    target: RealtimeTarget,
+    state: Mapping[str, object],
 ) -> tuple[str, bytes]:
     event = Realtime(
         event_id=new_id(),
@@ -19,6 +25,7 @@ def encode(
         aggregate_id=identity,
         revision=version,
     )
+    setattr(event.target, target.kind, target.id)
     ParseDict(dict(state), getattr(event, kind))
     return event.event_id, event.SerializeToString(deterministic=True)
 
@@ -28,12 +35,13 @@ def encode_rejection(
     kind: str,
     identity: str,
     version: int,
+    target: RealtimeTarget,
     command_id: str,
     correlation_id: str,
     code: str,
     message: str,
 ) -> tuple[str, bytes]:
-    """Encode a committed business rejection independently of aggregate snapshot ordering."""
+    """Encode a committed business rejection independently of state message ordering."""
     event = Realtime(
         event_id=new_id(),
         contract_version=1,
@@ -42,6 +50,7 @@ def encode_rejection(
         aggregate_id=identity,
         revision=version,
     )
+    setattr(event.target, target.kind, target.id)
     event.operation_rejected.command_id = command_id
     event.operation_rejected.correlation_id = correlation_id
     event.operation_rejected.code = code

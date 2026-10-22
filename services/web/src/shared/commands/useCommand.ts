@@ -59,9 +59,7 @@ export function useCommand(sessionEnded: () => void) {
       const outcome = await success(attempt.operation, response);
       sessionStorage.removeItem(storage);
       setPending(null);
-      setMessage(
-        `Command accepted at version ${outcome.version}. Live projections show the resulting state.`,
-      );
+      setMessage(`Command accepted at version ${outcome.version}. Live messages show the resulting state.`);
       return true;
     } catch (error) {
       setMessage(

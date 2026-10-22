@@ -55,7 +55,7 @@ Source: [redeem-reward.ts](../../../services/engagement/src/contexts/loyalty/app
 export class RedeemRewardCommandHandler {
   constructor(
     private repository: RewardWriteRepository,
-    private realtime: RealtimeBusPort<RealtimeEvent>,
+    private realtime: RealtimeBusPort<RealtimeMessage>,
     private clock: () => Date,
   ) {}
   async execute(context: CommandContext, command: RedeemRewardCommand) {

@@ -67,7 +67,7 @@ then import the generated input into the handler. Add owner semantic validation.
 Source: [ordering_requests.go](../../../services/storefront/apps/storefront/di/ordering_requests.go).
 
 ```go source="../../../services/storefront/apps/storefront/di/ordering_requests.go"
-	registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
+	registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.PlaceOrderCommandHandler {
 		return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 	})
 ```

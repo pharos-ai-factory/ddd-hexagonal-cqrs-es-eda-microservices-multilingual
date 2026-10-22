@@ -143,7 +143,10 @@ receipts and integration bytes commit separately from the original command. See
 
 Realtime message selection belongs to application handlers through `RealtimeBusPort`.
 Aggregates queue private facts; domain/integration handlers and command use cases
-explicitly choose browser messages. See [decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md).
+explicitly choose browser messages and application delivery targets. Context
+targets carry shared owner state; principal targets carry the authenticated
+actor's recorded rejection. See [decisions 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md)
+and [0031](docs/decisions/0031-targeted-realtime-messages.md).
 
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement

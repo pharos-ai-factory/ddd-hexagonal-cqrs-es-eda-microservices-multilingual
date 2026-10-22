@@ -11,16 +11,16 @@ import (
 
 // ChangeQuantityCommandHandler applies ChangeQuantity through one aggregate command transaction.
 type ChangeQuantityCommandHandler struct {
-	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime   a.RealtimeBusPort[a.RealtimeMessage]
 	Repository ports.OrderWriteRepository
 }
 
 func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.ChangeQuantityCommand) (result a.CommandResult, err error) {
 	defer func() {
 		var rejected d.ExpectedError
-		if errors.As(err, &rejected) {
+		if errors.As(err, &rejected) && m.ActorID != "" {
 			detail := rejected.Rejection()
-			if publishErr := h.Realtime.Publish(ctx, a.RealtimeEvent{Rejection: &detail}); publishErr != nil {
+			if publishErr := h.Realtime.Publish(ctx, a.RejectionMessage(a.PrincipalTarget(m.ActorID), detail)); publishErr != nil {
 				err = publishErr
 			}
 		}
@@ -40,7 +40,7 @@ func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandCo
 		if err = h.Repository.Save(ctx, order); err != nil {
 			return a.CommandResult{}, err
 		}
-		if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: order.Snapshot()}); err != nil {
+		if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("ordering"), order.Snapshot())); err != nil {
 			return a.CommandResult{}, err
 		}
 	}

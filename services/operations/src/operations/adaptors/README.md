@@ -13,7 +13,7 @@ Start with [Preparation](../contexts/preparation/README.md) or
 | [command_execution.py](command_execution.py) | Invoke a named handler with its scoped repository and collect selected private facts                                       |
 | [persistence](persistence)                   | PostgreSQL pools, aggregate transactions, snapshot repositories, receipts, exact outgoing bytes and fenced dispatch leases |
 | [messaging](messaging)                       | Protobuf envelopes, RabbitMQ consumers, request dispatch and confirmed outbox/reply relays                                 |
-| [realtime](realtime)                         | Browser projection encoding and publication through the authorised realtime gateway                                        |
+| [realtime](realtime)                         | Typed browser message encoding and publication through the authorised realtime gateway                                     |
 | [http](http)                                 | Authentication and error handling for health/diagnostics HTTP                                                              |
 | [diagnostics.py](diagnostics.py)             | Database backlog evidence and redacted worker failures                                                                     |
 | [generated](generated)                       | Generated Protobuf bindings, event/request registries and persistence metadata                                             |

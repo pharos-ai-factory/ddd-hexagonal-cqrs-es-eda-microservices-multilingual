@@ -7,14 +7,14 @@ import {
 } from '../adaptors/command-execution.js';
 import type { InternalCommandCodec } from '../adaptors/messaging/internal-command-codec.js';
 import type { RabbitMQRequestRegistry } from '../adaptors/messaging/rabbitmq-request-registry.js';
-import type { Metadata, Outcome, RealtimeBusPort, RealtimeEvent } from '../foundation/application.js';
+import type { Metadata, Outcome, RealtimeBusPort, RealtimeMessage } from '../foundation/application.js';
 import type { WriteRepository } from '../foundation/write-repository.js';
 import { commandSubscription, type EventPayloads } from './runtime.js';
 
 type Definitions = readonly { consumer: string; event: string; command?: string; publication?: string }[];
 type Factory<A, C> = (
   repository: WriteRepository<A>,
-  realtime: RealtimeBusPort<RealtimeEvent>,
+  realtime: RealtimeBusPort<RealtimeMessage>,
 ) => FeatureCommandHandler<C>;
 type Reaction<K extends EventName & keyof EventPayloads> = {
   handle(metadata: Metadata, event: NoInfer<EventPayloads[K]>): Promise<Outcome>;
@@ -64,7 +64,7 @@ export class CommandRegistration<A> {
     handler: (
       repository: WriteRepository<A>,
       prepared: P,
-      realtime: RealtimeBusPort<RealtimeEvent>,
+      realtime: RealtimeBusPort<RealtimeMessage>,
     ) => FeatureCommandHandler<NoInfer<C>>,
   ) {
     return commandSubscription(event, codec, definitions, target, reaction, {

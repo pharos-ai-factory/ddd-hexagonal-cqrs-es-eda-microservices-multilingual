@@ -58,6 +58,7 @@ func (p *probeRepository[S, A]) Save(_ context.Context, aggregate A) error {
 type SnapshotDecisionFixture[S any] struct {
 	Transaction execution.Transaction[S]
 	Realtime    bool
+	Target      a.RealtimeTarget
 }
 
 func (p SnapshotDecisionFixture[S]) Execute(ctx context.Context, m a.Metadata, decide func(a.Loaded[S]) (a.Mutation[S], error)) (a.Outcome, error) {
@@ -75,9 +76,9 @@ func (p SnapshotDecisionFixture[S]) Execute(ctx context.Context, m a.Metadata, d
 				return execution.Result{}, err
 			}
 		}
-		var realtime []a.RealtimeEvent
+		var realtime []a.RealtimeMessage
 		if p.Realtime && change.Changed {
-			realtime = []a.RealtimeEvent{{Snapshot: change.State}}
+			realtime = []a.RealtimeMessage{a.SnapshotMessage(p.Target, change.State)}
 		}
 		return execution.Result{Status: change.Status, Publications: change.Publications, Realtime: realtime}, nil
 	})

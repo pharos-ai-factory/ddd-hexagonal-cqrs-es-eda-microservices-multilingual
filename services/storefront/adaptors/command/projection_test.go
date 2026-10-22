@@ -63,7 +63,7 @@ func TestProjectionIsPreparedBeforeTransaction(t *testing.T) {
 	active := false
 	source := &projectionFixture{t: t, active: &active}
 	transaction := &transactionFixture{active: &active}
-	executor := BindProjection(transaction, source, func(c string) string { return c }, func(_ a.WriteRepository[string], projection a.ProjectionPort[string], _ a.RealtimeBusPort[a.RealtimeEvent]) projectionCommandHandler {
+	executor := BindProjection(transaction, source, func(c string) string { return c }, func(_ a.WriteRepository[string], projection a.ProjectionPort[string], _ a.RealtimeBusPort[a.RealtimeMessage]) projectionCommandHandler {
 		return projectionCommandHandler{t, &active, projection}
 	})
 	outcome, err := executor.Execute(t.Context(), a.Metadata{AggregateID: "target"}, "revision")

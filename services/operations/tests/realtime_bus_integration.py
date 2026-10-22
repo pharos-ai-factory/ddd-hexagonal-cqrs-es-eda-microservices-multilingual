@@ -6,11 +6,18 @@ import pytest
 from operations.adaptors.command_execution import TransactionResult
 from operations.adaptors.persistence.aggregate_transaction import PostgresAggregateTransaction
 from operations.adaptors.persistence.postgres_database import PostgresContextDatabase
-from operations.adaptors.persistence.realtime_event_bus import PostgresRealtimeEventBus
+from operations.adaptors.persistence.realtime_event_bus import PostgresRealtimeMessageBus
 from operations.adaptors.generated.cafe.realtime.v1.realtime_pb2 import Publication
 from operations.contexts.preparation.adaptors.persistence.ticket_snapshot import restore_ticket_snapshot
 from operations.contexts.preparation.domain.preparation_ticket import TicketSnapshot
-from operations.foundation.application import Metadata, RealtimeEvent
+from operations.foundation.application import (
+    Metadata,
+    RealtimeMessage,
+    context_target,
+    principal_target,
+    rejection_message,
+    snapshot_message,
+)
 from operations.foundation.identity import new_id
 from operations.foundation.domain import integer, RejectionDetail
 from operations.adaptors.persistence.dispatch_leases import binary
@@ -51,7 +58,9 @@ def test_explicit_realtime_and_subscription_recovery() -> None:
 
         def invalid(repository: WriteRepository[TicketSnapshot]) -> TransactionResult:
             repository.save(ready)
-            return TransactionResult("ready", realtime=(RealtimeEvent(snapshot=state),))
+            return TransactionResult(
+                "ready", realtime=(snapshot_message(context_target("preparation"), state),)
+            )
 
         changed = replace(command, id=new_id(), expected=1)
         with pytest.raises(ValueError, match="differs from committed"):
@@ -59,7 +68,9 @@ def test_explicit_realtime_and_subscription_recovery() -> None:
 
         def explicit(repository: WriteRepository[TicketSnapshot]) -> TransactionResult:
             repository.save(ready)
-            return TransactionResult("ready", realtime=(RealtimeEvent(snapshot=ready),))
+            return TransactionResult(
+                "ready", realtime=(snapshot_message(context_target("preparation"), ready),)
+            )
 
         assert unit.execute(changed, explicit)["version"] == 2
         unit.execute(changed, lambda _: pytest.fail("Duplicate command executed"))
@@ -74,8 +85,10 @@ def test_explicit_realtime_and_subscription_recovery() -> None:
             source_hash="a" * 64,
             source_version=1,
         )
-        bus = PostgresRealtimeEventBus(db, source.consumer, "ticket")
-        event = RealtimeEvent(source=source, revision=2, snapshot=ready)
+        bus = PostgresRealtimeMessageBus(db, source.consumer, "ticket")
+        event = RealtimeMessage(
+            target=context_target("preparation"), source=source, revision=2, snapshot=ready
+        )
         bus.publish(event)
         bus.publish(event)
         assert count() == 2
@@ -87,12 +100,14 @@ def test_explicit_realtime_and_subscription_recovery() -> None:
             ).fetchall()
             assert all(Publication.FromString(binary(row["body"])).revision == 2 for row in rows)
 
-        missing = replace(command, id=new_id(), target=new_id())
+        missing = replace(command, id=new_id(), target=new_id(), actor_id=new_id())
         rejection: RejectionDetail = {"code": "not_found", "message": "The ticket does not exist"}
         outcome = unit.execute(
             missing,
             lambda _: TransactionResult(
-                "", realtime=(RealtimeEvent(rejection=rejection),), rejection=rejection
+                "",
+                realtime=(rejection_message(principal_target(missing.actor_id), rejection),),
+                rejection=rejection,
             ),
         )
         assert outcome["version"] == 0 and outcome["rejection"] == rejection

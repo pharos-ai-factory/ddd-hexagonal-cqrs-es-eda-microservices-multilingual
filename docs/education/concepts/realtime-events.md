@@ -1,4 +1,4 @@
-# Realtime events: explicitly publish a browser update
+# Realtime messages: explicitly publish a browser update
 
 Realtime messages are selected by their owning context. A command handler, domain
 event handler or integration event handler receives `RealtimeBusPort` and calls
@@ -27,10 +27,11 @@ Edit `contracts/<context>/realtime/v1/*_snapshots.proto` for the owner payload a
 when adding a new message alternative. Preserve field numbers. Run
 `pnpm generate:contracts`; inspect all three runtime bindings and the web binding.
 
-The current development interface uses server-authorised `cafe:<owner>` channels.
-The concrete bus binds that owner, resource kind and publisher credential. A new
-recipient model requires an explicit server-side authorisation policy and gateway
-binding. Browser clients never choose their own channels.
+The current interface uses application targets. `context_target(owner)` carries
+shared owner state; `principal_target(subject)` carries a recorded rejection for
+the authenticated actor. The gateway validates the publisher, target and payload
+before deriving `cafe:<owner>` or `principal:<subject>`. Browser clients and relays
+never choose their own channels.
 
 ## 3. Publish an application update through the injected bus
 
@@ -59,16 +60,16 @@ import (
 
 // ChangeQuantityCommandHandler applies ChangeQuantity through one aggregate command transaction.
 type ChangeQuantityCommandHandler struct {
-	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime   a.RealtimeBusPort[a.RealtimeMessage]
 	Repository ports.OrderWriteRepository
 }
 
 func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.ChangeQuantityCommand) (result a.CommandResult, err error) {
 	defer func() {
 		var rejected d.ExpectedError
-		if errors.As(err, &rejected) {
+        if errors.As(err, &rejected) && m.ActorID != "" {
 			detail := rejected.Rejection()
-			if publishErr := h.Realtime.Publish(ctx, a.RealtimeEvent{Rejection: &detail}); publishErr != nil {
+            if publishErr := h.Realtime.Publish(ctx, a.RejectionMessage(a.PrincipalTarget(m.ActorID), detail)); publishErr != nil {
 				err = publishErr
 			}
 		}
@@ -88,7 +89,7 @@ func (h ChangeQuantityCommandHandler) Execute(ctx context.Context, m a.CommandCo
 		if err = h.Repository.Save(ctx, order); err != nil {
 			return a.CommandResult{}, err
 		}
-		if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: order.Snapshot()}); err != nil {
+        if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("ordering"), order.Snapshot())); err != nil {
 			return a.CommandResult{}, err
 		}
 	}
@@ -103,7 +104,14 @@ Source: [collect_order.py](../../../services/operations/src/operations/contexts/
 ```python source="../../../services/operations/src/operations/contexts/collection/application/commands/collect_order.py"
 from operations.contracts.requests.generated.collection import CollectOrderCommand
 from operations.foundation.domain import Rejection
-from operations.foundation.application import RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import (
+    RealtimeBusPort,
+    RealtimeMessage,
+    context_target,
+    principal_target,
+    rejection_message,
+    snapshot_message,
+)
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
 from operations.foundation.application import ApplicationError
@@ -119,7 +127,7 @@ class PickupNotFoundApplicationError(ApplicationError):
 class CollectOrderCommandHandler:
     """Checks the collection code through the aggregate and commits its collection fact."""
 
-    def __init__(self, repository: PickupWriteRepository, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+    def __init__(self, repository: PickupWriteRepository, realtime: RealtimeBusPort[RealtimeMessage]) -> None:
         self.repository = repository
         self.realtime = realtime
 
@@ -132,10 +140,13 @@ class CollectOrderCommandHandler:
             pickup = state
             pickup.collect(command["code"])
             self.repository.save(pickup)
-            self.realtime.publish(RealtimeEvent(snapshot=pickup.snapshot()))
+            self.realtime.publish(snapshot_message(context_target("collection"), pickup.snapshot()))
             return CommandResult("collected")
         except Rejection as rejection:
-            self.realtime.publish(RealtimeEvent(rejection=rejection.outcome()))
+            if context.actor_id:
+                self.realtime.publish(
+                    rejection_message(principal_target(context.actor_id), rejection.outcome())
+                )
             raise
 ```
 
@@ -146,7 +157,12 @@ Source: [redeem-reward.ts](../../../services/engagement/src/contexts/loyalty/app
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
 import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import { Rejection } from '../../../../foundation/domain.js';
-import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
+import {
+  realtimeMessage,
+  realtimeTarget,
+  type RealtimeBusPort,
+  type RealtimeMessage,
+} from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { ApplicationError } from '../../../../foundation/application.js';
@@ -155,7 +171,7 @@ import { ApplicationError } from '../../../../foundation/application.js';
 export class RedeemRewardCommandHandler {
   constructor(
     private repository: RewardWriteRepository,
-    private realtime: RealtimeBusPort<RealtimeEvent>,
+    private realtime: RealtimeBusPort<RealtimeMessage>,
     private clock: () => Date,
   ) {}
   async execute(context: CommandContext, command: RedeemRewardCommand) {
@@ -165,10 +181,16 @@ export class RedeemRewardCommandHandler {
       const reward = loaded.state;
       reward.redeem(command.orderId, this.clock());
       await this.repository.save(reward);
-      await this.realtime.publish({ snapshot: reward.snapshot() });
+      await this.realtime.publish(
+        realtimeMessage.snapshot(realtimeTarget.context('loyalty'), reward.snapshot()),
+      );
       return { status: 'redeemed' };
     } catch (error) {
-      if (error instanceof Rejection) await this.realtime.publish({ rejection: error.outcome() });
+      if (error instanceof Rejection && context.actorId) {
+        await this.realtime.publish(
+          realtimeMessage.rejection(realtimeTarget.principal(context.actorId), error.outcome()),
+        );
+      }
       throw error;
     }
   }
@@ -212,7 +234,7 @@ import (
 // OrderPlacedRealtimeDomainEventHandler publishes the current owner view with its actual revision.
 type OrderPlacedRealtimeDomainEventHandler struct {
 	Orders   ports.OrderReadRepository
-	Realtime a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime a.RealtimeBusPort[a.RealtimeMessage]
 }
 
 func (h OrderPlacedRealtimeDomainEventHandler) Handle(ctx context.Context, m a.Metadata, event d.OrderPlacedDomainEvent) (a.Outcome, error) {
@@ -226,7 +248,9 @@ func (h OrderPlacedRealtimeDomainEventHandler) Handle(ctx context.Context, m a.M
 	if !loaded.Exists {
 		return a.Outcome{}, fmt.Errorf("committed order is missing")
 	}
-	err = h.Realtime.Publish(ctx, a.RealtimeEvent{Source: &m, Revision: loaded.Version, Snapshot: loaded.State})
+	message := a.SnapshotMessage(a.ContextTarget("ordering"), loaded.State)
+	message.Source, message.Revision = &m, loaded.Version
+	err = h.Realtime.Publish(ctx, message)
 	return a.Outcome{AggregateID: m.AggregateID, Version: loaded.Version, Status: "realtime_queued"}, err
 }
 ```
@@ -240,13 +264,19 @@ Source: [realtime_drinks_ready.py](../../../services/operations/src/operations/c
 
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
 from operations.contexts.preparation.domain.preparation_ticket import DrinksReadyDomainEvent
-from operations.foundation.application import Metadata, Outcome, RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import (
+    Metadata,
+    Outcome,
+    RealtimeBusPort,
+    RealtimeMessage,
+    context_target,
+)
 
 
 class DrinksReadyRealtimeDomainEventHandler:
     """Publish the current ticket view with its own revision, including after delayed delivery."""
 
-    def __init__(self, tickets: TicketReadRepository, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+    def __init__(self, tickets: TicketReadRepository, realtime: RealtimeBusPort[RealtimeMessage]) -> None:
         self.tickets, self.realtime = tickets, realtime
 
     def handle(self, metadata: Metadata, event: DrinksReadyDomainEvent) -> Outcome:
@@ -254,7 +284,12 @@ class DrinksReadyRealtimeDomainEventHandler:
         if loaded is None or loaded["state"]["orderId"] != event.order_id:
             raise ValueError("Committed preparation ticket is missing or inconsistent")
         self.realtime.publish(
-            RealtimeEvent(source=metadata, revision=loaded["version"], snapshot=loaded["state"])
+            RealtimeMessage(
+                target=context_target("preparation"),
+                source=metadata,
+                revision=loaded["version"],
+                snapshot=loaded["state"],
+            )
         )
         return Outcome(aggregateId=metadata.target, version=loaded["version"], status="realtime_queued")
 ```
@@ -270,20 +305,26 @@ import type {
   Metadata,
   Outcome,
   RealtimeBusPort,
-  RealtimeEvent,
+  RealtimeMessage,
 } from '../../../../foundation/application.js';
+import { realtimeTarget } from '../../../../foundation/application.js';
 
 /** Explicitly translate a published reward fact into an owner-authorised browser update. */
 export class RewardIssuedRealtimeIntegrationEventHandler {
   constructor(
     private rewards: RewardReadRepository,
-    private realtime: RealtimeBusPort<RealtimeEvent>,
+    private realtime: RealtimeBusPort<RealtimeMessage>,
   ) {}
   async handle(metadata: Metadata, event: RewardIssuedIntegrationEvent): Promise<Outcome> {
     if (event.rewardId !== metadata.target) throw new Error('Reward event target mismatch');
     const loaded = await this.rewards.get(metadata.target);
     if (!loaded) throw new Error('Committed reward is missing');
-    await this.realtime.publish({ source: metadata, revision: loaded.version, snapshot: loaded.state });
+    await this.realtime.publish({
+      target: realtimeTarget.context('loyalty'),
+      source: metadata,
+      revision: loaded.version,
+      snapshot: loaded.state,
+    });
     return { aggregateId: metadata.target, version: loaded.version, status: 'realtime_queued' };
   }
 }
@@ -327,9 +368,9 @@ consumer identity, its source event and a `realtime` resource. Existing entries:
 Run `pnpm generate:contracts` again. It generates the subscription identifier,
 queue bindings and broker permissions. Then wire the concrete bus and handler:
 
-- Go: [Ordering composition](../../../services/storefront/apps/storefront/di/ordering.go) constructs `NewRealtimeEventBus` and binds the generated subscription with `SubscribePrivate`.
-- Python: [Preparation composition](../../../services/operations/src/operations/apps/composition/preparation.py) resolves `PostgresRealtimeEventBus` and calls `realtime_subscription`.
-- TypeScript: [Loyalty composition](../../../services/engagement/src/apps/composition/loyalty.ts) resolves `PostgresRealtimeEventBus` and calls `realtimeSubscription`.
+- Go: [Ordering composition](../../../services/storefront/apps/storefront/di/ordering.go) constructs `NewRealtimeMessageBus` and binds the generated subscription with `SubscribePrivate`.
+- Python: [Preparation composition](../../../services/operations/src/operations/apps/composition/preparation.py) resolves `PostgresRealtimeMessageBus` and calls `realtime_subscription`.
+- TypeScript: [Loyalty composition](../../../services/engagement/src/apps/composition/loyalty.ts) resolves `PostgresRealtimeMessageBus` and calls `realtimeSubscription`.
 
 Include the new worker in the complete owner subscription set. Startup rejects
 missing/mismatched declarations. Apply development migrations and generated broker
@@ -353,11 +394,13 @@ buffer instead. Neither path performs network publication inside a database tran
 
 ## 7. Decode, apply and recover in the frontend
 
-Update the [browser decoder](../../../services/web/src/adaptors/realtime/projection-codec.ts)
-and [realtime hook](../../../services/web/src/shared/realtime/useCafe.ts) when adding a
-payload. Snapshot identity and owner must match the envelope/channel. Apply only
-newer root revisions. `OperationRejected` carries command/correlation identity and
-safe code/message; it is displayed separately and does not replace root state.
+Update the [browser decoder](../../../services/web/src/adaptors/realtime/message-codec.ts),
+[message catalogue](../../../services/web/src/shared/realtime/messages.ts) and feature
+handler when adding a payload. `RealtimeProvider` owns the connection;
+`useRealtimeMessage` registers typed handlers without creating subscriptions.
+Snapshot identity and owner must match the envelope/channel. Apply only newer root
+revisions. `OperationRejected` carries command/correlation identity and safe
+code/message; it is displayed separately and does not replace root state.
 
 Initial attachment and history gaps use [owner queries](queries.md). Each window
 maintains its own recovery cursor. Keep uncertain command recovery and session
@@ -372,7 +415,7 @@ late events, business rejections, and browser revision handling. Executable evid
 [Go](../../../services/storefront/adaptors/persistence/postgres/explicit_realtime_integration_test.go),
 [Python](../../../services/operations/tests/realtime_bus_integration.py),
 [TypeScript](../../../services/engagement/src/adaptors/persistence/realtime-bus.integration.ts)
-and [browser decoding](../../../services/web/src/adaptors/realtime/projection-codec.test.ts).
+and [browser decoding](../../../services/web/src/adaptors/realtime/message-codec.test.ts).
 
 Run the focused owner tests, `pnpm check --changed`, `pnpm verify` and
 `pnpm test:integration`. Continue with the [end-to-end recipe](../end-to-end-recipe.md),

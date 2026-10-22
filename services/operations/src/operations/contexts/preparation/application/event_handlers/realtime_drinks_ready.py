@@ -2,13 +2,19 @@
 
 from operations.contexts.preparation.application.ports.ticket_read_repository import TicketReadRepository
 from operations.contexts.preparation.domain.preparation_ticket import DrinksReadyDomainEvent
-from operations.foundation.application import Metadata, Outcome, RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import (
+    Metadata,
+    Outcome,
+    RealtimeBusPort,
+    RealtimeMessage,
+    context_target,
+)
 
 
 class DrinksReadyRealtimeDomainEventHandler:
     """Publish the current ticket view with its own revision, including after delayed delivery."""
 
-    def __init__(self, tickets: TicketReadRepository, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+    def __init__(self, tickets: TicketReadRepository, realtime: RealtimeBusPort[RealtimeMessage]) -> None:
         self.tickets, self.realtime = tickets, realtime
 
     def handle(self, metadata: Metadata, event: DrinksReadyDomainEvent) -> Outcome:
@@ -16,6 +22,11 @@ class DrinksReadyRealtimeDomainEventHandler:
         if loaded is None or loaded["state"]["orderId"] != event.order_id:
             raise ValueError("Committed preparation ticket is missing or inconsistent")
         self.realtime.publish(
-            RealtimeEvent(source=metadata, revision=loaded["version"], snapshot=loaded["state"])
+            RealtimeMessage(
+                target=context_target("preparation"),
+                source=metadata,
+                revision=loaded["version"],
+                snapshot=loaded["state"],
+            )
         )
         return Outcome(aggregateId=metadata.target, version=loaded["version"], status="realtime_queued")

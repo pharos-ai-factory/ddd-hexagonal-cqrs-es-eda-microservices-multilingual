@@ -61,6 +61,10 @@ and explicit query-to-handler registration in every owner service.
 refines the application bus names, explicit context-owned browser publication and
 separate command/subscriber transactions.
 
+[0031 — Targeted realtime messages](0031-targeted-realtime-messages.md) adds typed
+context/principal audiences, gateway-derived Centrifugo channels and typed frontend
+message handlers without client-selected subscriptions.
+
 ## Foundations and public boundaries
 
 [0025 — Repository documentation site](0025-repository-documentation-site.md)

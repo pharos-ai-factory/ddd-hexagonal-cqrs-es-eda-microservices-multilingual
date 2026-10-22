@@ -13,7 +13,7 @@ import (
 
 // AddOfferCommandHandler applies AddOffer through one aggregate command transaction.
 type AddOfferCommandHandler struct {
-	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime   a.RealtimeBusPort[a.RealtimeMessage]
 	Repository ports.EditionWriteRepository
 	Drinks     a.ProjectionPort[app.DrinkPublishedDomainEvent]
 }
@@ -45,7 +45,7 @@ func (h AddOfferCommandHandler) Execute(ctx context.Context, m a.CommandContext,
 	if err = h.Repository.Save(ctx, edition); err != nil {
 		return a.CommandResult{}, err
 	}
-	if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: edition.Snapshot()}); err != nil {
+	if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("menu"), edition.Snapshot())); err != nil {
 		return a.CommandResult{}, err
 	}
 	return a.Result("draft"), nil

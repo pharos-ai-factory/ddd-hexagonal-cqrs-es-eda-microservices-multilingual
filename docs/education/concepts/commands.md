@@ -191,7 +191,12 @@ class CompletePreparationCommandHandler:
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
 import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import { Rejection } from '../../../../foundation/domain.js';
-import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
+import {
+  realtimeMessage,
+  realtimeTarget,
+  type RealtimeBusPort,
+  type RealtimeMessage,
+} from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { ApplicationError } from '../../../../foundation/application.js';
@@ -200,7 +205,7 @@ import { ApplicationError } from '../../../../foundation/application.js';
 export class RedeemRewardCommandHandler {
   constructor(
     private repository: RewardWriteRepository,
-    private realtime: RealtimeBusPort<RealtimeEvent>,
+    private realtime: RealtimeBusPort<RealtimeMessage>,
     private clock: () => Date,
   ) {}
   async execute(context: CommandContext, command: RedeemRewardCommand) {
@@ -210,10 +215,16 @@ export class RedeemRewardCommandHandler {
       const reward = loaded.state;
       reward.redeem(command.orderId, this.clock());
       await this.repository.save(reward);
-      await this.realtime.publish({ snapshot: reward.snapshot() });
+      await this.realtime.publish(
+        realtimeMessage.snapshot(realtimeTarget.context('loyalty'), reward.snapshot()),
+      );
       return { status: 'redeemed' };
     } catch (error) {
-      if (error instanceof Rejection) await this.realtime.publish({ rejection: error.outcome() });
+      if (error instanceof Rejection && context.actorId) {
+        await this.realtime.publish(
+          realtimeMessage.rejection(realtimeTarget.principal(context.actorId), error.outcome()),
+        );
+      }
       throw error;
     }
   }
@@ -254,7 +265,7 @@ factory through the shared registration API. Existing registration calls:
 ### Go
 
 ```go source="../../../services/storefront/apps/storefront/di/ordering_requests.go"
-registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
+registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.PlaceOrderCommandHandler {
 		return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 	})
 ```

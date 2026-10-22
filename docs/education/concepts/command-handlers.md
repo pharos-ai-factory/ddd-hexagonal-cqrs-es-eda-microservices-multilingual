@@ -10,7 +10,7 @@ the [aggregate](aggregates.md) to decide and stages the changed state.
 2. Define the command in Protobuf, run generation and import its generated plain input into the named handler in `application/commands/<action>`. Inject the named write repository and any plain clock/identity/projection ports needed by the use case.
 3. Load the target through `get`. Handle missing resources explicitly, or create the root when this is a creation command. Follow [hydration](aggregate-hydration.md).
 4. Invoke one aggregate behaviour and save its resulting state. The aggregate records its private facts; its owner mapper selects delivered facts.
-5. If this use case directly updates the browser, inject `RealtimeBusPort<RealtimeEvent>` and call `publish` with the selected snapshot after saving. For an event-driven update, declare the separate subscriber in the [realtime recipe](realtime-events.md).
+5. If this use case directly updates the browser, inject `RealtimeBusPort<RealtimeMessage>` and call `publish` with the selected snapshot after saving. For an event-driven update, declare the separate subscriber in the [realtime recipe](realtime-events.md).
 6. Register the parser and plain handler factory with the aggregate's command registration. The factory receives the invocation's write repository and realtime bus; the executor owns the transaction and closes both capabilities afterwards.
 7. Test absence, invariant rejection, saved state, fact selection, explicit publication and duplicate delivery through the real executor. Expected rejections can publish a matching outcome; infrastructure failures roll back.
 
@@ -95,7 +95,12 @@ Source: [redeem-reward.ts](../../../services/engagement/src/contexts/loyalty/app
 ```ts source="../../../services/engagement/src/contexts/loyalty/application/commands/redeem-reward.ts"
 import type { RedeemRewardCommand } from '../../../../contracts/requests/generated/loyalty.js';
 import { Rejection } from '../../../../foundation/domain.js';
-import type { RealtimeBusPort, RealtimeEvent } from '../../../../foundation/application.js';
+import {
+  realtimeMessage,
+  realtimeTarget,
+  type RealtimeBusPort,
+  type RealtimeMessage,
+} from '../../../../foundation/application.js';
 import type { CommandContext } from '../../../../foundation/write-repository.js';
 import type { RewardWriteRepository } from '../ports/reward-write-repository.js';
 import { ApplicationError } from '../../../../foundation/application.js';
@@ -104,7 +109,7 @@ import { ApplicationError } from '../../../../foundation/application.js';
 export class RedeemRewardCommandHandler {
   constructor(
     private repository: RewardWriteRepository,
-    private realtime: RealtimeBusPort<RealtimeEvent>,
+    private realtime: RealtimeBusPort<RealtimeMessage>,
     private clock: () => Date,
   ) {}
   async execute(context: CommandContext, command: RedeemRewardCommand) {
@@ -114,10 +119,16 @@ export class RedeemRewardCommandHandler {
       const reward = loaded.state;
       reward.redeem(command.orderId, this.clock());
       await this.repository.save(reward);
-      await this.realtime.publish({ snapshot: reward.snapshot() });
+      await this.realtime.publish(
+        realtimeMessage.snapshot(realtimeTarget.context('loyalty'), reward.snapshot()),
+      );
       return { status: 'redeemed' };
     } catch (error) {
-      if (error instanceof Rejection) await this.realtime.publish({ rejection: error.outcome() });
+      if (error instanceof Rejection && context.actorId) {
+        await this.realtime.publish(
+          realtimeMessage.rejection(realtimeTarget.principal(context.actorId), error.outcome()),
+        );
+      }
       throw error;
     }
   }

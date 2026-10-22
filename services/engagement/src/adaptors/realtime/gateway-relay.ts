@@ -27,7 +27,6 @@ export async function realtimeRelay(
           'X-Centrifugo-Error-Mode': 'transport',
         },
         body: JSON.stringify({
-          channel: row.channel,
           b64data: row.body.toString('base64'),
           idempotency_key: row.id,
         }),

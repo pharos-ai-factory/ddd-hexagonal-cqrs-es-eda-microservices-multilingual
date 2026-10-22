@@ -102,10 +102,35 @@ class RealtimeBusPort[E](Protocol):
 
 
 @dataclass(frozen=True)
-class RealtimeEvent:
-    """Select a snapshot or committed rejection; owner infrastructure supplies its envelope."""
+class RealtimeTarget:
+    """Application recipient resolved to a transport channel by an outer adaptor."""
 
+    kind: Literal["context", "principal"]
+    id: str
+
+
+def context_target(owner: str) -> RealtimeTarget:
+    return RealtimeTarget("context", owner)
+
+
+def principal_target(principal_id: str) -> RealtimeTarget:
+    return RealtimeTarget("principal", principal_id)
+
+
+@dataclass(frozen=True)
+class RealtimeMessage:
+    """Select a typed delivery target and one authoritative payload."""
+
+    target: RealtimeTarget
     source: Metadata | None = None
     revision: int = 0
     snapshot: Mapping[str, object] | None = None
     rejection: RejectionDetail | None = None
+
+
+def snapshot_message(target: RealtimeTarget, snapshot: Mapping[str, object]) -> RealtimeMessage:
+    return RealtimeMessage(target=target, snapshot=snapshot)
+
+
+def rejection_message(target: RealtimeTarget, rejection: RejectionDetail) -> RealtimeMessage:
+    return RealtimeMessage(target=target, rejection=rejection)

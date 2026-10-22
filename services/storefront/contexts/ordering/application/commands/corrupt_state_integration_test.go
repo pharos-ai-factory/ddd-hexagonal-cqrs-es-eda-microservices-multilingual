@@ -75,7 +75,7 @@ func TestStoredOrderPriceMustBeExplicit(t *testing.T) {
 			m := a.Metadata{ID: pg.NewID(), AggregateID: id, Name: "ordering.PlaceOrder",
 				ExpectedVersion: a.Expected(1), CorrelationID: pg.NewID(), Input: struct{}{},
 				Consumer: "ordering.test-corrupt-price", SourceEventID: pg.NewID(), SourceHash: "fixture"}
-			handler := execution.Bind(orderpg.NewOrderTransaction(db), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
+			handler := execution.Bind(orderpg.NewOrderTransaction(db), func(repository orderingports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.PlaceOrderCommandHandler {
 				return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 			})
 			outcome, failure := handler.Execute(t.Context(), m, struct{}{})

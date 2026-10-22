@@ -104,7 +104,7 @@ func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.Command
 		if err = h.Repository.Save(ctx, order); err != nil {
 			return a.CommandResult{}, err
 		}
-		if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: order.Snapshot()}); err != nil {
+		if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("ordering"), order.Snapshot())); err != nil {
 			return a.CommandResult{}, err
 		}
 	}
@@ -189,7 +189,7 @@ using its aggregate ID would target the wrong root.
 ```go source="../../../services/storefront/apps/storefront/di/ordering.go"
 registration.Subscribe(requests.Commands, s, rpc.Subscription(names.OrderingSubscriptionRecordCollection), commandCodec,
 		func(event model.OrderCollectedIntegrationEvent) string { return event.OrderID }, collected.Handle,
-		func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) commands.RecordCollectionCommandHandler {
+		func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) commands.RecordCollectionCommandHandler {
 			return commands.RecordCollectionCommandHandler{Repository: repository, Realtime: realtime}
 		})
 ```

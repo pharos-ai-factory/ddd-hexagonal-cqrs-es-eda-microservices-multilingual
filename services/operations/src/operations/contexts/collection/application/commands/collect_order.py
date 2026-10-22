@@ -1,6 +1,13 @@
 from operations.contracts.requests.generated.collection import CollectOrderCommand
 from operations.foundation.domain import Rejection
-from operations.foundation.application import RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import (
+    RealtimeBusPort,
+    RealtimeMessage,
+    context_target,
+    principal_target,
+    rejection_message,
+    snapshot_message,
+)
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
 from operations.foundation.application import ApplicationError
@@ -16,7 +23,7 @@ class PickupNotFoundApplicationError(ApplicationError):
 class CollectOrderCommandHandler:
     """Checks the collection code through the aggregate and commits its collection fact."""
 
-    def __init__(self, repository: PickupWriteRepository, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+    def __init__(self, repository: PickupWriteRepository, realtime: RealtimeBusPort[RealtimeMessage]) -> None:
         self.repository = repository
         self.realtime = realtime
 
@@ -29,8 +36,11 @@ class CollectOrderCommandHandler:
             pickup = state
             pickup.collect(command["code"])
             self.repository.save(pickup)
-            self.realtime.publish(RealtimeEvent(snapshot=pickup.snapshot()))
+            self.realtime.publish(snapshot_message(context_target("collection"), pickup.snapshot()))
             return CommandResult("collected")
         except Rejection as rejection:
-            self.realtime.publish(RealtimeEvent(rejection=rejection.outcome()))
+            if context.actor_id:
+                self.realtime.publish(
+                    rejection_message(principal_target(context.actor_id), rejection.outcome())
+                )
             raise

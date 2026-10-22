@@ -19,9 +19,9 @@ func (r *realtimeOrderReader) Get(context.Context, string) (a.Loaded[view.OrderV
 	return r.loaded, nil
 }
 
-type realtimeRecorder struct{ events []a.RealtimeEvent }
+type realtimeRecorder struct{ events []a.RealtimeMessage }
 
-func (b *realtimeRecorder) Publish(_ context.Context, event a.RealtimeEvent) error {
+func (b *realtimeRecorder) Publish(_ context.Context, event a.RealtimeMessage) error {
 	b.events = append(b.events, event)
 	return nil
 }
@@ -39,7 +39,7 @@ func TestRealtimeOrderRefreshUsesReadRevisionAndRequiresCommittedView(t *testing
 	if err != nil || outcome.Version != 4 || len(bus.events) != 1 {
 		t.Fatalf("refresh: %+v %v", outcome, err)
 	}
-	if bus.events[0].Revision != 4 || bus.events[0].Source.SourceVersion != 2 {
+	if bus.events[0].Revision != 4 || bus.events[0].Source.SourceVersion != 2 || bus.events[0].Target != a.ContextTarget("ordering") {
 		t.Fatal("source revision replaced the read revision")
 	}
 	reader.loaded.Exists = false

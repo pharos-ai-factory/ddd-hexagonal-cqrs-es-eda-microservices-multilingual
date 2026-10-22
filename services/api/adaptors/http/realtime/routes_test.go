@@ -33,8 +33,11 @@ func TestProxyChoosesChannelsAndRejectsUntrustedCallers(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatal(err)
 	}
-	if result.Result.User != a.OperatorID || len(result.Result.Subs) != 6 {
+	if result.Result.User != a.OperatorID || len(result.Result.Subs) != 7 {
 		t.Fatal("missing server authority")
+	}
+	if _, ok := result.Result.Subs["principal:"+a.OperatorID]; !ok {
+		t.Fatal("missing principal authority")
 	}
 	if result.Result.ExpireAt < time.Now().Unix() || result.Result.ExpireAt > time.Now().Add(a.ConnectLifetime).Unix() {
 		t.Fatal("connect authority has no bounded validity")

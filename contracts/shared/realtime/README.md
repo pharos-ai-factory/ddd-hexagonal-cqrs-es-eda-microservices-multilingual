@@ -1,4 +1,4 @@
-# Café browser projections, version 1
+# Café realtime messages, version 1
 
 [v1/realtime.proto](v1/realtime.proto) defines
 the shared `Publication` envelope. It imports typed snapshots owned by each
@@ -25,9 +25,11 @@ Centrifugo connect and refresh callbacks are HTTP operations defined in
 [the API HTTP contract](../../services/api/http_api/realtime.paths.json). Delivered
 business facts such as `OrderPlaced` belong to [events](../messaging/events.md).
 
-The envelope identifies the owning context, kind, root, revision and publication.
-The snapshot ID must match the envelope root ID. Channel authorisation comes from
-the API session, not from these payload fields. Each context uses `cafe:<context>`.
+The envelope identifies the owning context, kind, root, revision, publication and
+`DeliveryTarget`. The snapshot ID must match the envelope root ID. A `context`
+target delivers shared owner state on `cafe:<context>`. A `principal` target
+delivers `OperationRejected` to `principal:<authenticated-subject>`. Applications
+choose typed targets; relays never construct transport channels.
 
 Publish explicitly through the owner's `RealtimeBusPort`. Command handlers stage
 exact bytes and dispatch intent in their root/outcome transaction. Declared domain
@@ -36,7 +38,8 @@ A delayed subscriber reads the current owner view and uses that view's actual
 revision. Keep the original source-event revision separate from the snapshot revision.
 
 `OperationRejected` carries command ID, correlation ID, stable code and a safe
-message. Its revision can be zero for a missing root. Display it separately from
+message. Its target must match the authenticated command actor and its revision
+can be zero for a missing root. Display it separately from
 snapshot state; preserve uncertain command recovery through the recorded reply.
 Snapshot publications require a positive revision.
 The relay may deliver duplicates or different roots out of order. Consumers apply

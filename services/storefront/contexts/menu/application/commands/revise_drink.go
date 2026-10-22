@@ -10,7 +10,7 @@ import (
 
 // ReviseDrinkCommandHandler applies ReviseDrink through one aggregate command transaction.
 type ReviseDrinkCommandHandler struct {
-	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime   a.RealtimeBusPort[a.RealtimeMessage]
 	Repository ports.DrinkWriteRepository
 }
 
@@ -34,7 +34,7 @@ func (h ReviseDrinkCommandHandler) Execute(ctx context.Context, m a.CommandConte
 		if err = h.Repository.Save(ctx, drink); err != nil {
 			return a.CommandResult{}, err
 		}
-		if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: drink.Snapshot()}); err != nil {
+		if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("menu"), drink.Snapshot())); err != nil {
 			return a.CommandResult{}, err
 		}
 	}

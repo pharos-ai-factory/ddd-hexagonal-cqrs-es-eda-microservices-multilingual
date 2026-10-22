@@ -10,7 +10,7 @@ import (
 
 // PublishEditionCommandHandler applies PublishEdition through one aggregate command transaction.
 type PublishEditionCommandHandler struct {
-	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime   a.RealtimeBusPort[a.RealtimeMessage]
 	Repository ports.EditionWriteRepository
 }
 
@@ -29,7 +29,7 @@ func (h PublishEditionCommandHandler) Execute(ctx context.Context, m a.CommandCo
 	if err = h.Repository.Save(ctx, edition); err != nil {
 		return a.CommandResult{}, err
 	}
-	if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: edition.Snapshot()}); err != nil {
+	if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("menu"), edition.Snapshot())); err != nil {
 		return a.CommandResult{}, err
 	}
 	return a.Result("published"), nil

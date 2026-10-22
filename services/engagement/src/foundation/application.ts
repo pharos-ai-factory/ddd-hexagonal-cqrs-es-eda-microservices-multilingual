@@ -63,8 +63,24 @@ export interface DomainEventBusPort<E> {
 export interface RealtimeBusPort<E> {
   publish(event: E): Promise<void>;
 }
-/** Snapshot revisions and authorised audiences are supplied by the owner transaction. */
-export type RealtimeEvent = { source?: Metadata; revision?: number } & (
+/** Application recipient resolved to a transport channel by an outer adaptor. */
+export type RealtimeTarget = Readonly<{
+  kind: 'context' | 'principal';
+  id: string;
+}>;
+export const realtimeTarget = Object.freeze({
+  context: (owner: string): RealtimeTarget => ({ kind: 'context', id: owner }),
+  principal: (principalId: string): RealtimeTarget => ({ kind: 'principal', id: principalId }),
+});
+/** A typed delivery target and one authoritative payload. */
+export type RealtimeMessage = { target: RealtimeTarget; source?: Metadata; revision?: number } & (
   | { snapshot: object; rejection?: never }
   | { rejection: { code: string; message: string }; snapshot?: never }
 );
+export const realtimeMessage = Object.freeze({
+  snapshot: (target: RealtimeTarget, snapshot: object): RealtimeMessage => ({ target, snapshot }),
+  rejection: (
+    target: RealtimeTarget,
+    rejection: Readonly<{ code: string; message: string }>,
+  ): RealtimeMessage => ({ target, rejection }),
+});

@@ -8,7 +8,7 @@ and [Communication](../contexts/communication/README.md) adaptors own business m
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `persistence/`         | PostgreSQL pools, snapshot repositories, aggregate transactions, receipts, command/integration/reply outboxes and dispatch leases. |
 | `messaging/`           | Event/private-command/request codecs, confirmed RabbitMQ publication, consumers and outbox/reply relays.                           |
-| `realtime/`            | Encode browser projections and publish committed bytes to Centrifugo.                                                              |
+| `realtime/`            | Encode typed browser messages and publish committed bytes through the authority gateway.                                           |
 | `http/`                | Health and authenticated diagnostics.                                                                                              |
 | `generated/`           | Contract catalogues, owner codec registration and schema metadata.                                                                 |
 | `command-execution.ts` | Bind a plain named handler to its invocation transaction.                                                                          |

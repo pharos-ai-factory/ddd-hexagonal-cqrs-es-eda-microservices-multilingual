@@ -22,7 +22,7 @@ func New[A any](requests *rpc.RabbitMQRequestRegistry, transaction execution.Tra
 
 // Register connects a wire command, parser and handler, adding shared execution policy.
 func Register[A any, P proto.Message, C any, H execution.FeatureHandler[C]](
-	registry Registry[A], name pb.CommandName, parse func(P) C, handler func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeEvent]) H,
+	registry Registry[A], name pb.CommandName, parse func(P) C, handler func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeMessage]) H,
 ) {
 	rpc.Command(registry.requests, name, parse, execution.Bind(registry.transaction, handler).Execute)
 }
@@ -30,7 +30,7 @@ func Register[A any, P proto.Message, C any, H execution.FeatureHandler[C]](
 // RegisterProjection prepares immutable projection data before opening the aggregate transaction.
 func RegisterProjection[A any, P proto.Message, C, S any, H execution.FeatureHandler[C]](
 	registry Registry[A], name pb.CommandName, parse func(P) C, source a.ProjectionPort[S], key func(C) string,
-	handler func(a.WriteRepository[A], a.ProjectionPort[S], a.RealtimeBusPort[a.RealtimeEvent]) H,
+	handler func(a.WriteRepository[A], a.ProjectionPort[S], a.RealtimeBusPort[a.RealtimeMessage]) H,
 ) {
 	rpc.Command(registry.requests, name, parse, execution.BindProjection(registry.transaction, source, key, handler).Execute)
 }

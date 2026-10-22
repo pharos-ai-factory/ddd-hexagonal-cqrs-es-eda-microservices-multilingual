@@ -11,7 +11,7 @@ import (
 type Result struct {
 	Status       string
 	Publications []a.Publication
-	Realtime     []a.RealtimeEvent
+	Realtime     []a.RealtimeMessage
 }
 
 // Transaction coordinates one aggregate in one context database.
@@ -38,11 +38,11 @@ func (e Executor[C]) Execute(ctx context.Context, m a.Metadata, c C) (a.Outcome,
 
 type executor[A, C any, H FeatureHandler[C]] struct {
 	transaction Transaction[A]
-	factory     func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeEvent]) H
+	factory     func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeMessage]) H
 }
 
 // Bind constructs a fresh handler with its invocation's repository inside the transaction.
-func Bind[A, C any, H FeatureHandler[C]](transaction Transaction[A], factory func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeEvent]) H) Executor[C] {
+func Bind[A, C any, H FeatureHandler[C]](transaction Transaction[A], factory func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeMessage]) H) Executor[C] {
 	bound := &executor[A, C, H]{transaction, factory}
 	return Executor[C]{run: bound.Execute}
 }

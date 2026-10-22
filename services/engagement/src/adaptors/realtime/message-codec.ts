@@ -3,6 +3,7 @@ import protobuf from 'protobufjs';
 import realtimeSchema from '../generated/realtime.json' with { type: 'json' };
 
 import { newId } from '../../foundation/identity.js';
+import type { RealtimeTarget } from '../../foundation/application.js';
 
 const realtimeType = protobuf.Root.fromJSON(realtimeSchema).lookupType('cafe.realtime.v1.Publication');
 
@@ -11,6 +12,7 @@ export function realtime(
   kind: string,
   id: string,
   revision: number,
+  target: RealtimeTarget,
   state: unknown,
   field = kind,
 ) {
@@ -23,6 +25,7 @@ export function realtime(
     aggregateKind: kind,
     aggregateId: id,
     revision,
+    target: { [target.kind]: target.id },
     [field]: state,
   };
   const error = realtimeType.verify(value);

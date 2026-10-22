@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	a "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/application"
+	d "github.com/pharos-ai-factory/ddd-hexagonal-cqrs-es-eda-microservices-multilingual/services/storefront/foundation/domain"
 	"reflect"
 )
 
-func (db *ContextDatabase) appendRealtime(ctx context.Context, tx pgx.Tx, kind, aggregateID string, revision uint64, event a.RealtimeEvent) error {
+func (db *ContextDatabase) appendRealtime(ctx context.Context, tx pgx.Tx, kind, aggregateID string, revision uint64, event a.RealtimeMessage) error {
 	if db.realtime == nil {
 		return fmt.Errorf("realtime encoder is not configured")
 	}
@@ -19,13 +20,37 @@ func (db *ContextDatabase) appendRealtime(ctx context.Context, tx pgx.Tx, kind, 
 	if err != nil {
 		return err
 	}
+	channel, err := realtimeChannel(db.owner, event)
+	if err != nil {
+		return err
+	}
 	_, err = tx.Exec(ctx, `INSERT INTO cafe.realtime_publications(id,channel,aggregate_kind,aggregate_id,revision,body,message_kind)
-		VALUES($1,$2,$3,$4,$5,$6,$7)`, id, "cafe:"+db.owner, kind, aggregateID, revision, body, messageKind(event))
+		VALUES($1,$2,$3,$4,$5,$6,$7)`, id, channel, kind, aggregateID, revision, body, messageKind(event))
 	if err != nil {
 		return err
 	}
 	_, err = tx.Exec(ctx, `INSERT INTO cafe.realtime_dispatches(event_id) VALUES($1)`, id)
 	return err
+}
+
+func realtimeChannel(owner string, event a.RealtimeMessage) (string, error) {
+	switch event.Target.Kind {
+	case "context":
+		if event.Target.ID != owner || event.Snapshot == nil || event.Rejection != nil {
+			return "", fmt.Errorf("invalid context realtime target")
+		}
+		return "cafe:" + owner, nil
+	case "principal":
+		if event.Snapshot != nil || event.Rejection == nil {
+			return "", fmt.Errorf("invalid principal realtime target")
+		}
+		if err := d.ValidateID(event.Target.ID); err != nil {
+			return "", err
+		}
+		return "principal:" + event.Target.ID, nil
+	default:
+		return "", fmt.Errorf("invalid realtime delivery target")
+	}
 }
 
 // RealtimeDispatch carries exact browser publication bytes and its fenced lease.
@@ -64,7 +89,7 @@ func (db *ContextDatabase) FinishRealtime(ctx context.Context, d RealtimeDispatc
 	return err
 }
 
-func messageKind(event a.RealtimeEvent) string {
+func messageKind(event a.RealtimeMessage) string {
 	if event.Rejection != nil {
 		return "operation_rejected"
 	}
@@ -72,7 +97,7 @@ func messageKind(event a.RealtimeEvent) string {
 }
 
 // persistRealtime validates explicit requests against the outcome being committed.
-func (db *ContextDatabase) persistRealtime(ctx context.Context, tx pgx.Tx, kind string, m a.Metadata, outcome a.Outcome, pending any, events []a.RealtimeEvent) error {
+func (db *ContextDatabase) persistRealtime(ctx context.Context, tx pgx.Tx, kind string, m a.Metadata, outcome a.Outcome, pending any, events []a.RealtimeMessage) error {
 	for _, event := range events {
 		if event.Snapshot != nil {
 			if outcome.Rejection != nil {
@@ -96,8 +121,13 @@ func (db *ContextDatabase) persistRealtime(ctx context.Context, tx pgx.Tx, kind 
 			if saved == nil || !reflect.DeepEqual(saved, published) {
 				return fmt.Errorf("realtime snapshot differs from committed state")
 			}
-		} else if event.Rejection == nil || outcome.Rejection == nil || event.Rejection.Code != outcome.Rejection.Code || event.Rejection.Message != outcome.Rejection.Message {
-			return fmt.Errorf("realtime rejection differs from committed outcome")
+		} else {
+			if event.Rejection == nil || outcome.Rejection == nil || event.Rejection.Code != outcome.Rejection.Code || event.Rejection.Message != outcome.Rejection.Message {
+				return fmt.Errorf("realtime rejection differs from committed outcome")
+			}
+			if m.ActorID == "" || event.Target.Kind != "principal" || event.Target.ID != m.ActorID {
+				return fmt.Errorf("realtime rejection target differs from authenticated actor")
+			}
 		}
 		event.CommandID, event.CorrelationID = m.ID, m.CorrelationID
 		if err := db.appendRealtime(ctx, tx, kind, m.AggregateID, outcome.Version, event); err != nil {

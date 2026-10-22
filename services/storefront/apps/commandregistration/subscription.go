@@ -10,6 +10,6 @@ import (
 )
 
 // Subscribe connects the owner codec and plain handler factory to both durable consumers.
-func Subscribe[A, P, C any, H execution.FeatureHandler[C]](registry Registry[A], s *support.StorefrontRuntime, binding broker.Binding, codec internal.Codec[C], target func(P) string, react func(context.Context, a.Metadata, P) (a.Outcome, error), handler func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeEvent]) H) {
+func Subscribe[A, P, C any, H execution.FeatureHandler[C]](registry Registry[A], s *support.StorefrontRuntime, binding broker.Binding, codec internal.Codec[C], target func(P) string, react func(context.Context, a.Metadata, P) (a.Outcome, error), handler func(a.WriteRepository[A], a.RealtimeBusPort[a.RealtimeMessage]) H) {
 	support.SubscribeCommandPair(s, binding, codec, target, react, execution.Bind(registry.transaction, handler).Execute)
 }

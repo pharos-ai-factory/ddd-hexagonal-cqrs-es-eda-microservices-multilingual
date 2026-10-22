@@ -10,21 +10,24 @@ import (
 	"strings"
 )
 
-// RealtimeEventBus commits one declared event subscription's receipt and exact browser bytes.
-type RealtimeEventBus struct {
+// RealtimeMessageBus commits one declared event subscription's receipt and exact browser bytes.
+type RealtimeMessageBus struct {
 	db             *ContextDatabase
 	consumer, kind string
 }
 
-func NewRealtimeEventBus(db *ContextDatabase, consumer, kind string) *RealtimeEventBus {
+func NewRealtimeMessageBus(db *ContextDatabase, consumer, kind string) *RealtimeMessageBus {
 	if !strings.HasPrefix(consumer, db.owner+".") {
 		panic("foreign realtime subscription")
 	}
-	return &RealtimeEventBus{db, consumer, kind}
+	return &RealtimeMessageBus{db, consumer, kind}
 }
-func (b *RealtimeEventBus) Publish(ctx context.Context, event a.RealtimeEvent) error {
+func (b *RealtimeMessageBus) Publish(ctx context.Context, event a.RealtimeMessage) error {
 	if event.Source == nil || event.Snapshot == nil || event.Rejection != nil || event.Revision == 0 || event.Revision > 9007199254740991 {
 		return fmt.Errorf("invalid realtime delivery")
+	}
+	if event.Target != a.ContextTarget(b.db.owner) {
+		return fmt.Errorf("invalid realtime delivery target")
 	}
 	m := *event.Source
 	for _, id := range []string{m.ID, m.AggregateID, m.SourceEventID, m.CorrelationID} {

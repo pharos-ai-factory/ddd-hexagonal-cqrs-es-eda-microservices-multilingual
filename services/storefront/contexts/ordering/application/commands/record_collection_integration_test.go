@@ -72,11 +72,11 @@ func TestAcceptedCollectionCommitsOrderReceiptAndExplicitRealtimeTogether(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	execute := execution.Bind(orderpg.NewOrderTransaction(db), func(repo ports.OrderWriteRepository, bus a.RealtimeBusPort[a.RealtimeEvent]) commands.RecordCollectionCommandHandler {
+	execute := execution.Bind(orderpg.NewOrderTransaction(db), func(repo ports.OrderWriteRepository, bus a.RealtimeBusPort[a.RealtimeMessage]) commands.RecordCollectionCommandHandler {
 		return commands.RecordCollectionCommandHandler{Repository: repo, Realtime: bus}
 	})
 	// Force failure at browser encoding after the handler has staged its save.
-	if err = db.EnableRealtime(t.Context(), func(string, string, string, string, uint64, a.RealtimeEvent) ([]byte, error) {
+	if err = db.EnableRealtime(t.Context(), func(string, string, string, string, uint64, a.RealtimeMessage) ([]byte, error) {
 		return nil, context.DeadlineExceeded
 	}); err != nil {
 		t.Fatal(err)

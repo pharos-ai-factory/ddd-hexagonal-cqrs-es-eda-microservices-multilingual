@@ -28,7 +28,7 @@ func orderingModule() fx.Option {
 			return reactions.OrderCollectedIntegrationEventHandler{Commands: store.NewCommandOutbox[orderingcontracts.RecordCollectionCommand](s.Databases["ordering"], codec)}
 		},
 		func(s *support.StorefrontRuntime, orders ports.OrderReadRepository) reactions.OrderPlacedRealtimeDomainEventHandler {
-			return reactions.OrderPlacedRealtimeDomainEventHandler{Orders: orders, Realtime: store.NewRealtimeEventBus(s.Databases["ordering"], names.OrderingSubscriptionRealtimeOrderPlaced.String(), "order")}
+			return reactions.OrderPlacedRealtimeDomainEventHandler{Orders: orders, Realtime: store.NewRealtimeMessageBus(s.Databases["ordering"], names.OrderingSubscriptionRealtimeOrderPlaced.String(), "order")}
 		},
 		func(s *support.StorefrontRuntime) reactions.OrderPlacedDomainEventHandler {
 			return reactions.OrderPlacedDomainEventHandler{Publications: store.NewPublicationOutbox[model.OrderPlacedIntegrationEvent](s.Databases["ordering"], names.OrderingSubscriptionPublishOrderPlaced.String(), "order", codec.PublishOrderPlaced)}
@@ -58,7 +58,7 @@ func mountOrdering(s *support.StorefrontRuntime, requests orderingRequests, dire
 	s.RequestWorkers["ordering"] = requests.Run
 	registration.Subscribe(requests.Commands, s, rpc.Subscription(names.OrderingSubscriptionRecordCollection), commandCodec,
 		func(event model.OrderCollectedIntegrationEvent) string { return event.OrderID }, collected.Handle,
-		func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) commands.RecordCollectionCommandHandler {
+		func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) commands.RecordCollectionCommandHandler {
 			return commands.RecordCollectionCommandHandler{Repository: repository, Realtime: realtime}
 		})
 	support.Subscribe(s, rpc.Subscription(names.OrderingSubscriptionMenuDirectory), func(p model.MenuPublishedIntegrationEvent) string { return p.EditionID }, rpc.MenuPublished(orderingprojections.MenuDirectoryProjectionHandler{Directory: directory}.Handle))

@@ -11,7 +11,7 @@ import (
 // OrderPlacedRealtimeDomainEventHandler publishes the current owner view with its actual revision.
 type OrderPlacedRealtimeDomainEventHandler struct {
 	Orders   ports.OrderReadRepository
-	Realtime a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime a.RealtimeBusPort[a.RealtimeMessage]
 }
 
 func (h OrderPlacedRealtimeDomainEventHandler) Handle(ctx context.Context, m a.Metadata, event d.OrderPlacedDomainEvent) (a.Outcome, error) {
@@ -25,6 +25,8 @@ func (h OrderPlacedRealtimeDomainEventHandler) Handle(ctx context.Context, m a.M
 	if !loaded.Exists {
 		return a.Outcome{}, fmt.Errorf("committed order is missing")
 	}
-	err = h.Realtime.Publish(ctx, a.RealtimeEvent{Source: &m, Revision: loaded.Version, Snapshot: loaded.State})
+	message := a.SnapshotMessage(a.ContextTarget("ordering"), loaded.State)
+	message.Source, message.Revision = &m, loaded.Version
+	err = h.Realtime.Publish(ctx, message)
 	return a.Outcome{AggregateID: m.AggregateID, Version: loaded.Version, Status: "realtime_queued"}, err
 }

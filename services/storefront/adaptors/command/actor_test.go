@@ -27,7 +27,7 @@ func (h actorHandler) Execute(_ context.Context, c a.CommandContext, _ int) (a.C
 func TestHandlerReceivesAuthenticatedActor(t *testing.T) {
 	for _, actor := range []string{"", "11111111-1111-4111-8111-111111111111"} {
 		expected := a.CommandContext{Target: "22222222-2222-4222-8222-222222222222", ActorID: actor}
-		executor := Bind[int, int](actorTransaction{}, func(a.WriteRepository[int], a.RealtimeBusPort[a.RealtimeEvent]) actorHandler {
+		executor := Bind[int, int](actorTransaction{}, func(a.WriteRepository[int], a.RealtimeBusPort[a.RealtimeMessage]) actorHandler {
 			return actorHandler{t, expected}
 		})
 		result, err := executor.Execute(t.Context(), a.Metadata{AggregateID: expected.Target, ActorID: actor}, 0)

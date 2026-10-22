@@ -15,13 +15,39 @@ import os
 import urllib.error
 import urllib.request
 from operations.foundation.secrets import secret
+from operations.adaptors.generated.cafe.realtime.v1.realtime_pb2 import Publication
+
+foreign = Publication(
+    event_id="probe",
+    contract_version=1,
+    context="menu",
+    aggregate_kind="ticket",
+    aggregate_id="aggregate",
+    revision=1,
+)
+foreign.target.context = "menu"
+foreign.ticket.id = "aggregate"
+foreign_bytes = __import__("base64").b64encode(foreign.SerializeToString()).decode()
 
 url = os.environ["REALTIME_GATEWAY_URL"]
 for owner in ("preparation", "collection"):
     key = secret(owner.upper()+"_REALTIME_KEY")
+    kind = {"preparation": "ticket", "collection": "pickup"}[owner]
+    own = Publication(
+        event_id="own-probe",
+        contract_version=1,
+        context=owner,
+        aggregate_kind=kind,
+        aggregate_id="aggregate",
+        revision=1,
+    )
+    own.target.context = owner
+    getattr(own, kind).id = "aggregate"
+    own_bytes = __import__("base64").b64encode(own.SerializeToString()).decode()
     probes = [
-        ("/api/publish", {"channel": "cafe:"+owner, "b64data": "AA==", "idempotency_key": "probe"}, 400),
-        ("/api/publish", {"channel": "cafe:menu", "b64data": "AA==", "idempotency_key": "probe"}, 403),
+        ("/api/publish", {"b64data": "AA==", "idempotency_key": "probe"}, 400),
+        ("/api/publish", {"b64data": foreign_bytes, "idempotency_key": "probe"}, 400),
+        ("/api/publish", {"channel": "cafe:menu", "b64data": own_bytes, "idempotency_key": "own-probe"}, 403),
         ("/api/disconnect", {"user": "permission-probe"}, 403),
         ("/api/info", {}, 404),
         ("/api/history", {"channel": "cafe:menu"}, 404),
@@ -35,7 +61,7 @@ for owner in ("preparation", "collection"):
         except urllib.error.HTTPError as error:
             status = error.code
         assert status == expected, f"{owner} {path}: expected {expected}, received {status}"
-print("Realtime gateway validates own publications and denies foreign publication and administration")
+print("Realtime gateway derives channels and denies foreign publication and administration")
 """
 
 

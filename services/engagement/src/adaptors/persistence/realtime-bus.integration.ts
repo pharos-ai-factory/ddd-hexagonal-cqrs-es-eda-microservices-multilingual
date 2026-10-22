@@ -3,10 +3,15 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { PostgresContextDatabase } from './postgres-database.js';
 import { PostgresAggregateTransaction } from './aggregate-transaction.js';
-import { PostgresRealtimeEventBus } from './realtime-event-bus.js';
+import { PostgresRealtimeMessageBus } from './realtime-event-bus.js';
 import { restoreRewardSnapshot } from '../../contexts/loyalty/adaptors/persistence/reward-snapshot.js';
 import type { RewardState } from '../../contexts/loyalty/domain/reward.js';
-import type { Metadata, RealtimeEvent } from '../../foundation/application.js';
+import {
+  realtimeMessage,
+  realtimeTarget,
+  type Metadata,
+  type RealtimeMessage,
+} from '../../foundation/application.js';
 
 void test('explicit publication, subscription redelivery and rootless rejections commit durably', async () => {
   const db = new PostgresContextDatabase('loyalty', process.env.LOYALTY_DATABASE_URL!);
@@ -51,13 +56,19 @@ void test('explicit publication, subscription redelivery and rootless rejections
     await assert.rejects(
       unit.execute(changed, async (r) => {
         await r.save(next);
-        return { status: 'redeemed', realtime: [{ snapshot: state }] };
+        return {
+          status: 'redeemed',
+          realtime: [realtimeMessage.snapshot(realtimeTarget.context('loyalty'), state)],
+        };
       }),
       /differs from committed/,
     );
     const result = await unit.execute(changed, async (r) => {
       await r.save(next);
-      return { status: 'redeemed', realtime: [{ snapshot: next }] };
+      return {
+        status: 'redeemed',
+        realtime: [realtimeMessage.snapshot(realtimeTarget.context('loyalty'), next)],
+      };
     });
     assert.equal(result.version, 2);
     await unit.execute(changed, async () => assert.fail('Duplicate command executed'));
@@ -70,8 +81,13 @@ void test('explicit publication, subscription redelivery and rootless rejections
       sourceHash: 'a'.repeat(64),
       sourceVersion: 1,
     };
-    const bus = new PostgresRealtimeEventBus(db, source.consumer, 'reward');
-    const event: RealtimeEvent = { source, revision: 2, snapshot: next };
+    const bus = new PostgresRealtimeMessageBus(db, source.consumer, 'reward');
+    const event: RealtimeMessage = {
+      target: realtimeTarget.context('loyalty'),
+      source,
+      revision: 2,
+      snapshot: next,
+    };
     await bus.publish(event);
     await bus.publish(event);
     assert.equal(await count(), 2);
@@ -79,12 +95,12 @@ void test('explicit publication, subscription redelivery and rootless rejections
       bus.publish({ ...event, source: { ...source, sourceHash: 'b'.repeat(64) } }),
       /Conflicting/,
     );
-    const missing = { ...m, id: randomUUID(), target: randomUUID() };
+    const missing = { ...m, id: randomUUID(), target: randomUUID(), actorId: randomUUID() };
     const rejection = { code: 'not_found', message: 'The reward does not exist' };
     const outcome = await unit.execute(missing, async () => ({
       status: '',
       rejection,
-      realtime: [{ rejection }],
+      realtime: [realtimeMessage.rejection(realtimeTarget.principal(missing.actorId), rejection)],
     }));
     assert.equal(outcome.version, 0);
     assert.deepEqual(outcome.rejection, rejection);

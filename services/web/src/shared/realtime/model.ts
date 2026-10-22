@@ -46,8 +46,8 @@ export type Models = {
   };
 };
 export type Kind = keyof Models;
-export type Projection<K extends Kind = Kind> = { kind: K; version: number; state: Models[K] };
-export type Snapshot = Record<string, Projection>;
+export type VersionedState<K extends Kind = Kind> = { kind: K; version: number; state: Models[K] };
+export type Snapshot = Record<string, VersionedState>;
 export const owners: Record<Kind, string> = {
   drink: 'menu',
   edition: 'menu',
@@ -59,11 +59,11 @@ export const owners: Record<Kind, string> = {
   notification: 'communication',
 };
 
-export function merge(current: Snapshot, update: Projection): Snapshot {
+export function mergeState(current: Snapshot, update: VersionedState): Snapshot {
   const key = `${update.kind}/${update.state.id}`;
   if ((current[key]?.version ?? 0) >= update.version) return current;
   return { ...current, [key]: update };
 }
-export function items<K extends Kind>(snapshot: Snapshot, kind: K): Projection<K>[] {
-  return Object.values(snapshot).filter((value) => value.kind === kind) as Projection<K>[];
+export function items<K extends Kind>(snapshot: Snapshot, kind: K): VersionedState<K>[] {
+  return Object.values(snapshot).filter((value) => value.kind === kind) as VersionedState<K>[];
 }

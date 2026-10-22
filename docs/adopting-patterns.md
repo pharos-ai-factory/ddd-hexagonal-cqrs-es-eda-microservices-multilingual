@@ -4,31 +4,31 @@ Use the café to evaluate these patterns against an existing system's domain
 model, operational needs and accepted architectural decisions. The following
 questions help identify where a pattern would address a concrete problem.
 
-| Reference mechanism                                      | Review question or action                                                                                 |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| One-aggregate command port with no exposed transaction   | Find handlers that synchronously mutate multiple aggregate roots; revisit their invariants and lifecycles |
-| Database guard against a second aggregate target         | Add mechanical evidence wherever single-aggregate ownership is intended                                   |
-| Private and public delivery through the same outbox      | Replace required in-memory reactions with an atomic durable hand-off                                      |
-| Immutable events separate from dispatch leases           | Keep source evidence stable while workers retry and reclaim work                                          |
-| Consumer-local receipts include bytes and target         | Test conflicting identities and concurrent duplicate delivery                                             |
-| Stable recorded command outcomes                         | Distinguish unknown commit results from business rejections and new attempts                              |
-| Restricted context credentials                           | Verify actual database and broker access, beyond naming conventions                                       |
-| Immutable published drink/menu snapshots                 | Prefer consumer-owned evidence when mutable owner lookups would make decisions race                       |
-| Separate earned grant and issued Reward                  | Model pending workflow states instead of enlarging an aggregate to avoid eventual consistency             |
-| Provider idempotency plus an outcome command             | Exercise acceptance followed by lost response or process failure                                          |
-| Shared HTTP journeys and Protobuf fixtures               | Compare independent language services by behaviour and contracts                                          |
-| Atomic typed browser bytes plus fenced relay             | Preserve the projection revision represented by a publication across retries                              |
-| Two-window recovery tests                                | Prove server authorisation, recovered history and explicit reconciliation without polling                 |
-| Optional keyset pagination                               | Make traversal explicit and reusable without silently truncating ordinary queries                         |
-| Context-owned migration history                          | Evolve each database independently and reject mismatched runtime ownership or checksums                   |
-| Restricted realtime gateway                              | Give publishers authority over their own channel and session workers only disconnection authority         |
-| Protected developer secret files                         | Use individual provider credentials with scopes and spending controls outside generated configuration     |
-| Named command/query pairs and checked context navigation | Make business use cases discoverable through a stable source layout and live index                        |
-| Application read models and named read repository ports  | Let queries evolve independently from aggregate storage while retaining validated authority               |
-| Durable event-to-command acceptance                      | Make command execution/retry ownership explicit after the receiving event is acknowledged                 |
-| Explicit DI at composition roots                         | Inject plain ports, validate the graph and dispose owned resources after workers drain                    |
-| Historical contract/fixture checks                       | Preserve public consumers and queued private work as code evolves                                         |
-| Architecture checker with negative fixtures              | Turn enforceable architectural decisions into build failures                                              |
+| Reference mechanism                                      | Review question or action                                                                                        |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| One-aggregate command port with no exposed transaction   | Find handlers that synchronously mutate multiple aggregate roots; revisit their invariants and lifecycles        |
+| Database guard against a second aggregate target         | Add mechanical evidence wherever single-aggregate ownership is intended                                          |
+| Private and public delivery through the same outbox      | Replace required in-memory reactions with an atomic durable hand-off                                             |
+| Immutable events separate from dispatch leases           | Keep source evidence stable while workers retry and reclaim work                                                 |
+| Consumer-local receipts include bytes and target         | Test conflicting identities and concurrent duplicate delivery                                                    |
+| Stable recorded command outcomes                         | Distinguish unknown commit results from business rejections and new attempts                                     |
+| Restricted context credentials                           | Verify actual database and broker access, beyond naming conventions                                              |
+| Immutable published drink/menu snapshots                 | Prefer consumer-owned evidence when mutable owner lookups would make decisions race                              |
+| Separate earned grant and issued Reward                  | Model pending workflow states instead of enlarging an aggregate to avoid eventual consistency                    |
+| Provider idempotency plus an outcome command             | Exercise acceptance followed by lost response or process failure                                                 |
+| Shared HTTP journeys and Protobuf fixtures               | Compare independent language services by behaviour and contracts                                                 |
+| Atomic typed browser bytes plus fenced relay             | Preserve the projection revision represented by a publication across retries                                     |
+| Two-window recovery tests                                | Prove server authorisation, recovered history and explicit reconciliation without polling                        |
+| Optional keyset pagination                               | Make traversal explicit and reusable without silently truncating ordinary queries                                |
+| Context-owned migration history                          | Evolve each database independently and reject mismatched runtime ownership or checksums                          |
+| Restricted realtime gateway                              | Identify each publisher owner, derive authorised channels server-side and limit session workers to disconnection |
+| Protected developer secret files                         | Use individual provider credentials with scopes and spending controls outside generated configuration            |
+| Named command/query pairs and checked context navigation | Make business use cases discoverable through a stable source layout and live index                               |
+| Application read models and named read repository ports  | Let queries evolve independently from aggregate storage while retaining validated authority                      |
+| Durable event-to-command acceptance                      | Make command execution/retry ownership explicit after the receiving event is acknowledged                        |
+| Explicit DI at composition roots                         | Inject plain ports, validate the graph and dispose owned resources after workers drain                           |
+| Historical contract/fixture checks                       | Preserve public consumers and queued private work as code evolves                                                |
+| Architecture checker with negative fixtures              | Turn enforceable architectural decisions into build failures                                                     |
 
 ## Transfer the rules with their evidence
 

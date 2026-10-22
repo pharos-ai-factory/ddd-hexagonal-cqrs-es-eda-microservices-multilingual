@@ -2,7 +2,7 @@
 
 from operations.contexts.preparation.adaptors.messaging.generated import response_payloads as responses
 
-from operations.adaptors.persistence.realtime_event_bus import PostgresRealtimeEventBus
+from operations.adaptors.persistence.realtime_event_bus import PostgresRealtimeMessageBus
 from operations.contexts.preparation.application.event_handlers.realtime_drinks_ready import (
     DrinksReadyRealtimeDomainEventHandler,
 )
@@ -84,7 +84,7 @@ class PreparationContainer(containers.DeclarativeContainer):
         publish_DrinksReady,
     )
     realtime_bus = providers.Singleton(
-        PostgresRealtimeEventBus, database, PreparationSubscription.REALTIME_DRINKS_READY, "ticket"
+        PostgresRealtimeMessageBus, database, PreparationSubscription.REALTIME_DRINKS_READY, "ticket"
     )
     realtime_drinks_ready = providers.Singleton(
         DrinksReadyRealtimeDomainEventHandler, ticket_read_repository, realtime_bus

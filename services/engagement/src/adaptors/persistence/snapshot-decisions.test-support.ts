@@ -1,12 +1,15 @@
 import type { Change, Loaded, Metadata } from '../../foundation/application.js';
+import { realtimeMessage, realtimeTarget } from '../../foundation/application.js';
 import { PostgresContextDatabase } from './postgres-database.js';
 import { PostgresAggregateTransaction } from './aggregate-transaction.js';
 
 /** Technical fixtures drive the real command transaction with snapshot-only decisions. */
 export class SnapshotDecisionFixture<S> {
   private transaction: PostgresAggregateTransaction<S, S>;
+  private target: ReturnType<typeof realtimeTarget.context>;
   constructor(database: PostgresContextDatabase, kind: string, restore: (value: unknown) => S) {
     this.transaction = new PostgresAggregateTransaction(database, kind, restore, (repository) => repository);
+    this.target = realtimeTarget.context(database.owner);
   }
   execute(metadata: Metadata, decide: (loaded: Loaded<S> | undefined) => Change<S>) {
     return this.transaction.execute(metadata, async (repository) => {
@@ -15,7 +18,7 @@ export class SnapshotDecisionFixture<S> {
       return {
         status: change.status,
         publications: change.publications ?? [],
-        realtime: change.changed ? [{ snapshot: change.state as object }] : [],
+        realtime: change.changed ? [realtimeMessage.snapshot(this.target, change.state as object)] : [],
       };
     });
   }

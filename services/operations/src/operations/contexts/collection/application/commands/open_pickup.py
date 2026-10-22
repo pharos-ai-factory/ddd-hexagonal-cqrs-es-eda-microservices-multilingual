@@ -1,5 +1,10 @@
 from operations.contracts.requests.generated.collection import OpenPickupCommand
-from operations.foundation.application import RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import (
+    RealtimeBusPort,
+    RealtimeMessage,
+    context_target,
+    snapshot_message,
+)
 from operations.foundation.write_repository import CommandResult, CommandContext
 from operations.contexts.collection.application.ports.pickup_write_repository import PickupWriteRepository
 from collections.abc import Callable
@@ -12,7 +17,7 @@ class OpenPickupCommandHandler:
     def __init__(
         self,
         repository: PickupWriteRepository,
-        realtime: RealtimeBusPort[RealtimeEvent],
+        realtime: RealtimeBusPort[RealtimeMessage],
         identities: Callable[[str, str], str],
     ) -> None:
         self.repository, self.identities = repository, identities
@@ -27,5 +32,5 @@ class OpenPickupCommandHandler:
         code = self.identities("collection-code", command["orderId"])[:6].upper()
         pickup = Pickup.open(context.target, command["orderId"], command["customerId"], code)
         self.repository.save(pickup)
-        self.realtime.publish(RealtimeEvent(snapshot=pickup.snapshot()))
+        self.realtime.publish(snapshot_message(context_target("collection"), pickup.snapshot()))
         return CommandResult("ready")

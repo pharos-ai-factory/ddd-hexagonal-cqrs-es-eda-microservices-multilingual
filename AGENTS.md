@@ -117,12 +117,15 @@ and a dedicated topology credential.
   See decision 0030. Dependency lockfiles and Next.js' required `next-env.d.ts` retain their
   standard names. Plain generated event DTOs remain in service-local contracts.
 - Browser updates use server-authorised Centrifugo subscriptions and the separate
-  Protobuf projection contract. No browser polling or client-selected channels.
+  typed Protobuf realtime contract. Applications select context or principal
+  targets; the gateway derives channels. No browser polling or client-selected channels.
 - Publish realtime explicitly through `RealtimeBusPort`. Command publications commit
   with the root/outcome; event subscribers commit exact bytes with their receipt. Test recovery,
   stale revisions, independent windows and durable session revocation.
 - Browser features follow business tasks; reusable command recovery/realtime code
-  stays under `shared/`. HTTP calls use the generated operation client. Preserve
+  stays under `shared/` and exposes `RealtimeProvider`, `useRealtimeMessage` and
+  `useRealtimeConnection`. Feature hooks register typed handlers and never create
+  subscriptions. HTTP calls use the generated operation client. Preserve
   uncertain command attempts across reload and authentication loss.
 
 ## Verify and hand off

@@ -14,13 +14,13 @@ func TestRealtimeIntentIsAtomicAndDispatchIsFenced(t *testing.T) {
 	db, owner := fixtureDB(t), admin(t)
 	id := NewID()
 	clean(t, owner, id)
-	encoder := func(_, _, _, _ string, _ uint64, event a.RealtimeEvent) ([]byte, error) {
+	encoder := func(_, _, _, _ string, _ uint64, event a.RealtimeMessage) ([]byte, error) {
 		return json.Marshal(event.Snapshot)
 	}
 	if err := db.EnableRealtime(t.Context(), encoder); err != nil {
 		t.Fatal(err)
 	}
-	db.realtime = func(_, _, _, _ string, _ uint64, _ a.RealtimeEvent) ([]byte, error) {
+	db.realtime = func(_, _, _, _ string, _ uint64, _ a.RealtimeMessage) ([]byte, error) {
 		return nil, errors.New("encoding failed after state write")
 	}
 	m := metadata(id, 0)

@@ -68,7 +68,7 @@ Source: [preparation.py](../../../services/operations/src/operations/apps/compos
         publish_DrinksReady,
     )
     realtime_bus = providers.Singleton(
-        PostgresRealtimeEventBus, database, PreparationSubscription.REALTIME_DRINKS_READY, "ticket"
+        PostgresRealtimeMessageBus, database, PreparationSubscription.REALTIME_DRINKS_READY, "ticket"
     )
     realtime_drinks_ready = providers.Singleton(
         DrinksReadyRealtimeDomainEventHandler, ticket_read_repository, realtime_bus

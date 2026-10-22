@@ -25,7 +25,6 @@ def relay(database: PostgresContextDatabase, stop: Event) -> None:
                 method="POST",
                 data=json.dumps(
                     {
-                        "channel": row["channel"],
                         "b64data": base64.b64encode(row["body"]).decode(),
                         "idempotency_key": str(row["id"]),
                     }

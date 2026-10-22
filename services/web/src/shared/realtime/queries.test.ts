@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { subscriptionBarrier } from './queries';
-import { scan } from './httpProjection';
-import { merge, type Snapshot } from './model';
+import { scan } from './state-loader';
+import { mergeState, type Snapshot } from './model';
 
 void test('paginated scans load every row beyond 100 and preserve newer live revisions', async (t) => {
   const urls: string[] = [];
@@ -17,9 +17,9 @@ void test('paginated scans load every row beyond 100 and preserve newer live rev
     const cursor = new URL(url, 'http://test').searchParams.get('cursor');
     const offset = Number(cursor ?? 0);
     if (offset === 100) {
-      state = merge(state, { ...rows[0]!, version: 2, state: { ...rows[0]!.state, name: 'live' } });
+      state = mergeState(state, { ...rows[0]!, version: 2, state: { ...rows[0]!.state, name: 'live' } });
       // A root inserted behind the current cursor arrives through the subscription.
-      state = merge(state, { ...rows[0]!, state: { ...rows[0]!.state, id: '-1', name: 'new' } });
+      state = mergeState(state, { ...rows[0]!, state: { ...rows[0]!.state, id: '-1', name: 'new' } });
     }
     return new Response(
       JSON.stringify({
@@ -30,7 +30,7 @@ void test('paginated scans load every row beyond 100 and preserve newer live rev
   });
   const loaded = await scan('listDrinks', new AbortController().signal);
   loaded.forEach((row) => {
-    state = merge(state, { ...row, kind: 'drink' });
+    state = mergeState(state, { ...row, kind: 'drink' });
   });
   assert.equal(loaded.length, 205);
   assert.equal(urls.length, 3);

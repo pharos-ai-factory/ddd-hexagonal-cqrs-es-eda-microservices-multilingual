@@ -29,6 +29,7 @@ type Publication struct {
 	AggregateKind   string                 `protobuf:"bytes,4,opt,name=aggregate_kind,json=aggregateKind,proto3" json:"aggregate_kind,omitempty"`
 	AggregateId     string                 `protobuf:"bytes,5,opt,name=aggregate_id,json=aggregateId,proto3" json:"aggregate_id,omitempty"`
 	Revision        uint64                 `protobuf:"varint,6,opt,name=revision,proto3" json:"revision,omitempty"`
+	Target          *DeliveryTarget        `protobuf:"bytes,7,opt,name=target,proto3" json:"target,omitempty"`
 	// Types that are valid to be assigned to Snapshot:
 	//
 	//	*Publication_Drink
@@ -112,6 +113,13 @@ func (x *Publication) GetRevision() uint64 {
 	return 0
 }
 
+func (x *Publication) GetTarget() *DeliveryTarget {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
 func (x *Publication) GetSnapshot() isPublication_Snapshot {
 	if x != nil {
 		return x.Snapshot
@@ -183,6 +191,88 @@ func (*Publication_Order) isPublication_Snapshot() {}
 
 func (*Publication_OperationRejected) isPublication_Snapshot() {}
 
+type DeliveryTarget struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Target:
+	//
+	//	*DeliveryTarget_Context
+	//	*DeliveryTarget_Principal
+	Target        isDeliveryTarget_Target `protobuf_oneof:"target"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeliveryTarget) Reset() {
+	*x = DeliveryTarget{}
+	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeliveryTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeliveryTarget) ProtoMessage() {}
+
+func (x *DeliveryTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeliveryTarget.ProtoReflect.Descriptor instead.
+func (*DeliveryTarget) Descriptor() ([]byte, []int) {
+	return file_cafe_realtime_v1_realtime_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *DeliveryTarget) GetTarget() isDeliveryTarget_Target {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
+func (x *DeliveryTarget) GetContext() string {
+	if x != nil {
+		if x, ok := x.Target.(*DeliveryTarget_Context); ok {
+			return x.Context
+		}
+	}
+	return ""
+}
+
+func (x *DeliveryTarget) GetPrincipal() string {
+	if x != nil {
+		if x, ok := x.Target.(*DeliveryTarget_Principal); ok {
+			return x.Principal
+		}
+	}
+	return ""
+}
+
+type isDeliveryTarget_Target interface {
+	isDeliveryTarget_Target()
+}
+
+type DeliveryTarget_Context struct {
+	Context string `protobuf:"bytes,1,opt,name=context,proto3,oneof"`
+}
+
+type DeliveryTarget_Principal struct {
+	Principal string `protobuf:"bytes,2,opt,name=principal,proto3,oneof"`
+}
+
+func (*DeliveryTarget_Context) isDeliveryTarget_Target() {}
+
+func (*DeliveryTarget_Principal) isDeliveryTarget_Target() {}
+
 type OperationRejected struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
@@ -195,7 +285,7 @@ type OperationRejected struct {
 
 func (x *OperationRejected) Reset() {
 	*x = OperationRejected{}
-	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[1]
+	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -207,7 +297,7 @@ func (x *OperationRejected) String() string {
 func (*OperationRejected) ProtoMessage() {}
 
 func (x *OperationRejected) ProtoReflect() protoreflect.Message {
-	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[1]
+	mi := &file_cafe_realtime_v1_realtime_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -220,7 +310,7 @@ func (x *OperationRejected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationRejected.ProtoReflect.Descriptor instead.
 func (*OperationRejected) Descriptor() ([]byte, []int) {
-	return file_cafe_realtime_v1_realtime_proto_rawDescGZIP(), []int{1}
+	return file_cafe_realtime_v1_realtime_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *OperationRejected) GetCommandId() string {
@@ -255,21 +345,26 @@ var File_cafe_realtime_v1_realtime_proto protoreflect.FileDescriptor
 
 const file_cafe_realtime_v1_realtime_proto_rawDesc = "" +
 	"\n" +
-	"\x1fcafe/realtime/v1/realtime.proto\x12\x10cafe.realtime.v1\x1a3cafe/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\"\x9b\x04\n" +
+	"\x1fcafe/realtime/v1/realtime.proto\x12\x10cafe.realtime.v1\x1a3cafe/realtime/v1/contexts/menu/menu_snapshots.proto\x1a;cafe/realtime/v1/contexts/ordering/ordering_snapshots.proto\"\xd5\x04\n" +
 	"\vPublication\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12)\n" +
 	"\x10contract_version\x18\x02 \x01(\rR\x0fcontractVersion\x12\x18\n" +
 	"\acontext\x18\x03 \x01(\tR\acontext\x12%\n" +
 	"\x0eaggregate_kind\x18\x04 \x01(\tR\raggregateKind\x12!\n" +
 	"\faggregate_id\x18\x05 \x01(\tR\vaggregateId\x12\x1a\n" +
-	"\brevision\x18\x06 \x01(\x04R\brevision\x12/\n" +
+	"\brevision\x18\x06 \x01(\x04R\brevision\x128\n" +
+	"\x06target\x18\a \x01(\v2 .cafe.realtime.v1.DeliveryTargetR\x06target\x12/\n" +
 	"\x05drink\x18\n" +
 	" \x01(\v2\x17.cafe.realtime.v1.DrinkH\x00R\x05drink\x125\n" +
 	"\aedition\x18\v \x01(\v2\x19.cafe.realtime.v1.EditionH\x00R\aedition\x12/\n" +
 	"\x05order\x18\f \x01(\v2\x17.cafe.realtime.v1.OrderH\x00R\x05order\x12T\n" +
 	"\x12operation_rejected\x18\x12 \x01(\v2#.cafe.realtime.v1.OperationRejectedH\x00R\x11operationRejectedB\n" +
 	"\n" +
-	"\bsnapshotJ\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x06ticketR\x06pickupR\aaccountR\x06rewardR\fnotification\"\x87\x01\n" +
+	"\bsnapshotJ\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x0f\x10\x10J\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x06ticketR\x06pickupR\aaccountR\x06rewardR\fnotification\"V\n" +
+	"\x0eDeliveryTarget\x12\x1a\n" +
+	"\acontext\x18\x01 \x01(\tH\x00R\acontext\x12\x1e\n" +
+	"\tprincipal\x18\x02 \x01(\tH\x00R\tprincipalB\b\n" +
+	"\x06target\"\x87\x01\n" +
 	"\x11OperationRejected\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12%\n" +
@@ -289,24 +384,26 @@ func file_cafe_realtime_v1_realtime_proto_rawDescGZIP() []byte {
 	return file_cafe_realtime_v1_realtime_proto_rawDescData
 }
 
-var file_cafe_realtime_v1_realtime_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cafe_realtime_v1_realtime_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_cafe_realtime_v1_realtime_proto_goTypes = []any{
 	(*Publication)(nil),       // 0: cafe.realtime.v1.Publication
-	(*OperationRejected)(nil), // 1: cafe.realtime.v1.OperationRejected
-	(*Drink)(nil),             // 2: cafe.realtime.v1.Drink
-	(*Edition)(nil),           // 3: cafe.realtime.v1.Edition
-	(*Order)(nil),             // 4: cafe.realtime.v1.Order
+	(*DeliveryTarget)(nil),    // 1: cafe.realtime.v1.DeliveryTarget
+	(*OperationRejected)(nil), // 2: cafe.realtime.v1.OperationRejected
+	(*Drink)(nil),             // 3: cafe.realtime.v1.Drink
+	(*Edition)(nil),           // 4: cafe.realtime.v1.Edition
+	(*Order)(nil),             // 5: cafe.realtime.v1.Order
 }
 var file_cafe_realtime_v1_realtime_proto_depIdxs = []int32{
-	2, // 0: cafe.realtime.v1.Publication.drink:type_name -> cafe.realtime.v1.Drink
-	3, // 1: cafe.realtime.v1.Publication.edition:type_name -> cafe.realtime.v1.Edition
-	4, // 2: cafe.realtime.v1.Publication.order:type_name -> cafe.realtime.v1.Order
-	1, // 3: cafe.realtime.v1.Publication.operation_rejected:type_name -> cafe.realtime.v1.OperationRejected
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 0: cafe.realtime.v1.Publication.target:type_name -> cafe.realtime.v1.DeliveryTarget
+	3, // 1: cafe.realtime.v1.Publication.drink:type_name -> cafe.realtime.v1.Drink
+	4, // 2: cafe.realtime.v1.Publication.edition:type_name -> cafe.realtime.v1.Edition
+	5, // 3: cafe.realtime.v1.Publication.order:type_name -> cafe.realtime.v1.Order
+	2, // 4: cafe.realtime.v1.Publication.operation_rejected:type_name -> cafe.realtime.v1.OperationRejected
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_cafe_realtime_v1_realtime_proto_init() }
@@ -322,13 +419,17 @@ func file_cafe_realtime_v1_realtime_proto_init() {
 		(*Publication_Order)(nil),
 		(*Publication_OperationRejected)(nil),
 	}
+	file_cafe_realtime_v1_realtime_proto_msgTypes[1].OneofWrappers = []any{
+		(*DeliveryTarget_Context)(nil),
+		(*DeliveryTarget_Principal)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cafe_realtime_v1_realtime_proto_rawDesc), len(file_cafe_realtime_v1_realtime_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

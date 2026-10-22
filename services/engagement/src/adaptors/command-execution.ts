@@ -7,7 +7,7 @@ import type {
   Outcome,
   Publication,
   RealtimeBusPort,
-  RealtimeEvent,
+  RealtimeMessage,
   DomainEventBusPort,
 } from '../foundation/application.js';
 import type { CommandContext, CommandResult, WriteRepository } from '../foundation/write-repository.js';
@@ -16,7 +16,7 @@ import type { CommandContext, CommandResult, WriteRepository } from '../foundati
 export type TransactionResult = {
   status: string;
   publications?: Publication[];
-  realtime?: RealtimeEvent[];
+  realtime?: RealtimeMessage[];
   rejection?: { code: string; message: string };
 };
 /** Infrastructure boundary for one aggregate in one context database. */
@@ -39,7 +39,7 @@ export function bindCommand<A, C>(
   transaction: AggregateTransaction<A>,
   handler: (
     repository: WriteRepository<A>,
-    realtime: RealtimeBusPort<RealtimeEvent>,
+    realtime: RealtimeBusPort<RealtimeMessage>,
   ) => FeatureCommandHandler<C>,
   metadata: (value: Metadata, command: C) => Metadata = (value) => value,
 ): CommandExecutor<C> {

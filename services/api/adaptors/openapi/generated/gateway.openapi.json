@@ -35,13 +35,14 @@
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "channel",
                   "b64data",
                   "idempotency_key"
                 ],
                 "properties": {
                   "channel": {
-                    "type": "string"
+                    "type": "string",
+                    "deprecated": true,
+                    "description": "Legacy compatibility hint. When present it must equal the server-derived channel and never selects the delivery audience."
                   },
                   "b64data": {
                     "type": "string"

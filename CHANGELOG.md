@@ -6,6 +6,12 @@ Notable changes to this development reference are recorded here, newest first.
 
 ## Unreleased
 
+- Add typed context/principal delivery targets to café realtime messages. Derive
+  Centrifugo channels in the gateway, authorise principal outcome delivery, and
+  expose typed Go, Python, TypeScript and React publisher/consumer APIs. Relays omit
+  channels; the deprecated gateway field is accepted only when it matches the
+  server-derived audience.
+
 - Isolate API replies per broker connection across all three owner runtimes,
   retain reply routes in immutable command storage and scope temporary queue
   authority. Qualify overlapping API instances and reconnects against RabbitMQ.

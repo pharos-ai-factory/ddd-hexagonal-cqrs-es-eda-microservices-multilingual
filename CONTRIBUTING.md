@@ -206,8 +206,12 @@ PostgreSQL/RabbitMQ. Repository negative tests prohibit direct integration stagi
 
 Use `CommandBusPort`, `QueryBusPort`, `DomainEventBusPort`, `IntegrationEventBusPort`
 and `RealtimeBusPort` for messaging capabilities. Declare realtime subscriptions
-and explicit command publications; a save alone produces no browser update. Follow
+and explicit command publications with a typed `RealtimeTarget`; a save alone
+produces no browser update. Relays submit bytes without choosing a Centrifugo
+channel. Frontend features use `useRealtimeMessage` handlers and never subscribe
+directly. Follow
 [decision 0026](docs/decisions/0026-explicit-bus-ports-and-realtime-publication.md) and
+[decision 0031](docs/decisions/0031-targeted-realtime-messages.md) and
 the [end-to-end recipe](docs/education/end-to-end-recipe.md).
 
 Command and query payloads are schema-generated plain contracts. Declare owner and

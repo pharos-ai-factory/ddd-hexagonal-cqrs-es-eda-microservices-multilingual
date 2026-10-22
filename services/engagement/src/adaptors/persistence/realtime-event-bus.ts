@@ -1,12 +1,12 @@
-import type { RealtimeBusPort, RealtimeEvent } from '../../foundation/application.js';
+import { realtimeTarget, type RealtimeBusPort, type RealtimeMessage } from '../../foundation/application.js';
 import { identifier } from '../../foundation/domain.js';
 import type { PostgresContextDatabase } from './postgres-database.js';
 import { checkRootIdentity } from './receipt-outcome.js';
 import { appendRealtime } from './realtime-publication.js';
-import { realtime } from '../realtime/projection-codec.js';
+import { realtime } from '../realtime/message-codec.js';
 
 /** Commit a declared event subscription's receipt and exact browser bytes before ACK. */
-export class PostgresRealtimeEventBus implements RealtimeBusPort<RealtimeEvent> {
+export class PostgresRealtimeMessageBus implements RealtimeBusPort<RealtimeMessage> {
   constructor(
     private db: PostgresContextDatabase,
     private consumer: string,
@@ -14,10 +14,12 @@ export class PostgresRealtimeEventBus implements RealtimeBusPort<RealtimeEvent> 
   ) {
     if (!consumer.startsWith(db.owner + '.')) throw new Error('Foreign realtime subscription');
   }
-  async publish(event: RealtimeEvent): Promise<void> {
+  async publish(event: RealtimeMessage): Promise<void> {
     const m = event.source;
     if (!m || !event.snapshot || !Number.isSafeInteger(event.revision) || event.revision! < 1)
       throw new Error('Invalid realtime delivery');
+    if (event.target.kind !== 'context' || event.target.id !== realtimeTarget.context(this.db.owner).id)
+      throw new Error('Invalid realtime delivery target');
     for (const value of [m.id, m.target, m.sourceId, m.correlation]) identifier(String(value));
     if (m.consumer !== this.consumer || !/^[a-f0-9]{64}$/.test(m.sourceHash ?? ''))
       throw new Error('Invalid realtime receipt');
@@ -39,8 +41,22 @@ export class PostgresRealtimeEventBus implements RealtimeBusPort<RealtimeEvent> 
         if (previous.fingerprint !== m.sourceHash || previous.target !== target)
           throw new Error('Conflicting realtime delivery identity');
       } else {
-        const publication = realtime(this.db.owner, this.kind, m.target, event.revision!, event.snapshot);
-        await appendRealtime(client, this.db.owner, this.kind, m.target, event.revision!, publication);
+        const publication = realtime(
+          this.db.owner,
+          this.kind,
+          m.target,
+          event.revision!,
+          event.target,
+          event.snapshot,
+        );
+        await appendRealtime(
+          client,
+          'cafe:' + this.db.owner,
+          this.kind,
+          m.target,
+          event.revision!,
+          publication,
+        );
         const outcome = { aggregateId: m.target, version: event.revision, status: 'realtime_queued' };
         await client.query(
           'INSERT INTO cafe.consumer_receipts(consumer,event_id,fingerprint,target,outcome) VALUES($1,$2,$3,$4,$5)',

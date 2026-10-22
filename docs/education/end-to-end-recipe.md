@@ -207,10 +207,11 @@ DI registration, OpenAPI operation and API translation. Call the generated brows
 operation client. The frontend attaches server-authorised subscriptions before its
 initial query and reconciles again after an unrecoverable history gap.
 
-The [browser decoder](../../services/web/src/adaptors/realtime/projection-codec.ts)
-validates owner, channel, payload identity and revision. Its
-[realtime hook](../../services/web/src/shared/realtime/useCafe.ts) applies snapshots
-and displays operation rejections separately. Keep each window's revision guard,
+The [browser decoder](../../services/web/src/adaptors/realtime/message-codec.ts)
+validates owner, target, channel, payload identity and revision. `RealtimeProvider`
+owns the transport while feature hooks register typed `useRealtimeMessage` handlers.
+The café state hook applies state messages and displays operation rejections
+separately. Keep each window's revision guard,
 uncertain command recovery and session revocation behaviour.
 
 ## 11. Verify the recipe as a complete use case

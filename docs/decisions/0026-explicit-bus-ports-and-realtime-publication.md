@@ -111,6 +111,8 @@ regenerate contracts before starting the revised development composition.
 At acceptance, Go defined `CommandBusPort` without an aggregate-changing private
 command example. [Decision 0027](0027-go-durable-command-reactions.md) subsequently
 adds the concrete receiving outbox, paired consumers and Ordering example.
+[Decision 0031](0031-targeted-realtime-messages.md) subsequently adds typed
+application delivery targets and gateway-derived channels.
 
 ## Verification
 

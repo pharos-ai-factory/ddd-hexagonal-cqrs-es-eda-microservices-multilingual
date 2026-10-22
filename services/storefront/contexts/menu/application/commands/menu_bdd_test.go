@@ -26,7 +26,7 @@ type menuWorld struct {
 }
 
 func (w *menuWorld) publishDrink() error {
-	_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.PublishDrinkCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.PublishDrinkCommandHandler {
 		return menucommands.PublishDrinkCommandHandler{Repository: repository, Realtime: realtime}
 	})).Execute(context.Background(), s.Metadata(s.Drink), struct{}{})
 	if err != nil {
@@ -40,20 +40,20 @@ func (w *menuWorld) publishDrink() error {
 	return nil
 }
 func (w *menuWorld) add(code string, minor int64) error {
-	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.AddOfferCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.AddOfferCommandHandler {
 		return menucommands.AddOfferCommandHandler{Repository: repository, Realtime: realtime, Drinks: &w.directory}
 	})).Execute(context.Background(), s.Metadata(s.Edition),
 		menucontracts.AddOfferCommand{Code: code, DrinkID: s.Drink, DrinkRevision: 1, Minor: minor})
 	return err
 }
 func (w *menuWorld) publish() error {
-	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.PublishEditionCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.PublishEditionCommandHandler {
 		return menucommands.PublishEditionCommandHandler{Repository: repository, Realtime: realtime}
 	})).Execute(context.Background(), s.Metadata(s.Edition), struct{}{})
 	return err
 }
 func (w *menuWorld) price(code string, minor int64) error {
-	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.ChangePriceCommandHandler {
+	_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.ChangePriceCommandHandler {
 		return menucommands.ChangePriceCommandHandler{Repository: repository, Realtime: realtime}
 	})).Execute(context.Background(), s.Metadata(s.Edition), menucontracts.ChangePriceCommand{Code: code, Minor: minor})
 	return err
@@ -75,7 +75,7 @@ func TestMenuFeatures(t *testing.T) {
 				return ctx, nil
 			})
 			sc.Step(`^a published drink named "([^"]*)"$`, func(name string) error {
-				_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateDrinkCommandHandler {
+				_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.CreateDrinkCommandHandler {
 					return menucommands.CreateDrinkCommandHandler{Repository: repository, Realtime: realtime}
 				})).Execute(context.Background(), s.Metadata(s.Drink), menucontracts.CreateDrinkCommand{Name: name})
 				if err != nil {
@@ -87,7 +87,7 @@ func TestMenuFeatures(t *testing.T) {
 				return w.publishDrink()
 			})
 			sc.Step(`^a draft menu edition in "([^"]*)"$`, func(currency string) error {
-				_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.CreateEditionCommandHandler {
+				_, err := (execution.Bind(s.ForAggregate(&w.editions, d.RestoreEdition, (*d.MenuEdition).Snapshot, menupub.Edition), func(repository menuports.EditionWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.CreateEditionCommandHandler {
 					return menucommands.CreateEditionCommandHandler{Repository: repository, Realtime: realtime}
 				})).Execute(context.Background(), s.Metadata(s.Edition), menucontracts.CreateEditionCommand{Currency: currency})
 				if err != nil {
@@ -151,7 +151,7 @@ func TestMenuFeatures(t *testing.T) {
 				return nil
 			})
 			sc.Step(`^the drink is renamed to "([^"]*)" and published again$`, func(name string) error {
-				_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) menucommands.ReviseDrinkCommandHandler {
+				_, err := (execution.Bind(s.ForAggregate(&w.drinks, d.RestoreDrink, (*d.Drink).Snapshot, menupub.Drink), func(repository menuports.DrinkWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) menucommands.ReviseDrinkCommandHandler {
 					return menucommands.ReviseDrinkCommandHandler{Repository: repository, Realtime: realtime}
 				})).Execute(context.Background(), s.Metadata(s.Drink), menucontracts.ReviseDrinkCommand{Name: name})
 				if err != nil {

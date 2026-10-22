@@ -26,12 +26,43 @@ type RealtimeBusPort[E any] interface {
 	Publish(context.Context, E) error
 }
 
-// RealtimeEvent selects an authoritative snapshot or a committed operation rejection.
-// Snapshot revision and audience are supplied by the owner transaction.
-type RealtimeEvent struct {
+// RealtimeTargetKind identifies an application-defined recipient category.
+type RealtimeTargetKind string
+
+const (
+	RealtimeContextTarget   RealtimeTargetKind = "context"
+	RealtimePrincipalTarget RealtimeTargetKind = "principal"
+)
+
+// RealtimeTarget is an application recipient resolved to a transport channel by an outer adaptor.
+type RealtimeTarget struct {
+	Kind RealtimeTargetKind `json:"kind"`
+	ID   string             `json:"id"`
+}
+
+func ContextTarget(owner string) RealtimeTarget {
+	return RealtimeTarget{Kind: RealtimeContextTarget, ID: owner}
+}
+
+func PrincipalTarget(principalID string) RealtimeTarget {
+	return RealtimeTarget{Kind: RealtimePrincipalTarget, ID: principalID}
+}
+
+// RealtimeMessage selects a typed delivery target and one authoritative payload.
+// The owner transaction supplies command identity and committed revision.
+type RealtimeMessage struct {
+	Target                   RealtimeTarget
 	Source                   *Metadata
 	Revision                 uint64
 	Snapshot                 any
 	CommandID, CorrelationID string
 	Rejection                *domain.Violation
+}
+
+func SnapshotMessage[S any](target RealtimeTarget, snapshot S) RealtimeMessage {
+	return RealtimeMessage{Target: target, Snapshot: snapshot}
+}
+
+func RejectionMessage(target RealtimeTarget, rejection domain.Violation) RealtimeMessage {
+	return RealtimeMessage{Target: target, Rejection: &rejection}
 }

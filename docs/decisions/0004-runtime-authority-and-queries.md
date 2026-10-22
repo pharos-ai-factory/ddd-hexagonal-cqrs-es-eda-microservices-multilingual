@@ -18,12 +18,12 @@ use their own retry/dead-letter delivery exchange. They cannot declare or delete
 topology. Delivery still uses confirms and commit-before-acknowledgement.
 
 A small internal Go gateway holds Centrifugo's administrative API key. Each
-context receives a distinct publisher credential permitting only its own
-`cafe:<context>` channel. The gateway validates projection envelope identity and
-forwards the original bytes. The session worker has a separate credential that
-permits only disconnection. It cannot publish, and publishers cannot disconnect
-users or access history/administrative methods. The gateway is technical
-infrastructure and contains no domain policy.
+context receives a distinct publisher credential identifying its owning context.
+The gateway validates the message envelope owner, payload and delivery target,
+derives the authorised channel and forwards the original bytes. The session worker
+has a separate credential that permits only disconnection. It cannot publish, and
+publishers cannot disconnect users or access history/administrative methods. The
+gateway is technical infrastructure and contains no domain policy.
 
 Session Valkey retains durable revocation work with `appendfsync always`.
 Realtime history runs in a separate disposable Valkey instance, with its own

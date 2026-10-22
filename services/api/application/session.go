@@ -32,5 +32,5 @@ func AuthorisedChannels(principal Principal) []string {
 	if principal.Subject != OperatorID || principal.Role != "operator" {
 		return nil
 	}
-	return []string{"cafe:menu", "cafe:ordering", "cafe:preparation", "cafe:collection", "cafe:loyalty", "cafe:communication"}
+	return []string{"cafe:menu", "cafe:ordering", "cafe:preparation", "cafe:collection", "cafe:loyalty", "cafe:communication", "principal:" + principal.Subject}
 }

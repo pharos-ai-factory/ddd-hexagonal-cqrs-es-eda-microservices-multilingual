@@ -1,6 +1,6 @@
 import { request, success } from '../../adaptors/http/operation-client';
 import type { ListOperation, Success } from '../../adaptors/generated/http';
-import type { Projection } from './model';
+import type { VersionedState } from './model';
 
 type Items<K extends ListOperation> = Extract<Success<K>, { items: unknown }>['items'];
 export async function scan<K extends ListOperation>(operation: K, signal: AbortSignal): Promise<Items<K>> {
@@ -25,7 +25,8 @@ export async function scan<K extends ListOperation>(operation: K, signal: AbortS
   } while (cursor !== null);
   return items as Items<K>;
 }
-export async function projections(signal: AbortSignal): Promise<Projection[]> {
+
+export async function loadCafeState(signal: AbortSignal): Promise<VersionedState[]> {
   const [drinks, editions, orders, tickets, pickups, accounts, rewards, notifications] = await Promise.all([
     scan('listDrinks', signal),
     scan('listEditions', signal),

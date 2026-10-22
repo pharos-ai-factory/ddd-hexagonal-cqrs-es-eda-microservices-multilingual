@@ -51,7 +51,7 @@ and `http/`. Python/TypeScript keep explicit command execution and diagnostics
 modules; Go uses small responsibility packages. Context adaptors expose messaging,
 persistence and outbound delivery, with business resource names in their files.
 The API exposes HTTP, messaging, sessions and subscription authorisation; web
-exposes its operation client and projection codec. The [adaptor map](docs/adaptor-layout.md)
+exposes its operation client and realtime message codec. The [adaptor map](docs/adaptor-layout.md)
 and [decision 0021](docs/decisions/0021-service-and-context-adaptor-layout.md)
 explain every service and context boundary.
 
@@ -131,8 +131,9 @@ there is no frontend Node server. The ingress routes `/auth` and `/api/v1`
 to the Go API and `/connection/websocket` to Centrifugo. Internal proxy and
 administrative endpoints are not exposed through browser ingress.
 
-An internal Go realtime gateway authorises each context credential for publication
-to its own channel and the session credential for disconnection. Domain processes
+An internal Go realtime gateway authorises each context credential, validates the
+typed message target and derives its Centrifugo channel for publication. It accepts
+a separate session credential for disconnection. Domain processes
 do not receive Centrifugo's full API key. Owner RabbitMQ credentials cannot create, change or delete topology.
 API connections may declare and bind only their temporary, owner-scoped reply
 queues, using a fresh UUIDv4 address on each connection. The bootstrap uses a dedicated topology user;
@@ -277,10 +278,11 @@ The provider's idempotency receipt protects the crash window after acceptance.
 Current-state persistence is authoritative. Event history provides publication
 and audit evidence; aggregates are not reconstructed from that history.
 
-The Next.js frontend uses Centrifugo with Protobuf browser projections. Commands explicitly publish through `RealtimeBusPort`; their transactions commit
+The Next.js frontend uses Centrifugo with typed Protobuf realtime messages. Commands explicitly publish through `RealtimeBusPort`; their transactions commit
 exact bytes with the root/outcome. Declared domain/integration subscribers instead
 commit browser bytes with their own receipt. A saved root can await that publication. A fenced relay publishes those bytes to Centrifugo. Server-side
-subscriptions come from the Go API's session authority; each window reconciles
+context and principal subscriptions come from the Go API's session authority;
+features register typed handlers without selecting channels, and each window reconciles
 from owner queries at initial attachment or a history gap. Recoverable history
 requires no additional business GET. See `CLIENT-SUBSCRIPTIONS.md`.
 
@@ -350,6 +352,9 @@ Each context explicitly selects browser messages in application handlers. Comman
 publications commit with their outcome; declared event subscribers commit exact
 bytes with their receipt. Saving state alone produces no realtime publication.
 The owner gateway and Centrifugo continue handling authorised technical delivery.
+Relays submit message bytes and identity without a channel. The gateway combines
+the publisher credential with the message target and payload type to derive either
+`cafe:<context>` or `principal:<subject>`.
 
 Command and query payloads are schema-generated plain contracts. Declare owner and
 visibility in Protobuf; generate types and mechanical mappings, then implement

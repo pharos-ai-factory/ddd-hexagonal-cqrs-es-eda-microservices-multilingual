@@ -104,7 +104,7 @@ class DeveloperTests(unittest.TestCase):
         self.assertIn("a.CommandBusPort[C]", files["eventhandlers/record_collection.go"])
         self.assertIn("registration.Subscribe", files["wiring.txt"])
         _, commands = render("command", "ordering", "RecordCollection")
-        self.assertIn("a.RealtimeBusPort[a.RealtimeEvent]", commands["registration.txt"])
+        self.assertIn("a.RealtimeBusPort[a.RealtimeMessage]", commands["registration.txt"])
 
     def test_query_starters_register_each_query_directly(self):
         for context in ("ordering", "preparation", "loyalty"):

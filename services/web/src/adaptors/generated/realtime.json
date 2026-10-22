@@ -360,6 +360,10 @@
                       "type": "uint64",
                       "id": 6
                     },
+                    "target": {
+                      "type": ".cafe.realtime.v1.DeliveryTarget",
+                      "id": 7
+                    },
                     "drink": {
                       "type": ".cafe.realtime.v1.Drink",
                       "id": 10
@@ -396,6 +400,26 @@
                       "type": ".cafe.realtime.v1.OperationRejected",
                       "id": 18,
                       "protoName": "operation_rejected"
+                    }
+                  }
+                },
+                "DeliveryTarget": {
+                  "oneofs": {
+                    "target": {
+                      "oneof": [
+                        "context",
+                        "principal"
+                      ]
+                    }
+                  },
+                  "fields": {
+                    "context": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "principal": {
+                      "type": "string",
+                      "id": 2
                     }
                   }
                 },

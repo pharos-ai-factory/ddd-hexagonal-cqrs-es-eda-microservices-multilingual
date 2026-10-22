@@ -70,7 +70,7 @@ view to their published shapes. The query acquires no aggregate mutation capabil
 
 Use `ListOrdersQuery` for complete or explicitly paginated reads. The browser
 traverses every page during reconciliation and applies per-root revision guards.
-An older response cannot replace a newer realtime projection.
+An older response cannot replace a newer realtime state message.
 
 ## 4. Follow the event across the process boundary
 

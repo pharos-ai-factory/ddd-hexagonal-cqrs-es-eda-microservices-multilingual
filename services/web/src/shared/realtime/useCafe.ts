@@ -1,103 +1,59 @@
 'use client';
-import { Centrifuge } from 'centrifuge/build/protobuf';
-import { useEffect, useReducer, useState } from 'react';
-import { decode } from '../../adaptors/realtime/projection-codec';
-import { merge, owners, type Projection, type Snapshot } from './model';
-import { subscriptionBarrier } from './queries';
-import { SessionEnded } from '../../adaptors/http/operation-client';
-import { projections } from './httpProjection';
-import { request } from '../../adaptors/http/operation-client';
-import { reconciliationQueue } from './reconciliation';
+import { useReducer, useState } from 'react';
+import { loadCafeState } from './state-loader';
+import { mergeState, type VersionedState, type Snapshot } from './model';
+import {
+  realtimeMessages,
+  useRealtimeConnection,
+  useRealtimeMessage,
+  useRealtimeReconciliation,
+} from './index';
 
-export function useCafe(active: boolean, sessionEnded: () => void) {
+/** Café state is an application consumer of the generic typed realtime API. */
+export function useCafe() {
   const [snapshot, dispatch] = useReducer(
-    (current: Snapshot, action: Projection | 'clear') => (action === 'clear' ? {} : merge(current, action)),
+    (current: Snapshot, update: VersionedState) => mergeState(current, update),
     {},
   );
-  const [connection, setConnection] = useState('connecting');
-  const [problem, setProblem] = useState('');
-  useEffect(() => {
-    if (!active) {
-      dispatch('clear');
-      return;
-    }
-    let alive = true,
-      forceReconcile = false;
-    const seenOutcomes = new Set<string>();
-    const abort = new AbortController();
-    const barrier = subscriptionBarrier([...new Set(Object.values(owners).map((owner) => `cafe:${owner}`))]);
-    const websocket = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/connection/websocket`;
-    const client = new Centrifuge(websocket);
-    const reconciliation = reconciliationQueue(async () => {
-      try {
-        const updates = await projections(abort.signal);
-        if (alive) {
-          updates.forEach((update) => dispatch(update));
-          setProblem('');
-        }
-      } catch (error) {
-        if (alive) {
-          if (error instanceof SessionEnded) sessionEnded();
-          setProblem(error instanceof Error ? error.message : 'State unavailable');
-        }
-      }
-    });
-    client.on('connected', () => {
-      if (alive) {
-        barrier.reset(forceReconcile);
-        forceReconcile = false;
-        setConnection('connected');
-      }
-    });
-    client.on('connecting', () => {
-      if (alive) setConnection('connecting');
-    });
-    client.on('subscribed', (context) => {
-      // Each window keeps its own transport cursor. Recoverable history needs no GET.
-      if (barrier.subscribed(context.channel, context.wasRecovering && context.recovered)) {
-        void reconciliation.request();
-      }
-    });
-    client.on('publication', (context) => {
-      try {
-        if (alive) {
-          const update = decode(context.channel, context.data);
-          if ('type' in update) {
-            if (!seenOutcomes.has(update.eventId)) {
-              seenOutcomes.add(update.eventId);
-              if (seenOutcomes.size > 1000) seenOutcomes.delete(seenOutcomes.values().next().value!);
-              setProblem(`${update.message} (${update.code}; command ${update.commandId})`);
-            }
-          } else dispatch(update);
-        }
-      } catch {
-        if (alive) setProblem('An unrecognised update was rejected. Reconnect to reconcile.');
-      }
-    });
-    client.on('disconnected', () => {
-      if (!alive) return;
-      setConnection('disconnected');
-      // Recheck access once after a disconnect, including logout in another window.
-      void request('session', {})
-        .then((response) => {
-          if (alive && response.status === 401) sessionEnded();
-        })
-        .catch(() => {});
-    });
-    const reconnect = () => {
-      forceReconcile = true;
-      client.disconnect();
-      client.connect();
-    };
-    window.addEventListener('cafe-reconnect', reconnect);
-    client.connect();
-    return () => {
-      alive = false;
-      abort.abort();
-      reconciliation.close();
-      window.removeEventListener('cafe-reconnect', reconnect);
-      client.disconnect();
-    };
-  }, [active, sessionEnded]);
-  return { snapshot, connection, problem };
+  const [messageProblem, setMessageProblem] = useState('');
+  const connection = useRealtimeConnection();
+
+  useRealtimeMessage(realtimeMessages.drinkChanged, (message) =>
+    dispatch({ kind: 'drink', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.editionChanged, (message) =>
+    dispatch({ kind: 'edition', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.orderChanged, (message) =>
+    dispatch({ kind: 'order', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.ticketChanged, (message) =>
+    dispatch({ kind: 'ticket', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.pickupChanged, (message) =>
+    dispatch({ kind: 'pickup', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.accountChanged, (message) =>
+    dispatch({ kind: 'account', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.rewardChanged, (message) =>
+    dispatch({ kind: 'reward', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.notificationChanged, (message) =>
+    dispatch({ kind: 'notification', version: message.revision, state: message.state }),
+  );
+  useRealtimeMessage(realtimeMessages.operationRejected, (message) =>
+    setMessageProblem(`${message.message} (${message.code}; command ${message.commandId})`),
+  );
+  useRealtimeReconciliation(async (signal) => {
+    const updates = await loadCafeState(signal);
+    updates.forEach(dispatch);
+    setMessageProblem('');
+  });
+
+  return {
+    snapshot,
+    connection: connection.connection,
+    problem: connection.problem || messageProblem,
+  };
 }

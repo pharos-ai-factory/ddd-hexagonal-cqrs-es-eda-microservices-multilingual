@@ -63,18 +63,24 @@ func (c Config) Handler() (http.Handler, error) {
 			Data    string `json:"b64data"`
 			ID      string `json:"idempotency_key"`
 		}
-		body, err := decode(w, r, &publication)
+		_, err := decode(w, r, &publication)
 		if err != nil {
 			http.Error(w, "invalid publication", http.StatusBadRequest)
 			return
 		}
-		if publication.Channel != "cafe:"+owner {
+		wire, err := base64.StdEncoding.Strict().DecodeString(publication.Data)
+		channel, valid := validatedChannel(wire, owner, publication.ID)
+		if err != nil || !valid {
+			http.Error(w, "invalid publication envelope", http.StatusBadRequest)
+			return
+		}
+		if publication.Channel != "" && publication.Channel != channel {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
-		wire, err := base64.StdEncoding.Strict().DecodeString(publication.Data)
-		if err != nil || !validEnvelope(wire, owner, publication.ID) {
-			http.Error(w, "invalid publication envelope", http.StatusBadRequest)
+		body, err := json.Marshal(map[string]string{"channel": channel, "b64data": publication.Data, "idempotency_key": publication.ID})
+		if err != nil {
+			http.Error(w, "invalid publication", http.StatusBadRequest)
 			return
 		}
 		c.forward(w, r, client, body)

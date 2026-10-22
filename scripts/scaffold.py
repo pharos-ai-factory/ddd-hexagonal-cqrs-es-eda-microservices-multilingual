@@ -157,7 +157,7 @@ type {name}{role}[S any] struct {{ Repository {port} }}
         registration = {
             "operations": f"# In the context requests function, use its configured CommandRegistration:\ncommands.request(registry, {context.title()}Command.{snake.upper()}, wire.{snake}, {name}CommandHandler)\n",
             "engagement": f"// In the context request composition, use its configured CommandRegistration:\ncommands.request(registry, {context.title()}Command.{snake.upper()}, wire.{action}, (repository) => new {name}CommandHandler(repository));\n",
-            "storefront": f"// In the context request composition, use its aggregate registry:\nregistration.Register(aggregateCommands, names.{context.title()}Command{name}, wire.{name}, func(repository ports.OwningWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) commands.{name}CommandHandler {{\n return commands.{name}CommandHandler{{Repository: repository}}\n}})\n",
+            "storefront": f"// In the context request composition, use its aggregate registry:\nregistration.Register(aggregateCommands, names.{context.title()}Command{name}, wire.{name}, func(repository ports.OwningWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) commands.{name}CommandHandler {{\n return commands.{name}CommandHandler{{Repository: repository}}\n}})\n",
         }[service]
         registration += "Define the published command contract and run pnpm generate:contracts to create its identifier. Import the generated enum and define the owner parser, then register the handler here. The shared helper supplies execution policy.\n"
     files["registration.txt"] = registration

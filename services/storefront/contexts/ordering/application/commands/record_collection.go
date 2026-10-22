@@ -11,7 +11,7 @@ import (
 // RecordCollectionCommandHandler changes one Order and explicitly publishes its updated view.
 type RecordCollectionCommandHandler struct {
 	Repository ports.OrderWriteRepository
-	Realtime   a.RealtimeBusPort[a.RealtimeEvent]
+	Realtime   a.RealtimeBusPort[a.RealtimeMessage]
 }
 
 func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.CommandContext, c orderingcontracts.RecordCollectionCommand) (a.CommandResult, error) {
@@ -30,7 +30,7 @@ func (h RecordCollectionCommandHandler) Execute(ctx context.Context, m a.Command
 		if err = h.Repository.Save(ctx, order); err != nil {
 			return a.CommandResult{}, err
 		}
-		if err = h.Realtime.Publish(ctx, a.RealtimeEvent{Snapshot: order.Snapshot()}); err != nil {
+		if err = h.Realtime.Publish(ctx, a.SnapshotMessage(a.ContextTarget("ordering"), order.Snapshot())); err != nil {
 			return a.CommandResult{}, err
 		}
 	}

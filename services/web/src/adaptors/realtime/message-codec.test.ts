@@ -2,12 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import protobuf from 'protobufjs/light';
 import schema from '../generated/realtime.json';
-import { decode } from './projection-codec';
+import { decodeRealtimeMessage } from './message-codec';
 
 const wire = protobuf.Root.fromJSON(schema).lookupType('cafe.realtime.v1.Publication');
 const id = '00000000-0000-4000-8000-000000000001';
 
-void test('operation rejections have command identity and can precede aggregate creation', () => {
+void test('operation rejections are delivered only on their principal target', () => {
   const body = wire
     .encode(
       wire.create({
@@ -17,6 +17,7 @@ void test('operation rejections have command identity and can precede aggregate 
         aggregateKind: 'order',
         aggregateId: id,
         revision: 0,
+        target: { principal: id },
         operationRejected: {
           commandId: id,
           correlationId: id,
@@ -26,13 +27,13 @@ void test('operation rejections have command identity and can precede aggregate 
       }),
     )
     .finish();
-  const result = decode('cafe:ordering', body);
-  assert.ok('type' in result);
-  assert.equal(result.commandId, id);
-  assert.throws(() => decode('cafe:loyalty', body), /source/);
+  const result = decodeRealtimeMessage('principal:' + id, body);
+  assert.equal(result.type, 'operationRejected');
+  if (result.type === 'operationRejected') assert.equal(result.commandId, id);
+  assert.throws(() => decodeRealtimeMessage('cafe:ordering', body), /rejection/);
 });
 
-void test('snapshot publications still require a positive revision and matching root', () => {
+void test('state messages require a positive revision and matching context target', () => {
   const body = wire
     .encode(
       wire.create({
@@ -42,9 +43,10 @@ void test('snapshot publications still require a positive revision and matching 
         aggregateKind: 'order',
         aggregateId: id,
         revision: 0,
+        target: { context: 'ordering' },
         order: { id },
       }),
     )
     .finish();
-  assert.throws(() => decode('cafe:ordering', body), /snapshot/);
+  assert.throws(() => decodeRealtimeMessage('cafe:ordering', body), /state message/);
 });

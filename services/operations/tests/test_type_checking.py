@@ -9,9 +9,9 @@ from operations.contexts.collection.domain.pickup import Pickup, PickupSnapshot
 from operations.contexts.preparation.domain.preparation_ticket import PreparationTicket
 from operations.contracts.events.generated.preparation import DrinksReadyIntegrationEvent
 from operations.foundation.write_repository import CommandContext, WriteRepository
-from operations.foundation.application import RealtimeBusPort, RealtimeEvent
+from operations.foundation.application import RealtimeBusPort, RealtimeMessage
 
-def caller(pickups: WriteRepository[Pickup], tickets: WriteRepository[PreparationTicket], metadata: CommandContext, realtime: RealtimeBusPort[RealtimeEvent]) -> None:
+def caller(pickups: WriteRepository[Pickup], tickets: WriteRepository[PreparationTicket], metadata: CommandContext, realtime: RealtimeBusPort[RealtimeMessage]) -> None:
     collect = CollectOrderCommandHandler(pickups, realtime)
     collect.execute(metadata, {"code": "ABC123"})
     ready: DrinksReadyIntegrationEvent = {"orderId": metadata.target, "customerId": metadata.target}

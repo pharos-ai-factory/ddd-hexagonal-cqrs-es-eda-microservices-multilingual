@@ -30,6 +30,16 @@
         "force_positioning": true,
         "history_size": 1000,
         "history_ttl": "24h"
+      },
+      {
+        "name": "principal",
+        "publication_data_format": "binary",
+        "allow_publish_for_client": false,
+        "allow_subscribe_for_client": false,
+        "force_recovery": true,
+        "force_positioning": true,
+        "history_size": 1000,
+        "history_ttl": "24h"
       }
     ]
   },

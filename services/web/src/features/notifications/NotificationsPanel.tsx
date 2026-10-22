@@ -1,6 +1,6 @@
 'use client';
 import { items, type Snapshot } from '../../shared/realtime/model';
-/** Displays the customer's delivery status from the Communication projection. */
+/** Displays the customer's current delivery status from Communication. */
 export function NotificationsPanel({ snapshot, customer }: { snapshot: Snapshot; customer: string }) {
   const notices = items(snapshot, 'notification');
   return (

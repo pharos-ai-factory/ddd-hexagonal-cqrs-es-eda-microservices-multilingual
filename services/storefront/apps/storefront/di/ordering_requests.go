@@ -24,16 +24,16 @@ type orderingRequests struct {
 func orderingRequestsProvider(transaction execution.Transaction[*d.Order], directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], getOrder q.GetOrderQueryHandler, listOrders q.ListOrdersQueryHandler) orderingRequests {
 	r := requests.New("ordering")
 	commands := registration.New(r, transaction)
-	registration.RegisterProjection(commands, names.OrderingCommandCreateOrder, rpc.CreateOrder, directory, func(c orderingcontracts.CreateOrderCommand) string { return c.EditionID }, func(repository ports.OrderWriteRepository, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.CreateOrderCommandHandler {
+	registration.RegisterProjection(commands, names.OrderingCommandCreateOrder, rpc.CreateOrder, directory, func(c orderingcontracts.CreateOrderCommand) string { return c.EditionID }, func(repository ports.OrderWriteRepository, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.CreateOrderCommandHandler {
 		return orderingcommands.CreateOrderCommandHandler{Repository: repository, Realtime: realtime, Menus: directory}
 	})
-	registration.RegisterProjection(commands, names.OrderingCommandAddLine, rpc.AddLine, directory, func(c orderingcontracts.AddLineCommand) string { return c.EditionID }, func(repository ports.OrderWriteRepository, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.AddLineCommandHandler {
+	registration.RegisterProjection(commands, names.OrderingCommandAddLine, rpc.AddLine, directory, func(c orderingcontracts.AddLineCommand) string { return c.EditionID }, func(repository ports.OrderWriteRepository, directory a.ProjectionPort[model.MenuPublishedIntegrationEvent], realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.AddLineCommandHandler {
 		return orderingcommands.AddLineCommandHandler{Repository: repository, Realtime: realtime, Menus: directory}
 	})
-	registration.Register(commands, names.OrderingCommandChangeQuantity, rpc.ChangeQuantity, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.ChangeQuantityCommandHandler {
+	registration.Register(commands, names.OrderingCommandChangeQuantity, rpc.ChangeQuantity, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.ChangeQuantityCommandHandler {
 		return orderingcommands.ChangeQuantityCommandHandler{Repository: repository, Realtime: realtime}
 	})
-	registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeEvent]) orderingcommands.PlaceOrderCommandHandler {
+	registration.Register(commands, names.OrderingCommandPlaceOrder, rpc.PlaceOrder, func(repository ports.OrderWriteRepository, realtime a.RealtimeBusPort[a.RealtimeMessage]) orderingcommands.PlaceOrderCommandHandler {
 		return orderingcommands.PlaceOrderCommandHandler{Repository: repository}
 	})
 	responses.RegisterGetOrder(r, rpc.GetOrder, getOrder.Execute)
