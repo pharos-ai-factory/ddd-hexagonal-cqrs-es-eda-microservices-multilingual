@@ -166,7 +166,17 @@ func TestGatewayRestrictsAuthoritiesAndPreservesBytes(t *testing.T) {
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
 	check.Response(t, contract.Document("gateway"), r, w.Result())
-	if w.Code != 200 || forwarded[len(forwarded)-1].path != "/api/disconnect" {
+	last := forwarded[len(forwarded)-1]
+	var disconnect struct {
+		User       string `json:"user"`
+		Disconnect struct {
+			Code   int    `json:"code"`
+			Reason string `json:"reason"`
+		} `json:"disconnect"`
+	}
+	if json.Unmarshal(last.body, &disconnect) != nil || w.Code != 200 || last.path != "/api/disconnect" ||
+		disconnect.User != "operator" || disconnect.Disconnect.Code != revocationDisconnectCode ||
+		disconnect.Disconnect.Reason != revocationDisconnectReason {
 		t.Fatal("session disconnect refused")
 	}
 	r = httptest.NewRequest("GET", "/healthz", nil)

@@ -18,6 +18,9 @@ import (
 
 const MaxRequestBytes = 1024 * 1024
 
+const revocationDisconnectCode = 3001
+const revocationDisconnectReason = "session revoked"
+
 // Config contains the settings and injected ports for this HTTP boundary.
 type Config struct {
 	UpstreamURL, UpstreamKey, SessionKey string
@@ -93,8 +96,15 @@ func (c Config) Handler() (http.Handler, error) {
 		var command struct {
 			User string `json:"user"`
 		}
-		body, err := decode(w, r, &command)
+		_, err := decode(w, r, &command)
 		if err != nil || command.User == "" {
+			http.Error(w, "invalid disconnect", http.StatusBadRequest)
+			return
+		}
+		body, err := json.Marshal(map[string]any{"user": command.User, "disconnect": map[string]any{
+			"code": revocationDisconnectCode, "reason": revocationDisconnectReason,
+		}})
+		if err != nil {
 			http.Error(w, "invalid disconnect", http.StatusBadRequest)
 			return
 		}
